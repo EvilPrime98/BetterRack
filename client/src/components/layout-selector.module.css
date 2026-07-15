@@ -1,0 +1,9 @@
+.layoutButton {
+    background-color: #4a4a4a;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 14px;
+    font-size: 13px;
+    cursor: pointer;
+}

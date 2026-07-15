@@ -1,0 +1,44 @@
+### Get Comics
+GET http://localhost:3000/api/comics?search="hitman"
+Content-Type: application/json
+
+### Download Comic
+GET http://localhost:3000/api/download?id=393688&title=absolute%20superman&outputDir=test
+
+### Get Comic Links
+GET http://localhost:3000/api/comics/13320/links
+
+### Get Specific Comic Link
+GET http://localhost:3000/api/download?id=13320&uuid=e33ed398-356a-4cee-a986-9579dada4fc8&outputDir=test&title=whatever
+
+### Get Library
+GET http://localhost:3000/api/library
+
+### Read Comic
+GET http://localhost:3000/read/11fb27fb-92eb-c926-d02f-c3f6ff258858
+
+### Read Comic Page
+GET http://localhost:3000/read/11fb27fb-92eb-c926-d02f-c3f6ff258858/pages/1
+
+### POST FOLDER
+POST http://localhost:3000/api/library/folder
+Content-Type: application/json
+
+{
+    "folderName": "foo",
+    "parentFolderUid": "69071657-ea25-4b6c-b165-870ab6544205"
+}
+
+### set preferences
+PUT http://localhost:3000/api/library/preferences/8c446eaa-b557-b0c0-844a-c92f2f67e496
+Content-Type: application/json
+
+{
+    "prefCover": "foo"
+}
+
+### get preferences
+GET http://localhost:3000/api/library/preferences/2d37772d-dfad-7d46-778d-ac6dfd3ac772
+
+### get latest
+GET http://localhost:3000/api/comics?latest=true

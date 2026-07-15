@@ -1,0 +1,12 @@
+node_modules
+.env
+dist
+claude
+.claude
+client/node_modules
+client/dist
+downloads
+graphify-out/
+CLAUDE.md
+src/database/
+tmp-decompressor/

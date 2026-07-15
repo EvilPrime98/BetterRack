@@ -1,0 +1,117 @@
+.backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    background-color: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.backdrop.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.sideBar {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    position: fixed;
+    top: 0;
+    z-index: 2;
+    width: min(280px, 85vw);
+    background-color: #202020;
+    box-shadow: 2px 0 16px rgba(0, 0, 0, 0.4);
+    left: min(-280px, -85vw);
+    transition: left 0.2s ease-in-out;
+}
+
+.sideBar.expanded {
+    left: 0;
+}
+
+.header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    padding: 14px 16px;
+    border-bottom: 2px solid #34c3d1;
+}
+
+.title {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #fff;
+}
+
+.closeButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.15s ease-in-out;
+}
+
+.closeButton:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #4a4a4a transparent;
+}
+
+.list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.list::-webkit-scrollbar-thumb {
+    background-color: #4a4a4a;
+    border-radius: 3px;
+}
+
+.item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 6px;
+    border-left: 2px solid transparent;
+    color: #d8d8d8;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+
+    span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+.item:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+.emptyState {
+    padding: 16px 10px;
+    color: #9a9a9a;
+    font-size: 13px;
+    text-align: center;
+}

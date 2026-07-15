@@ -1,0 +1,9 @@
+.page {
+    padding: 20px;
+}
+
+.comicContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px 16px;
+}

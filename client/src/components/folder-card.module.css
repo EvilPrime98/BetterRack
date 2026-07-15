@@ -1,0 +1,45 @@
+.comicCard {
+
+    --cardWith: 150px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    width: var(--cardWith);
+
+    .cover {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+
+        img {
+            width: 100%;
+            aspect-ratio: 50 / 77;
+            object-fit: cover;
+            filter: saturate(1.1);
+        }
+    }
+
+    .title {
+        font-family: var(--font-sans);
+        margin: 8px 0 0;
+        padding: 0;
+        width: 90%;
+        text-wrap: balance;
+        font-size: 13px;
+        font-weight: 600;
+        text-align: center;
+        line-height: 1.2;
+        color: #fff;
+    }
+
+    .subtitle {
+        font-family: var(--font-sans);
+        margin: 2px 0 0;
+        padding: 0;
+        font-size: 12px;
+        text-align: center;
+        color: #9a9a9a;
+    }
+
+}

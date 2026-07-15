@@ -1,0 +1,37 @@
+{
+  "name": "get-comics-downloader",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "imports": {
+    "#src/*": "./src/*",
+    "#models/*": "./src/models/*",
+    "#utils/*": "./src/utils/*",
+    "#types/*": "./src/types/*",
+    "#controllers/*": "./src/controllers/*"
+  },
+  "scripts": {
+    "start": "tsc && bun run build && bun run ./src/run.ts",
+    "build": "cd client && pnpm run build",
+    "dev": "bun run ./src/run.ts --watch",
+    "front-dev": "cd client && pnpm run dev",
+    "knip": "knip"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/bun": "latest",
+    "eslint": "^10.1.0",
+    "globals": "^17.4.0",
+    "knip": "^6.15.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.57.2"
+  },
+  "dependencies": {
+    "@types/he": "^1.2.3",
+    "@types/node": "^25.9.1",
+    "he": "^1.2.0",
+    "hono": "^4.12.12",
+    "linkedom": "^0.18.12",
+    "patchright": "^1.58.2"
+  }
+}
