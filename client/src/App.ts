@@ -1,4 +1,4 @@
-import { UltraRouter } from "ultra-light.js";
+import { UltraRouter } from "ultra-light-js";
 import { LibraryPage } from "./pages/library-page";
 import { ReaderPage } from "./pages/reader.page";
 import { COMIC_CACHE_CONTEXT } from "./context/comic-cache.context";

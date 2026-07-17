@@ -1,4 +1,4 @@
-import { UltraComponent } from "ultra-light.js";
+import { UltraComponent } from "ultra-light-js";
 import styles from './read-bard.module.css';
 
 export function ReadBar({

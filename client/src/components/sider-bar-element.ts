@@ -1,4 +1,4 @@
-import { UltraComponent, UltraLink } from "ultra-light.js";
+import { UltraComponent, UltraLink } from "ultra-light-js";
 import { FolderIcon } from "../icons/folder.icon";
 import { SIDEBAR_CONTEXT } from "../context/sidebar.context";
 import type { ILibraryResponseItem } from "../library.types";
@@ -25,4 +25,5 @@ export function SideBarElement({
             click: closeSidebar
         }
     })
+
 }

@@ -1,4 +1,4 @@
-import { ultraCompState, type IUltraCompStateStateful } from "ultra-light.js";
+import { ultraCompState, type IUltraCompStateStateful } from "ultra-light-js";
 import type { IComicLSCache } from "../library.types";
 
 export interface IComicCacheCtx {
@@ -12,7 +12,7 @@ export interface IComicCacheCtx {
 
 export const COMIC_CACHE_CONTEXT: IComicCacheCtx = ultraCompState({
 
-    keyName: 'comic-rack-cache',
+    keyName: 'better-rack-cache',
 
     cache: {} as Record<string, IComicLSCache>,
 

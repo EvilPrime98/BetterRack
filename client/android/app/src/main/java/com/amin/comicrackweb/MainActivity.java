@@ -1,4 +1,4 @@
-package com.amin.comicrackweb;
+package com.amin.BetterRackweb;
 
 import com.getcapacitor.BridgeActivity;
 

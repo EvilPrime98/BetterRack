@@ -1,4 +1,4 @@
-import { UltraComponent } from "ultra-light.js";
+import { UltraComponent } from "ultra-light-js";
 import styles from './item-counter.module.css';
 import type { ILibraryResponseItem } from "../library.types";
 

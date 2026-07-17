@@ -1,7 +1,7 @@
-import { UltraComponent } from "ultra-light.js";
+import { UltraComponent } from "ultra-light-js";
 import styles from './folder-card.module.css';
 import { NO_IMAGE_URL } from "../data";
-import { UltraLink } from "ultra-light.js";
+import { UltraLink } from "ultra-light-js";
 
 export function FolderCard({
     title,

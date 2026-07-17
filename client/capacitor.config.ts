@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.amin.comicrackweb',
-  appName: 'comic-rack-web',
+  appId: 'com.amin.BetterRackweb',
+  appName: 'better-rack-web',
   webDir: 'dist',
   server: {
     androidScheme: 'http',

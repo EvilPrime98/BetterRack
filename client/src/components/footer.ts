@@ -1,4 +1,4 @@
-import { UltraComponent } from "ultra-light.js";
+import { UltraComponent } from "ultra-light-js";
 
 export function Footer(){
     return UltraComponent({

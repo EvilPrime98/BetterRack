@@ -1,5 +1,5 @@
 import type { WikiComic } from "better-wiki";
-import { ultraQuery, ultraState } from "ultra-light.js";
+import { ultraQuery, ultraState } from "ultra-light-js";
 import { wikiDcClient, wikiImageClient, wikiMarvelClient } from "../context/wiki.context";
 
 const queryClient = ultraQuery();

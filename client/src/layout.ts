@@ -1,4 +1,4 @@
-import { UltraComponent, type UltraRenderableElement } from "ultra-light.js";
+import { UltraComponent, type UltraRenderableElement } from "ultra-light-js";
 import { Header } from "./components/header";
 import { SideBar } from "./components/sidebar";
 
