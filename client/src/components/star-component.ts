@@ -1,4 +1,4 @@
-import { UltraComponent } from "ultra-light.js";
+import { UltraComponent } from "ultra-light-js";
 import { StarIcon } from "../icons/star.icon";
 
 export function StarComponent({
@@ -19,7 +19,7 @@ export function StarComponent({
 
     return UltraComponent({
         component: StarIcon({
-            size: 12,
+            size: 18,
             fill: initialFill
         }),
         eventHandler: {

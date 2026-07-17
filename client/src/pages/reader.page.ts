@@ -1,7 +1,8 @@
-import { UltraActivity, UltraComponent, ultraNavigate, ultraState } from "ultra-light.js"
+import { UltraActivity, UltraComponent, ultraNavigate, ultraState } from "ultra-light-js"
 import { API_URL, reader } from "../services/library.service"
 import { ArrowLeftIcon } from "../icons/arrow-left.icon"
 import styles from './reader.page.module.css'
+import { COMIC_CACHE_CONTEXT } from "../context/comic-cache.context"
 
 export function ReaderPage({
     uid
@@ -76,7 +77,9 @@ export function ReaderPage({
 
     const onProgressChange = ($el: HTMLElement) => {
         const total = pages().length || 1;
-        $el.style.width = `${(currentPage() / total) * 100}%`;
+        const per = (currentPage() / total) * 100;
+        COMIC_CACHE_CONTEXT.setCacheById(uid, { readPer: per });
+        $el.style.width = `${per}%`;
     }
 
     return UltraComponent({
@@ -127,8 +130,11 @@ export function ReaderPage({
                         component: '<div></div>',
                         className: [styles.progressFill],
                         trigger: [
-                            { subscriber: subsCurrentPage, triggerFunction: onProgressChange },
-                            { subscriber: subsPages, triggerFunction: onProgressChange }
+                            {
+                                subscriber: [subsPages, subsCurrentPage],
+                                triggerFunction: onProgressChange,
+                                defer: true
+                            }
                         ]
                     })
                 ]

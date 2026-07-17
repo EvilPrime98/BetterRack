@@ -1,7 +1,7 @@
-import { UltraComponent, ultraState } from "ultra-light.js"
-import styles from './comic-rating.module.css'
-import { StarComponent } from "./star-component";
-import { COMIC_CACHE_CONTEXT } from "../context/comic-cache.context";
+import { UltraComponent, ultraState } from "ultra-light-js"
+import styles from './comic-card.module.css'
+import { StarComponent } from "../star-component";
+import { COMIC_CACHE_CONTEXT } from "../../context/comic-cache.context";
 
 export function ComicRating({
     uid
