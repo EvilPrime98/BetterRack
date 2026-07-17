@@ -1,3 +1,5 @@
+import type { IUltraCompStateStateful } from "ultra-light-js";
+
 export interface ILibraryItem {
     id: number;
     thumbnail: string;
@@ -24,14 +26,43 @@ export interface ILibraryGroup {
     "entries": ILibraryResponseItem[]
 }
 
+export interface ILibraryFilters {
+    sortByCreation: IUltraCompStateStateful<boolean>;
+    sortAlphabetically: IUltraCompStateStateful<boolean>;
+}
+
 export interface IReadResponse {
     error: boolean;
     message: string;
     pages: string[];
 }
 
+export interface ILibraryRefreshResponse {
+    error: boolean;
+    message: string;
+}
+
 export interface IComicLSCache {
     comicId: string;
     cover: string;
     rating: number;
+    readPer: number;
+    /**Whether or not item has been *read* */
+    read: boolean;
 }
+
+export const COMICS_TYPES = {
+    'cover': 'cover',
+    detail: 'detail'
+} as const;
+
+export const READ_TYPES = {
+    'all': 'all',
+    'read': 'read',
+    'unread': 'unread',
+    'reading': 'reading'
+} as const;
+
+export type TReadTypes = keyof typeof READ_TYPES;
+
+export type TComicsTypes = keyof typeof COMICS_TYPES;

@@ -5,6 +5,12 @@
 @import '@fontsource/geist-mono/500.css';
 @import '@fontsource/geist-mono/600.css';
 
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
 :root {
     --font-sans: 'Geist Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --font-mono: 'Geist Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;

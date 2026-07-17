@@ -1,0 +1,71 @@
+import { ultraCompState, ultraQuery, type IUltraCompStateStateful } from "ultra-light-js";
+import { getLibrary, refreshLibrary as requestLibraryRefresh } from "../services/library.service";
+import type { ILibraryGroup, ILibraryResponseItem } from "../library.types";
+
+const queryClient = ultraQuery();
+
+export interface ILibraryCtx {
+    groups: IUltraCompStateStateful<ILibraryGroup[]>;
+    queryClient: IUltraCompStateStateful<typeof queryClient>;
+    fetchLibrary: () => Promise<void>;
+    refreshLibrary: () => Promise<void>;
+    getLibraryItems: ({ onlyDir, uid }: { onlyDir: boolean; uid?: string; }) => ILibraryResponseItem[]
+}
+
+export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
+
+    groups: [] as ILibraryGroup[],
+
+    queryClient: queryClient,
+
+    fetchLibrary: async (comp: ILibraryCtx) => {
+        const { data } = await queryClient.fetch(
+            'library',
+            getLibrary,
+            60 * 5 * 10000
+        ) as { data: ILibraryGroup[] };
+        // ultraQuery returns the same cached reference until invalidated;
+        // skipping the set avoids re-notifying every subscriber on cache hits
+        if (comp.groups.get() !== data) comp.groups.set(data);
+    },
+
+    refreshLibrary: async (comp: ILibraryCtx) => {
+        await queryClient.fetch(
+            'library-refresh',
+            requestLibraryRefresh,
+            0
+        );
+        queryClient.invalidateCache('library-refresh');
+        queryClient.invalidateCache('library');
+        await comp.fetchLibrary();
+    },
+
+    getLibraryItems: (
+        comp: ILibraryCtx,
+        { onlyDir, uid }: { onlyDir: boolean, uid?: string }
+    ): ILibraryResponseItem[] => {
+
+        const groups = comp.groups.get();
+
+        let data: ILibraryResponseItem[];
+
+        const library = uid
+            ? groups.find(g => g.uid === uid)
+            : undefined;
+
+        if (!uid) {
+            data = groups.map(g => g.entries).flat();
+        } else if (library) {
+            data = library.entries.filter(e => !e.parentId);
+        } else {
+            data = groups.flatMap(g => g.entries)
+            .filter(e => e.parentId === uid);
+        }
+
+        if (onlyDir) data = data.filter(i => i.did !== false);
+
+        return data;
+
+    }
+
+});

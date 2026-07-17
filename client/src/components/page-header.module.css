@@ -3,7 +3,9 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 0;
+    padding: 14px 0 18px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .left,

@@ -1,20 +1,38 @@
-import { UltraComponent } from "ultra-light.js";
+import { UltraComponent, ultraState } from "ultra-light-js";
 import styles from './sidebar.module.css';
 import { SIDEBAR_CONTEXT } from "../context/sidebar.context";
-import { ultraLibrary } from "../hooks/ultraLibrary";
+import { LIBRARY_CONTEXT } from "../context/library.context";
 import { CloseIcon } from "../icons/close.icon";
 import { SideBarElement } from "./sider-bar-element";
+import { RefreshIcon } from "../icons/refresh-icon";
+import type { ILibraryResponseItem } from "../library.types";
 
 export function SideBar() {
 
-    const { items, subsItems, fetchLibrary, queryClient } = ultraLibrary({ onlyDir: true })
+    const [ items,setItems,subsItems] = ultraState<ILibraryResponseItem[]>([]);
 
-    const closeSidebar = () => SIDEBAR_CONTEXT.isExpanded.set(false);
+    function fetchLibrary() {
+        LIBRARY_CONTEXT.fetchLibrary();
+        // on cache hits fetchLibrary won't notify, so hydrate from current state
+        if (LIBRARY_CONTEXT.groups.get().length) {
+            setItems(LIBRARY_CONTEXT.getLibraryItems({ onlyDir: true }));
+        }
+    };
+    
+    function refreshLibrary(){ LIBRARY_CONTEXT.refreshLibrary() };
+    
+    function closeSidebar(){ SIDEBAR_CONTEXT.isExpanded.set(false) };
 
-    const onExpandChange = ($aside: HTMLElement) => {
+    function onRefreshingChange($button: HTMLElement){
+        $button.classList.toggle(
+            styles.spinning, 
+            LIBRARY_CONTEXT.queryClient.get().isFetching()
+        );
+    }
+
+    function onExpandChange($aside: HTMLElement){
         const isExpanded = SIDEBAR_CONTEXT.isExpanded.get();
         $aside.classList.toggle(styles.expanded, isExpanded);
-
         if (isExpanded) {
             $aside.removeAttribute('inert');
         } else {
@@ -25,34 +43,29 @@ export function SideBar() {
         }
     }
 
-    const onBackdropChange = ($backdrop: HTMLElement) => {
+    function onBackdropChange($backdrop: HTMLElement){
         $backdrop.classList.toggle(styles.visible, SIDEBAR_CONTEXT.isExpanded.get());
     }
 
-    const onItemsChange = ($nav: HTMLElement) => {
-
+    function onItemsChange($nav: HTMLElement){
         const currItems = [...items()];
-
         if (!currItems.length) {
-            
             $nav.replaceChildren(
                 UltraComponent({
-                    component: `<p>${queryClient.isFetching() ? 'Loading library…' : 'No folders found'}</p>`,
+                    component: `<p>${LIBRARY_CONTEXT.queryClient.get().isFetching() ? 'Loading library…' : 'No folders found'}</p>`,
                     className: [styles.emptyState]
                 })
             );
-
         } else {
-
             $nav.replaceChildren(
-                ...currItems.map(item => SideBarElement({ item }))
+                ...currItems.map(item => {
+                    return SideBarElement({ item })
+                })
             )
-
         }
-        
     }
 
-    const onKeydown = (event: KeyboardEvent) => {
+    function onKeydown(event: KeyboardEvent){
         if (event.key === 'Escape') closeSidebar();
     }
 
@@ -91,10 +104,30 @@ export function SideBar() {
                         children: [
                             `<span class="${styles.title}">Library</span>`,
                             UltraComponent({
-                                component: CloseIcon({ size: 16 }),
-                                className: [styles.closeButton],
-                                attributes: { role: 'button' },
-                                eventHandler: { click: closeSidebar }
+                                component: '<div></div>',
+                                styles: {
+                                    display: 'flex',
+                                    gap: '10px'
+                                },
+                                children: [
+                                    UltraComponent({
+                                        onMount: [onRefreshingChange],
+                                        component: RefreshIcon({ size: 16 }),
+                                        className: [styles.closeButton],
+                                        attributes: { role: 'button', 'aria-label': 'Refresh library' },
+                                        eventHandler: { click: refreshLibrary },
+                                        trigger: [{
+                                            subscriber: LIBRARY_CONTEXT.queryClient.get().subscribeToFetching,
+                                            triggerFunction: onRefreshingChange
+                                        }]
+                                    }),
+                                    UltraComponent({
+                                        component: CloseIcon({ size: 16 }),
+                                        className: [styles.closeButton],
+                                        attributes: { role: 'button' },
+                                        eventHandler: { click: closeSidebar }
+                                    })
+                                ]
                             })
                         ]
                     }),
@@ -118,7 +151,14 @@ export function SideBar() {
                 ]
             })
 
-        ]
+        ],
+
+        trigger: [{
+            subscriber: LIBRARY_CONTEXT.groups.subscribe,
+            triggerFunction: () =>{
+                setItems(LIBRARY_CONTEXT.getLibraryItems({ onlyDir: true }))
+            }
+        }]
 
     })
 

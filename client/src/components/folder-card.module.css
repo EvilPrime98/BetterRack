@@ -1,11 +1,10 @@
 .comicCard {
 
-    --cardWith: 150px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    width: var(--cardWith);
+    width: 100%;
 
     .cover {
         display: flex;

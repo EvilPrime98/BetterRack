@@ -1,19 +1,21 @@
-import { UltraComponent } from "ultra-light.js";
+import { UltraComponent } from "ultra-light-js";
 import { DropdownOptions } from "./dropdown-options";
 import { ItemCounter } from "./item-counter";
 import { StateFilter } from "./state-filter";
 import { LayoutSelector } from "./layout-selector";
 import styles from './page-header.module.css';
-import type { ILibraryResponseItem } from "../library.types";
+import type { ILibraryResponseItem, ILibraryFilters } from "../library.types";
 
 export function PageHeader({
     items,
-    subsItems
+    subsItems,
+    filters
 }:{
-    items: () => ILibraryResponseItem[],
-    subsItems: (fn: (value: ILibraryResponseItem[]) => void) => () => void
+    items: () => ILibraryResponseItem[];
+    subsItems: (fn: (value: ILibraryResponseItem[]) => void) => () => void;
+    filters: ILibraryFilters
 }) {
-
+ 
     return UltraComponent({
 
         component: '<header></header>',
@@ -25,7 +27,7 @@ export function PageHeader({
                 component: '<div></div>',
                 className: [styles.left],
                 children: [
-                    DropdownOptions(),
+                    DropdownOptions({ filters }),
                     ItemCounter({ items, subsItems }),
                 ]
             }),
