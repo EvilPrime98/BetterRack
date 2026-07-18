@@ -6,7 +6,7 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   server: {
     androidScheme: 'http',
-    allowNavigation: ['192.168.1.117']
+    allowNavigation: ['192.168.1.117', '192.168.1.120']
   }
 };
 
