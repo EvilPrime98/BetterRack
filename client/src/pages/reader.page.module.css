@@ -9,8 +9,7 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    background-color: rgba(10, 10, 10, 0.85);
-    backdrop-filter: blur(6px);
+    background-color: rgba(10, 10, 10, 0.94);
     padding: 10px 16px;
     border-bottom: 2px solid #34c3d1;
     position: sticky;
@@ -82,14 +81,24 @@
     width: 100%;
     max-width: 900px;
     margin: 0;
-    background: linear-gradient(100deg, #1d1d1d 30%, #262626 50%, #1d1d1d 70%);
-    background-size: 200% 100%;
+    overflow: hidden;
+    background: #1d1d1d;
+}
+
+.pageWrapper::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(100deg, transparent 30%, #262626 50%, transparent 70%);
     animation: shimmer 1.4s ease-in-out infinite;
 }
 
 .pageWrapper.loaded {
-    animation: none;
     background: none;
+}
+
+.pageWrapper.loaded::after {
+    content: none;
 }
 
 .pageWrapper img {
@@ -105,8 +114,8 @@
 }
 
 @keyframes shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
 }
 
 .state {

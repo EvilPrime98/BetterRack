@@ -23,12 +23,13 @@
     width: min(280px, 85vw);
     background-color: #202020;
     box-shadow: 2px 0 16px rgba(0, 0, 0, 0.4);
-    left: min(-280px, -85vw);
-    transition: left 0.2s ease-in-out;
+    left: 0;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease-in-out;
 }
 
 .sideBar.expanded {
-    left: 0;
+    transform: translateX(0);
 }
 
 .header {

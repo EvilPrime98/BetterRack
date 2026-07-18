@@ -7,7 +7,7 @@ export interface IComicsTypeCtx {
 }
 
 export const COMICS_TYPE_CTX: IComicsTypeCtx = ultraCompState({
-    type: 'cover' as TComicsTypes,
+    type: 'detail' as TComicsTypes,
     next: (comp: IComicsTypeCtx) =>{
         const currType = comp.type.get();
         if (currType === 'cover') comp.type.set('detail')

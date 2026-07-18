@@ -44,6 +44,7 @@ export interface ILibraryRefreshResponse {
 
 export interface IComicLSCache {
     comicId: string;
+    /**Preference for the cover */
     cover: string;
     rating: number;
     readPer: number;

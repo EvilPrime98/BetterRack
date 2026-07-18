@@ -36,6 +36,7 @@ export function LibraryPage({
 
         currComics.map(item => {
             if (itemsMap.has(item.uid)) return;
+            console.log('building: ', item.uid);
             itemsMap.set(item.uid, (item.did)
                 ? FolderCard({
                     title: item.name,
@@ -58,10 +59,6 @@ export function LibraryPage({
         return LIBRARY_CONTEXT
         .getLibraryItems({ onlyDir: !uid, uid })
     }
-
-    subsItems(() => {
-        console.log('items have changed')
-    })
 
     return Layout(
 

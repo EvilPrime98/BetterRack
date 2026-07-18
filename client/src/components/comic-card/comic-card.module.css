@@ -12,15 +12,16 @@
     transition:
         padding 320ms ease,
         border-radius 320ms ease,
-        background 320ms ease,
         border-color 320ms ease,
         transform 220ms ease,
         box-shadow 220ms ease;
 
-    &:hover {
-        border-color: rgba(52, 195, 209, 0.35);
-        transform: translateY(-2px);
-        box-shadow: 0 14px 28px -14px rgba(0, 0, 0, 0.6);
+    @media (hover: hover) {
+        &:hover {
+            border-color: rgba(52, 195, 209, 0.35);
+            transform: translateY(-2px);
+            box-shadow: 0 14px 28px -14px rgba(0, 0, 0, 0.6);
+        }
     }
 
     a:focus-visible {
@@ -43,22 +44,37 @@
             aspect-ratio: 50 / 77;
             border-radius: 6px;
             overflow: hidden;
-            background: linear-gradient(100deg, #232222 30%, #302f2f 50%, #232222 70%);
-            background-size: 200% 100%;
-            animation: coverShimmer 1.6s ease-in-out infinite;
+            background: #232222;
             box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.6);
             transition: transform 220ms ease, box-shadow 220ms ease, border-radius 320ms ease;
         }
 
+        a::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(100deg, transparent 30%, #302f2f 50%, transparent 70%);
+            animation: coverShimmer 1.6s ease-in-out infinite;
+        }
+
         a.loaded {
-            animation: none;
             background: none;
         }
 
-        a:hover,
+        a.loaded::after {
+            content: none;
+        }
+
         a:focus-visible {
             transform: translateY(-3px);
             box-shadow: 0 12px 22px -8px rgba(0, 0, 0, 0.75);
+        }
+
+        @media (hover: hover) {
+            a:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 12px 22px -8px rgba(0, 0, 0, 0.75);
+            }
         }
 
         img {
@@ -87,8 +103,7 @@
         font-weight: 600;
         letter-spacing: 0.02em;
         color: #fff;
-        background: rgba(18, 18, 18, 0.7);
-        backdrop-filter: blur(4px);
+        background: rgba(18, 18, 18, 0.85);
         border: 1px solid rgba(52, 195, 209, 0.45);
         border-radius: 999px;
         opacity: 0;
@@ -154,8 +169,10 @@
         transition: color 180ms ease;
     }
 
-    .title:hover {
-        color: #34c3d1;
+    @media (hover: hover) {
+        .title:hover {
+            color: #34c3d1;
+        }
     }
 
     .meta {
@@ -234,9 +251,16 @@
     }
 
     &.detailMode {
-        align-items: stretch;
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 12px;
         background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.015));
         border-color: rgba(255, 255, 255, 0.07);
+
+        .cover {
+            width: 140px;
+            flex-shrink: 0;
+        }
 
         .cover a {
             border-radius: 8px;
@@ -253,8 +277,10 @@
         }
 
         .details {
-            width: 100%;
-            margin-top: 10px;
+            flex: 1;
+            min-width: 0;
+            width: auto;
+            margin-top: 0;
         }
 
         .title {
@@ -290,10 +316,10 @@
 
 @keyframes coverShimmer {
     0% {
-        background-position: 200% 0;
+        transform: translateX(-100%);
     }
 
     100% {
-        background-position: -200% 0;
+        transform: translateX(100%);
     }
 }

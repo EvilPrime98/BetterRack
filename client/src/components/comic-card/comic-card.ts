@@ -18,7 +18,7 @@ export function ComicCard({
     item: ILibraryResponseItem
 }) {
 
-    const readPer = COMIC_CACHE_CONTEXT.getCacheById(item.uid)?.readPer || 0;
+    const itemCache = COMIC_CACHE_CONTEXT.getCacheById(item.uid);    
     const readerHref = `/${item.uid}/reader`;
     const { comic, getComic, subsComic } = ultraComic();
 
@@ -31,6 +31,7 @@ export function ComicCard({
 
     const isVisible = () => {
         const currReadFilter = READ_TYPES_CTX.type.get();
+        const readPer = itemCache?.readPer || 0;
         if (currReadFilter === 'all'){
             return true;
         }else if (currReadFilter === 'read'){
@@ -42,6 +43,10 @@ export function ComicCard({
         }
     }
 
+    const scanComic = () => {
+        getComic(itemCache?.cover || item.name)
+    }
+
     return UltraActivity({
 
         mode: {
@@ -49,7 +54,7 @@ export function ComicCard({
             subscriber: READ_TYPES_CTX.type.subscribe
         },
 
-        onMount: [() => getComic(item.name)],
+        onMount: [scanComic],
 
         component: '<article></article>',
 
@@ -79,7 +84,7 @@ export function ComicCard({
                         item
                     }),
 
-                    ReadBar({ readPercentage: readPer })
+                    ReadBar({ readPercentage: itemCache?.readPer || 0 })
 
                 ]
 

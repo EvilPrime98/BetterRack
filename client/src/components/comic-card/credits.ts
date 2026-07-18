@@ -5,11 +5,11 @@ import type { WikiComic } from "better-wiki";
 export function ComicCardCredits({
     comic,
     subsComic
-}:{
-    comic: () => WikiComic|null;
-    subsComic: (fn: (value: WikiComic|null) => void) => () => void;
+}: {
+    comic: () => WikiComic | null;
+    subsComic: (fn: (value: WikiComic | null) => void) => () => void;
 }) {
-    
+
     return UltraComponent({
 
         component: '<div></div>',
@@ -17,6 +17,23 @@ export function ComicCardCredits({
         className: [styles.credits],
 
         children: [
+
+            UltraComponent({
+                component: '<div></div>',
+                className: [styles.creditRow],
+                children: [
+                    `<span class="${styles.creditLabel}">Comic</span>`,
+                    UltraComponent({
+                        component: `<span class="${styles.creditValue}"></span>`,
+                        trigger: [{
+                            subscriber: subsComic,
+                            triggerFunction: ($span: HTMLElement) => {
+                                $span.textContent = comic()?.title || '';
+                            }
+                        }]
+                    })
+                ]
+            }),
 
             UltraComponent({
                 component: '<div></div>',
