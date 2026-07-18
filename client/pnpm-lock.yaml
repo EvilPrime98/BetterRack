@@ -21,8 +21,8 @@ importers:
         specifier: ^0.14.1
         version: 0.14.1
       ultra-light-js:
-        specifier: ^1.0.18
-        version: 1.0.18
+        specifier: ^1.1.1
+        version: 1.1.1
     devDependencies:
       '@capacitor/android':
         specifier: ^8.4.1
@@ -610,8 +610,8 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
-  ultra-light-js@1.0.18:
-    resolution: {integrity: sha512-q6Y0PzOxOwDRpdj3rbWHuf5b7n8z4TinmjHFacKmKMLxNsq6nNthsVRI9osX3f2iALHx1nh19KhqgZC+N3efXA==}
+  ultra-light-js@1.1.1:
+    resolution: {integrity: sha512-Cy2Ui2Vd0U76l2d/vUfelULnobZetInHe0ujUA3XcPQMpoFV8stJM6TFogZjGZs31yrUdMKvT60ufMwWDv8Gdw==}
     engines: {node: '>=18'}
 
   undici-types@8.3.0:
@@ -1246,7 +1246,7 @@ snapshots:
 
   typescript@6.0.3: {}
 
-  ultra-light-js@1.0.18:
+  ultra-light-js@1.1.1:
     dependencies:
       csstype: 3.2.3
 
