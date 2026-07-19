@@ -1,33 +1,45 @@
 import { ultraCompState } from "ultra-light-js";
-import type { ILibraryFilters, ILibraryResponseItem } from "../library.types";
+import { isIUltraCompStateStateful, type ILibraryFilters, type ILibraryResponseItem } from "../library.types";
+import { USER_PREF } from "../context/user-pref-cache.context";
 
 export function ultraFilters({
     rawItems,
-    items,
     setItems,
-}:{
+}: {
     rawItems: () => ILibraryResponseItem[];
-    items: () => ILibraryResponseItem[];
     setItems: (value: ILibraryResponseItem[]) => void;
 }) {
 
     const filters: ILibraryFilters = ultraCompState({
         sortByCreation: false,
-        sortAlphabetically: true
     });
 
-    filters.sortByCreation.subscribe(() => {
-        setItems([...items()]
-            .sort((a, b) => Number(a.createdAt) - Number(b.createdAt))
+    function applyFilters() {
+        const source = rawItems();
+        setItems(filters.sortByCreation.get()
+            ? [...source].sort((a, b) => Number(a.createdAt) - Number(b.createdAt))
+            : source
         );
-    });
+    }
 
-    filters.sortAlphabetically.subscribe(() => {
+    function resetFilters() {
+        for (const key of Object.keys(filters)) {
+            const keyVal = filters[key as keyof ILibraryFilters];
+            if (isIUltraCompStateStateful(keyVal)) {
+                keyVal.set(false);
+            }
+        }
         setItems(rawItems());
-    });
+    }
+
+    filters.sortByCreation.subscribe(() => applyFilters());
+
+    filters.sortByCreation.set(USER_PREF.getPref('filter') === 'Creation Date');
 
     return {
-        filters
+        filters,
+        resetFilters,
+        applyFilters
     }
 
 }

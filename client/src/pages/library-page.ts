@@ -16,7 +16,7 @@ export function LibraryPage({
 }) {
 
     const [items, setItems, subsItems] = ultraState<ILibraryResponseItem[]>([]);
-    const { filters  } = ultraFilters({ rawItems: getLibraryItems, items, setItems });
+    const { filters, resetFilters, applyFilters } = ultraFilters({ rawItems: getLibraryItems, setItems });
     const itemsMap = new Map<string, UltraLightElement>();
 
     function onLayoutChange(
@@ -36,7 +36,6 @@ export function LibraryPage({
 
         currComics.map(item => {
             if (itemsMap.has(item.uid)) return;
-            console.log('building: ', item.uid);
             itemsMap.set(item.uid, (item.did)
                 ? FolderCard({
                     title: item.name,
@@ -73,14 +72,15 @@ export function LibraryPage({
                 PageHeader({
                     items,
                     subsItems,
-                    filters
+                    filters,
+                    resetFilters
                 }),
 
                 UltraComponent({
                     onMount: [() => {
                         LIBRARY_CONTEXT.fetchLibrary();
                         // on cache hits fetchLibrary won't notify, so hydrate from current state
-                        if (LIBRARY_CONTEXT.groups.get().length) setItems(getLibraryItems());
+                        if (LIBRARY_CONTEXT.groups.get().length) applyFilters();
                     }],
                     component: '<section></section>',
                     className: [styles.comicContainer],
@@ -104,7 +104,7 @@ export function LibraryPage({
 
             trigger: [{
                 subscriber: LIBRARY_CONTEXT.groups.subscribe,
-                triggerFunction: () => setItems(getLibraryItems())
+                triggerFunction: () => applyFilters()
             }]
 
         })

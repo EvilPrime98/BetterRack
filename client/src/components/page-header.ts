@@ -9,13 +9,15 @@ import type { ILibraryResponseItem, ILibraryFilters } from "../library.types";
 export function PageHeader({
     items,
     subsItems,
-    filters
+    filters,
+    resetFilters
 }:{
     items: () => ILibraryResponseItem[];
     subsItems: (fn: (value: ILibraryResponseItem[]) => void) => () => void;
-    filters: ILibraryFilters
+    filters: ILibraryFilters;
+    resetFilters: () => void;
 }) {
- 
+
     return UltraComponent({
 
         component: '<header></header>',
@@ -27,7 +29,7 @@ export function PageHeader({
                 component: '<div></div>',
                 className: [styles.left],
                 children: [
-                    DropdownOptions({ filters }),
+                    DropdownOptions({ filters, resetFilters }),
                     ItemCounter({ items, subsItems }),
                 ]
             }),

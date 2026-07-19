@@ -1,23 +1,24 @@
 import { UltraComponent, UltraActivity, ultraState } from "ultra-light-js";
 import styles from './dropdown-options.module.css';
 import { ChevronDownIcon } from "../icons/chevron.icon";
-import type { ILibraryFilters } from "../library.types";
-
-const OPTIONS = {
-    nofilters: 'Alphabetically',
-    byCreation: 'Creation Date'
-} as const;
-
-type TOptions = typeof OPTIONS[keyof typeof OPTIONS];
+import { FILTER_OPTIONS, type ILibraryFilters, type TFilterOptions } from "../library.types";
+import { USER_PREF } from "../context/user-pref-cache.context";
 
 export function DropdownOptions({
-    filters
+    filters,
+    resetFilters
 }:{
-    filters: ILibraryFilters
+    filters: ILibraryFilters;
+    resetFilters: () => void;
 }) {
 
     const [isOpen, setOpen, subsOpen] = ultraState(false);
-    const [selected, setSelected, subsSelected] = ultraState<TOptions>(OPTIONS.nofilters);
+    
+    const [selected, setSelected, subsSelected] = ultraState<TFilterOptions>(
+        filters.sortByCreation.get()
+        ? FILTER_OPTIONS.byCreation
+        : FILTER_OPTIONS.nofilters
+    );
 
     const closeMenu = () => setOpen(false);
 
@@ -40,11 +41,9 @@ export function DropdownOptions({
         )
     }
 
-    const sortByAlphabetically = () => {
-        filters.sortAlphabetically.set(
-            !filters.sortAlphabetically.get()
-        )
-    }
+    subsSelected(() => {
+        USER_PREF.setPref({ filter: selected()})
+    })  
 
     return UltraComponent({
 
@@ -93,24 +92,24 @@ export function DropdownOptions({
                 children: [
 
                     UltraComponent({
-                        component: `<li class="${styles.option}">${OPTIONS.nofilters}</li>`,
+                        component: `<li class="${styles.option}">${FILTER_OPTIONS.nofilters}</li>`,
                         eventHandler: {
                             click: (e: Event) => {
                                 e.stopPropagation();
-                                sortByAlphabetically();
-                                setSelected(OPTIONS.nofilters);
+                                resetFilters();
+                                setSelected(FILTER_OPTIONS.nofilters);
                                 setOpen(false);
                             }
                         }
                     }),
 
                     UltraComponent({
-                        component: `<li class="${styles.option}">${OPTIONS.byCreation}</li>`,
+                        component: `<li class="${styles.option}">${FILTER_OPTIONS.byCreation}</li>`,
                         eventHandler: {
                             click: (e: Event) => {
                                 e.stopPropagation();
                                 sortByCreation();
-                                setSelected(OPTIONS.byCreation);
+                                setSelected(FILTER_OPTIONS.byCreation);
                                 setOpen(false);
                             }
                         }

@@ -28,7 +28,6 @@ export interface ILibraryGroup {
 
 export interface ILibraryFilters {
     sortByCreation: IUltraCompStateStateful<boolean>;
-    sortAlphabetically: IUltraCompStateStateful<boolean>;
 }
 
 export interface IReadResponse {
@@ -67,3 +66,18 @@ export const READ_TYPES = {
 export type TReadTypes = keyof typeof READ_TYPES;
 
 export type TComicsTypes = keyof typeof COMICS_TYPES;
+
+export const FILTER_OPTIONS = {
+    nofilters: 'Alphabetically',
+    byCreation: 'Creation Date'
+} as const;
+
+export type TFilterOptions = typeof FILTER_OPTIONS[keyof typeof FILTER_OPTIONS];
+
+export function isIUltraCompStateStateful<T>(
+    candidate: object
+): candidate is IUltraCompStateStateful<T> {
+    return Object.hasOwn(candidate, 'get')
+    && Object.hasOwn(candidate, 'set')
+    && Object.hasOwn(candidate, 'subscribe')
+}
