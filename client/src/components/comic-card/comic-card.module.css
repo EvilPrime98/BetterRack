@@ -10,24 +10,29 @@
     background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0));
     border: 1px solid rgba(255, 255, 255, 0);
     transition:
-        padding 320ms ease,
-        border-radius 320ms ease,
-        border-color 320ms ease,
-        transform 220ms ease,
-        box-shadow 220ms ease;
+    padding 320ms ease,
+    border-radius 320ms ease,
+    border-color 320ms ease,
+    transform 220ms ease,
+    box-shadow 220ms ease;
+    user-select: none;
 
-    @media (hover: hover) {
+    /*@media (hover: hover) {
         &:hover {
             border-color: rgba(52, 195, 209, 0.35);
             transform: translateY(-2px);
             box-shadow: 0 14px 28px -14px rgba(0, 0, 0, 0.6);
         }
-    }
+    }*/
 
     a:focus-visible {
         outline: 2px solid #34c3d1;
         outline-offset: 2px;
         border-radius: 4px;
+    }
+
+    &.isRead {
+        border-color: rgba(19, 166, 41, 0.3);
     }
 
     .cover {
@@ -70,12 +75,12 @@
             box-shadow: 0 12px 22px -8px rgba(0, 0, 0, 0.75);
         }
 
-        @media (hover: hover) {
+        /*@media (hover: hover) {
             a:hover {
                 transform: translateY(-3px);
                 box-shadow: 0 12px 22px -8px rgba(0, 0, 0, 0.75);
             }
-        }
+        }*/
 
         img {
             display: block;
@@ -142,6 +147,26 @@
 
     .eventBadge:empty {
         display: none;
+    }
+
+    .readBadge {
+        position: absolute;
+        top: 6px;
+        left: 6px;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 1;
+        color: #fff;
+        background: #13a629;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 999px;
+        box-shadow: 0 2px 6px -2px rgba(0, 0, 0, 0.6);
     }
 
     .details {
@@ -309,6 +334,10 @@
 
         .rating {
             justify-content: flex-start;
+        }
+
+        &.isRead {
+            border-color: rgba(19, 166, 41, 0.3);
         }
     }
 

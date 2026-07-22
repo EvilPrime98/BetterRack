@@ -18,13 +18,14 @@ export function ComicCard({
     item: ILibraryResponseItem
 }) {
 
-    const itemCache = COMIC_CACHE_CONTEXT.getCacheById(item.uid);    
+    const itemCache = COMIC_CACHE_CONTEXT.getCacheById(item.uid);
     const readerHref = `/${item.uid}/reader`;
+    const isRead = (itemCache?.readPer || 0) === 100;
     const { comic, getComic, subsComic } = ultraComic();
 
     const onCardTypeChange = ($article: HTMLElement) => {
         $article.classList.toggle(
-            styles.detailMode, 
+            styles.detailMode,
             COMICS_TYPE_CTX.type.get() === 'detail'
         );
     }
@@ -32,13 +33,13 @@ export function ComicCard({
     const isVisible = () => {
         const currReadFilter = READ_TYPES_CTX.type.get();
         const readPer = itemCache?.readPer || 0;
-        if (currReadFilter === 'all'){
+        if (currReadFilter === 'all') {
             return true;
-        }else if (currReadFilter === 'read'){
+        } else if (currReadFilter === 'read') {
             return readPer === 100
-        }else if (currReadFilter === 'reading'){
+        } else if (currReadFilter === 'reading') {
             return readPer > 0 && readPer < 100
-        }else {
+        } else {
             return readPer === 0
         }
     }
@@ -60,7 +61,8 @@ export function ComicCard({
 
         className: [
             styles.comicCard,
-            ...(COMICS_TYPE_CTX.type.get() === 'detail' ? [styles.detailMode] : [])
+            ...(COMICS_TYPE_CTX.type.get() === 'detail' ? [styles.detailMode] : []),
+            ...(isRead ? [styles.isRead] : [])
         ],
 
         trigger: [{
@@ -87,7 +89,7 @@ export function ComicCard({
                     ReadBar({ readPercentage: itemCache?.readPer || 0 })
 
                 ]
-
+                
             }),
 
             UltraComponent({

@@ -7,6 +7,10 @@ export function ReadBar({
     readPercentage: number //1-100
 }){
 
+    const bgColor = (readPercentage === 100)
+    ? '#13a629'
+    : '#34c3d1'
+
     return UltraComponent({
         
         component: '<div></div>',
@@ -17,7 +21,8 @@ export function ReadBar({
             UltraComponent({
                 component: '<div></div>',
                 styles: {
-                    width: `${readPercentage}%`
+                    width: `${readPercentage}%`,
+                    backgroundColor: bgColor
                 },
                 className: [styles.fillIn]
             })
