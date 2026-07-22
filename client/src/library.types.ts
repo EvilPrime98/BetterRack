@@ -46,6 +46,9 @@ export interface IComicLSCache {
     /**Preference for the cover */
     cover: string;
     rating: number;
+    /**Current page reading */
+    currentPage: number;
+    /**Current % of read */
     readPer: number;
     /**Whether or not item has been *read* */
     read: boolean;
