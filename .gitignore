@@ -10,3 +10,4 @@ graphify-out/
 CLAUDE.md
 src/database/
 tmp-decompressor/
+release/

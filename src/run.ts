@@ -36,13 +36,16 @@ async function startApp() {
         }).catch(console.error);
     }, COMIC_TMP_SWEEP_INTERVAL_MS);
 
-    app.use('/*', serveStatic({ root: './client/dist' }));
-    
-    app.get('/*', serveStatic({ path: 'index.html', root: './client/dist' }));
+    const clientDistDir = process.env.CLIENT_DIST_DIR || './client/dist';
+
+    app.use('/*', serveStatic({ root: clientDistDir }));
+
+    app.get('/*', serveStatic({ path: 'index.html', root: clientDistDir }));
 
     app.notFound((c) => c.text('Not Found', 404));
 
     const server = Bun.serve({
+        port: Number(process.env.PORT) || 3000,
         fetch: app.fetch,
         idleTimeout: 0
     });

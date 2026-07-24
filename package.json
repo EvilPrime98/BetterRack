@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "main": "dist/main.js",
   "imports": {
     "#src/*": "./src/*",
     "#models/*": "./src/models/*",
@@ -12,10 +13,15 @@
   },
   "scripts": {
     "start": "tsc && bun run build && bun run ./src/run.ts",
+    "start-app": "bun run build:client:electron && bun run build-app && electron .",
     "build": "cd client && pnpm run build",
+    "build:client:electron": "cd client && pnpm run build -- --mode electron",
     "dev": "bun run ./src/run.ts --watch",
     "front-dev": "cd client && pnpm run dev",
-    "knip": "knip"
+    "knip": "knip",
+    "build-app": "bun build ./main.ts --outfile dist/main.js --target node --format esm --external electron && bun build ./preload.ts --outfile dist/preload.cjs --target node --format cjs --external electron",
+    "build-server": "bun build ./src/run.ts --compile --outfile dist/server/run",
+    "dist": "bun run build:client:electron && bun run build-app && bun run build-server && electron-builder --win nsis --publish=never"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -24,14 +30,48 @@
     "globals": "^17.4.0",
     "knip": "^6.15.0",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.57.2"
+    "typescript-eslint": "^8.57.2",
+    "electron": "^43.2.0",
+    "electron-builder": "^26.15.3"
   },
   "dependencies": {
     "@types/he": "^1.2.3",
     "@types/node": "^25.9.1",
     "he": "^1.2.0",
     "hono": "^4.12.12",
-    "linkedom": "^0.18.12",
-    "patchright": "^1.58.2"
-  }
+    "linkedom": "^0.18.12"
+  },
+  "build": {
+    "appId": "com.better.rack",
+    "productName": "Better Rack",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/main.js",
+      "dist/preload.cjs",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+      "from": "dist/server",
+      "to": "server"
+    },
+    {
+    "from": "client/dist",
+    "to": "client"
+  },
+  {
+  "from": ".env",
+  "to": ".env"
+}
+],
+"win": {
+  "target": "nsis"
+},
+"nsis": {
+  "oneClick": false,
+  "allowToChangeInstallationDirectory": true
+}
+}
 }
