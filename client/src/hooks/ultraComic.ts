@@ -1,35 +1,48 @@
 import type { WikiComic } from "better-wiki";
 import { ultraQuery, ultraState } from "ultra-light-js";
-import { wikiDcClient, wikiImageClient, wikiMarvelClient } from "../context/wiki.context";
+import { getComicPref } from "../services/library.service";
+import type { ILibraryItemPref } from "../library.types";
+import { fetchComic, fetchComicById } from "../services/wiki.service";
 
-const queryClient = ultraQuery();
-
-async function fetchComic(title: string): Promise<WikiComic | null> {
-    const [dc, marvel, image] = await Promise.all([
-        wikiDcClient.getComic(title, { thumbnailSize: 450 }),
-        wikiMarvelClient.getComic(title, { thumbnailSize: 450 }),
-        wikiImageClient.getComic(title, { thumbnailSize: 450 })
-    ]);
-    return dc || marvel || image || null;
-}
+export const ultraComicQueryClient = ultraQuery();
 
 export function ultraComic() {
 
     const [comic, setComic, subsComic] = ultraState<WikiComic|null>(null);
 
     const getComic = async (title: string) => {
-        const { data } = await queryClient.fetch(
+        const { data } = await ultraComicQueryClient.fetch(
             `comic:${title}`,
             () => fetchComic(title),
-            60 * 5 * 10000
+            60 * 5 * 1000
         ) as { data: WikiComic | null };
         setComic(data);
+    }
+
+    const getComicById = async (id: number) => {
+        const { data } = await ultraComicQueryClient.fetch(
+            `wiki-comic-${id}`,
+            () => fetchComicById(id),
+            60 * 5 * 1000
+        ) as { data: WikiComic | null };
+        setComic(data);
+    }
+
+    const getPref = async (uid: string) => {
+        const { data } = await ultraComicQueryClient.fetch(
+            `comic-pref-${uid}`,
+            () => getComicPref(uid),
+            60 * 5 * 1000
+        ) as  { data: ILibraryItemPref};
+        return data
     }
 
     return {
         comic,
         subsComic,
-        getComic
+        getComic,
+        getComicById,
+        getPref
     }
 
 }

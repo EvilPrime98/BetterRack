@@ -22,23 +22,6 @@ export function ComicCardCredits({
                 component: '<div></div>',
                 className: [styles.creditRow],
                 children: [
-                    `<span class="${styles.creditLabel}">Comic</span>`,
-                    UltraComponent({
-                        component: `<span class="${styles.creditValue}"></span>`,
-                        trigger: [{
-                            subscriber: subsComic,
-                            triggerFunction: ($span: HTMLElement) => {
-                                $span.textContent = comic()?.title || '';
-                            }
-                        }]
-                    })
-                ]
-            }),
-
-            UltraComponent({
-                component: '<div></div>',
-                className: [styles.creditRow],
-                children: [
                     `<span class="${styles.creditLabel}">Writer</span>`,
                     UltraComponent({
                         component: `<span class="${styles.creditValue}"></span>`,

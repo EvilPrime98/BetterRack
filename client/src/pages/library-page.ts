@@ -8,6 +8,7 @@ import { Layout } from "../layout";
 import { COMICS_TYPE_CTX } from "../context/comics-types.context";
 import type { ILibraryResponseItem } from "../library.types";
 import { ultraFilters } from "../hooks/ultraFilters";
+import { ComicIdentifier } from "../components/comic-identifier/comic-identifer";
 
 export function LibraryPage({
     uid
@@ -107,7 +108,9 @@ export function LibraryPage({
                 triggerFunction: () => applyFilters()
             }]
 
-        })
+        }),
+
+        ComicIdentifier()
 
     )
 

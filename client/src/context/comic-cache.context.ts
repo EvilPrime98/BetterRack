@@ -1,13 +1,17 @@
 import { ultraCompState, type IUltraCompStateStateful } from "ultra-light-js";
 import type { IComicLSCache } from "../library.types";
 
+const PERSIST_DEBOUNCE_MS = 400;
+let persistTimer: ReturnType<typeof setTimeout> | null = null;
+
 export interface IComicCacheCtx {
     keyName: IUltraCompStateStateful<string>;
     cache: IUltraCompStateStateful<Record<string, IComicLSCache>>;
     compile: () => void;
     init: () => void;
-    getCacheById: (uid: string) => IComicLSCache;
+    getCacheById: (uid: string) => IComicLSCache | undefined;
     setCacheById: (uid: string, pref: Partial<IComicLSCache>) => void;
+    subscribeById: (uid: string, fn: (entry: IComicLSCache | undefined) => void) => () => void;
 }
 
 export const COMIC_CACHE_CONTEXT: IComicCacheCtx = ultraCompState({
@@ -16,8 +20,14 @@ export const COMIC_CACHE_CONTEXT: IComicCacheCtx = ultraCompState({
 
     cache: {} as Record<string, IComicLSCache>,
 
+    // Debounced: cache.set() below already updates reactive state synchronously,
+    // this only batches the localStorage write for bursts of updates (e.g. reader scroll).
     compile: (comp: IComicCacheCtx) => {
-        window.localStorage.setItem(comp.keyName.get(), JSON.stringify(comp.cache.get()));
+        if (persistTimer) clearTimeout(persistTimer);
+        persistTimer = setTimeout(() => {
+            window.localStorage.setItem(comp.keyName.get(), JSON.stringify(comp.cache.get()));
+            persistTimer = null;
+        }, PERSIST_DEBOUNCE_MS);
     },
 
     init: (comp: IComicCacheCtx) => {
@@ -34,10 +44,22 @@ export const COMIC_CACHE_CONTEXT: IComicCacheCtx = ultraCompState({
     },
 
     setCacheById: (comp: IComicCacheCtx, uid: string, pref: Partial<IComicLSCache>) => {
-        const currCache = structuredClone(comp.cache.get());
+        // Shallow copy: keeps object identity for every untouched uid, so
+        // subscribeById can diff with a cheap reference check instead of deep equality.
+        const currCache = { ...comp.cache.get() };
         currCache[uid] = { ...currCache[uid], ...pref };
         comp.cache.set(currCache);
         comp.compile();
+    },
+
+    subscribeById: (comp: IComicCacheCtx, uid: string, fn: (entry: IComicLSCache | undefined) => void) => {
+        let lastEntry = comp.cache.get()[uid];
+        return comp.cache.subscribe((cache) => {
+            const entry = cache[uid];
+            if (entry === lastEntry) return;
+            lastEntry = entry;
+            fn(entry);
+        });
     }
 
 });

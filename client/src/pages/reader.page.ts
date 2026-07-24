@@ -110,9 +110,10 @@ export function ReaderPage({
     const onProgressChange = () => {
         const total = pages().length || 1;
         const per = (currentPage() / total) * 100;
-        COMIC_CACHE_CONTEXT.setCacheById(uid, { 
+        COMIC_CACHE_CONTEXT.setCacheById(uid, {
             readPer: Number(per.toFixed(2)),
-            currentPage: currentPage()
+            currentPage: currentPage(),
+            read: per === 100
         });
     }
 

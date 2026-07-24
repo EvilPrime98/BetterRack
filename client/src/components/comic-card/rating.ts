@@ -1,13 +1,15 @@
-import { UltraComponent, ultraState } from "ultra-light-js"
+import { UltraActivity, ultraState } from "ultra-light-js"
 import styles from './comic-card.module.css'
 import { StarComponent } from "../star-component";
 import { COMIC_CACHE_CONTEXT } from "../../context/comic-cache.context";
+import { ultraComicQueryClient } from "../../hooks/ultraComic";
 
 export function ComicRating({
     uid
 }: {
     uid: string
 }) {
+
     const [rating, setRating, subsRating] = ultraState(
         COMIC_CACHE_CONTEXT.getCacheById(uid)?.rating || 0
     );
@@ -47,7 +49,11 @@ export function ComicRating({
         $div.replaceChildren(...stars);
     }
 
-    return UltraComponent({
+    return UltraActivity({
+        mode: {
+            state:  () => !ultraComicQueryClient.isFetching(),
+            subscriber: ultraComicQueryClient.subscribeToFetching
+        },
         component: '<div></div>',
         className: [styles.rating],
         onMount: [onRatingChange],

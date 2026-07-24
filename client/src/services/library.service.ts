@@ -1,4 +1,4 @@
-import type { IReadResponse, ILibraryGroup, ILibraryRefreshResponse } from "../library.types";
+import type { IReadResponse, ILibraryGroup, ILibraryRefreshResponse, ILibraryItemPref } from "../library.types";
 
 export const API_URL = import.meta.env.VITE_API_URL;
 
@@ -24,4 +24,12 @@ export async function reader({
     const data: IReadResponse = await response.json();
     if (!response.ok) throw new Error(data.message)
     return data.pages
+}
+
+export async function getComicPref(
+    uid: string
+): Promise<ILibraryItemPref> {
+    const response = await fetch(`${API_URL}/api/library/preferences/${uid}`);
+    const data = await response.json() as ILibraryItemPref;
+    return data;
 }

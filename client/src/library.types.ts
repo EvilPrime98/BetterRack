@@ -42,9 +42,13 @@ export interface ILibraryRefreshResponse {
 }
 
 export interface IComicLSCache {
+    /**File ID */
     comicId: string;
+    /**Preference for the wiki page ID */
+    prefId: number;
     /**Preference for the cover */
     cover: string;
+    /**Rating for the comic */
     rating: number;
     /**Current page reading */
     currentPage: number;
@@ -83,4 +87,11 @@ export function isIUltraCompStateStateful<T>(
     return Object.hasOwn(candidate, 'get')
     && Object.hasOwn(candidate, 'set')
     && Object.hasOwn(candidate, 'subscribe')
+}
+
+export interface ILibraryItemPref {
+    uid: string;
+    prefPublisher: string;
+    recursive: string;
+    prefCover: string;
 }
