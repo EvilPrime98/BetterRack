@@ -3,6 +3,7 @@ import type { TDownloadLink, TStrat } from "#src/types.ts";
 import { VALID_STRATS } from "#src/types.ts";
 
 const FORBIDDEN_PROVIDERS = ['terabox', 'mega', 'pixeldrain', 'wetransfer'];
+
 const FORBIDDEN_URLS = [
     `${process.env.HOST_DOMAIN}/dc`, 
     `${process.env.HOST_DOMAIN}/marvel`,
