@@ -20,8 +20,6 @@ export const COMIC_CACHE_CONTEXT: IComicCacheCtx = ultraCompState({
 
     cache: {} as Record<string, IComicLSCache>,
 
-    // Debounced: cache.set() below already updates reactive state synchronously,
-    // this only batches the localStorage write for bursts of updates (e.g. reader scroll).
     compile: (comp: IComicCacheCtx) => {
         if (persistTimer) clearTimeout(persistTimer);
         persistTimer = setTimeout(() => {
@@ -44,8 +42,6 @@ export const COMIC_CACHE_CONTEXT: IComicCacheCtx = ultraCompState({
     },
 
     setCacheById: (comp: IComicCacheCtx, uid: string, pref: Partial<IComicLSCache>) => {
-        // Shallow copy: keeps object identity for every untouched uid, so
-        // subscribeById can diff with a cheap reference check instead of deep equality.
         const currCache = { ...comp.cache.get() };
         currCache[uid] = { ...currCache[uid], ...pref };
         comp.cache.set(currCache);

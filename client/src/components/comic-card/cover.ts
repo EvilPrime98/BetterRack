@@ -15,10 +15,16 @@ export function ComicCardCover({
 }) {
 
     const readerHref = `/${item.uid}/reader`;
-    const [, setIsLoaded, subsIsLoaded] = ultraState(false);
+    const [loaded, setIsLoaded, subsIsLoaded] = ultraState(false);
+    let currentSrc: string | null = null;
 
     const onCoverChange = ($img: HTMLElement) => {
-        ($img as HTMLImageElement).src = comic()?.cover || NO_IMAGE_URL;
+        const nextSrc = comic()?.cover || NO_IMAGE_URL;
+        if (nextSrc !== currentSrc) {
+            setIsLoaded(false);
+        }
+        currentSrc = nextSrc;
+        ($img as HTMLImageElement).src = nextSrc;
     }
 
     const onEventChange = ($span: HTMLElement) => {
@@ -39,18 +45,20 @@ export function ComicCardCover({
         $span.textContent = issue ? `#${issue}` : '';
     }
 
-    const unsubLoaded = subsIsLoaded((loaded) => {
-        coverLink.classList.toggle(styles.loaded, loaded);
-    });
-
-    const coverLink = UltraLink({
+    return UltraLink({
 
         href: readerHref,
+        
+        trigger: [{
+            subscriber: subsIsLoaded,
+            triggerFunction: ($link: HTMLElement) => {
+                $link.classList.toggle(styles.loaded, loaded())
+            }
+        }],
 
         children: [
 
             UltraComponent({
-                cleanup: [unsubLoaded],
                 component: `<img alt="${item.name}" loading="lazy" decoding="async"/>`,
                 eventHandler: {
                     load: () => setIsLoaded(true),
@@ -80,7 +88,5 @@ export function ComicCardCover({
         ]
 
     })
-
-    return coverLink;
     
 }

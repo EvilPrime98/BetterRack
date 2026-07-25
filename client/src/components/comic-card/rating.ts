@@ -1,8 +1,7 @@
-import { UltraActivity, ultraState } from "ultra-light-js"
+import { UltraComponent, ultraState } from "ultra-light-js"
 import styles from './comic-card.module.css'
-import { StarComponent } from "../star-component";
+import { StarComponent, getStarFraction } from "../star-component";
 import { COMIC_CACHE_CONTEXT } from "../../context/comic-cache.context";
-import { ultraComicQueryClient } from "../../hooks/ultraComic";
 
 export function ComicRating({
     uid
@@ -22,7 +21,8 @@ export function ComicRating({
     const onMouseEnter = (e: Event) => {
         const $svg = e.currentTarget as SVGAElement;
         const $fillRect = $svg.querySelector('.fillRect');
-        $fillRect?.setAttribute('width', '16')
+        const fraction = getStarFraction(e);
+        $fillRect?.setAttribute('width', String(16 * fraction))
     }
 
     const onMouseLeave = (e: Event) => {
@@ -49,11 +49,7 @@ export function ComicRating({
         $div.replaceChildren(...stars);
     }
 
-    return UltraActivity({
-        mode: {
-            state:  () => !ultraComicQueryClient.isFetching(),
-            subscriber: ultraComicQueryClient.subscribeToFetching
-        },
+    return UltraComponent({
         component: '<div></div>',
         className: [styles.rating],
         onMount: [onRatingChange],

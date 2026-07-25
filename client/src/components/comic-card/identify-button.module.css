@@ -1,6 +1,6 @@
 .identifyButton {
     display: inline-flex;
-    align-self: center;
+    align-self: flex-start;
     align-items: center;
     justify-content: center;
     gap: 6px;

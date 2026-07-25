@@ -17,14 +17,6 @@
     box-shadow 220ms ease;
     user-select: none;
 
-    /*@media (hover: hover) {
-        &:hover {
-            border-color: rgba(52, 195, 209, 0.35);
-            transform: translateY(-2px);
-            box-shadow: 0 14px 28px -14px rgba(0, 0, 0, 0.6);
-        }
-    }*/
-
     a:focus-visible {
         outline: 2px solid #34c3d1;
         outline-offset: 2px;
@@ -74,13 +66,6 @@
             transform: translateY(-3px);
             box-shadow: 0 12px 22px -8px rgba(0, 0, 0, 0.75);
         }
-
-        /*@media (hover: hover) {
-            a:hover {
-                transform: translateY(-3px);
-                box-shadow: 0 12px 22px -8px rgba(0, 0, 0, 0.75);
-            }
-        }*/
 
         img {
             display: block;
@@ -200,23 +185,7 @@
         }
     }
 
-    .meta {
-        margin: 0;
-        padding: 0;
-        max-height: 0;
-        opacity: 0;
-        font-family: var(--font-mono);
-        font-size: 10px;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        color: #9a9a9a;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        transition: max-height 320ms ease, opacity 220ms ease, margin-top 320ms ease;
-    }
-
-    .credits {
+    .info {
         display: flex;
         flex-direction: column;
         gap: 3px;
@@ -234,7 +203,7 @@
             border-color 320ms ease;
     }
 
-    .creditRow {
+    .infoRow {
         display: flex;
         align-items: baseline;
         gap: 6px;
@@ -242,13 +211,13 @@
         line-height: 1.4;
     }
 
-    .creditRow:has(.creditValue:empty) {
+    .infoRow:has(.infoValue:empty) {
         display: none;
     }
 
-    .creditLabel {
+    .infoLabel {
         flex-shrink: 0;
-        width: 36px;
+        width: 56px;
         font-family: var(--font-sans);
         font-size: 9px;
         font-weight: 700;
@@ -257,7 +226,7 @@
         color: #34c3d1;
     }
 
-    .creditValue {
+    .infoValue {
         min-width: 0;
         font-family: var(--font-sans);
         color: #cfcfcf;
@@ -273,6 +242,7 @@
         justify-content: center;
         gap: 2px;
         margin-top: 8px;
+        margin-bottom: 8px;
     }
 
     &.detailMode {
@@ -306,26 +276,16 @@
             min-width: 0;
             width: auto;
             margin-top: 0;
+            align-self: stretch;
         }
 
         .title {
             text-align: left;
         }
 
-        .meta {
-            max-height: 20px;
-            opacity: 1;
-            margin-top: 4px;
-        }
-
-        .meta:empty {
-            max-height: 0;
-            opacity: 0;
-            margin-top: 0;
-        }
-
-        .credits {
-            max-height: 120px;
+        .info {
+            flex: 1;
+            max-height: none;
             opacity: 1;
             margin-top: 8px;
             padding-top: 8px;
