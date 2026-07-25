@@ -1,34 +1,24 @@
 import { UltraComponent, ultraState } from "ultra-light-js";
 import styles from './sidebar.module.css';
-import { SIDEBAR_CONTEXT } from "../context/sidebar.context";
-import { LIBRARY_CONTEXT } from "../context/library.context";
-import { CloseIcon } from "../icons/close.icon";
-import { SideBarElement } from "./sider-bar-element";
-import { RefreshIcon } from "../icons/refresh-icon";
-import type { ILibraryResponseItem } from "../library.types";
+import { SIDEBAR_CONTEXT } from "../../context/sidebar.context";
+import { LIBRARY_CONTEXT } from "../../context/library.context";
+import { SideBarGroup } from "./sidebar-group";
+import type { ILibraryGroup } from "../../library.types";
+import { RefreshLibraryButton } from "./refresh-button";
+import { SidebarCloseButton } from "./close-button";
 
 export function SideBar() {
 
-    const [ items,setItems,subsItems] = ultraState<ILibraryResponseItem[]>([]);
+    const [ items,setItems,subsItems] = ultraState<ILibraryGroup[]>([]);
 
     function fetchLibrary() {
         LIBRARY_CONTEXT.fetchLibrary();
-        // on cache hits fetchLibrary won't notify, so hydrate from current state
         if (LIBRARY_CONTEXT.groups.get().length) {
-            setItems(LIBRARY_CONTEXT.getLibraryItems({ onlyDir: true }));
+            setItems(LIBRARY_CONTEXT.groups.get());
         }
     };
-    
-    function refreshLibrary(){ LIBRARY_CONTEXT.refreshLibrary() };
-    
+        
     function closeSidebar(){ SIDEBAR_CONTEXT.isExpanded.set(false) };
-
-    function onRefreshingChange($button: HTMLElement){
-        $button.classList.toggle(
-            styles.spinning, 
-            LIBRARY_CONTEXT.queryClient.get().isFetching()
-        );
-    }
 
     function onExpandChange($aside: HTMLElement){
         const isExpanded = SIDEBAR_CONTEXT.isExpanded.get();
@@ -58,8 +48,8 @@ export function SideBar() {
             );
         } else {
             $nav.replaceChildren(
-                ...currItems.map(item => {
-                    return SideBarElement({ item })
+                ...currItems.map(group => {
+                    return SideBarGroup({ group })
                 })
             )
         }
@@ -86,6 +76,7 @@ export function SideBar() {
             }),
 
             UltraComponent({
+                
                 onMount: [
                     onExpandChange,
                     fetchLibrary,
@@ -94,39 +85,32 @@ export function SideBar() {
                         return () => document.removeEventListener('keydown', onKeydown);
                     }
                 ],
-                component: '<aside role="navigation" aria-label="Library folders"></aside>',
+                
+                component: '<aside></aside>',
+
+                attributes: {
+                    role: 'navigation',
+                    'aria-label': 'Library folders'
+                },
+                
                 className: [styles.sideBar],
+                
                 children: [
 
-                    UltraComponent({
-                        component: '<div></div>',
-                        className: [styles.header],
-                        children: [
-                            `<span class="${styles.title}">Library</span>`,
-                            UltraComponent({
-                                component: '<div></div>',
+                    UltraComponent({                        
+                        component: '<div></div>',                       
+                        className: [styles.header],                     
+                        children: [                          
+                            `<span class="${styles.title}">Library</span>`,                           
+                            UltraComponent({                               
+                                component: '<div></div>',                              
                                 styles: {
                                     display: 'flex',
                                     gap: '10px'
                                 },
-                                children: [
-                                    UltraComponent({
-                                        onMount: [onRefreshingChange],
-                                        component: RefreshIcon({ size: 16 }),
-                                        className: [styles.closeButton],
-                                        attributes: { role: 'button', 'aria-label': 'Refresh library' },
-                                        eventHandler: { click: refreshLibrary },
-                                        trigger: [{
-                                            subscriber: LIBRARY_CONTEXT.queryClient.get().subscribeToFetching,
-                                            triggerFunction: onRefreshingChange
-                                        }]
-                                    }),
-                                    UltraComponent({
-                                        component: CloseIcon({ size: 16 }),
-                                        className: [styles.closeButton],
-                                        attributes: { role: 'button' },
-                                        eventHandler: { click: closeSidebar }
-                                    })
+                                children: [                                 
+                                    RefreshLibraryButton(),
+                                    SidebarCloseButton()
                                 ]
                             })
                         ]
@@ -143,6 +127,7 @@ export function SideBar() {
                     })
 
                 ],
+
                 trigger: [
                     {
                         subscriber: SIDEBAR_CONTEXT.isExpanded.subscribe,
@@ -156,7 +141,7 @@ export function SideBar() {
         trigger: [{
             subscriber: LIBRARY_CONTEXT.groups.subscribe,
             triggerFunction: () =>{
-                setItems(LIBRARY_CONTEXT.getLibraryItems({ onlyDir: true }))
+                setItems(LIBRARY_CONTEXT.groups.get())
             }
         }]
 

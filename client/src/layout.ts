@@ -1,6 +1,6 @@
 import { UltraComponent, type UltraRenderableElement } from "ultra-light-js";
 import { Header } from "./components/header";
-import { SideBar } from "./components/sidebar";
+import { SideBar } from "./components/sidebar/sidebar";
 
 export function Layout(
     ...components: UltraRenderableElement[]
