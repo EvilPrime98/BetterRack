@@ -37,7 +37,7 @@ export function ComicIdentifier(){
             ...(
                 (items.length) 
                 ? items.map(s => SuggestionCard({ comic: s }))
-                : [IdentifierDefaultContent({ search, isSearching })]
+                : [IdentifierDefaultContent({ search, isSearching, subsIsSearching })]
             )
         );
     }
@@ -58,10 +58,11 @@ export function ComicIdentifier(){
             return;
         }
 
-        setIsSearching(true);
-
         timeOutID = setTimeout(
-            () => getSuggestions(value),
+            () => {
+                setIsSearching(true);
+                getSuggestions(value);
+            },
             DEBOUNCING_DELAY
         );
 

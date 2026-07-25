@@ -53,7 +53,7 @@ export async function fetchComics(
 
     const flags = {
         multiple: true,
-        thumbnailSize: 450,
+        thumbnailSize: 120,
         includeCollections: true
     } as Pick<WikiFlags, "thumbnailSize" | "includeCollections" | "category" | "sorted"> & { multiple: true };
     
