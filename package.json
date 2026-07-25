@@ -39,7 +39,8 @@
     "@types/node": "^25.9.1",
     "he": "^1.2.0",
     "hono": "^4.12.12",
-    "linkedom": "^0.18.12"
+    "linkedom": "^0.18.12",
+    "ultra-light-js": "^1.3.0"
   },
   "build": {
     "appId": "com.better.rack",
@@ -54,24 +55,24 @@
     ],
     "extraResources": [
       {
-      "from": "dist/server",
-      "to": "server"
+        "from": "dist/server",
+        "to": "server"
+      },
+      {
+        "from": "client/dist",
+        "to": "client"
+      },
+      {
+        "from": ".env",
+        "to": ".env"
+      }
+    ],
+    "win": {
+      "target": "nsis"
     },
-    {
-    "from": "client/dist",
-    "to": "client"
-  },
-  {
-  "from": ".env",
-  "to": ".env"
-}
-],
-"win": {
-  "target": "nsis"
-},
-"nsis": {
-  "oneClick": false,
-  "allowToChangeInstallationDirectory": true
-}
-}
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
 }
