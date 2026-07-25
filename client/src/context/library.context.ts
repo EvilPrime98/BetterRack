@@ -7,9 +7,10 @@ const queryClient = ultraQuery();
 export interface ILibraryCtx {
     groups: IUltraCompStateStateful<ILibraryGroup[]>;
     queryClient: IUltraCompStateStateful<typeof queryClient>;
+    searchQuery: IUltraCompStateStateful<string>;
     fetchLibrary: () => Promise<void>;
     refreshLibrary: () => Promise<void>;
-    getLibraryItems: ({ onlyDir, uid }: { onlyDir: boolean; uid?: string; }) => ILibraryResponseItem[]
+    getLibraryItems: (args: { onlyDir: boolean, uid?: string }) => ILibraryResponseItem[];
 }
 
 export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
@@ -18,14 +19,14 @@ export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
 
     queryClient: queryClient,
 
+    searchQuery: '' as string,
+
     fetchLibrary: async (comp: ILibraryCtx) => {
         const { data } = await queryClient.fetch(
             'library',
             getLibrary,
             60 * 5 * 10000
         ) as { data: ILibraryGroup[] };
-        // ultraQuery returns the same cached reference until invalidated;
-        // skipping the set avoids re-notifying every subscriber on cache hits
         if (comp.groups.get() !== data) comp.groups.set(data);
     },
 

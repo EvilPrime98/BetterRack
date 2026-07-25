@@ -58,9 +58,22 @@ async function startDesktopApp() {
 
   function createWindow(): void {
 
+    const isMac = process.platform === "darwin";
+
     const win = new BrowserWindow({
       width: 1240,
       height: 840,
+      minWidth: 900,
+      minHeight: 600,
+      backgroundColor: "#0a0a0a",
+      titleBarStyle: isMac ? "hiddenInset" : "hidden",
+      ...(isMac ? {} : {
+        titleBarOverlay: {
+          color: "#0a0a0a",
+          symbolColor: "#ffffff",
+          height: 64,
+        },
+      }),
       webPreferences: {
         preload: path.join(__dirname, "preload.cjs"),
       },
@@ -96,7 +109,7 @@ async function startDesktopApp() {
 
       } else {
 
-        const projectRoot = __dirname;
+        const projectRoot = path.join(__dirname, "..");
 
         serverProcess = spawn("bun", ["run", "./src/run.ts"], {
           cwd: projectRoot,

@@ -1,7 +1,7 @@
 .page {
     position: relative;
     min-height: 100vh;
-    background-color: #141414;
+    background-color: var(--bg-canvas);
 }
 
 .toolbar {
@@ -11,10 +11,20 @@
     justify-content: space-between;
     background-color: rgba(10, 10, 10, 0.94);
     padding: 10px 16px;
-    border-bottom: 2px solid #34c3d1;
+    border-bottom: 2px solid var(--accent);
     position: sticky;
     top: 0;
     z-index: 3;
+    -webkit-app-region: drag;
+}
+
+:root[data-platform="win32"] .toolbar,
+:root[data-platform="linux"] .toolbar {
+    padding-right: 140px;
+}
+
+:root[data-platform="darwin"] .toolbar {
+    padding-left: 80px;
 }
 
 .back {
@@ -29,6 +39,7 @@
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
+    -webkit-app-region: no-drag;
 }
 
 .back:hover {

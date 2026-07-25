@@ -2,6 +2,8 @@ import { UltraActivity, UltraComponent, ultraNavigate, ultraState } from "ultra-
 import { API_URL, reader } from "../services/library.service"
 import styles from './reader.page.module.css'
 import { ImageElement } from "../components/reader-page-image/reader-page-image";
+import { ReaderPageHeader } from "../components/reader-page-header/reader-page-header";
+import { ReaderPageProgressBar } from "../components/reader-page-progress-bar/reader-page-progress-bar";
 import { COMIC_CACHE_CONTEXT } from "../context/comic-cache.context";
 
 const PRELOAD_WINDOW = 2;
@@ -135,6 +137,17 @@ export function ReaderPage({
         className: [styles.page],
 
         children: [
+
+            ReaderPageHeader({
+                currentPage, subsCurrentPage,
+                pages, subsPages,
+                goBack
+            }),
+
+            ReaderPageProgressBar({
+                currentPage, subsCurrentPage,
+                pages, subsPages
+            }),
 
             UltraActivity({
                 mode: { state: isLoading, subscriber: subsIsLoading },

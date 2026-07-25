@@ -56,8 +56,10 @@ export function LibraryPage({
     }
 
     function getLibraryItems(){
-        return LIBRARY_CONTEXT
-        .getLibraryItems({ onlyDir: !uid, uid })
+        const items = LIBRARY_CONTEXT.getLibraryItems({ onlyDir: !uid, uid });
+        const query = LIBRARY_CONTEXT.searchQuery.get().trim().toLowerCase();
+        if (!query) return items;
+        return items.filter(item => item.name.toLowerCase().includes(query));
     }
 
     return Layout(
@@ -104,7 +106,10 @@ export function LibraryPage({
             ],
 
             trigger: [{
-                subscriber: LIBRARY_CONTEXT.groups.subscribe,
+                subscriber: [
+                    LIBRARY_CONTEXT.groups.subscribe,
+                    LIBRARY_CONTEXT.searchQuery.subscribe
+                ],
                 triggerFunction: () => applyFilters()
             }]
 
