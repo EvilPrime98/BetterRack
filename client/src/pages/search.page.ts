@@ -1,33 +1,64 @@
-import { UltraComponent, ultraQueryParams, ultraState, type UltraLightElement } from "ultra-light-js";
-import styles from './library-page.module.css';
+import { UltraComponent, ultraState, type UltraLightElement } from "ultra-light-js";
+import styles from './search-page.module.css';
 import { PageHeader } from "../components/page-header";
 import { LIBRARY_CONTEXT } from "../context/library.context";
-import { FolderCard } from "../components/folder-card";
 import { ComicCard } from "../components/comic-card/comic-card";
 import { Layout } from "../layout";
 import { COMICS_TYPE_CTX } from "../context/comics-types.context";
 import type { ILibraryResponseItem } from "../library.types";
 import { ultraFilters } from "../hooks/ultraFilters";
-import { SearchPage } from "./search.page";
 
-export function LibraryPage({
-    uid
+export function SearchPage({
+    search
 }: {
-    uid?: string
+    search: string
 }) {
 
-    const { search } = ultraQueryParams();
-    if (search) {
-        return SearchPage({ search });
+    const PAGE_SIZE = 60; //max chunk for pages
+
+    if (LIBRARY_CONTEXT.searchQuery.get() !== search) {
+        LIBRARY_CONTEXT.searchQuery.set(search);
     }
 
     const [items, setItems, subsItems] = ultraState<ILibraryResponseItem[]>([]);
-    const { filters, resetFilters, applyFilters } = ultraFilters({ 
-        rawItems: getLibraryItems, 
-        setItems 
-    });
     
+    const [visibleCount, setVisibleCount, subsVisibleCount] = ultraState(PAGE_SIZE);
+    
+    const { filters, resetFilters, applyFilters } = ultraFilters({
+        rawItems: getSearchItems,
+        setItems
+    });
+
     const itemsMap = new Map<string, UltraLightElement>();
+    
+    const sentinel = UltraComponent({
+        component: `<div class="${styles.sentinel}"></div>`,
+        onMount: [onSentinelMount]
+    });
+
+    function hasMore(){
+        return visibleCount() < items().length;
+    }
+
+    function loadMore(){
+        if (!hasMore()) return;
+        setVisibleCount(Math.min(visibleCount() + PAGE_SIZE, items().length));
+    }
+
+    function onSentinelMount(
+        $sentinel: HTMLElement
+    ){
+        const observer = new IntersectionObserver((entries) => {
+            if (!entries.some(e => e.isIntersecting)) return;
+            if (!hasMore()) {
+                observer.disconnect();
+                return;
+            }
+            loadMore();
+        }, { rootMargin: '600px' });
+        observer.observe($sentinel);
+        return () => observer.disconnect();
+    }
 
     function onLayoutChange(
         $section: HTMLElement
@@ -42,7 +73,7 @@ export function LibraryPage({
         $section: HTMLElement
     ){
 
-        const currComics = [...items()];
+        const currComics = items().slice(0, visibleCount());
         const currIds = new Set(currComics.map(c => c.uid));
 
         for (const [uid, node] of itemsMap) {
@@ -54,15 +85,7 @@ export function LibraryPage({
 
         currComics.map(item => {
             if (itemsMap.has(item.uid)) return;
-            itemsMap.set(item.uid, (item.did)
-                ? FolderCard({
-                    title: item.name,
-                    uid: item.uid
-                })
-                : ComicCard({
-                    item: item
-                })
-            )
+            itemsMap.set(item.uid, ComicCard({ item }));
         })
 
         currComics.map(c => {
@@ -70,14 +93,18 @@ export function LibraryPage({
             if ($item) $section.appendChild($item);
         })
 
+        $section.appendChild(sentinel);
+
     }
 
-    function getLibraryItems(){
-        const items = LIBRARY_CONTEXT.getLibraryItems({ onlyDir: !uid, uid });
+    function getSearchItems(){
         const query = LIBRARY_CONTEXT.searchQuery.get().trim().toLowerCase();
-        if (!query) return items;
-        return items.filter(item => item.name.toLowerCase().includes(query));
+        return LIBRARY_CONTEXT.getLibraryItems({ onlyDir: false })
+        .filter(item => item.did === false)
+        .filter(item => item.name.toLowerCase().includes(query));
     }
+
+    subsItems(() => setVisibleCount(PAGE_SIZE));
 
     return Layout(
 
@@ -90,7 +117,6 @@ export function LibraryPage({
             children: [
 
                 PageHeader({
-                    uid,
                     items,
                     subsItems,
                     filters,
@@ -98,17 +124,15 @@ export function LibraryPage({
                 }),
 
                 UltraComponent({
-                   
                     onMount: [() => {
                         LIBRARY_CONTEXT.fetchLibrary();
                         if (LIBRARY_CONTEXT.groups.get().length) applyFilters();
                     }],
-
                     component: '<section></section>',
                     className: [styles.comicContainer],
                     trigger: [
                         {
-                            subscriber: subsItems,
+                            subscriber: [subsItems, subsVisibleCount],
                             triggerFunction: onItemsChange,
                             defer: true
                         },

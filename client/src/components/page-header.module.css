@@ -1,8 +1,7 @@
 .pageHeader{
     display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    gap: 10px;
     padding: 14px 0 18px;
     margin-bottom: 6px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -10,6 +9,13 @@
     top: var(--header-height);
     z-index: 2;
     background-color: var(--bg-app);
+}
+
+.filtersRow {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .left,

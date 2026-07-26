@@ -1,0 +1,38 @@
+.breadcrumbs {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.crumb {
+    font-family: var(--font-sans);
+    color: #9a9a9a;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    transition: color 0.15s ease-in-out;
+}
+
+a.crumb:hover {
+    color: #e8a33d;
+}
+
+.crumb.current {
+    color: #e8a33d;
+    cursor: default;
+}
+
+.separator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    opacity: 0.5;
+
+    svg {
+        transform: rotate(-90deg);
+    }
+}

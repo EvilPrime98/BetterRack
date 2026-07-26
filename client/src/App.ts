@@ -8,12 +8,14 @@ import { COMICS_TYPE_CTX } from "./context/comics-types.context";
 export function App() {
 
     COMIC_CACHE_CONTEXT.init();
+    
     USER_PREF.init();
+    
     COMICS_TYPE_CTX.init();
 
     return UltraRouter(
         { path: '/:uid/reader', component:({ uid } = {}) => ReaderPage({ uid }) },
-        { path: '/:uid', component: ({ uid } = {}) => LibraryPage({ uid }) },       
+        { path: '/:uid', component: ({ uid } = {}) => LibraryPage({ uid }) },      
         { path: '/*', component: () => LibraryPage({}) }
     )
 

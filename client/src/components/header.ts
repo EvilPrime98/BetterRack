@@ -1,4 +1,4 @@
-import { UltraComponent, UltraLink, ultraState } from "ultra-light-js";
+import { UltraComponent, UltraLink, ultraNavigate, ultraQueryParams } from "ultra-light-js";
 import styles from './header.module.css';
 import { SearchIcon } from "../icons/search.icon";
 import { SIDEBAR_CONTEXT } from "../context/sidebar.context";
@@ -9,40 +9,70 @@ import { HeaderMenu } from "./header-menu";
 
 export function Header() {
 
-    const [isSearchOpen, setSearchOpen, subsSearchOpen] = ultraState(false);
+    const iconSize = 30;
 
     function toggleSidebar() {
         SIDEBAR_CONTEXT.isExpanded.set(!SIDEBAR_CONTEXT.isExpanded.get())
     };
 
-    function closeSearch() {
-        if (!isSearchOpen()) return;
-        setSearchOpen(false);
+    function leaveSearchResults() {
+        if (ultraQueryParams().search) ultraNavigate({ href: '/' });
+    }
+
+    // UltraLink skips its own navigation when the pathname is unchanged, so a
+    // click on '/' while '?search=' is set wouldn't otherwise drop the query
+    function goHome() {
         LIBRARY_CONTEXT.searchQuery.set('');
+        if (ultraQueryParams().search) ultraNavigate({ href: '/' });
     }
 
-    function toggleSearch() {
-        if (isSearchOpen()) { closeSearch(); return; }
-        setSearchOpen(true);
+    function clearSearch($input: HTMLInputElement) {
+        $input.value = '';
+        $input.blur();
+        LIBRARY_CONTEXT.searchQuery.set('');
+        leaveSearchResults();
     }
 
-    function onSearchIconClick(e: Event) {
-        e.stopPropagation();
-        toggleSearch();
+    function focusSearchInput(e: Event) {
+        (e.currentTarget as HTMLElement)
+            .closest(`.${styles.searchBox}`)
+            ?.querySelector('input')
+            ?.focus();
     }
 
-    function onSearchOpenChange($box: HTMLElement) {
-        const open = isSearchOpen();
-        $box.classList.toggle(styles.open, open);
+    // the header is rebuilt on every route navigation (see App.ts/UltraRouter),
+    // so restore the last submitted query, and refocus if that rebuild was
+    // caused by the user's own search landing on the search page
+    function onSearchMount($box: HTMLElement) {
         const $input = $box.querySelector('input');
         if (!$input) return;
-        if (open) {
-            $input.removeAttribute('tabindex');
+        $input.value = LIBRARY_CONTEXT.searchQuery.get();
+        if (ultraQueryParams().search) {
             $input.focus();
-        } else {
-            $input.setAttribute('tabindex', '-1');
-            $input.value = '';
-            $input.blur();
+            const end = $input.value.length;
+            $input.setSelectionRange(end, end);
+        }
+    }
+
+    function onSearchKeydown(e: Event) {
+        const key = (e as KeyboardEvent).key;
+
+        if (key === 'Escape') {
+            clearSearch(e.target as HTMLInputElement);
+            return;
+        }
+
+        if (key !== 'Enter') return;
+
+        const query = (e.target as HTMLInputElement).value.trim();
+        const onSearchPage = !!ultraQueryParams().search;
+
+        LIBRARY_CONTEXT.searchQuery.set(query);
+
+        if (query) {
+            ultraNavigate({ href: `/?search=${encodeURIComponent(query)}` });
+        } else if (onSearchPage) {
+            ultraNavigate({ href: '/' });
         }
     }
 
@@ -74,7 +104,7 @@ export function Header() {
                 children: [
 
                     UltraComponent({
-                        component: BurgerIcon({ size: '20' }),
+                        component: BurgerIcon({ size: iconSize }),
                         className: [styles.iconBtn, styles.noDrag],
                         attributes: {
                             role: 'button',
@@ -93,8 +123,11 @@ export function Header() {
                             'aria-label': 'BetterRack home'
                         },
                         className: [styles.logo, styles.noDrag],
+                        eventHandler: {
+                            click: goHome
+                        },
                         children: [
-                            BetterRackIcon({ size: 32 })
+                            BetterRackIcon({ size: iconSize })
                         ]
                     }),
 
@@ -117,37 +150,23 @@ export function Header() {
                 children: [
 
                     UltraComponent({
-                        
+
                         component: '<div></div>',
-                        
+
                         className: [styles.searchBox, styles.noDrag],
-                        
-                        onMount: [
-                            onSearchOpenChange,
-                            () => {
-                                document.addEventListener('click', closeSearch);
-                                return () => document.removeEventListener('click', closeSearch);
-                            }
-                        ],
-                        
-                        trigger: [{
-                            subscriber: subsSearchOpen,
-                            triggerFunction: onSearchOpenChange
-                        }],
+
+                        onMount: [onSearchMount],
 
                         children: [
 
                             UltraComponent({
-                                component: SearchIcon({ size: 18 }),
+                                component: SearchIcon({ size: iconSize - 10 }),
                                 className: [styles.iconBtn],
                                 attributes: {
-                                    role: 'button',
-                                    tabindex: '0',
-                                    'aria-label': 'Search library'
+                                    'aria-hidden': 'true'
                                 },
                                 eventHandler: {
-                                    click: onSearchIconClick,
-                                    keydown: onEnterOrSpace(toggleSearch)
+                                    click: focusSearchInput
                                 }
                             }),
 
@@ -155,17 +174,11 @@ export function Header() {
                                 component: '<input type="text" />',
                                 className: [styles.searchInput],
                                 attributes: {
-                                    tabindex: '-1',
                                     placeholder: 'Search library…',
                                     'aria-label': 'Search library'
                                 },
                                 eventHandler: {
-                                    click: (e: Event) => e.stopPropagation(),
-                                    input: (e: Event) => LIBRARY_CONTEXT.searchQuery.set((e.target as HTMLInputElement).value),
-                                    keydown: (e: Event) => {
-                                        if ((e as KeyboardEvent).key !== 'Escape') return;
-                                        closeSearch();
-                                    }
+                                    keydown: onSearchKeydown
                                 }
                             })
 

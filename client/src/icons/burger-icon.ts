@@ -1,14 +1,14 @@
 interface Props {
-  size?: string
+  size?: number
 }
 
 export function BurgerIcon({
-  size = '24'
+  size = 24
 }: Props) {
   return `
     <svg
-      width=${size}
-      height=${size}
+      width="${size}"
+      height="${size}"
       viewBox="0 -0.5 25 25"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
