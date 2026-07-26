@@ -7,6 +7,8 @@ import fs, { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { writeFile } from "node:fs/promises";
 
+const COMIC_EXTENSIONS = new Set(['.cbz', '.cbr', '.cb7', '.cbt']);
+
 export class LibraryModel implements TLibraryModel {
 
     private libPaths: string[];
@@ -34,7 +36,9 @@ export class LibraryModel implements TLibraryModel {
         const entries = (await Promise.all(
             this.libPaths.map(async (libPath, libIndex) => {
                 const dirEntries = await readdir(libPath, { withFileTypes: true, recursive: true });
-                return dirEntries.map(entry => ({ entry, libIndex }));
+                return dirEntries
+                    .filter(entry => entry.isDirectory() || COMIC_EXTENSIONS.has(path.extname(entry.name).toLowerCase()))
+                    .map(entry => ({ entry, libIndex }));
             })
         )).flat();
 
