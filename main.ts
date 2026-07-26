@@ -71,7 +71,7 @@ async function startDesktopApp() {
         titleBarOverlay: {
           color: "#0a0a0a",
           symbolColor: "#ffffff",
-          height: 64,
+          height: 54,
         },
       }),
       webPreferences: {
