@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "get-comics-downloader",
+      "name": "BetterRack",
       "dependencies": {
         "@types/he": "^1.2.3",
         "@types/node": "^25.9.1",
