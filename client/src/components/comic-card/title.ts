@@ -38,6 +38,9 @@ export function ComicCardTitle({
         children: [
             UltraComponent({
                 component: `<p class="${styles.title}"></p>`,
+                attributes: {
+                    title: item.name
+                },
                 trigger: [{
                     subscriber: [subsComic, COMICS_TYPE_CTX.type.subscribe],
                     triggerFunction: onTitleChange

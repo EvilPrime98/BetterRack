@@ -7,9 +7,9 @@ import { COMIC_IDENT_CTX } from "../../context/identifer-modal.context";
 
 export function SuggestionCard({
     comic
-}:{
+}: {
     comic: WikiComic
-}){
+}) {
 
     const meta = [comic.volume, comic.issue ? `#${comic.issue}` : null]
     .filter(Boolean)
@@ -24,15 +24,29 @@ export function SuggestionCard({
     }
 
     return UltraComponent({
+        
         component: '<article></article>',
+        
         className: [styles.suggestionCard],
-        eventHandler: { click: onClick },
+        
+        eventHandler: { 
+            click: onClick 
+        },
+
         children: [
+
             UltraComponent({
                 component: '<div></div>',
                 className: [styles.suggestionCover],
-                children: [ ImageGen({ src: comic.cover }) ]
+                children: [
+                    ImageGen({
+                        attributes: {
+                            src: comic.cover
+                        }
+                    })
+                ]
             }),
+
             UltraComponent({
                 component: '<div></div>',
                 className: [styles.suggestionInfo],
@@ -41,7 +55,9 @@ export function SuggestionCard({
                     `<p class="${styles.suggestionMeta}">${meta}</p>`
                 ]
             })
+
         ]
+
     })
 
 }

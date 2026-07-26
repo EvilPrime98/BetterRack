@@ -3,6 +3,7 @@ import type { ILibraryResponseItem } from "../../library.types";
 import { NO_IMAGE_URL } from "../../data";
 import type { WikiComic } from "better-wiki";
 import styles from './comic-card.module.css';
+import { ImageGen } from "../image-generic/image-generic";
 
 export function ComicCardCover({
     item,
@@ -58,8 +59,11 @@ export function ComicCardCover({
 
         children: [
 
-            UltraComponent({
-                component: `<img alt="${item.name}" loading="lazy" decoding="async"/>`,
+            ImageGen({
+                attributes: {
+                    alt: item.name,
+                    title: item.name
+                },
                 eventHandler: {
                     load: () => setIsLoaded(true),
                     error: onCoverError

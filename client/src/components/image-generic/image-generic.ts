@@ -1,18 +1,22 @@
-import { UltraComponent } from "ultra-light-js"
+import { UltraComponent, type UltraElementProps } from "ultra-light-js"
+
+interface ImageGenProps extends UltraElementProps {
+    attributes?: UltraElementProps['attributes']
+}
 
 export function ImageGen({
-    src
-}:{
-    src: string
-}){
+    attributes,
+    ...props
+}: ImageGenProps){
 
     return UltraComponent({
         component: '<img/>',
         attributes: {
-            src: src,
+            ...attributes,
             loading: 'lazy',
-            decoding: 'async'
-        }
+            decoding: 'async',
+        },
+        ...props
     })
 
 }
