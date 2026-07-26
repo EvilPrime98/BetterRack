@@ -10,19 +10,25 @@ export function ultraComic() {
 
     const [comic, setComic, subsComic] = ultraState<WikiComic|null>(null);
 
-    const getComic = async (title: string) => {
+    const getComic = async (
+        title: string,
+        thumbnailSize?: number
+    ) => {
         const { data } = await ultraComicQueryClient.fetch(
             `comic:${title}`,
-            () => fetchComic(title),
+            () => fetchComic(title, thumbnailSize),
             60 * 5 * 1000
         ) as { data: WikiComic | null };
         setComic(data);
     }
 
-    const getComicById = async (id: number) => {
+    const getComicById = async (
+        id: number,
+        thumbnailSize?: number
+    ) => {
         const { data } = await ultraComicQueryClient.fetch(
             `wiki-comic-${id}`,
-            () => fetchComicById(id),
+            () => fetchComicById(id, thumbnailSize),
             60 * 5 * 1000
         ) as { data: WikiComic | null };
         setComic(data);

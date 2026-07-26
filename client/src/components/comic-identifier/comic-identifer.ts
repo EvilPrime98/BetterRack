@@ -21,7 +21,7 @@ export function ComicIdentifier(){
     const getSuggestions = async (
         search: string
     ) => {
-        const comics = await fetchComics(search);
+        const comics = await fetchComics(search, 120);
         setSuggestions(comics);
         setIsSearching(false);
     }

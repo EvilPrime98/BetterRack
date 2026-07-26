@@ -18,6 +18,8 @@ export function ComicCard({
     item: ILibraryResponseItem
 }) {
 
+    const coverSize = 280; //x2 the rendered size of the image element
+
     const { comic, getComic, getComicById, subsComic } = ultraComic();
     
     const [itemCache, setItemCache, subsItemCache] = ultraState<IComicLSCache|null>(
@@ -61,9 +63,9 @@ export function ComicCard({
     const scanComic = async () => {
         const cache = itemCache();
         if (cache?.prefId) {
-            await getComicById(cache.prefId);
+            await getComicById(cache.prefId,coverSize);
         } else {
-            await getComic(item.name)
+            await getComic(item.name,coverSize)
             if (comic()) {
                 COMIC_CACHE_CONTEXT.setCacheById(item.uid, {
                     prefId: comic()?.pageId
@@ -72,17 +74,32 @@ export function ComicCard({
         }
     }
 
+    let hasScanned = false;
+
     const onCacheChange = async (
         entry: ReturnType<typeof COMIC_CACHE_CONTEXT.getCacheById>
     ) => {
         setItemCache(entry || null);
-        await scanComic();
+        if (hasScanned) await scanComic();
     }
 
     COMIC_CACHE_CONTEXT.subscribeById(
-        item.uid, 
+        item.uid,
         onCacheChange
     )
+
+    // fetching hits 5 wiki providers per card, so defer it until the card
+    // is actually scrolled into view instead of firing for every mounted card
+    const onCardMount = ($article: HTMLElement) => {
+        const observer = new IntersectionObserver((entries) => {
+            if (!entries.some(e => e.isIntersecting)) return;
+            observer.disconnect();
+            hasScanned = true;
+            scanComic();
+        }, { rootMargin: '400px' });
+        observer.observe($article);
+        return () => observer.disconnect();
+    }
 
     return UltraActivity({
 
@@ -91,7 +108,7 @@ export function ComicCard({
             subscriber: [READ_TYPES_CTX.type.subscribe, subsItemCache]
         },
 
-        onMount: [ scanComic ],
+        onMount: [ onCardMount ],
 
         component: '<article></article>',
 

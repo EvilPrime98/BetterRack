@@ -1,12 +1,14 @@
 import type { WikiComic, WikiFlags } from "better-wiki";
 import { wikiDarkHorseClient, wikiDcClient, wikiDynamiteClient, wikiImageClient, wikiMarvelClient } from "../context/wiki.context";
+import { DEFAULT_IMAGE_SIZE } from "../data";
 
 export async function fetchComic(
-    title: string
+    title: string,
+    thumbnailSize: number = DEFAULT_IMAGE_SIZE
 ): Promise<WikiComic | null> {
 
     const flags = {
-        thumbnailSize: 450,
+        thumbnailSize: thumbnailSize,
         includeCollections: true
     }
     
@@ -27,11 +29,12 @@ export async function fetchComic(
 }
 
 export async function fetchComicById(
-    pageId: number
+    pageId: number,
+    thumbnailSize: number = DEFAULT_IMAGE_SIZE
 ): Promise<WikiComic | null> {
 
     const flags = {
-        thumbnailSize: 450
+        thumbnailSize
     }
     
     const results = await Promise.all([      
@@ -48,12 +51,13 @@ export async function fetchComicById(
 }
 
 export async function fetchComics(
-    title: string
+    title: string,
+    thumbnailSize: number = DEFAULT_IMAGE_SIZE
 ): Promise<WikiComic[]> {
 
     const flags = {
         multiple: true,
-        thumbnailSize: 120,
+        thumbnailSize: thumbnailSize,
         includeCollections: true
     } as Pick<WikiFlags, "thumbnailSize" | "includeCollections" | "category" | "sorted"> & { multiple: true };
     

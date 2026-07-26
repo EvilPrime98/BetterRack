@@ -1,1 +1,2 @@
 export const NO_IMAGE_URL = 'https://static.wikia.nocookie.net/marvel_dc/images/3/3c/None.jpg/revision/latest/scale-to-width-down/200?cb=20200417182656';
+export const DEFAULT_IMAGE_SIZE = 120;
