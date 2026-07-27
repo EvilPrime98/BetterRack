@@ -42,8 +42,6 @@ export interface ILibraryRefreshResponse {
 }
 
 export interface IComicLSCache {
-    /**File ID */
-    comicId: string;
     /**Preference for the wiki page ID */
     prefId: number;
     /**Base URL of the wiki the prefId belongs to (page IDs are only unique per wiki) */

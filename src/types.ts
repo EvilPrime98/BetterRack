@@ -118,6 +118,23 @@ export type TWikiModel = {
     getComics: (title: string, thumbnailSize?: number) => Promise<WikiComic[]>
 }
 
+export type TComicData = {
+    uid: string;
+    prefId?: number;
+    sourceWiki?: string;
+    cover?: string;
+    rating?: number;
+    currentPage?: number;
+    readPer?: number;
+    read?: boolean;
+}
+
+export type TComicDataModel = {
+    getAll: () => Record<string, TComicData>,
+    getByUid: (uid: string) => TComicData | undefined,
+    upsert: (uid: string, partial: Partial<Omit<TComicData, 'uid'>>) => TComicData
+}
+
 export type TZipModel = {
     listPages: ({ filePath }: {
         filePath: string;

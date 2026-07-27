@@ -13,6 +13,10 @@ export function ComicRating({
         COMIC_CACHE_CONTEXT.getCacheById(uid)?.rating || 0
     );
 
+    COMIC_CACHE_CONTEXT.subscribeById(uid, (entry) => {
+        setRating(entry?.rating || 0);
+    });
+
     const changeRating = (newRating: number) => {
         setRating(newRating);
         COMIC_CACHE_CONTEXT.setCacheById(uid, { rating: rating() })

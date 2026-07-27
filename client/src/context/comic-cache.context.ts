@@ -1,14 +1,16 @@
 import { ultraCompState, type IUltraCompStateStateful } from "ultra-light-js";
 import type { IComicLSCache } from "../library.types";
+import { getComicData, updateComicData } from "../services/comic-data.service";
 
 const PERSIST_DEBOUNCE_MS = 400;
-let persistTimer: ReturnType<typeof setTimeout> | null = null;
+const persistTimers = new Map<string, ReturnType<typeof setTimeout>>();
+let initPromise: Promise<void> | null = null;
 
 export interface IComicCacheCtx {
-    keyName: IUltraCompStateStateful<string>;
     cache: IUltraCompStateStateful<Record<string, IComicLSCache>>;
-    compile: () => void;
-    init: () => void;
+    init: () => Promise<void>;
+    /**Resolves once the initial bulk load from the server has completed (or immediately if init() was never called). */
+    ready: () => Promise<void>;
     getCacheById: (uid: string) => IComicLSCache | undefined;
     setCacheById: (uid: string, pref: Partial<IComicLSCache>) => void;
     subscribeById: (uid: string, fn: (entry: IComicLSCache | undefined) => void) => () => void;
@@ -16,26 +18,17 @@ export interface IComicCacheCtx {
 
 export const COMIC_CACHE_CONTEXT: IComicCacheCtx = ultraCompState({
 
-    keyName: 'better-rack-cache',
-
     cache: {} as Record<string, IComicLSCache>,
 
-    compile: (comp: IComicCacheCtx) => {
-        if (persistTimer) clearTimeout(persistTimer);
-        persistTimer = setTimeout(() => {
-            window.localStorage.setItem(comp.keyName.get(), JSON.stringify(comp.cache.get()));
-            persistTimer = null;
-        }, PERSIST_DEBOUNCE_MS);
+    init: (comp: IComicCacheCtx) => {
+        initPromise = (async () => {
+            const data = await getComicData();
+            comp.cache.set(data);
+        })();
+        return initPromise;
     },
 
-    init: (comp: IComicCacheCtx) => {
-        const lsCache = window.localStorage.getItem(comp.keyName.get());
-        if (!lsCache) {
-            comp.compile();
-        } else {
-            comp.cache.set(JSON.parse(lsCache));
-        }
-    },
+    ready: () => initPromise ?? Promise.resolve(),
 
     getCacheById: (comp: IComicCacheCtx, uid: string) => {
         return (comp.cache.get() as Record<string, IComicLSCache>)[uid];
@@ -45,7 +38,13 @@ export const COMIC_CACHE_CONTEXT: IComicCacheCtx = ultraCompState({
         const currCache = { ...comp.cache.get() };
         currCache[uid] = { ...currCache[uid], ...pref };
         comp.cache.set(currCache);
-        comp.compile();
+
+        const existingTimer = persistTimers.get(uid);
+        if (existingTimer) clearTimeout(existingTimer);
+        persistTimers.set(uid, setTimeout(() => {
+            persistTimers.delete(uid);
+            updateComicData(uid, currCache[uid]).catch(console.error);
+        }, PERSIST_DEBOUNCE_MS));
     },
 
     subscribeById: (comp: IComicCacheCtx, uid: string, fn: (entry: IComicLSCache | undefined) => void) => {

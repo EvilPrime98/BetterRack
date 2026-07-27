@@ -14,7 +14,7 @@ export function ReaderPage({
     uid: string
 }) {
 
-    const comicCache = COMIC_CACHE_CONTEXT.getCacheById(uid);
+    let comicCache = COMIC_CACHE_CONTEXT.getCacheById(uid);
     const [pages, setPages, subsPages] = ultraState<string[]>([]);
     const [isLoading, setIsLoading, subsIsLoading] = ultraState(true);
     const [hasError, setHasError, subsHasError] = ultraState(false);
@@ -53,6 +53,8 @@ export function ReaderPage({
         setHasError(false);
         setIsLoading(true);
         try {
+            await COMIC_CACHE_CONTEXT.ready();
+            comicCache = COMIC_CACHE_CONTEXT.getCacheById(uid);
             const data = await reader({ uid });
             const savedPage = comicCache?.currentPage || 1;
             await preloadWindow(data.length, savedPage);
