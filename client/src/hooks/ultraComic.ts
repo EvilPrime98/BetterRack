@@ -24,11 +24,12 @@ export function ultraComic() {
 
     const getComicById = async (
         id: number,
+        sourceWiki: string,
         thumbnailSize?: number
     ) => {
         const { data } = await ultraComicQueryClient.fetch(
-            `wiki-comic-${id}`,
-            () => fetchComicById(id, thumbnailSize),
+            `wiki-comic-${sourceWiki}-${id}`,
+            () => fetchComicById(id, sourceWiki, thumbnailSize),
             60 * 5 * 1000
         ) as { data: WikiComic | null };
         setComic(data);

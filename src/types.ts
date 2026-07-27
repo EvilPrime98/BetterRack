@@ -1,3 +1,5 @@
+import type { WikiComic } from "better-wiki";
+
 export type TPostLink = {
     id?: number;
     thumbnailUrl?: string;
@@ -98,6 +100,22 @@ export type TLibraryModel = {
     moveFile: (fileUid: string, targetFolderUid: string) => Promise<void>,
     deleteFolder: (folderUid: string) => Promise<void>,
     deleteFile: (fileUid: string) => Promise<void>
+}
+
+export const WIKI_URLS = [
+    'https://dc.fandom.com',
+    'https://marvel.fandom.com',
+    'https://imagecomics.fandom.com',
+    'https://darkhorse.fandom.com',
+    'https://dynamiteentertainment.fandom.com'
+] as const;
+
+export type TWikiUrl = typeof WIKI_URLS[number];
+
+export type TWikiModel = {
+    getComic: (title: string, thumbnailSize?: number) => Promise<WikiComic | null>,
+    getComicById: (pageId: number, sourceWiki: TWikiUrl, thumbnailSize?: number) => Promise<WikiComic | null>,
+    getComics: (title: string, thumbnailSize?: number) => Promise<WikiComic[]>
 }
 
 export type TZipModel = {

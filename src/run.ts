@@ -7,6 +7,8 @@ import { libraryRouter } from './routers/libraryRouter';
 import { comicReaderRouter } from './routers/comic-reader.router';
 import { Zip7Decompressor } from './models/decompressor.model';
 import { COMIC_TMP_DIR } from './controllers/comic-reader.controller';
+import { WikiModel } from './models/wikiModel';
+import { wikiRouter } from './routers/wikiRouter';
 
 const COMIC_TMP_TTL_MS = 30 * 60 * 1000;
 const COMIC_TMP_SWEEP_INTERVAL_MS = 10 * 60 * 1000;
@@ -19,10 +21,13 @@ async function startApp() {
     const app = new Hono();
     const libModel = new LibraryModel(OUTPUT_DIRS);
     const zipModel = new Zip7Decompressor();
+    const wikiModel = new WikiModel();
 
     app.use(cors());
 
     app.route('/api/library', libraryRouter(libModel));
+
+    app.route('/api/wiki', wikiRouter(wikiModel));
 
     app.route('/read', comicReaderRouter({
         libModel: libModel,

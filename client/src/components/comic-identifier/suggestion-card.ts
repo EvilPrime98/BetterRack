@@ -18,7 +18,7 @@ export function SuggestionCard({
     const onClick = () => {
         COMIC_CACHE_CONTEXT.setCacheById(
             COMIC_IDENT_CTX.itemUid.get(),
-            { prefId: comic.pageId }
+            { prefId: comic.pageId, sourceWiki: comic.sourceWiki }
         )
         COMIC_IDENT_CTX.isVisible.set(false);
     }

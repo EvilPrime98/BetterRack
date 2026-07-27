@@ -62,13 +62,15 @@ export function ComicCard({
 
     const scanComic = async () => {
         const cache = itemCache();
-        if (cache?.prefId) {
-            await getComicById(cache.prefId,coverSize);
+        if (cache?.prefId && cache?.sourceWiki) {
+            await getComicById(cache.prefId, cache.sourceWiki, coverSize);
         } else {
             await getComic(item.name,coverSize)
-            if (comic()) {
+            const found = comic();
+            if (found) {
                 COMIC_CACHE_CONTEXT.setCacheById(item.uid, {
-                    prefId: comic()?.pageId
+                    prefId: found.pageId,
+                    sourceWiki: found.sourceWiki
                 })
             }
         }

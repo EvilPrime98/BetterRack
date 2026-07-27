@@ -46,6 +46,8 @@ export interface IComicLSCache {
     comicId: string;
     /**Preference for the wiki page ID */
     prefId: number;
+    /**Base URL of the wiki the prefId belongs to (page IDs are only unique per wiki) */
+    sourceWiki: string;
     /**Preference for the cover */
     cover: string;
     /**Rating for the comic */

@@ -1,53 +1,28 @@
-import type { WikiComic, WikiFlags } from "better-wiki";
-import { wikiDarkHorseClient, wikiDcClient, wikiDynamiteClient, wikiImageClient, wikiMarvelClient } from "../context/wiki.context";
+import type { WikiComic } from "better-wiki";
 import { DEFAULT_IMAGE_SIZE } from "../data";
+import { API_URL } from "./library.service";
 
 export async function fetchComic(
     title: string,
     thumbnailSize: number = DEFAULT_IMAGE_SIZE
 ): Promise<WikiComic | null> {
 
-    const flags = {
-        thumbnailSize: thumbnailSize,
-        includeCollections: true
-    }
-    
-    const results = await Promise.all([       
-        wikiDcClient.getComic(title,flags),      
-        wikiMarvelClient.getComic(title,flags),     
-        wikiImageClient.getComic(title,flags),      
-        wikiDarkHorseClient.getComic(title,flags),   
-        wikiDynamiteClient.getComic(title,flags)
-    ]);
+    const params = new URLSearchParams({ title, thumbnailSize: String(thumbnailSize) });
+    const response = await fetch(`${API_URL}/api/wiki/comic?${params}`);
+    return await response.json();
 
-    for (const result of results){
-        if (result) return result;
-    }
-
-    return null
-    
 }
 
 export async function fetchComicById(
     pageId: number,
+    sourceWiki: string,
     thumbnailSize: number = DEFAULT_IMAGE_SIZE
 ): Promise<WikiComic | null> {
 
-    const flags = {
-        thumbnailSize
-    }
-    
-    const results = await Promise.all([      
-        wikiDcClient.getComicById(pageId,flags),     
-        wikiMarvelClient.getComicById(pageId,flags),      
-        wikiImageClient.getComicById(pageId,flags),    
-        wikiDarkHorseClient.getComicById(pageId,flags),    
-        wikiDynamiteClient.getComicById(pageId,flags)
-    ]);
+    const params = new URLSearchParams({ sourceWiki, thumbnailSize: String(thumbnailSize) });
+    const response = await fetch(`${API_URL}/api/wiki/comic/${pageId}?${params}`);
+    return await response.json();
 
-    for (const result of results) if (result) return result;
-    return null;
-    
 }
 
 export async function fetchComics(
@@ -55,20 +30,8 @@ export async function fetchComics(
     thumbnailSize: number = DEFAULT_IMAGE_SIZE
 ): Promise<WikiComic[]> {
 
-    const flags = {
-        multiple: true,
-        thumbnailSize: thumbnailSize,
-        includeCollections: true
-    } as Pick<WikiFlags, "thumbnailSize" | "includeCollections" | "category" | "sorted"> & { multiple: true };
-    
-    const results = await Promise.all([
-        wikiDcClient.getComic(title,flags),
-        wikiMarvelClient.getComic(title,flags),
-        wikiImageClient.getComic(title,flags),
-        wikiDarkHorseClient.getComic(title, flags),       
-        wikiDynamiteClient.getComic(title, flags)
-    ]);
+    const params = new URLSearchParams({ title, thumbnailSize: String(thumbnailSize) });
+    const response = await fetch(`${API_URL}/api/wiki/comics?${params}`);
+    return await response.json();
 
-    return results.flat()
-    
 }
