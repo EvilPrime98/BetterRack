@@ -18,8 +18,8 @@ importers:
         specifier: ^26.1.1
         version: 26.1.1
       better-wiki:
-        specifier: ^0.14.1
-        version: 0.14.1
+        specifier: ^0.15.0
+        version: 0.15.0
       ultra-light-js:
         specifier: ^1.3.1
         version: 1.3.1
@@ -246,8 +246,8 @@ packages:
   base64-js@1.5.1:
     resolution: {integrity: sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==}
 
-  better-wiki@0.14.1:
-    resolution: {integrity: sha512-AFJKKx33XSmnni59qbxpHWzTYM2cg4MA94tlsubrUGcwO3PAoKDJ25NFYOXRgIOYy8NiAeVCoDBB5u8P0VhPCw==}
+  better-wiki@0.15.0:
+    resolution: {integrity: sha512-9KUZ95hS48Ncjx+NC5oQlKe8PPPvEjLyna4JDmkgblcWvV+7p8fconFuijraGczCfNlVCnkJmn8nXw1CZYauYA==}
     engines: {node: '>=18'}
 
   big-integer@1.6.52:
@@ -922,7 +922,7 @@ snapshots:
 
   base64-js@1.5.1: {}
 
-  better-wiki@0.14.1:
+  better-wiki@0.15.0:
     dependencies:
       fuse.js: 7.4.2
 

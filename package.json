@@ -37,6 +37,7 @@
   "dependencies": {
     "@types/he": "^1.2.3",
     "@types/node": "^25.9.1",
+    "better-wiki": "^0.15.0",
     "he": "^1.2.0",
     "hono": "^4.12.12",
     "linkedom": "^0.18.12",
