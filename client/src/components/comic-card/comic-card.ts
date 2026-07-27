@@ -21,10 +21,12 @@ export function ComicCard({
     const coverSize = 280; //x2 the rendered size of the image element
 
     const { comic, getComic, getComicById, subsComic } = ultraComic();
-    
+
     const [itemCache, setItemCache, subsItemCache] = ultraState<IComicLSCache|null>(
         COMIC_CACHE_CONTEXT.getCacheById(item.uid) || null
     );
+
+    const [scanFailed, setScanFailed, subsScanFailed] = ultraState(false);
 
     const readerHref = `/${item.uid}/reader`;
     
@@ -61,6 +63,7 @@ export function ComicCard({
     }
 
     const scanComic = async () => {
+        setScanFailed(false);
         const cache = itemCache();
         if (cache?.prefId && cache?.sourceWiki) {
             await getComicById(cache.prefId, cache.sourceWiki, coverSize);
@@ -74,6 +77,7 @@ export function ComicCard({
                 })
             }
         }
+        setScanFailed(!comic());
     }
 
     let hasScanned = false;
@@ -145,6 +149,20 @@ export function ComicCard({
                         comic,
                         subsComic,
                         item
+                    }),
+
+                    UltraActivity({
+                        component: UltraComponent({
+                            component: '<div></div>',
+                            className: [styles.identifyOverlay],
+                            children: [
+                                IdentifyButton({ uid: item.uid })
+                            ]
+                        }),
+                        mode: {
+                            state: () => COMICS_TYPE_CTX.type.get() !== 'detail' && scanFailed(),
+                            subscriber: [COMICS_TYPE_CTX.type.subscribe, subsScanFailed]
+                        }
                     }),
 
                     ReadBar({

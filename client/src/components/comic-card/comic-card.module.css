@@ -134,6 +134,14 @@
         display: none;
     }
 
+    .identifyOverlay {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        z-index: 2;
+        transform: translateX(-50%);
+    }
+
     .readBadge {
         position: absolute;
         top: 6px;
