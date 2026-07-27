@@ -1,6 +1,5 @@
 import { UltraComponent, UltraLink, ultraNavigate, ultraQueryParams } from "ultra-light-js";
 import styles from './header.module.css';
-import { SearchIcon } from "../icons/search.icon";
 import { SIDEBAR_CONTEXT } from "../context/sidebar.context";
 import { BurgerIcon } from "../icons/burger-icon";
 import { BetterRackIcon } from "../icons/better-rack.icon";
@@ -19,8 +18,6 @@ export function Header() {
         if (ultraQueryParams().search) ultraNavigate({ href: '/' });
     }
 
-    // UltraLink skips its own navigation when the pathname is unchanged, so a
-    // click on '/' while '?search=' is set wouldn't otherwise drop the query
     function goHome() {
         LIBRARY_CONTEXT.searchQuery.set('');
         if (ultraQueryParams().search) ultraNavigate({ href: '/' });
@@ -33,18 +30,8 @@ export function Header() {
         leaveSearchResults();
     }
 
-    function focusSearchInput(e: Event) {
-        (e.currentTarget as HTMLElement)
-            .closest(`.${styles.searchBox}`)
-            ?.querySelector('input')
-            ?.focus();
-    }
-
-    // the header is rebuilt on every route navigation (see App.ts/UltraRouter),
-    // so restore the last submitted query, and refocus if that rebuild was
-    // caused by the user's own search landing on the search page
-    function onSearchMount($box: HTMLElement) {
-        const $input = $box.querySelector('input');
+    function onSearchMount($el: HTMLElement) {
+        const $input = $el as HTMLInputElement;
         if (!$input) return;
         $input.value = LIBRARY_CONTEXT.searchQuery.get();
         if (ultraQueryParams().search) {
@@ -138,16 +125,7 @@ export function Header() {
                             `<span class="${styles.title}">BetterRack</span>`,
                             `<span class="${styles.subtitle}">Comics</span>`
                         ]
-                    })
-
-                ]
-
-            }),
-
-            UltraComponent({
-                component: '<div></div>',
-                className: [styles.icons],
-                children: [
+                    }),
 
                     UltraComponent({
 
@@ -155,22 +133,10 @@ export function Header() {
 
                         className: [styles.searchBox, styles.noDrag],
 
-                        onMount: [onSearchMount],
-
                         children: [
-
+                            
                             UltraComponent({
-                                component: SearchIcon({ size: iconSize - 10 }),
-                                className: [styles.iconBtn],
-                                attributes: {
-                                    'aria-hidden': 'true'
-                                },
-                                eventHandler: {
-                                    click: focusSearchInput
-                                }
-                            }),
-
-                            UltraComponent({
+                                onMount: [onSearchMount],
                                 component: '<input type="text" />',
                                 className: [styles.searchInput],
                                 attributes: {
@@ -183,7 +149,16 @@ export function Header() {
                             })
 
                         ]
-                    }),
+                    })
+
+                ]
+
+            }),
+
+            UltraComponent({
+                component: '<div></div>',
+                className: [styles.icons],
+                children: [
 
                     HeaderMenu()
 

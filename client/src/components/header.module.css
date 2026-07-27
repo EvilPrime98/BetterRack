@@ -5,7 +5,7 @@
     justify-content: space-between;
     box-sizing: border-box;
     height: var(--header-height);
-    background: linear-gradient(180deg, #121212 0%, var(--bg-chrome) 100%);
+    background: var(--bg-chrome);
     padding: 0 20px;
     border-bottom: 1px solid var(--border-subtle);
     box-shadow:
@@ -132,9 +132,9 @@
 
 .searchInput {
     box-sizing: border-box;
-    width: 160px;
+    width: 260px;
     height: 32px;
-    padding: 0 6px;
+    padding: 10px 15px;
     border: none;
     border-radius: 6px;
     background: transparent;
@@ -148,8 +148,7 @@
 }
 
 .searchInput:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: -2px;
+    outline: none;
 }
 
 .noDrag {
