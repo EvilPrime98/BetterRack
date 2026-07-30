@@ -1,6 +1,7 @@
 import { ultraCompState, ultraQuery, type IUltraCompStateStateful } from "ultra-light-js";
 import { getLibrary, refreshLibrary as requestLibraryRefresh } from "../services/library.service";
 import type { ILibraryGroup, ILibraryResponseItem } from "../library.types";
+import { toast } from "../services/toast.service";
 
 const queryClient = ultraQuery();
 
@@ -31,14 +32,19 @@ export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
     },
 
     refreshLibrary: async (comp: ILibraryCtx) => {
-        await queryClient.fetch(
-            'library-refresh',
-            requestLibraryRefresh,
-            0
-        );
-        queryClient.invalidateCache('library-refresh');
-        queryClient.invalidateCache('library');
-        await comp.fetchLibrary();
+        try {
+            await queryClient.fetch(
+                'library-refresh',
+                requestLibraryRefresh,
+                0
+            );
+            queryClient.invalidateCache('library-refresh');
+            queryClient.invalidateCache('library');
+            await comp.fetchLibrary();
+            toast.success('Library refreshed');
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : 'Failed to refresh library.');
+        }
     },
 
     getLibraryItems: (

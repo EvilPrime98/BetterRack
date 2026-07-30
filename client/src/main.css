@@ -44,3 +44,24 @@ body::-webkit-scrollbar {
 a {
     text-decoration: none;
 }
+
+.notyf__toast {
+    min-width: unset;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.notyf__message {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 500;
+    color: #fff;
+}
+
+.notyf__toast.toast-success {
+    border-left: 3px solid var(--accent);
+}
+
+.notyf__toast.toast-error {
+    border-left: 3px solid #ff5c5c;
+}
