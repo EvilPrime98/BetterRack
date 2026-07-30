@@ -20,21 +20,52 @@ function parseEnvFile(filePath: string): Record<string, string> {
 
 function waitForServer(
   url: string,
-  retries = 20,
-  delayMs = 300
+  serverProcess: ChildProcess,
+  retries = 60,
+  delayMs = 500
 ): Promise<void> {
 
   return new Promise((resolve, reject) => {
 
+    let settled = false;
+
+    const onExit = (code: number | null) => {
+      if (settled) return;
+      settled = true;
+      reject(new Error(`Server process exited before responding (code ${code})`));
+    };
+
+    const onError = (err: Error) => {
+      if (settled) return;
+      settled = true;
+      reject(new Error(`Failed to start server process: ${err.message}`));
+    };
+
+    serverProcess.once("exit", onExit);
+    serverProcess.once("error", onError);
+
+    const cleanup = () => {
+      serverProcess.off("exit", onExit);
+      serverProcess.off("error", onError);
+    };
+
     const attempt = (remaining: number) => {
+
+      if (settled) return;
 
       const req = http.get(url, (res) => {
         res.destroy();
+        if (settled) return;
+        settled = true;
+        cleanup();
         resolve();
       });
 
       req.on("error", () => {
+        if (settled) return;
         if (remaining <= 0) {
+          settled = true;
+          cleanup();
           reject(new Error(`Server did not respond at ${url}`));
           return;
         }
@@ -94,6 +125,9 @@ async function startDesktopApp() {
         const exePath = path.join(resourcesPath, "server", "run.exe");
         const bundledEnv = parseEnvFile(path.join(resourcesPath, ".env"));
 
+        const dbDir = path.join(app.getPath("userData"), "database");
+        fs.mkdirSync(dbDir, { recursive: true });
+
         serverProcess = spawn(exePath, [], {
 
           cwd: app.getPath("userData"),
@@ -103,6 +137,8 @@ async function startDesktopApp() {
             ...bundledEnv,
             PORT,
             CLIENT_DIST_DIR: path.join(resourcesPath, "client"),
+            COMIC_DATA_DB: path.join(dbDir, "comic-data.sqlite"),
+            PREFERENCES_DB: path.join(dbDir, "preferences.sqlite"),
           },
 
         });
@@ -120,8 +156,8 @@ async function startDesktopApp() {
 
       serverProcess.stdout?.on("data", (data) => console.log(`[server] ${data}`));
       serverProcess.stderr?.on("data", (data) => console.error(`[server] ${data}`));
-      
-      await waitForServer(SERVER_URL);
+
+      await waitForServer(SERVER_URL, serverProcess);
 
     } catch (e) {
 
