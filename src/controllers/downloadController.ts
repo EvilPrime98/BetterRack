@@ -9,7 +9,6 @@ export class DownloadController {
     private gcwModel: TGetComicsApiModel;
     private fsModel: fsModel;
     private libModel: TLibraryModel;
-    private BOT_NOTIFY_URL: string;
 
     constructor(
         dwnModel: TDownloadModel,
@@ -21,7 +20,6 @@ export class DownloadController {
         this.gcwModel = gcwModel;
         this.fsModel = fsModel;
         this.libModel = libModel;
-        this.BOT_NOTIFY_URL = process.env['BOT_NOTIFY_URL'] || '';
     }
 
     public async downloadComic(
@@ -70,19 +68,11 @@ export class DownloadController {
                     const emit = (event: object) =>
                         stream.writeSSE({ data: JSON.stringify(event) });
 
-                    const dest = await dwnModel.downloadComic({
+                    await dwnModel.downloadComic({
                         link: { title, downloadLink },
                         outputDir: outputDirPath,
                         onProgress: (event) => { emit(event); }
                     });
-
-                    if (dest && this.BOT_NOTIFY_URL) {
-                        fetch(this.BOT_NOTIFY_URL, {
-                            method: 'POST',
-                            headers: { 'content-type': 'application/json' },
-                            body: JSON.stringify({ text: `GCW Client: Download finished: ${title}` })
-                        }).catch(() => {});
-                    }
 
                     libModel.scan();
                 });

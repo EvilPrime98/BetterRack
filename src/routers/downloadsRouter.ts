@@ -8,7 +8,7 @@ export function downloadsRouter(
     gcwModel: TGetComicsApiModel,
     fsModel: fsModel,
     libModel: TLibraryModel
-){   
+){
     const app = new Hono();
     const cc = new DownloadController(dwnModel, gcwModel, fsModel, libModel);
     app.get('/', (c) => cc.downloadComic(c));
