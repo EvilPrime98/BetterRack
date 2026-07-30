@@ -8,6 +8,7 @@ client/dist
 downloads
 graphify-out/
 CLAUDE.md
-src/database/
+src/database/*
+!src/database/schema.ts
 tmp-decompressor/
 release/

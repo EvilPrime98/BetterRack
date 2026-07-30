@@ -1,30 +1,33 @@
 import path from "node:path";
 import { existsSync, readFileSync } from "node:fs";
 import { Database } from "bun:sqlite";
+import { drizzle, type BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
+import { eq } from "drizzle-orm";
 import type { TAppSettings, TLibraryPref, TPreferencesModel } from "#src/types.ts";
-import type { TAppSettingRow, TLibraryPrefRow } from "./preferences.types";
+import { appSettings, libraryItemPrefs } from "#src/database/schema.ts";
 
 const DEFAULT_SETTINGS: TAppSettings = {
     outputDirs: [],
     apiUrl: '',
     baseUrl: '',
     hostDomain: '',
+    downloadDir: '',
 };
 
 export class PreferencesModel implements TPreferencesModel {
 
-    private db: Database;
+    private db: BunSQLiteDatabase;
 
     constructor() {
-        const dbPath = path.resolve('src/database/preferences.sqlite');
-        this.db = new Database(dbPath, { create: true });
-        this.db.run(`
+        const dbPath = process.env['PREFERENCES_DB'] ?? path.resolve('src/database/preferences.sqlite');
+        const sqlite = new Database(dbPath, { create: true });
+        sqlite.run(`
             CREATE TABLE IF NOT EXISTS app_settings (
                 key TEXT PRIMARY KEY,
                 value TEXT
             )
         `);
-        this.db.run(`
+        sqlite.run(`
             CREATE TABLE IF NOT EXISTS library_item_prefs (
                 uid TEXT PRIMARY KEY,
                 pref_publisher TEXT,
@@ -32,13 +35,14 @@ export class PreferencesModel implements TPreferencesModel {
                 pref_cover TEXT
             )
         `);
+        this.db = drizzle(sqlite);
         this.seedAppSettingsFromEnv();
         this.seedLibraryPrefsFromFile();
     }
 
     private seedAppSettingsFromEnv = () => {
         try {
-            const { count } = this.db.query<{ count: number }, []>('SELECT COUNT(*) as count FROM app_settings').get()!;
+            const count = this.db.select().from(appSettings).all().length;
             if (count > 0) return;
 
             const outputDirs = (process.env.OUTPUT_DIR || '').split(',').map(dir => dir.trim()).filter(Boolean);
@@ -48,6 +52,7 @@ export class PreferencesModel implements TPreferencesModel {
             if (process.env.API_URL) seed.apiUrl = process.env.API_URL;
             if (process.env.BASE_URL) seed.baseUrl = process.env.BASE_URL;
             if (process.env.HOST_DOMAIN) seed.hostDomain = process.env.HOST_DOMAIN;
+            if (process.env.DOWNLOAD_DIR) seed.downloadDir = process.env.DOWNLOAD_DIR;
 
             if (Object.keys(seed).length > 0) this.updateAppSettings(seed);
         } catch (e) {
@@ -57,7 +62,7 @@ export class PreferencesModel implements TPreferencesModel {
 
     private seedLibraryPrefsFromFile = () => {
         try {
-            const { count } = this.db.query<{ count: number }, []>('SELECT COUNT(*) as count FROM library_item_prefs').get()!;
+            const count = this.db.select().from(libraryItemPrefs).all().length;
             if (count > 0) return;
 
             const filePath = process.env['LIB_PREFERENCES'] || path.resolve('src/database/library-pref.json');
@@ -67,16 +72,12 @@ export class PreferencesModel implements TPreferencesModel {
             const prefs: TLibraryPref[] = JSON.parse(content);
 
             for (const pref of prefs) {
-                this.db.run(`
-                    INSERT INTO library_item_prefs (uid, pref_publisher, recursive, pref_cover)
-                    VALUES (?, ?, ?, ?)
-                    ON CONFLICT(uid) DO NOTHING
-                `, [
-                    pref.uid,
-                    pref.prefPublisher ?? null,
-                    pref.recursive === undefined ? null : Number(pref.recursive),
-                    pref.prefCover ?? null,
-                ]);
+                this.db.insert(libraryItemPrefs).values({
+                    uid: pref.uid,
+                    prefPublisher: pref.prefPublisher ?? null,
+                    recursive: pref.recursive === undefined ? null : Number(pref.recursive),
+                    prefCover: pref.prefCover ?? null,
+                }).onConflictDoNothing().run();
             }
         } catch (e) {
             console.error('Failed to seed library prefs from file:', e);
@@ -84,7 +85,7 @@ export class PreferencesModel implements TPreferencesModel {
     }
 
     getAppSettings = (): TAppSettings => {
-        const rows = this.db.query<TAppSettingRow, []>('SELECT * FROM app_settings').all();
+        const rows = this.db.select().from(appSettings).all();
         const values: Record<string, string> = {};
         for (const row of rows) values[row.key] = row.value ?? '';
 
@@ -93,6 +94,7 @@ export class PreferencesModel implements TPreferencesModel {
             apiUrl: values.apiUrl ?? DEFAULT_SETTINGS.apiUrl,
             baseUrl: values.baseUrl ?? DEFAULT_SETTINGS.baseUrl,
             hostDomain: values.hostDomain ?? DEFAULT_SETTINGS.hostDomain,
+            downloadDir: values.downloadDir ?? DEFAULT_SETTINGS.downloadDir,
         };
     }
 
@@ -100,29 +102,28 @@ export class PreferencesModel implements TPreferencesModel {
         for (const [key, value] of Object.entries(partial)) {
             if (value === undefined) continue;
             const stored = key === 'outputDirs' ? JSON.stringify(value) : String(value);
-            this.db.run(`
-                INSERT INTO app_settings (key, value)
-                VALUES (?, ?)
-                ON CONFLICT(key) DO UPDATE SET value = excluded.value
-            `, [key, stored]);
+            this.db.insert(appSettings)
+                .values({ key, value: stored })
+                .onConflictDoUpdate({ target: appSettings.key, set: { value: stored } })
+                .run();
         }
         return this.getAppSettings();
     }
 
-    private rowToLibraryPref = (row: TLibraryPrefRow): TLibraryPref => ({
+    private rowToLibraryPref = (row: typeof libraryItemPrefs.$inferSelect): TLibraryPref => ({
         uid: row.uid,
-        prefPublisher: row.pref_publisher ?? '',
+        prefPublisher: row.prefPublisher ?? '',
         recursive: Boolean(row.recursive),
-        prefCover: row.pref_cover ?? '',
+        prefCover: row.prefCover ?? '',
     });
 
     getLibraryPref = (uid: string): TLibraryPref | undefined => {
-        const row = this.db.query<TLibraryPrefRow, [string]>('SELECT * FROM library_item_prefs WHERE uid = ?').get(uid);
+        const row = this.db.select().from(libraryItemPrefs).where(eq(libraryItemPrefs.uid, uid)).get();
         return row ? this.rowToLibraryPref(row) : undefined;
     }
 
     getAllLibraryPrefs = (): TLibraryPref[] => {
-        const rows = this.db.query<TLibraryPrefRow, []>('SELECT * FROM library_item_prefs').all();
+        const rows = this.db.select().from(libraryItemPrefs).all();
         return rows.map(this.rowToLibraryPref);
     }
 
@@ -137,19 +138,22 @@ export class PreferencesModel implements TPreferencesModel {
             ...partial,
         };
 
-        this.db.run(`
-            INSERT INTO library_item_prefs (uid, pref_publisher, recursive, pref_cover)
-            VALUES (?, ?, ?, ?)
-            ON CONFLICT(uid) DO UPDATE SET
-                pref_publisher = excluded.pref_publisher,
-                recursive = excluded.recursive,
-                pref_cover = excluded.pref_cover
-        `, [
-            merged.uid,
-            merged.prefPublisher,
-            Number(merged.recursive),
-            merged.prefCover,
-        ]);
+        this.db.insert(libraryItemPrefs)
+            .values({
+                uid: merged.uid,
+                prefPublisher: merged.prefPublisher,
+                recursive: Number(merged.recursive),
+                prefCover: merged.prefCover,
+            })
+            .onConflictDoUpdate({
+                target: libraryItemPrefs.uid,
+                set: {
+                    prefPublisher: merged.prefPublisher,
+                    recursive: Number(merged.recursive),
+                    prefCover: merged.prefCover,
+                },
+            })
+            .run();
 
         return merged;
     }

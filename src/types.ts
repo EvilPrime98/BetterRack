@@ -110,6 +110,7 @@ export type TAppSettings = {
     apiUrl: string;
     baseUrl: string;
     hostDomain: string;
+    downloadDir: string;
 }
 
 export type TPreferencesModel = {

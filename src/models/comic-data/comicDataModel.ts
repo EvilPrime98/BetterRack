@@ -1,16 +1,18 @@
 import path from "node:path";
 import { Database } from "bun:sqlite";
+import { drizzle, type BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
+import { eq } from "drizzle-orm";
 import type { TComicData, TComicDataModel } from "#src/types.ts";
-import type { TComicDataRow } from "./comicData.types";
+import { comicData } from "#src/database/schema.ts";
 
 export class ComicDataModel implements TComicDataModel {
 
-    private db: Database;
+    private db: BunSQLiteDatabase;
 
     constructor() {
         const dbPath = process.env['COMIC_DATA_DB'] ?? path.resolve('src/database/comic-data.sqlite');
-        this.db = new Database(dbPath, { create: true });
-        this.db.run(`
+        const sqlite = new Database(dbPath, { create: true });
+        sqlite.run(`
             CREATE TABLE IF NOT EXISTS comic_data (
                 uid TEXT PRIMARY KEY,
                 pref_id INTEGER,
@@ -22,28 +24,29 @@ export class ComicDataModel implements TComicDataModel {
                 read INTEGER
             )
         `);
+        this.db = drizzle(sqlite);
     }
 
-    private rowToComicData = (row: TComicDataRow): TComicData => ({
+    private rowToComicData = (row: typeof comicData.$inferSelect): TComicData => ({
         uid: row.uid,
-        prefId: row.pref_id ?? undefined,
-        sourceWiki: row.source_wiki ?? undefined,
+        prefId: row.prefId ?? undefined,
+        sourceWiki: row.sourceWiki ?? undefined,
         cover: row.cover ?? undefined,
         rating: row.rating ?? undefined,
-        currentPage: row.current_page ?? undefined,
-        readPer: row.read_per ?? undefined,
+        currentPage: row.currentPage ?? undefined,
+        readPer: row.readPer ?? undefined,
         read: row.read === null ? undefined : Boolean(row.read),
     });
 
     getAll = (): Record<string, TComicData> => {
-        const rows = this.db.query<TComicDataRow, []>('SELECT * FROM comic_data').all();
+        const rows = this.db.select().from(comicData).all();
         const returnable: Record<string, TComicData> = {};
         for (const row of rows) returnable[row.uid] = this.rowToComicData(row);
         return returnable;
     }
 
     getByUid = (uid: string): TComicData | undefined => {
-        const row = this.db.query<TComicDataRow, [string]>('SELECT * FROM comic_data WHERE uid = ?').get(uid);
+        const row = this.db.select().from(comicData).where(eq(comicData.uid, uid)).get();
         return row ? this.rowToComicData(row) : undefined;
     }
 
@@ -51,27 +54,30 @@ export class ComicDataModel implements TComicDataModel {
         const existing = this.getByUid(uid);
         const merged: TComicData = { uid, ...existing, ...partial };
 
-        this.db.run(`
-            INSERT INTO comic_data (uid, pref_id, source_wiki, cover, rating, current_page, read_per, read)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(uid) DO UPDATE SET
-                pref_id = excluded.pref_id,
-                source_wiki = excluded.source_wiki,
-                cover = excluded.cover,
-                rating = excluded.rating,
-                current_page = excluded.current_page,
-                read_per = excluded.read_per,
-                read = excluded.read
-        `, [
-            merged.uid,
-            merged.prefId ?? null,
-            merged.sourceWiki ?? null,
-            merged.cover ?? null,
-            merged.rating ?? null,
-            merged.currentPage ?? null,
-            merged.readPer ?? null,
-            merged.read === undefined ? null : Number(merged.read),
-        ]);
+        this.db.insert(comicData)
+            .values({
+                uid: merged.uid,
+                prefId: merged.prefId ?? null,
+                sourceWiki: merged.sourceWiki ?? null,
+                cover: merged.cover ?? null,
+                rating: merged.rating ?? null,
+                currentPage: merged.currentPage ?? null,
+                readPer: merged.readPer ?? null,
+                read: merged.read === undefined ? null : Number(merged.read),
+            })
+            .onConflictDoUpdate({
+                target: comicData.uid,
+                set: {
+                    prefId: merged.prefId ?? null,
+                    sourceWiki: merged.sourceWiki ?? null,
+                    cover: merged.cover ?? null,
+                    rating: merged.rating ?? null,
+                    currentPage: merged.currentPage ?? null,
+                    readPer: merged.readPer ?? null,
+                    read: merged.read === undefined ? null : Number(merged.read),
+                },
+            })
+            .run();
 
         return merged;
     }
