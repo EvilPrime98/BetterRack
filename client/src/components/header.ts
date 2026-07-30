@@ -122,8 +122,7 @@ export function Header() {
                         component: '<div></div>',
                         className: [styles.text],
                         children: [
-                            `<span class="${styles.title}">BetterRack</span>`,
-                            `<span class="${styles.subtitle}">Comics</span>`
+                            `<span class="${styles.title}">BetterRack</span>`
                         ]
                     }),
 

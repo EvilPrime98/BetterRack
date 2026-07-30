@@ -61,6 +61,12 @@
     stroke: #34c3d1;
 }
 
+.back:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
 .counter {
     font-family: var(--font-mono);
     font-size: 12px;
@@ -184,4 +190,9 @@
 .retry:hover {
     background-color: #34c3d1;
     color: #0a0a0a;
+}
+
+.retry:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
 }
