@@ -16,6 +16,7 @@ export function SettingsPage() {
         apiUrl: '',
         baseUrl: '',
         hostDomain: '',
+        downloadDir: '',
         folderPath: ''
     })
 
@@ -36,6 +37,7 @@ export function SettingsPage() {
         fieldsState.apiUrl.set(settings.apiUrl);
         fieldsState.baseUrl.set(settings.baseUrl);
         fieldsState.hostDomain.set(settings.hostDomain);
+        fieldsState.downloadDir.set(settings.downloadDir);
     }
 
     function renderFolders(
@@ -83,6 +85,7 @@ export function SettingsPage() {
             apiUrl: fieldsState.apiUrl.get(),
             baseUrl: fieldsState.baseUrl.get(),
             hostDomain: fieldsState.hostDomain.get(),
+            downloadDir: fieldsState.downloadDir.get(),
         };
 
         setSettingsError('');
@@ -106,7 +109,7 @@ export function SettingsPage() {
 
             className: [styles.page],
 
-            onMount: [() => { SETTINGS_CONTEXT.fetchSettings(); }, syncFields],
+            onMount: [syncFields],
 
             trigger: [{
                 subscriber: SETTINGS_CONTEXT.settings.subscribe,
@@ -192,43 +195,79 @@ export function SettingsPage() {
                 }),
 
                 UltraComponent({
-                    
+
                     component: '<section></section>',
-                    
+
                     className: [styles.section],
-                    
+
                     children: [
 
-                        `<h2 class="${styles.sectionTitle}">API configuration</h2>`,
+                        UltraComponent({
 
-                        TextField({ 
-                            key: 'apiUrl', 
-                            label: 'API URL', 
-                            placeholder: 'https://example.com/wp-json/wp/v2',
-                            onKeydown: (e: Event) => {
-                                const $input = e.target as HTMLInputElement;
-                                fieldsState.apiUrl.set($input.value)
-                            }
+                            component: '<div></div>',
+
+                            className: [styles.fieldGroup],
+
+                            children: [
+
+                                `<h2 class="${styles.sectionTitle}">Downloads</h2>`,
+
+                                TextField({
+                                    key: 'downloadDir',
+                                    label: 'Download folder',
+                                    placeholder: '/path/to/downloads',
+                                    onKeydown: (e: Event) => {
+                                        const $input = e.target as HTMLInputElement;
+                                        fieldsState.downloadDir.set($input.value)
+                                    }
+                                }),
+
+                            ]
+
                         }),
 
-                        TextField({ 
-                            key: 'baseUrl', 
-                            label: 'Base URL', 
-                            placeholder: 'https://example.com',
-                            onKeydown: (e: Event) => {
-                                const $input = e.target as HTMLInputElement;
-                                fieldsState.baseUrl.set($input.value)
-                            }
-                        }),
+                        UltraComponent({
 
-                        TextField({ 
-                            key: 'hostDomain', 
-                            label: 'Host domain', 
-                            placeholder: 'https://example.com',
-                            onKeydown: (e: Event) => {
-                                const $input = e.target as HTMLInputElement;
-                                fieldsState.hostDomain.set($input.value)
-                            }
+                            component: '<div></div>',
+
+                            className: [styles.fieldGroup],
+
+                            children: [
+
+                                `<h2 class="${styles.sectionTitle} ${styles.groupDivider}">API configuration</h2>`,
+
+                                TextField({
+                                    key: 'apiUrl',
+                                    label: 'API URL',
+                                    placeholder: 'https://example.com/wp-json/wp/v2',
+                                    onKeydown: (e: Event) => {
+                                        const $input = e.target as HTMLInputElement;
+                                        fieldsState.apiUrl.set($input.value)
+                                    }
+                                }),
+
+                                TextField({
+                                    key: 'baseUrl',
+                                    label: 'Base URL',
+                                    placeholder: 'https://example.com',
+                                    onKeydown: (e: Event) => {
+                                        const $input = e.target as HTMLInputElement;
+                                        fieldsState.baseUrl.set($input.value)
+                                    }
+                                }),
+
+                                TextField({
+                                    key: 'hostDomain',
+                                    label: 'Host domain',
+                                    placeholder: 'https://example.com',
+                                    onKeydown: (e: Event) => {
+                                        const $input = e.target as HTMLInputElement;
+                                        fieldsState.hostDomain.set($input.value)
+                                    }
+                                }),
+
+                            ]
+
                         }),
 
                         UltraComponent({

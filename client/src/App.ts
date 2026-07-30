@@ -2,9 +2,11 @@ import { UltraRouter } from "ultra-light-js";
 import { LibraryPage } from "./pages/library-page";
 import { ReaderPage } from "./pages/reader.page";
 import { SettingsPage } from "./pages/settings.page";
+import { StorePage } from "./pages/store.page";
 import { COMIC_CACHE_CONTEXT } from "./context/comic-cache.context";
 import { USER_PREF } from "./context/user-pref-cache.context";
 import { COMICS_TYPE_CTX } from "./context/comics-types.context";
+import { SETTINGS_CONTEXT } from "./context/settings.context";
 
 export function App() {
 
@@ -14,9 +16,12 @@ export function App() {
 
     COMICS_TYPE_CTX.init();
 
+    SETTINGS_CONTEXT.fetchSettings();
+
     return UltraRouter(
         { path: '/:uid/reader', component:({ uid } = {}) => ReaderPage({ uid }) },
         { path: '/settings', component: () => SettingsPage() },
+        { path: '/store', component: () => StorePage() },
         { path: '/:uid', component: ({ uid } = {}) => LibraryPage({ uid }) },
         { path: '/*', component: () => LibraryPage({}) }
     )

@@ -36,6 +36,18 @@
     color: #f2f2f2;
 }
 
+.fieldGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.groupDivider {
+    margin-top: 4px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border-subtle);
+}
+
 .folderList {
     display: flex;
     flex-direction: column;
@@ -102,6 +114,11 @@
     color: #f2f2f2;
 }
 
+.removeBtn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
 .addRow {
     display: flex;
     gap: 8px;
@@ -133,9 +150,9 @@
     font-size: 12px;
 }
 
-.input:focus,
 .input:focus-visible {
-    outline: none;
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
 }
 
 .addBtn,
@@ -168,4 +185,10 @@
 .saveBtn:active {
     background: #3bb8c4;
     transform: scale(0.97);
+}
+
+.addBtn:focus-visible,
+.saveBtn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
 }

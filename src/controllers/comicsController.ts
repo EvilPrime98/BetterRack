@@ -42,13 +42,14 @@ export class ComicsController {
             );
         }
 
-        const numOfPages = Number(c.req.query('pages')) || 1;
+        const page = Number(c.req.query('page')) || 1;
+        const perPage = Number(c.req.query('perPage')) || 20;
         const exact = c.req.query('exact') === 'true';
-        const pages = Array.from({ length: numOfPages }, (_, i) => i + 1);
-        
-        const postLinks = await this.gcwModel.getPostLinks({ 
-            search, 
-            page: [...pages] 
+
+        const postLinks = await this.gcwModel.getPostLinks({
+            search,
+            page,
+            perPage
         });
 
         if (exact === true) {

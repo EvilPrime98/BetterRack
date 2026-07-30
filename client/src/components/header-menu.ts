@@ -38,6 +38,11 @@ export function HeaderMenu() {
         setOpen(false);
     }
 
+    const goToStore = () => {
+        ultraNavigate({ href: '/store' });
+        setOpen(false);
+    }
+
     return UltraComponent({
 
         component: '<div></div>',
@@ -100,6 +105,21 @@ export function HeaderMenu() {
                                 refresh();
                             },
                             keydown: onEnterOrSpace(refresh)
+                        }
+                    }),
+
+                    UltraComponent({
+                        component: `<li class="${styles.option}">Store</li>`,
+                        attributes: {
+                            role: 'menuitem',
+                            tabindex: '0'
+                        },
+                        eventHandler: {
+                            click: (e: Event) => {
+                                e.stopPropagation();
+                                goToStore();
+                            },
+                            keydown: onEnterOrSpace(goToStore)
                         }
                     }),
 

@@ -3,6 +3,10 @@ export interface IAppSettings {
     apiUrl: string;
     baseUrl: string;
     hostDomain: string;
+    downloadDir: string;
 }
 
-export type TFieldKey = 'apiUrl' | 'baseUrl' | 'hostDomain';
+export type TFieldKey = 'apiUrl'
+| 'baseUrl'
+| 'hostDomain'
+| 'downloadDir';

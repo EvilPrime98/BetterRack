@@ -17,7 +17,7 @@ export function TextField({
 
     function onFieldMount($el: HTMLElement) {
         const $input = $el as HTMLInputElement;
-        $input.value = SETTINGS_CONTEXT.settings.get()[key];
+        $input.value = SETTINGS_CONTEXT.settings.get()[key] ?? '';
     }
 
     return UltraComponent({

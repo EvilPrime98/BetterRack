@@ -2,13 +2,6 @@ import { ultraCompState, type IUltraCompStateStateful } from "ultra-light-js";
 import { getSettings, updateSettings as requestUpdateSettings, addLibraryFolder as requestAddLibraryFolder, removeLibraryFolder as requestRemoveLibraryFolder } from "../services/settings.service";
 import type { IAppSettings } from "../settings.types";
 
-const EMPTY_SETTINGS: IAppSettings = {
-    outputDirs: [],
-    apiUrl: '',
-    baseUrl: '',
-    hostDomain: '',
-};
-
 export interface ISettingsCtx {
     settings: IUltraCompStateStateful<IAppSettings>;
     fetchSettings: () => Promise<void>;
@@ -19,7 +12,13 @@ export interface ISettingsCtx {
 
 export const SETTINGS_CONTEXT: ISettingsCtx = ultraCompState({
 
-    settings: EMPTY_SETTINGS,
+    settings: {
+        outputDirs: [],
+        apiUrl: '',
+        baseUrl: '',
+        hostDomain: '',
+        downloadDir: '',
+    } as IAppSettings,
 
     fetchSettings: async (comp: ISettingsCtx) => {
         const data = await getSettings();
