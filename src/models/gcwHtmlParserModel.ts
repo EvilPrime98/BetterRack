@@ -4,22 +4,22 @@ import { VALID_STRATS } from "#src/types.ts";
 
 const FORBIDDEN_PROVIDERS = ['terabox', 'mega', 'pixeldrain', 'wetransfer'];
 
-const FORBIDDEN_URLS = [
-    `${process.env.HOST_DOMAIN}/dc`, 
-    `${process.env.HOST_DOMAIN}/marvel`,
-    `${process.env.HOST_DOMAIN}/other-comics`,
-];
-
 export class GcwHtmlParser {
 
     private document;
     private Node;
     private issuesCache: TDownloadLink[] = [];
-    
-    constructor(rawHtml: string){
+    private forbiddenUrls: string[];
+
+    constructor(rawHtml: string, hostDomain: string){
         const result = parseHTML(rawHtml);
         this.document = result.document;
         this.Node = result.Node;
+        this.forbiddenUrls = hostDomain ? [
+            `${hostDomain}/dc`,
+            `${hostDomain}/marvel`,
+            `${hostDomain}/other-comics`,
+        ] : [];
     }
 
     private normalizeText(
@@ -37,7 +37,7 @@ export class GcwHtmlParser {
         const filteredlinks = links
         .filter(link => {
             return FORBIDDEN_PROVIDERS.every(prov => !link.downloadLink?.toLocaleLowerCase()?.includes(prov))
-            && FORBIDDEN_URLS.every(url => !link.downloadLink?.toLocaleLowerCase()?.includes(url) )
+            && this.forbiddenUrls.every(url => !link.downloadLink?.toLocaleLowerCase()?.includes(url) )
             && link.downloadLink !== undefined && link.title !== undefined
         })
         return filteredlinks

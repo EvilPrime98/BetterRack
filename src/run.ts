@@ -11,17 +11,17 @@ import { WikiModel } from './models/wikiModel';
 import { wikiRouter } from './routers/wikiRouter';
 import { ComicDataModel } from './models/comic-data/comicDataModel';
 import { comicDataRouter } from './routers/comicDataRouter';
+import { PreferencesModel } from './models/preferencesModel';
+import { settingsRouter } from './routers/settingsRouter';
 
 const COMIC_TMP_TTL_MS = 30 * 60 * 1000;
 const COMIC_TMP_SWEEP_INTERVAL_MS = 10 * 60 * 1000;
 
 async function startApp() {
 
-    const OUTPUT_DIRS = (process.env.OUTPUT_DIR || '').split(',').map(dir => dir.trim()).filter(Boolean);
-    if (OUTPUT_DIRS.length === 0) throw new Error('Output directory not defined');
-
     const app = new Hono();
-    const libModel = new LibraryModel(OUTPUT_DIRS);
+    const prefsModel = new PreferencesModel();
+    const libModel = new LibraryModel(prefsModel);
     const zipModel = new Zip7Decompressor();
     const wikiModel = new WikiModel();
     const comicDataModel = new ComicDataModel();
@@ -33,6 +33,8 @@ async function startApp() {
     app.route('/api/wiki', wikiRouter(wikiModel));
 
     app.route('/api/comic-data', comicDataRouter(comicDataModel));
+
+    app.route('/api/settings', settingsRouter(prefsModel, libModel));
 
     app.route('/read', comicReaderRouter({
         libModel: libModel,

@@ -99,7 +99,25 @@ export type TLibraryModel = {
     createFolder: (folderName: string, parentFolderUid: string) => Promise<void>,
     moveFile: (fileUid: string, targetFolderUid: string) => Promise<void>,
     deleteFolder: (folderUid: string) => Promise<void>,
-    deleteFile: (fileUid: string) => Promise<void>
+    deleteFile: (fileUid: string) => Promise<void>,
+    addLibraryPath: (dir: string) => Promise<void>,
+    removeLibraryPath: (dir: string) => Promise<void>,
+    getLibraryPaths: () => string[],
+}
+
+export type TAppSettings = {
+    outputDirs: string[];
+    apiUrl: string;
+    baseUrl: string;
+    hostDomain: string;
+}
+
+export type TPreferencesModel = {
+    getAppSettings: () => TAppSettings,
+    updateAppSettings: (partial: Partial<TAppSettings>) => TAppSettings,
+    getLibraryPref: (uid: string) => TLibraryPref | undefined,
+    getAllLibraryPrefs: () => TLibraryPref[],
+    upsertLibraryPref: (uid: string, partial: Partial<Omit<TLibraryPref, 'uid'>>) => TLibraryPref,
 }
 
 export const WIKI_URLS = [

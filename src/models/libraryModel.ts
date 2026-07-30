@@ -2,29 +2,26 @@ import path from "node:path";
 import { readdir, mkdir, rename, rm } from "node:fs/promises";
 import { basename } from "node:path";
 import crypto from 'node:crypto';
-import type { TLibraryEntry, TLibraryGroup, TLibraryModel, TLibraryPref } from "#src/types.ts";
-import fs, { existsSync } from "node:fs";
-import { readFile } from "node:fs/promises";
-import { writeFile } from "node:fs/promises";
+import type { TLibraryEntry, TLibraryGroup, TLibraryModel, TLibraryPref, TPreferencesModel } from "#src/types.ts";
+import fs from "node:fs";
 
 const COMIC_EXTENSIONS = new Set(['.cbz', '.cbr', '.cb7', '.cbt']);
 
 export class LibraryModel implements TLibraryModel {
 
+    private prefsModel: TPreferencesModel;
     private libPaths: string[];
     private db: TLibraryEntry[] = [];
     private pref: TLibraryPref[] = [];
     private entryLibraryIndex = new Map<string, number>();
 
-    constructor(libPath: string | string[]) {
-        const paths = Array.isArray(libPath) ? libPath : libPath.split(',');
-        this.libPaths = paths.map(p => p.trim()).filter(Boolean).map(p => path.resolve(p));
-        if (this.libPaths.length === 0) throw new Error('Output directory not defined');
+    constructor(prefsModel: TPreferencesModel) {
+        this.prefsModel = prefsModel;
+        this.libPaths = this.prefsModel.getAppSettings().outputDirs.map(p => path.resolve(p));
         this.init()
     }
 
     private init = async () => {
-        await this.setPreferences();
         await this.scan();
     }
 
@@ -32,6 +29,8 @@ export class LibraryModel implements TLibraryModel {
      * Scans the library for entries and populates the "db" property.
      */
     scan = async () => {
+
+        this.loadPreferences();
 
         const entries = (await Promise.all(
             this.libPaths.map(async (libPath, libIndex) => {
@@ -79,12 +78,8 @@ export class LibraryModel implements TLibraryModel {
 
     };
 
-    setPreferences = async () => {
-        const filePath = process.env['LIB_PREFERENCES'];
-        if (!filePath) return;
-        if (!existsSync(filePath)) await writeFile('library-pref.json', '');
-        const content = await readFile(filePath, { encoding: 'utf-8'});
-        this.pref = JSON.parse(content);
+    private loadPreferences = () => {
+        this.pref = this.prefsModel.getAllLibraryPrefs();
     }
 
     getPreferences = (uid: string) => {
@@ -92,22 +87,18 @@ export class LibraryModel implements TLibraryModel {
     }
 
     updatePreferences = async (uid: string, updates: Partial<Omit<TLibraryPref, 'uid'>>) => {
+        const updated = this.prefsModel.upsertLibraryPref(uid, updates);
         const existing = this.pref.find(p => p.uid === uid);
         if (existing) {
-            Object.assign(existing, updates);
+            Object.assign(existing, updated);
         } else {
-            this.pref.push({ uid, prefPublisher: '', recursive: false, prefCover: '', ...updates });
+            this.pref.push(updated);
         }
         const dbEntry = this.db.find(e => e.uid === uid);
         if (dbEntry) {
-            const updated = this.pref.find(p => p.uid === uid)!;
             dbEntry.prefPublisher = updated.prefPublisher;
             dbEntry.prefInheritance = updated.recursive;
             dbEntry.prefCover = updated.prefCover;
-        }
-        const filePath = process.env['LIB_PREFERENCES'];
-        if (filePath) {
-            await writeFile(filePath, JSON.stringify(this.pref, null, 2));
         }
     }
 
@@ -176,6 +167,7 @@ export class LibraryModel implements TLibraryModel {
     ) => {
 
         if (!parentFolderUid) {
+            if (this.libPaths.length === 0) throw new Error('No library folder configured.');
             await mkdir(path.resolve(this.libPaths[0], folderName), { recursive: true });
             return;
         }
@@ -220,7 +212,10 @@ export class LibraryModel implements TLibraryModel {
                 if (!targetFolder.did) throw new Error('Target is not a folder.');
                 return targetFolder.path;
             })()
-            : this.libPaths[0];
+            : (() => {
+                if (this.libPaths.length === 0) throw new Error('No library folder configured.');
+                return this.libPaths[0];
+            })();
 
         const newPath = path.resolve(targetPath, basename(file.path));
         await rename(file.path, newPath);
@@ -255,5 +250,31 @@ export class LibraryModel implements TLibraryModel {
         await rm(file.path, { force: true });
         await this.scan();
     }
+
+    /**
+     * Adds a new library folder and persists it to the preferences store.
+     */
+    addLibraryPath = async (dir: string) => {
+        const resolved = path.resolve(dir);
+        if (this.libPaths.includes(resolved)) return;
+        if (!fs.existsSync(resolved) || !fs.statSync(resolved).isDirectory()) {
+            throw new Error('Folder does not exist.');
+        }
+        this.libPaths = [...this.libPaths, resolved];
+        this.prefsModel.updateAppSettings({ outputDirs: this.libPaths });
+        await this.scan();
+    }
+
+    /**
+     * Removes a library folder and persists the change to the preferences store.
+     */
+    removeLibraryPath = async (dir: string) => {
+        const resolved = path.resolve(dir);
+        this.libPaths = this.libPaths.filter(p => p !== resolved);
+        this.prefsModel.updateAppSettings({ outputDirs: this.libPaths });
+        await this.scan();
+    }
+
+    getLibraryPaths = () => this.libPaths;
 
 }
