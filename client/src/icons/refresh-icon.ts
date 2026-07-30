@@ -1,6 +1,6 @@
 export function RefreshIcon({
   size = 10,
-  color = '#c7c7c7'
+  color = 'currentColor'
 }: {
   size?: number;
   color?: string;

@@ -1,12 +1,13 @@
 import { UltraComponent } from "ultra-light-js";
 import { LIBRARY_CONTEXT } from "../../context/library.context";
-import { RefreshIcon } from "../../icons/refresh-icon";
 import styles from './sidebar.module.css';
 
 export function RefreshLibraryButton() {
 
-    function refreshLibrary(){ LIBRARY_CONTEXT.refreshLibrary() };
-    
+    function refreshLibrary(){ 
+        LIBRARY_CONTEXT.refreshLibrary() 
+    };
+
     function onRefreshingChange($button: HTMLElement) {
         $button.classList.toggle(
             styles.spinning,
@@ -16,10 +17,14 @@ export function RefreshLibraryButton() {
 
     return UltraComponent({
         onMount: [onRefreshingChange],
-        component: RefreshIcon({ size: 20 }),
-        className: [styles.button],
-        attributes: { role: 'button', 'aria-label': 'Refresh library' },
+        component: '<button></button>',
+        className: [styles.refreshButton],
+        attributes: { 'aria-label': 'Refresh library' },
         eventHandler: { click: refreshLibrary },
+        children: [
+            `<span class="${styles.refreshSpinner}"></span>`,
+            `<span>Refresh Libraries</span>`
+        ],
         trigger: [{
             subscriber: LIBRARY_CONTEXT.queryClient.get().subscribeToFetching,
             triggerFunction: onRefreshingChange

@@ -108,14 +108,15 @@ export function SideBar() {
                                     display: 'flex',
                                     gap: '10px'
                                 },
-                                children: [                                 
-                                    RefreshLibraryButton(),
+                                children: [                                
                                     SidebarCloseButton()
                                 ]
                             })
                         ]
                     }),
-
+                    
+                    RefreshLibraryButton(), 
+                    
                     UltraComponent({
                         onMount: [onItemsChange],
                         component: '<nav></nav>',
