@@ -5,6 +5,8 @@ import { ImageElement } from "../components/reader-page-image/reader-page-image"
 import { ReaderPageHeader } from "../components/reader-page-header/reader-page-header";
 import { ReaderPageProgressBar } from "../components/reader-page-progress-bar/reader-page-progress-bar";
 import { COMIC_CACHE_CONTEXT } from "../context/comic-cache.context";
+import { ultraComicQueryClient } from "../hooks/ultraComic";
+import { NO_IMAGE_URL } from "../data";
 
 const PRELOAD_WINDOW = 2;
 
@@ -15,6 +17,7 @@ export function ReaderPage({
 }) {
 
     let comicCache = COMIC_CACHE_CONTEXT.getCacheById(uid);
+    const coverPreview = ultraComicQueryClient.cache()[uid] as string || NO_IMAGE_URL;
     const [pages, setPages, subsPages] = ultraState<string[]>([]);
     const [isLoading, setIsLoading, subsIsLoading] = ultraState(true);
     const [hasError, setHasError, subsHasError] = ultraState(false);
@@ -156,6 +159,18 @@ export function ReaderPage({
                 component: '<div></div>',
                 className: [styles.state],
                 children: [
+                    UltraComponent({
+                        component: '<img/>',
+                        className: [styles.coverBackdrop],
+                        attributes: {
+                            src: coverPreview,
+                            alt: '',
+                            'aria-hidden': 'true'
+                        },
+                        styles: {
+                            viewTransitionName: `vt-${uid}`
+                        }
+                    }),
                     '<div class="' + styles.spinner + '"></div>',
                     '<p>Loading pages…</p>'
                 ]

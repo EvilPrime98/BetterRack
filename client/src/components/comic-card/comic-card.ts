@@ -93,9 +93,7 @@ export function ComicCard({
         item.uid,
         onCacheChange
     )
-
-    // fetching hits 5 wiki providers per card, so defer it until the card
-    // is actually scrolled into view instead of firing for every mounted card
+    
     const onCardMount = ($article: HTMLElement) => {
         const observer = new IntersectionObserver((entries) => {
             if (!entries.some(e => e.isIntersecting)) return;

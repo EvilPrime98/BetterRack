@@ -49,7 +49,9 @@ export function ComicCardCover({
     return UltraLink({
 
         href: readerHref,
-        
+
+        viewTransition: true,
+
         trigger: [{
             subscriber: subsIsLoaded,
             triggerFunction: ($link: HTMLElement) => {
@@ -63,6 +65,9 @@ export function ComicCardCover({
                 attributes: {
                     alt: item.name,
                     title: item.name
+                },
+                styles: {
+                    viewTransitionName: `vt-${item.uid}`
                 },
                 eventHandler: {
                     load: () => setIsLoaded(true),
