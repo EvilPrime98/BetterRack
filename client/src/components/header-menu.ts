@@ -1,4 +1,4 @@
-import { UltraComponent, UltraActivity, ultraState, ultraNavigate } from "ultra-light-js";
+import { UltraComponent, UltraActivity, ultraState } from "ultra-light-js";
 import styles from './header-menu.module.css';
 import headerStyles from './header.module.css';
 import { MenuIcon } from "../icons/menu.icon";
@@ -30,16 +30,6 @@ export function HeaderMenu() {
 
     const refresh = () => {
         LIBRARY_CONTEXT.refreshLibrary();
-        setOpen(false);
-    }
-
-    const goToSettings = () => {
-        ultraNavigate({ href: '/settings' });
-        setOpen(false);
-    }
-
-    const goToStore = () => {
-        ultraNavigate({ href: '/store' });
         setOpen(false);
     }
 
@@ -105,36 +95,6 @@ export function HeaderMenu() {
                                 refresh();
                             },
                             keydown: onEnterOrSpace(refresh)
-                        }
-                    }),
-
-                    UltraComponent({
-                        component: `<li class="${styles.option}">Store</li>`,
-                        attributes: {
-                            role: 'menuitem',
-                            tabindex: '0'
-                        },
-                        eventHandler: {
-                            click: (e: Event) => {
-                                e.stopPropagation();
-                                goToStore();
-                            },
-                            keydown: onEnterOrSpace(goToStore)
-                        }
-                    }),
-
-                    UltraComponent({
-                        component: `<li class="${styles.option}">Settings</li>`,
-                        attributes: {
-                            role: 'menuitem',
-                            tabindex: '0'
-                        },
-                        eventHandler: {
-                            click: (e: Event) => {
-                                e.stopPropagation();
-                                goToSettings();
-                            },
-                            keydown: onEnterOrSpace(goToSettings)
                         }
                     })
 

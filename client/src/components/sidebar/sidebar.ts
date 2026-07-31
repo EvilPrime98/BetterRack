@@ -6,6 +6,7 @@ import { SideBarGroup } from "./sidebar-group";
 import type { ILibraryGroup } from "../../library.types";
 import { RefreshLibraryButton } from "./refresh-button";
 import { SidebarCloseButton } from "./close-button";
+import { SidebarSearch } from "./sidebar-search";
 
 export function SideBar() {
 
@@ -114,8 +115,10 @@ export function SideBar() {
                             })
                         ]
                     }),
-                    
-                    RefreshLibraryButton(), 
+
+                    SidebarSearch(),
+
+                    RefreshLibraryButton(),
                     
                     UltraComponent({
                         onMount: [onItemsChange],

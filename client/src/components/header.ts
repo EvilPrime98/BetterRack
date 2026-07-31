@@ -3,6 +3,8 @@ import styles from './header.module.css';
 import { SIDEBAR_CONTEXT } from "../context/sidebar.context";
 import { BurgerIcon } from "../icons/burger-icon";
 import { BetterRackIcon } from "../icons/better-rack.icon";
+import { ShopIcon } from "../icons/shop.icon";
+import { GearIcon } from "../icons/gear.icon";
 import { LIBRARY_CONTEXT } from "../context/library.context";
 import { HeaderMenu } from "./header-menu";
 
@@ -14,53 +16,17 @@ export function Header() {
         SIDEBAR_CONTEXT.isExpanded.set(!SIDEBAR_CONTEXT.isExpanded.get())
     };
 
-    function leaveSearchResults() {
-        if (ultraQueryParams().search) ultraNavigate({ href: '/' });
+    function goToStore() {
+        ultraNavigate({ href: '/store' });
+    }
+
+    function goToSettings() {
+        ultraNavigate({ href: '/settings' });
     }
 
     function goHome() {
         LIBRARY_CONTEXT.searchQuery.set('');
         if (ultraQueryParams().search) ultraNavigate({ href: '/' });
-    }
-
-    function clearSearch($input: HTMLInputElement) {
-        $input.value = '';
-        $input.blur();
-        LIBRARY_CONTEXT.searchQuery.set('');
-        leaveSearchResults();
-    }
-
-    function onSearchMount($el: HTMLElement) {
-        const $input = $el as HTMLInputElement;
-        if (!$input) return;
-        $input.value = LIBRARY_CONTEXT.searchQuery.get();
-        if (ultraQueryParams().search) {
-            $input.focus();
-            const end = $input.value.length;
-            $input.setSelectionRange(end, end);
-        }
-    }
-
-    function onSearchKeydown(e: Event) {
-        const key = (e as KeyboardEvent).key;
-
-        if (key === 'Escape') {
-            clearSearch(e.target as HTMLInputElement);
-            return;
-        }
-
-        if (key !== 'Enter') return;
-
-        const query = (e.target as HTMLInputElement).value.trim();
-        const onSearchPage = !!ultraQueryParams().search;
-
-        LIBRARY_CONTEXT.searchQuery.set(query);
-
-        if (query) {
-            ultraNavigate({ href: `/?search=${encodeURIComponent(query)}` });
-        } else if (onSearchPage) {
-            ultraNavigate({ href: '/' });
-        }
     }
 
     function onEnterOrSpace(
@@ -91,7 +57,7 @@ export function Header() {
                 children: [
 
                     UltraComponent({
-                        component: BurgerIcon({ size: iconSize }),
+                        component: BurgerIcon({ size: iconSize * 1.5 }),
                         className: [styles.iconBtn, styles.noDrag],
                         attributes: {
                             role: 'button',
@@ -114,39 +80,24 @@ export function Header() {
                             click: goHome
                         },
                         children: [
-                            BetterRackIcon({ size: iconSize })
+                            BetterRackIcon({ size: iconSize * 1.3 })
                         ]
                     }),
 
                     UltraComponent({
                         component: '<div></div>',
                         className: [styles.text],
+                        styles: {
+                            userSelect: 'none',
+                        },
                         children: [
-                            `<span class="${styles.title}">BetterRack</span>`
-                        ]
-                    }),
-
-                    UltraComponent({
-
-                        component: '<div></div>',
-
-                        className: [styles.searchBox, styles.noDrag],
-
-                        children: [
-                            
                             UltraComponent({
-                                onMount: [onSearchMount],
-                                component: '<input type="text" />',
-                                className: [styles.searchInput],
-                                attributes: {
-                                    placeholder: 'Search library…',
-                                    'aria-label': 'Search library'
-                                },
-                                eventHandler: {
-                                    keydown: onSearchKeydown
+                                component: `<span>BetterRack</span>`,
+                                className: [styles.title],
+                                styles: {
+                                    fontSize: '1.5rem'
                                 }
                             })
-
                         ]
                     })
 
@@ -156,8 +107,36 @@ export function Header() {
 
             UltraComponent({
                 component: '<div></div>',
-                className: [styles.icons],
+                className: [styles.icons, styles.noDrag],
                 children: [
+
+                    UltraComponent({
+                        component: ShopIcon({ size: iconSize }),
+                        className: [styles.iconBtn],
+                        attributes: {
+                            role: 'button',
+                            tabindex: '0',
+                            'aria-label': 'Store'
+                        },
+                        eventHandler: {
+                            click: goToStore,
+                            keydown: onEnterOrSpace(goToStore)
+                        }
+                    }),
+
+                    UltraComponent({
+                        component: GearIcon({ size: iconSize }),
+                        className: [styles.iconBtn],
+                        attributes: {
+                            role: 'button',
+                            tabindex: '0',
+                            'aria-label': 'Settings'
+                        },
+                        eventHandler: {
+                            click: goToSettings,
+                            keydown: onEnterOrSpace(goToSettings)
+                        }
+                    }),
 
                     HeaderMenu()
 
