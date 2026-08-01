@@ -1,14 +1,15 @@
 import { UltraComponent, ultraQueryParams, ultraState, type UltraLightElement } from "ultra-light-js";
 import styles from './library-page.module.css';
-import { PageHeader } from "../components/page-header";
+import { PageHeader } from "@/components/page-header/page-header";
 import { LIBRARY_CONTEXT } from "../context/library.context";
-import { FolderCard } from "../components/folder-card";
-import { ComicCard } from "../components/comic-card/comic-card";
-import { Layout } from "../layout";
+import { FolderCard } from "@/components/folder-card/folder-card";
+import { ComicCard } from "@/components/comic-card/comic-card";
+import { Layout } from "@/layout";
 import { COMICS_TYPE_CTX } from "../context/comics-types.context";
 import type { ILibraryResponseItem } from "../library.types";
 import { ultraFilters } from "../hooks/ultraFilters";
 import { SearchPage } from "./search.page";
+import { DOCUMENT_TITLE_CONTEXT } from "../context/document-title.context";
 
 export function LibraryPage({
     uid
@@ -86,6 +87,8 @@ export function LibraryPage({
             component: '<section></section>',
 
             className: [styles.page],
+
+            onMount: [() => DOCUMENT_TITLE_CONTEXT.setTitle('Library')],
 
             children: [
 

@@ -1,10 +1,11 @@
 import { UltraActivity, UltraComponent, ultraCompState, type IUltraCompStateStateful, type UltraLightElement } from "ultra-light-js";
 import styles from './store.page.module.css';
 import { Layout } from "../layout";
-import { StoreCard } from "../components/store-card";
+import { StoreCard } from "../components/store-card/store-card";
 import { searchComics, getLatestComics } from "../services/store.service";
 import { toast } from "../services/toast.service";
 import type { IStorePost } from "../store.types";
+import { DOCUMENT_TITLE_CONTEXT } from "../context/document-title.context";
 
 interface IStorePageState {
     query: IUltraCompStateStateful<string>;
@@ -171,7 +172,10 @@ export function StorePage() {
 
             className: [styles.page],
 
-            onMount: [() => { store.loadFirstPage(); }],
+            onMount: [
+                () => { store.loadFirstPage(); },
+                () => DOCUMENT_TITLE_CONTEXT.setTitle('Store')
+            ],
 
             children: [
 

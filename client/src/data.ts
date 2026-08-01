@@ -17,4 +17,7 @@ const noCoverSvg = `
 `.trim();
 
 export const NO_IMAGE_URL = `data:image/svg+xml,${encodeURIComponent(noCoverSvg)}`;
+
 export const DEFAULT_IMAGE_SIZE = 120;
+
+export const APP_NAME = 'BetterRack';
