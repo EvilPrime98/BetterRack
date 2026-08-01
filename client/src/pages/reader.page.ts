@@ -5,10 +5,13 @@ import { ImageElement } from "../components/reader-page-image/reader-page-image"
 import { ReaderPageHeader } from "../components/reader-page-header/reader-page-header";
 import { ReaderPageProgressBar } from "../components/reader-page-progress-bar/reader-page-progress-bar";
 import { COMIC_CACHE_CONTEXT } from "../context/comic-cache.context";
-import { ultraComicQueryClient } from "../hooks/ultraComic";
-import { NO_IMAGE_URL } from "../data";
+import { DOCUMENT_TITLE_CONTEXT } from "../context/document-title.context";
 
 const PRELOAD_WINDOW = 2;
+
+const MIN_ZOOM = 0.5;
+const MAX_ZOOM = 3;
+const ZOOM_STEP = 0.1;
 
 export function ReaderPage({
     uid
@@ -17,11 +20,11 @@ export function ReaderPage({
 }) {
 
     let comicCache = COMIC_CACHE_CONTEXT.getCacheById(uid);
-    const coverPreview = ultraComicQueryClient.cache()[uid] as string || NO_IMAGE_URL;
     const [pages, setPages, subsPages] = ultraState<string[]>([]);
     const [isLoading, setIsLoading, subsIsLoading] = ultraState(true);
     const [hasError, setHasError, subsHasError] = ultraState(false);
     const [currentPage, setCurrentPage, subsCurrentPage] = ultraState(comicCache?.currentPage || 1);
+    const [zoom, setZoom, subsZoom] = ultraState(1);
     let observer: IntersectionObserver | null = null;
 
     const goBack = () => {
@@ -70,8 +73,40 @@ export function ReaderPage({
         }
     }
 
+    const zoomIn = () => setZoom(Math.min(MAX_ZOOM, +(zoom() + ZOOM_STEP).toFixed(2)));
+    const zoomOut = () => setZoom(Math.max(MIN_ZOOM, +(zoom() - ZOOM_STEP).toFixed(2)));
+    const zoomReset = () => setZoom(1);
+
+    const onZoomChange = ($viewer: HTMLElement) => {
+        $viewer.style.setProperty('--reader-zoom', String(zoom()));
+    }
+
+    const onWheel = (evt: Event) => {
+        const e = evt as WheelEvent;
+        if (!e.ctrlKey) return;
+        // hijack the browser/Electron ctrl+wheel pinch-zoom and drive our own page zoom instead
+        e.preventDefault();
+        if (e.deltaY < 0) zoomIn();
+        else if (e.deltaY > 0) zoomOut();
+    }
+
     const onKeydown = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') goBack();
+        if (e.key === 'Escape') {
+            goBack();
+            return;
+        }
+        if (!e.ctrlKey) return;
+        // hijack the browser/Electron page-zoom shortcuts and drive our own page zoom instead
+        if (e.code === 'Equal' || e.code === 'NumpadAdd') {
+            e.preventDefault();
+            zoomIn();
+        } else if (e.code === 'Minus' || e.code === 'NumpadSubtract') {
+            e.preventDefault();
+            zoomOut();
+        } else if (e.code === 'Digit0' || e.code === 'Numpad0') {
+            e.preventDefault();
+            zoomReset();
+        }
     }
 
     const onPagesChange = ($section: HTMLElement) => {
@@ -128,6 +163,7 @@ export function ReaderPage({
 
         onMount: [
             loadPages,
+            () => DOCUMENT_TITLE_CONTEXT.setTitle('Reader'),
             () => {
                 window.addEventListener('keydown', onKeydown);
                 return () => {
@@ -140,6 +176,10 @@ export function ReaderPage({
         component: '<section></section>',
 
         className: [styles.page],
+
+        eventHandler: {
+            wheel: onWheel
+        },
 
         children: [
 
@@ -159,18 +199,6 @@ export function ReaderPage({
                 component: '<div></div>',
                 className: [styles.state],
                 children: [
-                    UltraComponent({
-                        component: '<img/>',
-                        className: [styles.coverBackdrop],
-                        attributes: {
-                            src: coverPreview,
-                            alt: '',
-                            'aria-hidden': 'true'
-                        },
-                        styles: {
-                            viewTransitionName: `vt-${uid}`
-                        }
-                    }),
                     '<div class="' + styles.spinner + '"></div>',
                     '<p>Loading pages…</p>'
                 ]
@@ -193,10 +221,17 @@ export function ReaderPage({
             UltraComponent({
                 component: '<section></section>',
                 className: [styles.viewer],
-                trigger: [{
-                    subscriber: subsPages,
-                    triggerFunction: onPagesChange
-                }]
+                onMount: [onZoomChange],
+                trigger: [
+                    {
+                        subscriber: subsPages,
+                        triggerFunction: onPagesChange
+                    },
+                    {
+                        subscriber: subsZoom,
+                        triggerFunction: onZoomChange
+                    }
+                ]
             })
 
         ],
