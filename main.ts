@@ -93,7 +93,7 @@ async function startDesktopApp() {
 
     const win = new BrowserWindow({
       width: 1240,
-      height: 840,
+      height: 950,
       minWidth: 900,
       minHeight: 600,
       backgroundColor: "#0a0a0a",
