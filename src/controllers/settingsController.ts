@@ -23,6 +23,7 @@ export class settingsController {
     public async updateSettings(
         c: Context
     ) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars -- outputDirs is intentionally stripped from the update payload
         const { outputDirs, ...rest } = await c.req.json() as Partial<TAppSettings>;
         return c.json(this.prefsModel.updateAppSettings(rest), 200);
     }

@@ -4,9 +4,9 @@ export class CacheModel {
 
     private cache: Record<string, CacheEntry> = {};
 
-    public get(
+    public get<T>(
         key: string
-    ): any[] {
+    ): T[] {
         const entry = this.cache[key];
         if (!entry) return [];
         if (entry.expiresAt !== null && Date.now() > entry.expiresAt) {
@@ -15,12 +15,12 @@ export class CacheModel {
         }
         const value = entry.value;
         const returnable = (value instanceof Array) ? value : [value]
-        return returnable;
+        return returnable as T[];
     }
 
-    public set(
-        key: string, 
-        value: any, 
+    public set<T>(
+        key: string,
+        value: T,
         ttlMs?: number
     ): void {
         this.cache[key] = {

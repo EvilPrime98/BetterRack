@@ -194,9 +194,9 @@ export class GetComicsApiModel implements TGetComicsApiModel {
     ): Promise<TDownloadableObject[]> => {
         
         const cacheKey = `download_link_${postId}_${strat}`;
-        const cached = this.cache.get(cacheKey);
+        const cached = this.cache.get<TDownloadableObject>(cacheKey);
         if (cached.length > 0) return cached;
-        
+
         const res = await this.fetchWithRetry(`${this.apiUrl}/posts/${postId}?_fields=content,jetpack_featured_media_url`);
         if (!res.ok) return [];
         
@@ -236,7 +236,7 @@ export class GetComicsApiModel implements TGetComicsApiModel {
         postId: number
     ): Promise<string | null> => {
         const cacheKey = `cover_${postId}`;
-        const cached = this.cache.get(cacheKey);
+        const cached = this.cache.get<string>(cacheKey);
         if (cached.length > 0) return cached[0];
         const res = await this.fetchWithRetry(`${this.apiUrl}/posts/${postId}?_fields=jetpack_featured_media_url`);
         if (!res.ok) return null;
@@ -286,7 +286,7 @@ export class GetComicsApiModel implements TGetComicsApiModel {
         const page = params?.page ?? 1;
         const perPage = params?.perPage ?? 10;
         const cacheKey = `latest_${page}_${perPage}`;
-        const cached = this.cache.get(cacheKey);
+        const cached = this.cache.get<TPostLink>(cacheKey);
         if (cached.length > 0) return cached;
         const searchParams = new URLSearchParams({
             orderby: 'date',
@@ -310,7 +310,7 @@ export class GetComicsApiModel implements TGetComicsApiModel {
     ): Promise<string | null> => {
         
         const cacheKey = `download_link_${postId}_${strat}`;
-        const cached = this.cache.get(cacheKey) as (TDownloadLink & TDownloadableObject)[];
+        const cached = this.cache.get<TDownloadLink & TDownloadableObject>(cacheKey);
 
         if (cached.length > 0) {
             const cachedItem = cached.find(el => el.uuid === uuid);

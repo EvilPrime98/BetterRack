@@ -82,7 +82,7 @@ export class DownloadModel implements TDownloadModel {
 
         } catch (error) {
 
-            onProgress?.({ type: 'error', message: 'Failed to download' });
+            onProgress?.({ type: 'error', message: error instanceof Error ? error.message : 'Failed to download' });
 
         }
 

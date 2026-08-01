@@ -1,6 +1,17 @@
 import { App } from "./App";
 
-const platform = (window as any).versions?.platform;
+declare global {
+    interface Window {
+        versions?: {
+            chrome: string;
+            node: string;
+            electron: string;
+            platform: string;
+        };
+    }
+}
+
+const platform = window.versions?.platform;
 if (platform) document.documentElement.dataset.platform = platform;
 
 const $app = document.getElementById('root');

@@ -200,13 +200,13 @@ export type fsModel = {
 }
 
 export type TCacheModel = {
-    get: (key: string) => any[];
-    set: (key: string, value: any, ttlMs?: number) => void;
+    get: <T>(key: string) => T[];
+    set: <T>(key: string, value: T, ttlMs?: number) => void;
     delete: (key: string) => void;
 }
 
 export type CacheEntry = {
-    value: any;
+    value: unknown;
     expiresAt: number | null;
 };
 
