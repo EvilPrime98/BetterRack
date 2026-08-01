@@ -1,8 +1,8 @@
 import { UltraComponent, UltraLink } from "ultra-light-js";
 import styles from './folder-card.module.css';
-import { FolderIcon } from "../icons/folder.icon";
-import { ChevronDownIcon } from "../icons/chevron.icon";
-import { COMICS_TYPE_CTX } from "../context/comics-types.context";
+import { FolderIcon } from "@/icons/folder.icon";
+import { ChevronDownIcon } from "@/icons/chevron.icon";
+import { COMICS_TYPE_CTX } from "@/context/comics-types.context";
 
 export function FolderCard({
     title,

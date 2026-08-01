@@ -1,15 +1,15 @@
 import { UltraActivity, UltraComponent, ultraState } from "ultra-light-js";
 import styles from './comic-card.module.css';
-import { ReadBar } from "../read-bar";
+import { ReadBar } from "@/components/read-bar/read-bar";
 import { ComicRating } from "./rating";
-import { ultraComic } from "../../hooks/ultraComic";
-import { type IComicLSCache, type ILibraryResponseItem } from "../../library.types";
-import { COMICS_TYPE_CTX } from "../../context/comics-types.context";
+import { ultraComic } from "@/hooks/ultraComic";
+import { type IComicLSCache, type ILibraryResponseItem } from "@/library.types";
+import { COMICS_TYPE_CTX } from "@/context/comics-types.context";
 import { ComicCardTitle } from "./title";
 import { ComicCardInfo } from "./info";
 import { ComicCardCover } from "./cover";
-import { READ_TYPES_CTX } from "../../context/read-types.context";
-import { COMIC_CACHE_CONTEXT } from "../../context/comic-cache.context";
+import { READ_TYPES_CTX } from "@/context/read-types.context";
+import { COMIC_CACHE_CONTEXT } from "@/context/comic-cache.context";
 import { IdentifyButton } from "./identify-button";
 
 export function ComicCard({

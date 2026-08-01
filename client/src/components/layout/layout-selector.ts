@@ -1,6 +1,6 @@
 import { UltraComponent } from "ultra-light-js";
 import styles from './layout-selector.module.css';
-import { COMICS_TYPE_CTX } from "../context/comics-types.context";
+import { COMICS_TYPE_CTX } from "@/context/comics-types.context";
 
 export function LayoutSelector(){
 

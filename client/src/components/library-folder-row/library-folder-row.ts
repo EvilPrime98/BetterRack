@@ -1,8 +1,8 @@
 import { UltraComponent } from "ultra-light-js";
-import { CloseIcon } from "../icons/close.icon";
-import { SETTINGS_CONTEXT } from "../context/settings.context";
-import { toast } from "../services/toast.service";
-import styles from '../pages/settings.page.module.css';
+import { CloseIcon } from "@/icons/close.icon";
+import { SETTINGS_CONTEXT } from "@/context/settings.context";
+import { toast } from "@/services/toast.service";
+import styles from '@/pages/settings.page.module.css';
 
 export function LibraryFolderRow({
     dir,

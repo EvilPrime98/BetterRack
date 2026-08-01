@@ -1,6 +1,6 @@
 import { UltraComponent, ultraState } from "ultra-light-js"
 import styles from './comic-card.module.css'
-import { StarComponent, getStarFraction } from "../star-component";
+import { StarComponent, getStarFraction } from "../star-component/star-component";
 import { COMIC_CACHE_CONTEXT } from "../../context/comic-cache.context";
 
 export function ComicRating({

@@ -1,5 +1,5 @@
 import { UltraComponent } from "ultra-light-js";
-import { StarIcon } from "../icons/star.icon";
+import { StarIcon } from "../../icons/star.icon";
 
 export function getStarFraction(e: Event): number {
     const rect = (e.currentTarget as Element).getBoundingClientRect();

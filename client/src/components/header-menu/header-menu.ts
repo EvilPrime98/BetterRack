@@ -1,8 +1,8 @@
 import { UltraComponent, UltraActivity, ultraState } from "ultra-light-js";
 import styles from './header-menu.module.css';
 import headerStyles from './header.module.css';
-import { MenuIcon } from "../icons/menu.icon";
-import { LIBRARY_CONTEXT } from "../context/library.context";
+import { MenuIcon } from "../../icons/menu.icon";
+import { LIBRARY_CONTEXT } from "../../context/library.context";
 
 function onEnterOrSpace(handler: () => void) {
     return (e: Event) => {

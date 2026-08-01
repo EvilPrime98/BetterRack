@@ -1,8 +1,8 @@
 import { UltraComponent, UltraActivity, ultraState } from "ultra-light-js";
 import styles from './dropdown-options.module.css';
-import { ChevronDownIcon } from "../icons/chevron.icon";
-import { FILTER_OPTIONS, type ILibraryFilters, type TFilterOptions } from "../library.types";
-import { USER_PREF } from "../context/user-pref-cache.context";
+import { ChevronDownIcon } from "../../icons/chevron.icon";
+import { FILTER_OPTIONS, type ILibraryFilters, type TFilterOptions } from "../../library.types";
+import { USER_PREF } from "../../context/user-pref-cache.context";
 
 export function DropdownOptions({
     filters,

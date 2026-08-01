@@ -1,6 +1,6 @@
 import { UltraComponent } from "ultra-light-js";
 import styles from './state-filter.module.css';
-import { READ_TYPES_CTX } from "../context/read-types.context";
+import { READ_TYPES_CTX } from "@/context/read-types.context";
 
 export function StateFilter(){
 

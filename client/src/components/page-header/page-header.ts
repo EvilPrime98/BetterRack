@@ -1,11 +1,11 @@
 import { UltraComponent } from "ultra-light-js";
-import { DropdownOptions } from "./dropdown-options";
-import { ItemCounter } from "./item-counter";
-import { StateFilter } from "./state-filter";
-import { LayoutSelector } from "./layout-selector";
-import { Breadcrumbs } from "./breadcrumbs";
+import { DropdownOptions } from "@/components/dropdown/dropdown-options";
+import { ItemCounter } from "@/components/item-counter/item-counter";
+import { StateFilter } from "@/components/state-filter/state-filter";
+import { LayoutSelector } from "@/components/layout/layout-selector";
+import { Breadcrumbs } from "@/components/breadcrumbs/breadcrumbs";
 import styles from './page-header.module.css';
-import type { ILibraryResponseItem, ILibraryFilters } from "../library.types";
+import type { ILibraryResponseItem, ILibraryFilters } from "@/library.types";
 
 export function PageHeader({
     uid,

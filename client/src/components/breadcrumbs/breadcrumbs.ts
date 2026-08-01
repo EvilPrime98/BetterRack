@@ -1,8 +1,8 @@
 import { UltraComponent, UltraLink } from "ultra-light-js";
 import styles from './breadcrumbs.module.css';
-import { ChevronDownIcon } from "../icons/chevron.icon";
-import { LIBRARY_CONTEXT } from "../context/library.context";
-import type { ILibraryGroup, ILibraryResponseItem } from "../library.types";
+import { ChevronDownIcon } from "../../icons/chevron.icon";
+import { LIBRARY_CONTEXT } from "../../context/library.context";
+import type { ILibraryGroup, ILibraryResponseItem } from "../../library.types";
 
 interface ICrumb {
     uid: string;
@@ -11,7 +11,10 @@ interface ICrumb {
 
 // walks parentId links back to the entry's owning group, which is the
 // only place that tells us where a top-level (parentId-less) entry lives
-function buildTrail(uid: string, groups: ILibraryGroup[]): ICrumb[] {
+function buildTrail(
+    uid: string, 
+    groups: ILibraryGroup[]
+): ICrumb[] {
 
     const group = groups.find(g => g.uid === uid);
     if (group) return [{ uid: group.uid, name: group.name }];

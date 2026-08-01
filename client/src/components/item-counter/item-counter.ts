@@ -1,6 +1,6 @@
 import { UltraComponent } from "ultra-light-js";
 import styles from './item-counter.module.css';
-import type { ILibraryResponseItem } from "../library.types";
+import type { ILibraryResponseItem } from "@/library.types";
 
 export function ItemCounter({
     items,
