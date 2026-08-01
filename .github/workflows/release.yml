@@ -1,0 +1,49 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  release:
+    name: Build & publish release
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install server dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Install client dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: client
+
+      # main.ts packages a literal `.env` file into the app via electron-builder's
+      # extraResources. That file is gitignored, so it must come from a secret here.
+      # Populate the APP_ENV repository secret with the contents of your local .env.
+      - name: Write .env
+        shell: bash
+        run: echo "${{ secrets.APP_ENV }}" > .env
+
+      - name: Build & package
+        run: bun run dist
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/**/*.exe
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

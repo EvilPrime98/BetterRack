@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
+    "lint": "eslint .",
     "android:sync": "pnpm build && cap sync android",
     "android:apk": "pnpm android:sync && cd android && gradlew assembleDebug",
     "android:apk:release": "pnpm android:sync && cd android && gradlew assembleRelease",
@@ -16,7 +17,11 @@
     "@capacitor/android": "^8.4.1",
     "@capacitor/cli": "^8.4.1",
     "@capacitor/core": "^8.4.1",
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.1.0",
+    "globals": "^17.4.0",
     "typescript": "~6.0.2",
+    "typescript-eslint": "^8.57.2",
     "vite": "^8.1.1"
   },
   "dependencies": {
