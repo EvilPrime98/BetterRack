@@ -1,4 +1,4 @@
-import { UltraComponent, ultraState } from "ultra-light-js";
+import { UltraComponent, UltraLink, ultraState } from "ultra-light-js";
 import styles from './sidebar.module.css';
 import { SIDEBAR_CONTEXT } from "../../context/sidebar.context";
 import { LIBRARY_CONTEXT } from "../../context/library.context";
@@ -7,10 +7,12 @@ import type { ILibraryGroup } from "../../library.types";
 import { RefreshLibraryButton } from "./refresh-button";
 import { SidebarCloseButton } from "./close-button";
 import { SidebarSearch } from "./sidebar-search";
+import { GearIcon } from "../../icons/gear.icon";
+import { ShopIcon } from "../../icons/shop.icon";
 
 export function SideBar() {
 
-    const [ items,setItems,subsItems] = ultraState<ILibraryGroup[]>([]);
+    const [items, setItems, subsItems] = ultraState<ILibraryGroup[]>([]);
 
     function fetchLibrary() {
         LIBRARY_CONTEXT.fetchLibrary();
@@ -18,10 +20,10 @@ export function SideBar() {
             setItems(LIBRARY_CONTEXT.groups.get());
         }
     };
-        
-    function closeSidebar(){ SIDEBAR_CONTEXT.isExpanded.set(false) };
 
-    function onExpandChange($aside: HTMLElement){
+    function closeSidebar() { SIDEBAR_CONTEXT.isExpanded.set(false) };
+
+    function onExpandChange($aside: HTMLElement) {
         const isExpanded = SIDEBAR_CONTEXT.isExpanded.get();
         $aside.classList.toggle(styles.expanded, isExpanded);
         if (isExpanded) {
@@ -34,11 +36,11 @@ export function SideBar() {
         }
     }
 
-    function onBackdropChange($backdrop: HTMLElement){
+    function onBackdropChange($backdrop: HTMLElement) {
         $backdrop.classList.toggle(styles.visible, SIDEBAR_CONTEXT.isExpanded.get());
     }
 
-    function onItemsChange($nav: HTMLElement){
+    function onItemsChange($nav: HTMLElement) {
         const currItems = [...items()];
         if (!currItems.length) {
             $nav.replaceChildren(
@@ -56,7 +58,7 @@ export function SideBar() {
         }
     }
 
-    function onKeydown(event: KeyboardEvent){
+    function onKeydown(event: KeyboardEvent) {
         if (event.key === 'Escape') closeSidebar();
     }
 
@@ -77,7 +79,7 @@ export function SideBar() {
             }),
 
             UltraComponent({
-                
+
                 onMount: [
                     onExpandChange,
                     fetchLibrary,
@@ -86,31 +88,65 @@ export function SideBar() {
                         return () => document.removeEventListener('keydown', onKeydown);
                     }
                 ],
-                
+
                 component: '<aside></aside>',
 
                 attributes: {
                     role: 'navigation',
                     'aria-label': 'Library folders'
                 },
-                
+
                 className: [styles.sideBar],
-                
+
                 children: [
 
-                    UltraComponent({                        
-                        component: '<div></div>',                       
-                        className: [styles.header],                     
-                        children: [                          
-                            `<span class="${styles.title}">Library</span>`,                           
-                            UltraComponent({                               
-                                component: '<div></div>',                              
+                    UltraComponent({
+                        component: '<div></div>',
+                        className: [styles.header],
+                        children: [
+                            `<span class="${styles.title}">Library</span>`,
+                            UltraComponent({
+                                component: '<div></div>',
                                 styles: {
                                     display: 'flex',
                                     gap: '10px'
                                 },
-                                children: [                                
+                                children: [
                                     SidebarCloseButton()
+                                ]
+                            })
+                        ]
+                    }),
+
+                    UltraComponent({
+                        component: '<div></div>',
+                        className: [styles.section],
+                        children: [
+                            `<span class="${styles.sectionTitle}">User</span>`,
+                            UltraLink({
+                                href: '/settings',
+                                className: [styles.item],
+                                eventHandler: { click: closeSidebar },
+                                children: [
+                                    GearIcon({ size: 16 }),
+                                    `<span>Settings</span>`
+                                ]
+                            })
+                        ]
+                    }),
+
+                    UltraComponent({
+                        component: '<div></div>',
+                        className: [styles.section],
+                        children: [
+                            `<span class="${styles.sectionTitle}">Store</span>`,
+                            UltraLink({
+                                href: '/store',
+                                className: [styles.item],
+                                eventHandler: { click: closeSidebar },
+                                children: [
+                                    ShopIcon({ size: 16 }),
+                                    `<span>Store</span>`
                                 ]
                             })
                         ]
@@ -119,7 +155,7 @@ export function SideBar() {
                     SidebarSearch(),
 
                     RefreshLibraryButton(),
-                    
+
                     UltraComponent({
                         onMount: [onItemsChange],
                         component: '<nav></nav>',
@@ -144,7 +180,7 @@ export function SideBar() {
 
         trigger: [{
             subscriber: LIBRARY_CONTEXT.groups.subscribe,
-            triggerFunction: () =>{
+            triggerFunction: () => {
                 setItems(LIBRARY_CONTEXT.groups.get())
             }
         }]

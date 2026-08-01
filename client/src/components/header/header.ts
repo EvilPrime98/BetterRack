@@ -1,12 +1,9 @@
 import { UltraComponent, UltraLink, ultraNavigate, ultraQueryParams } from "ultra-light-js";
 import styles from './header.module.css';
-import { SIDEBAR_CONTEXT } from "../context/sidebar.context";
-import { BurgerIcon } from "../icons/burger-icon";
-import { BetterRackIcon } from "../icons/better-rack.icon";
-import { ShopIcon } from "../icons/shop.icon";
-import { GearIcon } from "../icons/gear.icon";
-import { LIBRARY_CONTEXT } from "../context/library.context";
-import { HeaderMenu } from "./header-menu";
+import { SIDEBAR_CONTEXT } from "@/context/sidebar.context";
+import { BurgerIcon } from "@/icons/burger-icon";
+import { BetterRackIcon } from "@/icons/better-rack.icon";
+import { LIBRARY_CONTEXT } from "@/context/library.context";
 
 export function Header() {
 
@@ -15,14 +12,6 @@ export function Header() {
     function toggleSidebar() {
         SIDEBAR_CONTEXT.isExpanded.set(!SIDEBAR_CONTEXT.isExpanded.get())
     };
-
-    function goToStore() {
-        ultraNavigate({ href: '/store' });
-    }
-
-    function goToSettings() {
-        ultraNavigate({ href: '/settings' });
-    }
 
     function goHome() {
         LIBRARY_CONTEXT.searchQuery.set('');
@@ -105,43 +94,13 @@ export function Header() {
 
             }),
 
-            UltraComponent({
-                component: '<div></div>',
-                className: [styles.icons, styles.noDrag],
-                children: [
-
-                    UltraComponent({
-                        component: ShopIcon({ size: iconSize }),
-                        className: [styles.iconBtn],
-                        attributes: {
-                            role: 'button',
-                            tabindex: '0',
-                            'aria-label': 'Store'
-                        },
-                        eventHandler: {
-                            click: goToStore,
-                            keydown: onEnterOrSpace(goToStore)
-                        }
-                    }),
-
-                    UltraComponent({
-                        component: GearIcon({ size: iconSize }),
-                        className: [styles.iconBtn],
-                        attributes: {
-                            role: 'button',
-                            tabindex: '0',
-                            'aria-label': 'Settings'
-                        },
-                        eventHandler: {
-                            click: goToSettings,
-                            keydown: onEnterOrSpace(goToSettings)
-                        }
-                    }),
-
-                    HeaderMenu()
-
-                ]
-            })
+            // UltraComponent({
+            //     component: '<div></div>',
+            //     className: [styles.icons, styles.noDrag],
+            //     children: [
+            //         HeaderMenu()
+            //     ]
+            // })
 
         ]
 

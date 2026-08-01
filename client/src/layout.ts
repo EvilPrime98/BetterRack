@@ -1,5 +1,5 @@
 import { UltraComponent, type UltraRenderableElement } from "ultra-light-js";
-import { Header } from "./components/header";
+import { Header } from "@/components/header/header";
 import { SideBar } from "./components/sidebar/sidebar";
 import { ComicIdentifier } from "./components/comic-identifier/comic-identifer";
 

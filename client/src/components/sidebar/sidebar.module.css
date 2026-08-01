@@ -16,7 +16,7 @@
 .sideBar {
     display: flex;
     flex-direction: column;
-    height: 100dvh;
+    height: calc(100dvh - var(--header-height));
     position: fixed;
     top: var(--header-height);
     z-index: 4;
@@ -220,6 +220,8 @@
 .list {
     display: flex;
     flex-direction: column;
+    flex: 1;
+    min-height: 0;
     gap: 2px;
     padding: 10px;
     overflow-y: auto;
@@ -260,6 +262,25 @@
 
 .item:hover {
     background-color: rgba(255, 255, 255, 0.06);
+}
+
+.section {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px;
+    flex-shrink: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sectionTitle {
+    padding: 4px 10px;
+    color: #8a8a8a;
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
 }
 
 .group {
