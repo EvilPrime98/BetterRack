@@ -3,9 +3,11 @@ import styles from './settings.page.module.css';
 import { Layout } from "../layout";
 import { SETTINGS_CONTEXT } from "../context/settings.context";
 import type { IAppSettings } from "../settings.types";
-import { TextField } from "../components/text-field";
-import { LibraryFolderRow } from "../components/library-folder-row";
+import { TextField } from "../components/text-field/text-field";
+import { LibraryFolderRow } from "@/components/library-folder-row/library-folder-row";
 import { toast } from "../services/toast.service";
+import { DOCUMENT_TITLE_CONTEXT } from "../context/document-title.context";
+import { BRButton } from "../components/br-button/br-button";
 
 export function SettingsPage() {
 
@@ -109,7 +111,7 @@ export function SettingsPage() {
 
             className: [styles.page],
 
-            onMount: [syncFields],
+            onMount: [syncFields, () => DOCUMENT_TITLE_CONTEXT.setTitle('Settings')],
 
             trigger: [{
                 subscriber: SETTINGS_CONTEXT.settings.subscribe,
@@ -174,8 +176,8 @@ export function SettingsPage() {
                                     }
                                 }),
 
-                                UltraComponent({
-                                    component: `<button type="button">Add folder</button>`,
+                                BRButton({
+                                    text: 'Add Folder',
                                     className: [styles.addBtn],
                                     eventHandler: { click: onAddFolder }
                                 })
@@ -216,9 +218,11 @@ export function SettingsPage() {
                                     key: 'downloadDir',
                                     label: 'Download folder',
                                     placeholder: '/path/to/downloads',
-                                    onKeydown: (e: Event) => {
-                                        const $input = e.target as HTMLInputElement;
-                                        fieldsState.downloadDir.set($input.value)
+                                    eventHandler: {
+                                        input: (e: Event) => {
+                                            const $input = e.target as HTMLInputElement;
+                                            fieldsState.downloadDir.set($input.value)
+                                        }
                                     }
                                 }),
 
@@ -240,9 +244,11 @@ export function SettingsPage() {
                                     key: 'apiUrl',
                                     label: 'API URL',
                                     placeholder: 'https://example.com/wp-json/wp/v2',
-                                    onKeydown: (e: Event) => {
-                                        const $input = e.target as HTMLInputElement;
-                                        fieldsState.apiUrl.set($input.value)
+                                    eventHandler: {
+                                        keydown: (e: Event) => {
+                                            const $input = e.target as HTMLInputElement;
+                                            fieldsState.apiUrl.set($input.value)
+                                        }
                                     }
                                 }),
 
@@ -250,9 +256,11 @@ export function SettingsPage() {
                                     key: 'baseUrl',
                                     label: 'Base URL',
                                     placeholder: 'https://example.com',
-                                    onKeydown: (e: Event) => {
-                                        const $input = e.target as HTMLInputElement;
-                                        fieldsState.baseUrl.set($input.value)
+                                    eventHandler: {
+                                        keydown: (e: Event) => {
+                                            const $input = e.target as HTMLInputElement;
+                                            fieldsState.baseUrl.set($input.value)
+                                        }
                                     }
                                 }),
 
@@ -260,9 +268,11 @@ export function SettingsPage() {
                                     key: 'hostDomain',
                                     label: 'Host domain',
                                     placeholder: 'https://example.com',
-                                    onKeydown: (e: Event) => {
-                                        const $input = e.target as HTMLInputElement;
-                                        fieldsState.hostDomain.set($input.value)
+                                    eventHandler: {
+                                        keydown: (e: Event) => {
+                                            const $input = e.target as HTMLInputElement;
+                                            fieldsState.hostDomain.set($input.value)
+                                        }
                                     }
                                 }),
 
@@ -270,9 +280,8 @@ export function SettingsPage() {
 
                         }),
 
-                        UltraComponent({
-                            component: `<button type="button">Save</button>`,
-                            className: [styles.saveBtn],
+                        BRButton({
+                            text: 'Save',
                             eventHandler: { click: onSave }
                         }),
 

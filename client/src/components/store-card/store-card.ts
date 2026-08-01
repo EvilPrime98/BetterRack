@@ -1,19 +1,20 @@
 import { UltraComponent, ultraState } from "ultra-light-js";
 import styles from './store-card.module.css';
-import { ImageGen } from "./image-generic/image-generic";
-import { NO_IMAGE_URL } from "../data";
-import { SETTINGS_CONTEXT } from "../context/settings.context";
-import { getComicLinks, downloadComic } from "../services/store.service";
-import { toast } from "../services/toast.service";
-import { CheckIcon } from "../icons/check.icon";
-import { STRAT, type IStoreLink, type IStorePost, type TCardState } from "../store.types";
+import { ImageGen } from "@/components/image-generic/image-generic";
+import { NO_IMAGE_URL } from "@/data";
+import { SETTINGS_CONTEXT } from "@/context/settings.context";
+import { getComicLinks, downloadComic } from "@/services/store.service";
+import { toast } from "@/services/toast.service";
+import { CheckIcon } from "@/icons/check.icon";
+import { STRAT, type IStoreLink, type IStorePost, type TCardState } from "@/store.types";
+import { BRButton } from "@/components/br-button/br-button";
 
 export function StoreCard({
     item
 }: {
     item: IStorePost
 }) {
-     
+
     const [state, setState, subsState] = ultraState<TCardState>({
         status: 'idle'
     });
@@ -32,8 +33,8 @@ export function StoreCard({
     async function startDownload(link: IStoreLink) {
 
         const outputDir = SETTINGS_CONTEXT
-        .settings
-        .get().downloadDir;
+            .settings
+            .get().downloadDir;
 
         if (!outputDir) {
             const message = 'Set a download folder in Settings before downloading.';
@@ -113,49 +114,74 @@ export function StoreCard({
 
         const $button = (
             label: string,
-            { disabled = false, loading = false, retry = false }: { disabled?: boolean; loading?: boolean; retry?: boolean } = {}
-        ) => UltraComponent({
-            component: `<button type="button">${loading ? `<span class="${styles.spinner}"></span>` : ''}<span>${label}</span></button>`,
-            className: [styles.downloadBtn, ...(retry ? [styles.retryBtn] : [])],
-            attributes: disabled ? { type: 'button', disabled: 'true' } : { type: 'button' },
-            eventHandler: { click: onDownloadClick }
-        });
+            { 
+                disabled = false, 
+                loading = false, 
+                retry = false 
+            }: { 
+                disabled?: boolean; 
+                loading?: boolean; 
+                retry?: boolean 
+            } = {}
+        ) => {
+
+            return BRButton({
+                text: '',
+                className:  retry ? [styles.retryBtn] : [],
+                attributes: disabled ? { type: 'button', disabled: 'true' } : { type: 'button' },
+                eventHandler: { click: onDownloadClick },
+                children: [
+                    loading ? `<span class="${styles.spinner}"></span>` : '',
+                    `<span>${label}</span>`         
+                ]
+            })
+            
+        }
 
         if (curr.status === 'idle') {
 
-            $div.replaceChildren($button('Download'));
-
-        } else if (curr.status === 'links-loading') {
-
-            $div.replaceChildren($button('Loading…', { disabled: true, loading: true }));
+            $div.replaceChildren(
+                $button('Download')
+            );
 
         } else if (curr.status === 'downloading') {
 
-            $div.replaceChildren(UltraComponent({
-                component: '<div></div>',
-                className: [styles.progressWrap],
-                children: [
-                    UltraComponent({
-                        component: `<div class="${styles.progress}"><span class="${styles.progressFill}" style="width:${curr.percent}%"></span></div>`,
-                        attributes: { 'aria-label': `Downloading ${curr.percent}%` }
-                    }),
-                    `<span class="${styles.progressPercent}">${curr.percent}%</span>`
-                ]
-            }));
+            $div.replaceChildren(
+
+                UltraComponent({
+                    component: '<div></div>',
+                    className: [styles.progressWrap],
+                    children: [
+                        UltraComponent({
+                            component: `<div class="${styles.progress}"><span class="${styles.progressFill}" style="width:${curr.percent}%"></span></div>`,
+                            attributes: { 'aria-label': `Downloading ${curr.percent}%` }
+                        }),
+                        `<span class="${styles.progressPercent}">${curr.percent}%</span>`
+                    ]
+                })
+
+            );
 
         } else if (curr.status === 'done') {
 
-            $div.replaceChildren(UltraComponent({
-                component: `<span class="${styles.doneLabel}">${CheckIcon({ size: 14 })}Downloaded</span>`
-            }));
+            $div.replaceChildren(
+
+                UltraComponent({
+                    component: `<span class="${styles.doneLabel}">${CheckIcon({ size: 14 })}Downloaded</span>`
+                })
+
+            );
 
         } else if (curr.status === 'error') {
 
-            $div.replaceChildren($button('Retry', { retry: true }));
+            $div.replaceChildren(
+                $button('Retry', { retry: true })
+            );
 
         } else if (curr.status === 'links-ready') {
-            
+
             $div.replaceChildren(
+
                 UltraComponent({
                     component: `<ul class="${styles.linkList}" role="listbox"></ul>`,
                     children: curr.links.map(link => UltraComponent({
@@ -170,6 +196,7 @@ export function StoreCard({
                         }
                     }))
                 })
+
             );
 
         }
