@@ -3,6 +3,7 @@ import { FolderIcon } from "../../icons/folder.icon";
 import { SIDEBAR_CONTEXT } from "../../context/sidebar.context";
 import type { ILibraryResponseItem } from "../../library.types";
 import styles from './sidebar.module.css';
+import { LIBRARY_CONTEXT } from "@/context/library.context";
 
 export function SideBarElement({
     item
@@ -10,7 +11,10 @@ export function SideBarElement({
     item: ILibraryResponseItem
 }) {
 
-    const closeSidebar = () => SIDEBAR_CONTEXT.isExpanded.set(false);
+    const onClick = () => {
+        LIBRARY_CONTEXT.searchQuery.set(''); //reset search when selecting a comic folder
+        SIDEBAR_CONTEXT.isExpanded.set(false)
+    }
 
     return UltraLink({
         href: `/${item.uid}`,
@@ -20,7 +24,7 @@ export function SideBarElement({
             `<span>${item.name}</span>`
         ],
         eventHandler: {
-            click: closeSidebar
+            click: onClick
         }
     })
 
