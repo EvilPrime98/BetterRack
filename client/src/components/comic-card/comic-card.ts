@@ -12,6 +12,7 @@ import { READ_TYPES_CTX } from "@/context/read-types.context";
 import { COMIC_CACHE_CONTEXT } from "@/context/comic-cache.context";
 import { COMIC_IDENT_CTX } from "@/context/identifer-modal.context";
 import { IdentifyButton } from "./identify-button";
+import { MarkAsReadButton } from "./mark-as-read-button";
 
 export function ComicCard({
     item
@@ -153,6 +154,14 @@ export function ComicCard({
 
                     UltraActivity({
                         component: IdentifyButton({ uid: item.uid }),
+                        mode: {
+                            state: () => COMICS_TYPE_CTX.type.get() === 'detail',
+                            subscriber: COMICS_TYPE_CTX.type.subscribe
+                        }
+                    }),
+
+                    UltraActivity({
+                        component: MarkAsReadButton({ uid: item.uid }),
                         mode: {
                             state: () => COMICS_TYPE_CTX.type.get() === 'detail',
                             subscriber: COMICS_TYPE_CTX.type.subscribe
