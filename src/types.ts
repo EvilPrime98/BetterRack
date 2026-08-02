@@ -73,6 +73,10 @@ export type TLibraryEntry = {
     prefPublisher?: string;
     prefInheritance?: boolean;
     prefCover?: string;
+    /** Tri-state, files only: undefined = not applicable/not yet scanned, true = identified (see `comic`), false = scanned, no wiki match. */
+    identified?: boolean;
+    /** The identified wiki comic, already resolved by LibraryModel.scan(). */
+    comic?: WikiComic;
 }
 
 export type TLibraryPref = {
@@ -141,6 +145,10 @@ export type TComicData = {
     uid: string;
     prefId?: number;
     sourceWiki?: string;
+    /** Tri-state: undefined = never attempted, true = matched, false = searched and found nothing. */
+    identified?: boolean;
+    /** Full wiki payload cached once identified, so the front never has to re-fetch it. */
+    comic?: WikiComic;
     cover?: string;
     rating?: number;
     currentPage?: number;

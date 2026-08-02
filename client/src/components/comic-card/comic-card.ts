@@ -1,8 +1,8 @@
 import { UltraActivity, UltraComponent, ultraState } from "ultra-light-js";
+import type { WikiComic } from "better-wiki";
 import styles from './comic-card.module.css';
 import { ReadBar } from "@/components/read-bar/read-bar";
 import { ComicRating } from "./rating";
-import { ultraComic } from "@/hooks/ultraComic";
 import { type IComicLSCache, type ILibraryResponseItem } from "@/library.types";
 import { COMICS_TYPE_CTX } from "@/context/comics-types.context";
 import { ComicCardTitle } from "./title";
@@ -10,6 +10,7 @@ import { ComicCardInfo } from "./info";
 import { ComicCardCover } from "./cover";
 import { READ_TYPES_CTX } from "@/context/read-types.context";
 import { COMIC_CACHE_CONTEXT } from "@/context/comic-cache.context";
+import { COMIC_IDENT_CTX } from "@/context/identifer-modal.context";
 import { IdentifyButton } from "./identify-button";
 
 export function ComicCard({
@@ -18,15 +19,12 @@ export function ComicCard({
     item: ILibraryResponseItem
 }) {
 
-    const coverSize = 280; //x2 the rendered size of the image element
-
-    const { comic, getComic, getComicById, subsComic } = ultraComic();
+    const [comic, setComic, subsComic] = ultraState<WikiComic | null>(item.comic ?? null);
+    const [identified, setIdentified, subsIdentified] = ultraState(item.identified !== false);
 
     const [itemCache, setItemCache, subsItemCache] = ultraState<IComicLSCache|null>(
         COMIC_CACHE_CONTEXT.getCacheById(item.uid) || null
     );
-
-    const [scanFailed, setScanFailed, subsScanFailed] = ultraState(false);
 
     const readerHref = `/${item.uid}/reader`;
     
@@ -62,48 +60,16 @@ export function ComicCard({
         }
     }
 
-    const scanComic = async () => {
-        setScanFailed(false);
-        const cache = itemCache();
-        if (cache?.prefId && cache?.sourceWiki) {
-            await getComicById(cache.prefId, cache.sourceWiki, coverSize);
-        } else {
-            await getComic(item.name,coverSize)
-            const found = comic();
-            if (found) {
-                COMIC_CACHE_CONTEXT.setCacheById(item.uid, {
-                    prefId: found.pageId,
-                    sourceWiki: found.sourceWiki
-                })
-            }
-        }
-        setScanFailed(!comic());
-    }
-
-    let hasScanned = false;
-
-    const onCacheChange = async (
-        entry: ReturnType<typeof COMIC_CACHE_CONTEXT.getCacheById>
-    ) => {
-        setItemCache(entry || null);
-        if (hasScanned) await scanComic();
-    }
-
     COMIC_CACHE_CONTEXT.subscribeById(
         item.uid,
-        onCacheChange
+        (entry) => setItemCache(entry || null)
     )
-    
-    const onCardMount = ($article: HTMLElement) => {
-        const observer = new IntersectionObserver((entries) => {
-            if (!entries.some(e => e.isIntersecting)) return;
-            observer.disconnect();
-            hasScanned = true;
-            scanComic();
-        }, { rootMargin: '400px' });
-        observer.observe($article);
-        return () => observer.disconnect();
-    }
+
+    COMIC_IDENT_CTX.lastIdentified.subscribe((entry) => {
+        if (entry?.uid !== item.uid) return;
+        setComic(entry.comic);
+        setIdentified(true);
+    });
 
     return UltraActivity({
 
@@ -111,8 +77,6 @@ export function ComicCard({
             state: isVisible,
             subscriber: [READ_TYPES_CTX.type.subscribe, subsItemCache]
         },
-
-        onMount: [ onCardMount ],
 
         component: '<article></article>',
 
@@ -158,8 +122,8 @@ export function ComicCard({
                             ]
                         }),
                         mode: {
-                            state: () => COMICS_TYPE_CTX.type.get() !== 'detail' && scanFailed(),
-                            subscriber: [COMICS_TYPE_CTX.type.subscribe, subsScanFailed]
+                            state: () => COMICS_TYPE_CTX.type.get() !== 'detail' && !identified(),
+                            subscriber: [COMICS_TYPE_CTX.type.subscribe, subsIdentified]
                         }
                     }),
 
@@ -201,10 +165,6 @@ export function ComicCard({
                     }),
 
                     UltraComponent({
-                        /*mode: {
-                            state:  () => !ultraComicQueryClient.isFetching(),
-                            subscriber: ultraComicQueryClient.subscribeToFetching
-                        },*/
                         component: ComicRating({
                             uid: item.uid
                         })

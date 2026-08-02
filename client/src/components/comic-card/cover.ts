@@ -68,6 +68,7 @@ export function ComicCardCover({
                     load: () => setIsLoaded(true),
                     error: onCoverError
                 },
+                onMount: [onCoverChange],
                 trigger: [{
                     subscriber: subsComic,
                     triggerFunction: onCoverChange
@@ -76,6 +77,7 @@ export function ComicCardCover({
 
             UltraComponent({
                 component: `<span class="${styles.issueBadge}"></span>`,
+                onMount: [onIssueBadgeChange],
                 trigger: [{
                     subscriber: subsComic,
                     triggerFunction: onIssueBadgeChange
@@ -84,6 +86,7 @@ export function ComicCardCover({
 
             UltraComponent({
                 component: `<span class="${styles.eventBadge}"></span>`,
+                onMount: [onEventChange],
                 trigger: [{
                     subscriber: subsComic,
                     triggerFunction: onEventChange

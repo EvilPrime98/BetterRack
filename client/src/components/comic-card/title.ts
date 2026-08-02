@@ -41,6 +41,7 @@ export function ComicCardTitle({
                 attributes: {
                     title: item.name
                 },
+                onMount: [onTitleChange],
                 trigger: [{
                     subscriber: [subsComic, COMICS_TYPE_CTX.type.subscribe],
                     triggerFunction: onTitleChange

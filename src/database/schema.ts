@@ -17,6 +17,10 @@ export const comicData = sqliteTable('comic_data', {
     prefId: integer('pref_id'),
     sourceWiki: text('source_wiki'),
     cover: text('cover'),
+    /** Tri-state: NULL = never attempted, 0 = searched and found nothing, 1 = matched. */
+    identified: integer('identified'),
+    /** Full wiki payload (WikiComic), JSON-serialized, cached once identified. */
+    comic: text('comic'),
     rating: integer('rating'),
     currentPage: integer('current_page'),
     readPer: real('read_per'),

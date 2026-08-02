@@ -1,4 +1,5 @@
 import type { IUltraCompStateStateful } from "ultra-light-js";
+import type { WikiComic } from "better-wiki";
 
 export interface ILibraryItem {
     id: number;
@@ -16,7 +17,11 @@ export interface ILibraryResponseItem {
     "name": string,
     "path": string,
     "parentId": string,
-    "createdAt": string
+    "createdAt": string,
+    /** Tri-state, files only: undefined = not applicable, true = identified (see `comic`), false = scanned, no wiki match. */
+    "identified"?: boolean,
+    /** The identified wiki comic, already resolved server-side by LibraryModel.scan(). */
+    "comic"?: WikiComic
 }
 
 export interface ILibraryGroup {
@@ -42,12 +47,6 @@ export interface ILibraryRefreshResponse {
 }
 
 export interface IComicLSCache {
-    /**Preference for the wiki page ID */
-    prefId: number;
-    /**Base URL of the wiki the prefId belongs to (page IDs are only unique per wiki) */
-    sourceWiki: string;
-    /**Preference for the cover */
-    cover: string;
     /**Rating for the comic */
     rating: number;
     /**Current page reading */
@@ -56,6 +55,14 @@ export interface IComicLSCache {
     readPer: number;
     /**Whether or not item has been *read* */
     read: boolean;
+}
+
+/** Persisted alongside IComicLSCache in comic_data, but manages identity rather than reading progress. */
+export interface IComicIdentity {
+    prefId?: number;
+    sourceWiki?: string;
+    identified?: boolean;
+    comic?: WikiComic;
 }
 
 export const COMICS_TYPES = {

@@ -27,10 +27,10 @@ async function startApp() {
 
     const app = new Hono();
     const prefsModel = new PreferencesModel();
-    const libModel = new LibraryModel(prefsModel);
     const zipModel = new Zip7Decompressor();
     const wikiModel = new WikiModel();
     const comicDataModel = new ComicDataModel();
+    const libModel = new LibraryModel(prefsModel, wikiModel, comicDataModel);
     const cacheModel = new CacheModel();
     const gcwModel = new GetComicsApiModel(cacheModel, prefsModel);
     const dwnModel = new DownloadModel();

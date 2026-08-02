@@ -2,8 +2,8 @@ import type { WikiComic } from "better-wiki";
 import { UltraComponent } from "ultra-light-js";
 import styles from './comic-identifier.module.css'
 import { ImageGen } from "../image-generic/image-generic";
-import { COMIC_CACHE_CONTEXT } from "../../context/comic-cache.context";
 import { COMIC_IDENT_CTX } from "../../context/identifer-modal.context";
+import { updateComicIdentity } from "../../services/comic-data.service";
 
 export function SuggestionCard({
     comic
@@ -16,10 +16,14 @@ export function SuggestionCard({
     .join(' · ');
 
     const onClick = () => {
-        COMIC_CACHE_CONTEXT.setCacheById(
-            COMIC_IDENT_CTX.itemUid.get(),
-            { prefId: comic.pageId, sourceWiki: comic.sourceWiki }
-        )
+        const uid = COMIC_IDENT_CTX.itemUid.get();
+        updateComicIdentity(uid, {
+            prefId: comic.pageId,
+            sourceWiki: comic.sourceWiki,
+            identified: true,
+            comic
+        }).catch(console.error);
+        COMIC_IDENT_CTX.lastIdentified.set({ uid, comic });
         COMIC_IDENT_CTX.isVisible.set(false);
     }
 

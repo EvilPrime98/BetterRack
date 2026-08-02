@@ -18,6 +18,7 @@ export function InfoRow({
             `<span class="${styles.infoLabel}">${label}</span>`,
             UltraComponent({
                 component: `<span class="${styles.infoValue}"></span>`,
+                onMount: [onValueChange],
                 trigger: [{
                     subscriber: subsComic,
                     triggerFunction: onValueChange

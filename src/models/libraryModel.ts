@@ -2,21 +2,27 @@ import path from "node:path";
 import { readdir, mkdir, rename, rm } from "node:fs/promises";
 import { basename } from "node:path";
 import crypto from 'node:crypto';
-import type { TLibraryEntry, TLibraryGroup, TLibraryModel, TLibraryPref, TPreferencesModel } from "#src/types.ts";
+import type { TComicDataModel, TLibraryEntry, TLibraryGroup, TLibraryModel, TLibraryPref, TPreferencesModel, TWikiModel } from "#src/types.ts";
 import fs from "node:fs";
 
 const COMIC_EXTENSIONS = new Set(['.cbz', '.cbr', '.cb7', '.cbt']);
 
+const IDENTIFY_CONCURRENCY = 4;
+
 export class LibraryModel implements TLibraryModel {
 
     private prefsModel: TPreferencesModel;
+    private wikiModel: TWikiModel;
+    private comicDataModel: TComicDataModel;
     private libPaths: string[];
     private db: TLibraryEntry[] = [];
     private pref: TLibraryPref[] = [];
     private entryLibraryIndex = new Map<string, number>();
 
-    constructor(prefsModel: TPreferencesModel) {
+    constructor(prefsModel: TPreferencesModel, wikiModel: TWikiModel, comicDataModel: TComicDataModel) {
         this.prefsModel = prefsModel;
+        this.wikiModel = wikiModel;
+        this.comicDataModel = comicDataModel;
         this.libPaths = this.prefsModel.getAppSettings().outputDirs.map(p => path.resolve(p));
         this.init()
     }
@@ -25,9 +31,6 @@ export class LibraryModel implements TLibraryModel {
         await this.scan();
     }
 
-    /**
-     * Scans the library for entries and populates the "db" property.
-     */
     scan = async () => {
 
         this.loadPreferences();
@@ -75,6 +78,51 @@ export class LibraryModel implements TLibraryModel {
             if (a.did !== b.did) return a.did ? -1 : 1;
             return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
         });
+
+        await this.identifyComics();
+
+    };
+
+    private identifyComics = async () => {
+
+        const toIdentify: TLibraryEntry[] = [];
+
+        for (const entry of this.db) {
+            if (entry.did) continue;
+            const existing = this.comicDataModel.getByUid(entry.uid);
+            if (existing?.identified === true) {
+                entry.identified = true;
+                entry.comic = existing.comic;
+            } else if (existing?.identified === false) {
+                entry.identified = false;
+            } else {
+                toIdentify.push(entry);
+            }
+        }
+
+        for (let i = 0; i < toIdentify.length; i += IDENTIFY_CONCURRENCY) {
+            const batch = toIdentify.slice(i, i + IDENTIFY_CONCURRENCY);
+            await Promise.all(batch.map(async (entry) => {
+                try {
+                    const found = await this.wikiModel.getComic(entry.name);
+                    if (found) {
+                        this.comicDataModel.upsert(entry.uid, {
+                            prefId: found.pageId,
+                            sourceWiki: found.sourceWiki,
+                            identified: true,
+                            comic: found,
+                        });
+                        entry.identified = true;
+                        entry.comic = found;
+                    } else {
+                        this.comicDataModel.upsert(entry.uid, { identified: false });
+                        entry.identified = false;
+                    }
+                } catch (e) {
+                    if (e instanceof Error) console.log(`[ERROR]: ${e.message}`);
+                }
+            }));
+        }
 
     };
 

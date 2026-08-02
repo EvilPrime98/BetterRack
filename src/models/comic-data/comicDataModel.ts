@@ -18,12 +18,21 @@ export class ComicDataModel implements TComicDataModel {
                 pref_id INTEGER,
                 source_wiki TEXT,
                 cover TEXT,
+                identified INTEGER,
+                comic TEXT,
                 rating INTEGER,
                 current_page INTEGER,
                 read_per REAL,
                 read INTEGER
             )
         `);
+        for (const column of ['identified INTEGER', 'comic TEXT']) {
+            try {
+                sqlite.run(`ALTER TABLE comic_data ADD COLUMN ${column}`);
+            } catch {
+                // column already exists
+            }
+        }
         this.db = drizzle(sqlite);
     }
 
@@ -31,6 +40,8 @@ export class ComicDataModel implements TComicDataModel {
         uid: row.uid,
         prefId: row.prefId ?? undefined,
         sourceWiki: row.sourceWiki ?? undefined,
+        identified: row.identified === null ? undefined : Boolean(row.identified),
+        comic: row.comic ? JSON.parse(row.comic) : undefined,
         cover: row.cover ?? undefined,
         rating: row.rating ?? undefined,
         currentPage: row.currentPage ?? undefined,
@@ -59,6 +70,8 @@ export class ComicDataModel implements TComicDataModel {
                 uid: merged.uid,
                 prefId: merged.prefId ?? null,
                 sourceWiki: merged.sourceWiki ?? null,
+                identified: merged.identified === undefined ? null : Number(merged.identified),
+                comic: merged.comic ? JSON.stringify(merged.comic) : null,
                 cover: merged.cover ?? null,
                 rating: merged.rating ?? null,
                 currentPage: merged.currentPage ?? null,
@@ -70,6 +83,8 @@ export class ComicDataModel implements TComicDataModel {
                 set: {
                     prefId: merged.prefId ?? null,
                     sourceWiki: merged.sourceWiki ?? null,
+                    identified: merged.identified === undefined ? null : Number(merged.identified),
+                    comic: merged.comic ? JSON.stringify(merged.comic) : null,
                     cover: merged.cover ?? null,
                     rating: merged.rating ?? null,
                     currentPage: merged.currentPage ?? null,
