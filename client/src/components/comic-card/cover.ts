@@ -1,9 +1,12 @@
 import { UltraComponent, UltraLink, ultraState } from "ultra-light-js";
 import type { ILibraryResponseItem } from "../../library.types";
 import { NO_IMAGE_URL } from "../../data";
-import type { WikiComic } from "better-wiki";
+import { type WikiComic } from "better-wiki";
 import styles from './comic-card.module.css';
 import { ImageGen } from "../image-generic/image-generic";
+import { wikiImageOptimizer } from "@/services/wiki.service";
+
+const FALLBACK_RENDER_SIZE = 174;
 
 export function ComicCardCover({
     item,
@@ -25,7 +28,8 @@ export function ComicCardCover({
             setIsLoaded(false);
         }
         currentSrc = nextSrc;
-        ($img as HTMLImageElement).src = nextSrc;
+        const renderWidth = $img.parentElement?.clientWidth || FALLBACK_RENDER_SIZE;
+        ($img as HTMLImageElement).src = wikiImageOptimizer(nextSrc, renderWidth * 1.75);
     }
 
     const onEventChange = ($span: HTMLElement) => {
@@ -95,5 +99,5 @@ export function ComicCardCover({
         ]
 
     })
-    
+
 }
