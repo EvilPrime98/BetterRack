@@ -1,4 +1,4 @@
-import { UltraComponent, UltraFragment, UltraRouter } from "ultra-light-js";
+import { UltraActivity, UltraComponent, UltraFragment, UltraRouter } from "ultra-light-js";
 import { LibraryPage } from "./pages/library-page";
 import { ReaderPage } from "./pages/reader.page";
 import { SettingsPage } from "./pages/settings.page";
@@ -15,16 +15,16 @@ export function App() {
 
     async function onMount() {
         APP_CTX.isLoading.set(true);
-            await Promise.all([
-                Promise.allSettled([
-                    LIBRARY_CONTEXT.fetchLibrary(),
-                    COMIC_CACHE_CONTEXT.init(),
-                    SETTINGS_CONTEXT.fetchSettings()
-                ]),
-                new Promise(resolve => setTimeout(resolve, 1200)) //fictional delay
-            ])
-            USER_PREF.init();
-            COMICS_TYPE_CTX.init();
+        await Promise.all([
+            Promise.allSettled([
+                LIBRARY_CONTEXT.fetchLibrary(),
+                COMIC_CACHE_CONTEXT.init(),
+                SETTINGS_CONTEXT.fetchSettings()
+            ]),
+            new Promise(resolve => setTimeout(resolve, 1200)) //fictional delay
+        ])
+        USER_PREF.init();
+        COMICS_TYPE_CTX.init();
         APP_CTX.isLoading.set(false);
     }
 
@@ -41,14 +41,20 @@ export function App() {
                 }
             }),
 
-            UltraRouter(
-                { path: '/:uid/reader', component: ({ uid } = {}) => ReaderPage({ uid }) },
-                { path: '/settings', component: () => SettingsPage() },
-                { path: '/store', component: () => StorePage() },
-                { path: '/:uid', component: ({ uid } = {}) => LibraryPage({ uid }) },
-                { path: '/*', component: () => LibraryPage({}) }
-            )
-
+            UltraActivity({
+                mode: {
+                    state: () => !APP_CTX.isLoading.get(),
+                    subscriber: APP_CTX.isLoading.subscribe
+                },
+                component: UltraRouter(
+                    { path: '/:uid/reader', component: ({ uid } = {}) => ReaderPage({ uid }) },
+                    { path: '/settings', component: () => SettingsPage() },
+                    { path: '/store', component: () => StorePage() },
+                    { path: '/:uid', component: ({ uid } = {}) => LibraryPage({ uid }) },
+                    { path: '/*', component: () => LibraryPage({}) }
+                )
+            })
+            
         ],
 
         onMount: [onMount]
