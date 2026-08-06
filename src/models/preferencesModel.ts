@@ -1,5 +1,5 @@
 import path from "node:path";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { Database } from "bun:sqlite";
 import { drizzle, type BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
 import { eq } from "drizzle-orm";
@@ -19,14 +19,20 @@ export class PreferencesModel implements TPreferencesModel {
     private db: BunSQLiteDatabase;
 
     constructor() {
-        const dbPath = process.env['PREFERENCES_DB'] ?? path.resolve('src/database/preferences.sqlite');
+        
+        const dbPath = path.resolve('src/database/preferences.sqlite');
+        
+        mkdirSync(path.dirname(dbPath), { recursive: true });
+        
         const sqlite = new Database(dbPath, { create: true });
+        
         sqlite.run(`
             CREATE TABLE IF NOT EXISTS app_settings (
                 key TEXT PRIMARY KEY,
                 value TEXT
             )
         `);
+
         sqlite.run(`
             CREATE TABLE IF NOT EXISTS library_item_prefs (
                 uid TEXT PRIMARY KEY,
@@ -35,37 +41,59 @@ export class PreferencesModel implements TPreferencesModel {
                 pref_cover TEXT
             )
         `);
+
         this.db = drizzle(sqlite);
-        this.seedAppSettingsFromEnv();
+        
+        this.seedAppSettingsFromEnvFile();
+        
         this.seedLibraryPrefsFromFile();
     }
 
-    private seedAppSettingsFromEnv = () => {
+    private seedAppSettingsFromEnvFile = () => {
+
         try {
+            
             const count = this.db.select().from(appSettings).all().length;
             if (count > 0) return;
 
-            const outputDirs = (process.env.OUTPUT_DIR || '').split(',').map(dir => dir.trim()).filter(Boolean);
+            const filePath = path.resolve('.env');
+            if (!existsSync(filePath)) return;
+
+            const env: Record<string, string> = {};
+            for (const line of readFileSync(filePath, 'utf-8').split(/\r?\n/)) {
+                const trimmed = line.trim();
+                if (!trimmed || trimmed.startsWith('#')) continue;
+                const eq = trimmed.indexOf('=');
+                if (eq === -1) continue;
+                env[trimmed.slice(0, eq).trim()] = trimmed.slice(eq + 1).trim();
+            }
+
+            const outputDirs = (env.OUTPUT_DIR || '').split(',').map(dir => dir.trim()).filter(Boolean);
 
             const seed: Partial<TAppSettings> = {};
             if (outputDirs.length > 0) seed.outputDirs = outputDirs;
-            if (process.env.API_URL) seed.apiUrl = process.env.API_URL;
-            if (process.env.BASE_URL) seed.baseUrl = process.env.BASE_URL;
-            if (process.env.HOST_DOMAIN) seed.hostDomain = process.env.HOST_DOMAIN;
-            if (process.env.DOWNLOAD_DIR) seed.downloadDir = process.env.DOWNLOAD_DIR;
-
+            if (env.API_URL) seed.apiUrl = env.API_URL;
+            if (env.BASE_URL) seed.baseUrl = env.BASE_URL;
+            if (env.HOST_DOMAIN) seed.hostDomain = env.HOST_DOMAIN;
+            if (env.DOWNLOAD_DIR) seed.downloadDir = env.DOWNLOAD_DIR;
             if (Object.keys(seed).length > 0) this.updateAppSettings(seed);
+
         } catch (e) {
-            console.error('Failed to seed app settings from env:', e);
+
+            console.error('Failed to migrate app settings from .env:', e);
+
         }
+
     }
 
     private seedLibraryPrefsFromFile = () => {
+
         try {
+            
             const count = this.db.select().from(libraryItemPrefs).all().length;
             if (count > 0) return;
 
-            const filePath = process.env['LIB_PREFERENCES'] || path.resolve('src/database/library-pref.json');
+            const filePath = path.resolve('src/database/library-pref.json');
             if (!existsSync(filePath)) return;
 
             const content = readFileSync(filePath, { encoding: 'utf-8' });
@@ -79,9 +107,13 @@ export class PreferencesModel implements TPreferencesModel {
                     prefCover: pref.prefCover ?? null,
                 }).onConflictDoNothing().run();
             }
+
         } catch (e) {
+
             console.error('Failed to seed library prefs from file:', e);
+
         }
+        
     }
 
     getAppSettings = (): TAppSettings => {

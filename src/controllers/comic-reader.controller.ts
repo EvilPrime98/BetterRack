@@ -3,9 +3,7 @@ import type { Context } from "hono";
 import { existsSync } from "node:fs";
 import path from "node:path";
 
-export const COMIC_TMP_DIR = path.resolve(
-    process.env['COMIC_DECOMPRESS_DIR'] || './tmp-decompressor'
-);
+export const COMIC_TMP_DIR = path.resolve('./tmp-decompressor');
 
 export class comicReaderController {
 

@@ -4,9 +4,7 @@ import path from "node:path";
 import sharp from "sharp";
 import type { TThumbnailModel, TZipModel } from "#src/types.ts";
 
-export const THUMBNAIL_CACHE_DIR = path.resolve(
-    process.env['COMIC_THUMBNAIL_DIR'] || './tmp-thumbnails'
-);
+export const THUMBNAIL_CACHE_DIR = path.resolve('./tmp-thumbnails');
 
 /** Raw pages are extracted here before being re-encoded, then discarded; keeps THUMBNAIL_CACHE_DIR holding only the final webp per uid. */
 const RAW_EXTRACT_DIR = path.join(THUMBNAIL_CACHE_DIR, '.raw');

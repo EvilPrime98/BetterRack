@@ -1,4 +1,5 @@
 import path from "node:path";
+import { mkdirSync } from "node:fs";
 import { Database } from "bun:sqlite";
 import { drizzle, type BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
 import { eq } from "drizzle-orm";
@@ -10,7 +11,8 @@ export class ComicDataModel implements TComicDataModel {
     private db: BunSQLiteDatabase;
 
     constructor() {
-        const dbPath = process.env['COMIC_DATA_DB'] ?? path.resolve('src/database/comic-data.sqlite');
+        const dbPath = path.resolve('src/database/comic-data.sqlite');
+        mkdirSync(path.dirname(dbPath), { recursive: true });
         const sqlite = new Database(dbPath, { create: true });
         sqlite.run(`
             CREATE TABLE IF NOT EXISTS comic_data (

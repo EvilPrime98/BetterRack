@@ -67,7 +67,7 @@ async function startApp() {
         }).catch(console.error);
     }, COMIC_TMP_SWEEP_INTERVAL_MS);
 
-    const clientDistDir = process.env.CLIENT_DIST_DIR || './client/dist';
+    const clientDistDir = './client/dist';
 
     app.use('/*', serveStatic({ root: clientDistDir }));
 

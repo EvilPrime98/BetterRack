@@ -68,10 +68,6 @@
       {
         "from": "client/dist",
         "to": "client"
-      },
-      {
-        "from": ".env",
-        "to": ".env"
       }
     ],
     "win": {

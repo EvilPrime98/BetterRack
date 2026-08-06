@@ -2,21 +2,7 @@ import { app, BrowserWindow, dialog } from "electron";
 import { spawn, type ChildProcess } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import fs from "node:fs";
 import http from "node:http";
-
-function parseEnvFile(filePath: string): Record<string, string> {
-  const env: Record<string, string> = {};
-  if (!fs.existsSync(filePath)) return env;
-  for (const line of fs.readFileSync(filePath, "utf-8").split(/\r?\n/)) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
-    const eq = trimmed.indexOf("=");
-    if (eq === -1) continue;
-    env[trimmed.slice(0, eq).trim()] = trimmed.slice(eq + 1).trim();
-  }
-  return env;
-}
 
 function waitForServer(
   url: string,
@@ -32,13 +18,17 @@ function waitForServer(
     const onExit = (code: number | null) => {
       if (settled) return;
       settled = true;
-      reject(new Error(`Server process exited before responding (code ${code})`));
+      reject(new Error(
+        `Server process exited before responding (code ${code})`
+      ));
     };
 
     const onError = (err: Error) => {
       if (settled) return;
       settled = true;
-      reject(new Error(`Failed to start server process: ${err.message}`));
+      reject(new Error(
+        `Failed to start server process: ${err.message}`
+      ));
     };
 
     serverProcess.once("exit", onExit);
@@ -123,10 +113,6 @@ async function startDesktopApp() {
 
         const resourcesPath = process.resourcesPath;
         const exePath = path.join(resourcesPath, "server", "run.exe");
-        const bundledEnv = parseEnvFile(path.join(resourcesPath, ".env"));
-
-        const dbDir = path.join(app.getPath("userData"), "database");
-        fs.mkdirSync(dbDir, { recursive: true });
 
         serverProcess = spawn(exePath, [], {
 
@@ -134,11 +120,8 @@ async function startDesktopApp() {
 
           env: {
             ...process.env,
-            ...bundledEnv,
             PORT,
             CLIENT_DIST_DIR: path.join(resourcesPath, "client"),
-            COMIC_DATA_DB: path.join(dbDir, "comic-data.sqlite"),
-            PREFERENCES_DB: path.join(dbDir, "preferences.sqlite"),
           },
 
         });
@@ -154,14 +137,26 @@ async function startDesktopApp() {
 
       }
 
-      serverProcess.stdout?.on("data", (data) => console.log(`[server] ${data}`));
-      serverProcess.stderr?.on("data", (data) => console.error(`[server] ${data}`));
+      serverProcess.stdout?.on("data", (data) =>
+        console.log(`[server] ${data}`)
+      );
+      
+      serverProcess.stderr?.on("data", (data) => 
+        console.error(`[server] ${data}`)
+      );
 
       await waitForServer(SERVER_URL, serverProcess);
 
     } catch (e) {
 
-      dialog.showErrorBox("Better Rack", `Failed to start the server: ${e instanceof Error ? e.message : String(e)}`);
+      dialog.showErrorBox(
+        "Better Rack", 
+        `Failed to start the server: ${
+          e instanceof Error 
+            ? e.message 
+            : String(e)
+        }`
+      );
       
       app.quit();
       
