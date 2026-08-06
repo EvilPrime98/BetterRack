@@ -1,4 +1,6 @@
+import { UltraErrorBoundary } from "ultra-light-js";
 import { App } from "./App";
+import { AppLoader } from "./components/app-loader/app-loader";
 
 declare global {
     interface Window {
@@ -17,5 +19,12 @@ if (platform) document.documentElement.dataset.platform = platform;
 const $app = document.getElementById('root');
 
 $app?.appendChild(
-    App()
+    UltraErrorBoundary({
+        factories: App,
+        fallback: (e) => AppLoader({
+           message: e instanceof Error 
+           ? `${e.stack}`
+           : 'There was an error'
+        })
+    })
 )
