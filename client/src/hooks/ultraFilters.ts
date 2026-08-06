@@ -15,16 +15,25 @@ export function ultraFilters({
         sortByReleaseDate: false
     })
 
-    function sortByCreation(
+    function sortByReleaseDate(
         data: ILibraryResponseItem[]
     ): ILibraryResponseItem[]{
        return data
-       .sort((a, b) => Number(a.createdAt) - Number(b.createdAt)) 
+       .sort((a, b) => {
+            const aDate = a.comic?.releaseDate;
+            const bDate = b.comic?.releaseDate;
+            if (!aDate || !bDate) return -1;
+            const r1 = Number(aDate.releaseYear) - Number(bDate.releaseYear);
+            if (r1 !== 0) return r1;
+            const r2 = Number(aDate.releaseMonth) - Number(bDate.releaseMonth);
+            if (r2 !== 0) return r2;
+            return Number(aDate.releaseDay) - Number(bDate.releaseDay)
+        }) 
     }
 
     function applyFilters() {
         const source = [...rawItems()];
-        if (filters.sortByCreation.get()) sortByCreation(source)
+        if (filters.sortByReleaseDate.get()) sortByReleaseDate(source);
         setItems(source);
     }
 
@@ -44,8 +53,9 @@ export function ultraFilters({
         (f: IUltraCompStateStateful<boolean>) => f.subscribe(applyFilters)
     );
 
-
-    filters.sortByCreation.set(USER_PREF.getPref('filter') === FILTER_OPTIONS.byCreation);
+    filters.sortByReleaseDate.set(
+        USER_PREF.getPref('filter') === FILTER_OPTIONS.byReleaseDate
+    );
 
     return {
         filters,

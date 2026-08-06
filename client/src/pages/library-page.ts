@@ -21,15 +21,16 @@ export function LibraryPage({
     if (search) {
         return SearchPage({ search });
     }
+    
+    const itemsMap = new Map<string, UltraLightElement>();
 
     const [items, setItems, subsItems] = ultraState<ILibraryResponseItem[]>([]);
+    
     const { filters, resetFilters, applyFilters } = ultraFilters({ 
         rawItems: getLibraryItems, 
         setItems 
     });
     
-    const itemsMap = new Map<string, UltraLightElement>();
-
     function onLayoutChange(
         $section: HTMLElement
     ){

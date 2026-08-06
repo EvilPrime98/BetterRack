@@ -7,17 +7,17 @@ import { USER_PREF } from "../../context/user-pref-cache.context";
 export function DropdownOptions({
     filters,
     resetFilters
-}:{
+}: {
     filters: ILibraryFilters;
     resetFilters: () => void;
 }) {
 
     const [isOpen, setOpen, subsOpen] = ultraState(false);
-    
+
     const [selected, setSelected, subsSelected] = ultraState<TFilterOptions>(
-        filters.sortByCreation.get()
-        ? FILTER_OPTIONS.byCreation
-        : FILTER_OPTIONS.nofilters
+        filters.sortByReleaseDate.get()
+            ? FILTER_OPTIONS.byReleaseDate
+            : FILTER_OPTIONS.nofilters
     );
 
     const closeMenu = () => setOpen(false);
@@ -27,23 +27,13 @@ export function DropdownOptions({
         setOpen(!isOpen());
     }
 
-    const onLabelChange = ($span: HTMLElement) => {
-        $span.textContent = selected();
-    }
-
     const onOpenChange = ($root: HTMLElement) => {
         $root.classList.toggle(styles.open, isOpen());
     }
 
-    const sortByCreation = () => {
-        filters.sortByCreation.set(
-            !filters.sortByCreation.get()
-        )
-    }
-
     subsSelected(() => {
-        USER_PREF.setPref({ filter: selected()})
-    })  
+        USER_PREF.setPref({ filter: selected() })
+    })
 
     return UltraComponent({
 
@@ -74,7 +64,9 @@ export function DropdownOptions({
                 component: `<span class="${styles.label}">${selected()}</span>`,
                 trigger: [{
                     subscriber: subsSelected,
-                    triggerFunction: onLabelChange
+                    triggerFunction: ($span: HTMLElement) => {
+                        $span.textContent = selected();
+                    }
                 }]
             }),
 
@@ -104,12 +96,12 @@ export function DropdownOptions({
                     }),
 
                     UltraComponent({
-                        component: `<li class="${styles.option}">${FILTER_OPTIONS.byCreation}</li>`,
+                        component: `<li class="${styles.option}">${FILTER_OPTIONS.byReleaseDate}</li>`,
                         eventHandler: {
                             click: (e: Event) => {
                                 e.stopPropagation();
-                                sortByCreation();
-                                setSelected(FILTER_OPTIONS.byCreation);
+                                filters.sortByReleaseDate.set(true);
+                                setSelected(FILTER_OPTIONS.byReleaseDate);
                                 setOpen(false);
                             }
                         }
