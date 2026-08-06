@@ -40,7 +40,7 @@
   "dependencies": {
     "@types/he": "^1.2.3",
     "@types/node": "^25.9.1",
-    "better-wiki": "^0.15.0",
+    "better-wiki": "^0.16.0",
     "drizzle-orm": "^0.45.2",
     "he": "^1.2.0",
     "hono": "^4.12.12",

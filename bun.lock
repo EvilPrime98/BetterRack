@@ -7,7 +7,7 @@
       "dependencies": {
         "@types/he": "^1.2.3",
         "@types/node": "^25.9.1",
-        "better-wiki": "^0.15.0",
+        "better-wiki": "^0.16.0",
         "drizzle-orm": "^0.45.2",
         "he": "^1.2.0",
         "hono": "^4.12.12",
@@ -415,7 +415,7 @@
 
     "base64-js": ["base64-js@1.5.1", "", {}, "sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA=="],
 
-    "better-wiki": ["better-wiki@0.15.0", "", { "dependencies": { "fuse.js": "7.4.2" } }, "sha512-9KUZ95hS48Ncjx+NC5oQlKe8PPPvEjLyna4JDmkgblcWvV+7p8fconFuijraGczCfNlVCnkJmn8nXw1CZYauYA=="],
+    "better-wiki": ["better-wiki@0.16.0", "", { "dependencies": { "fuse.js": "7.4.2" } }, "sha512-7PxniOwq6RO7v2BzpDhU+Ji3VZ6Iyq9djrKBqhOCsdZ6hioilu2G3Zs5Rov8PJCcBgtbi27awSAwN175+Z8BtQ=="],
 
     "bluebird": ["bluebird@3.7.2", "", {}, "sha512-XpNj6GDQzdfW+r2Wnn7xiSAd7TM3jzkxGXBGTtWKuSXv1xUV+azxAm8jdWZN06QTQk+2N2XB9jRDkvbmQmcRtg=="],
 
