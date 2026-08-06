@@ -11,4 +11,5 @@ CLAUDE.md
 src/database/*
 !src/database/schema.ts
 tmp-decompressor/
+tmp-thumbnails/
 release/

@@ -1,6 +1,7 @@
 import { UltraComponent, ultraState } from "ultra-light-js";
 import { API_URL } from "../../services/library.service";
 import styles from '../../pages/reader.page.module.css';
+import { ImageGen } from "../image-generic/image-generic";
 
 export function ImageElement({
     uid,
@@ -34,8 +35,7 @@ export function ImageElement({
         }],
 
         children: [
-            UltraComponent({
-                component: '<img/>',
+            ImageGen({
                 attributes: {
                     src: `${API_URL}/read/${uid}/pages/${ind}`,
                     alt: `${uid} — page ${index} of ${total}`,

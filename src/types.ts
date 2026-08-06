@@ -77,6 +77,8 @@ export type TLibraryEntry = {
     identified?: boolean;
     /** The identified wiki comic, already resolved by LibraryModel.scan(). */
     comic?: WikiComic;
+    /** True when wiki identification failed, so the card should fall back to GET /api/thumbnail/:uid, which extracts a local cover on demand. */
+    thumbnail?: boolean;
 }
 
 export type TLibraryPref = {
@@ -94,6 +96,8 @@ export type TLibraryGroup = {
 }
 
 export type TLibraryModel = {
+    /** Resolves once the initial scan (including wiki identification) has completed. */
+    ready: Promise<void>,
     scan: () => Promise<void>,
     get: (uid?: string) => TLibraryEntry[] | TLibraryEntry | undefined,
     getByLibrary: () => TLibraryGroup[],
@@ -160,6 +164,15 @@ export type TComicDataModel = {
     getAll: () => Record<string, TComicData>,
     getByUid: (uid: string) => TComicData | undefined,
     upsert: (uid: string, partial: Partial<Omit<TComicData, 'uid'>>) => TComicData
+}
+
+export type TThumbnailModel = {
+    /**
+     * Returns the cached fallback thumbnail path for a comic, if one exists.
+     * When `filePath` is provided and no cached thumbnail exists yet, extracts the archive's
+     * first image page and caches it. Returns null if unavailable/ungeneratable.
+     */
+    getThumbnail: (uid: string, filePath?: string) => Promise<string | null>,
 }
 
 export type TZipModel = {

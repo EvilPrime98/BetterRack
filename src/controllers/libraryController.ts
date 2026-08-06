@@ -47,6 +47,7 @@ export class libraryController{
     public async get(
         c: Context
     ) {
+        await this.libModel.ready;
         const content = this.libModel.getByLibrary();
         return c.json(
             content,

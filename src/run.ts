@@ -19,6 +19,8 @@ import { DownloadModel } from './models/downloadModel';
 import { FileSystemModel } from './models/directoryModel';
 import { comicsRouter } from './routers/comicsRouter';
 import { downloadsRouter } from './routers/downloadsRouter';
+import { ThumbnailModel } from './models/thumbnailModel';
+import { thumbnailRouter } from './routers/thumbnailRouter';
 
 const COMIC_TMP_TTL_MS = 30 * 60 * 1000;
 const COMIC_TMP_SWEEP_INTERVAL_MS = 10 * 60 * 1000;
@@ -30,6 +32,7 @@ async function startApp() {
     const zipModel = new Zip7Decompressor();
     const wikiModel = new WikiModel();
     const comicDataModel = new ComicDataModel();
+    const thumbnailModel = new ThumbnailModel(zipModel);
     const libModel = new LibraryModel(prefsModel, wikiModel, comicDataModel);
     const cacheModel = new CacheModel();
     const gcwModel = new GetComicsApiModel(cacheModel, prefsModel);
@@ -49,6 +52,8 @@ async function startApp() {
     app.route('/api/comics', comicsRouter(gcwModel));
 
     app.route('/api/downloads', downloadsRouter(dwnModel, gcwModel, fsModel, libModel));
+
+    app.route('/api/thumbnail', thumbnailRouter(thumbnailModel, libModel));
 
     app.route('/read', comicReaderRouter({
         libModel: libModel,

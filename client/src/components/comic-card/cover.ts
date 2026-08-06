@@ -5,6 +5,7 @@ import { type WikiComic } from "better-wiki";
 import styles from './comic-card.module.css';
 import { ImageGen } from "../image-generic/image-generic";
 import { wikiImageOptimizer } from "@/services/wiki.service";
+import { API_URL } from "@/services/library.service";
 
 const FALLBACK_RENDER_SIZE = 174;
 
@@ -23,13 +24,22 @@ export function ComicCardCover({
     let currentSrc: string | null = null;
 
     const onCoverChange = ($img: HTMLElement) => {
-        const nextSrc = comic()?.cover || NO_IMAGE_URL;
+        
+        const fallbackThumbnail = item.thumbnail 
+        ? `${API_URL}/api/thumbnail/${item.uid}` 
+        : null;
+
+        const nextSrc = comic()?.cover || fallbackThumbnail || NO_IMAGE_URL;
         if (nextSrc !== currentSrc) {
             setIsLoaded(false);
         }
+
         currentSrc = nextSrc;
+
         const renderWidth = $img.parentElement?.clientWidth || FALLBACK_RENDER_SIZE;
+
         ($img as HTMLImageElement).src = wikiImageOptimizer(nextSrc, renderWidth * 1.75);
+        
     }
 
     const onEventChange = ($span: HTMLElement) => {
