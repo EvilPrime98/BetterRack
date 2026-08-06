@@ -21,7 +21,9 @@ export interface ILibraryResponseItem {
     /** Tri-state, files only: undefined = not applicable, true = identified (see `comic`), false = scanned, no wiki match. */
     "identified"?: boolean,
     /** The identified wiki comic, already resolved server-side by LibraryModel.scan(). */
-    "comic"?: WikiComic
+    "comic"?: WikiComic,
+    /** True when wiki identification failed but a local fallback cover was extracted; fetch it at GET /api/thumbnail/:uid. */
+    "thumbnail"?: boolean
 }
 
 export interface ILibraryGroup {
@@ -32,7 +34,7 @@ export interface ILibraryGroup {
 }
 
 export interface ILibraryFilters {
-    sortByCreation: IUltraCompStateStateful<boolean>;
+    sortByReleaseDate: IUltraCompStateStateful<boolean>;
 }
 
 export interface IReadResponse {
@@ -83,7 +85,8 @@ export type TComicsTypes = keyof typeof COMICS_TYPES;
 
 export const FILTER_OPTIONS = {
     nofilters: 'Alphabetically',
-    byCreation: 'Creation Date'
+    byCreation: 'Creation Date',
+    byReleaseDate: 'Release Date'
 } as const;
 
 export type TFilterOptions = typeof FILTER_OPTIONS[keyof typeof FILTER_OPTIONS];
@@ -99,6 +102,6 @@ export function isIUltraCompStateStateful<T>(
 export interface ILibraryItemPref {
     uid: string;
     prefPublisher: string;
-    recursive: string;
+    recursive: boolean;
     prefCover: string;
 }

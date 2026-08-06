@@ -10,21 +10,17 @@
     background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0));
     border: 1px solid rgba(255, 255, 255, 0);
     transition:
-    padding 320ms ease,
-    border-radius 320ms ease,
-    border-color 320ms ease,
-    transform 220ms ease,
-    box-shadow 220ms ease;
+        padding 320ms ease,
+        border-radius 320ms ease,
+        border-color 320ms ease,
+        transform 220ms ease,
+        box-shadow 220ms ease;
     user-select: none;
 
     a:focus-visible {
         outline: 2px solid #34c3d1;
         outline-offset: 2px;
         border-radius: 4px;
-    }
-
-    &.isRead {
-        border-color: rgba(19, 166, 41, 0.3);
     }
 
     .cover {
@@ -39,7 +35,7 @@
             display: block;
             width: 100%;
             aspect-ratio: 50 / 77;
-            border-radius: 6px;
+            border-radius: 0px;
             overflow: hidden;
             background: #232222;
             box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.6);
@@ -74,13 +70,68 @@
             object-fit: cover;
             filter: saturate(1.1);
             opacity: 0;
-            transition: opacity 240ms ease;
+            transition: opacity 240ms ease, filter 320ms ease;
         }
 
         a.loaded img {
             opacity: 1;
         }
     }
+
+    .board {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        width: 104%;
+        aspect-ratio: 50 / 77;
+        background: linear-gradient(180deg, #f5f0e4, #e7e1d0);
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        box-shadow: 0 2px 5px -1px rgba(0, 0, 0, 0.35);
+        opacity: 0;
+        transform: translateX(-50%) scaleY(1);
+        transform-origin: center bottom;
+        transition: opacity 360ms ease
+        ,transform 360ms ease
+        ,border-radius 320ms ease;
+    }
+
+    .bagOverlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        aspect-ratio: 50 / 77;
+        overflow: hidden;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 360ms ease, border-radius 320ms ease;
+    }
+
+    /**plastic effect**/
+    .bagOverlay::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(118deg,
+                transparent 22%,
+                rgba(255, 255, 255, 0.14) 42%,
+                rgba(255, 255, 255, 0.32) 48%,
+                rgba(255, 255, 255, 0.1) 54%,
+                transparent 74%);
+        mix-blend-mode: screen;
+    }
+
+    /*.bagOverlay::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 15%;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.04) 75%, transparent);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.22);
+        box-shadow: 0 3px 6px -2px rgba(0, 0, 0, 0.45);
+    }*/
 
     .issueBadge {
         position: absolute;
@@ -140,26 +191,6 @@
         left: 50%;
         z-index: 2;
         transform: translateX(-50%);
-    }
-
-    .readBadge {
-        position: absolute;
-        top: 6px;
-        left: 6px;
-        z-index: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 18px;
-        height: 18px;
-        font-size: 11px;
-        font-weight: 700;
-        line-height: 1;
-        color: #fff;
-        background: #13a629;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        border-radius: 999px;
-        box-shadow: 0 2px 6px -2px rgba(0, 0, 0, 0.6);
     }
 
     .details {
@@ -253,60 +284,119 @@
         margin-bottom: 8px;
     }
 
-    &.detailMode {
+    .actions {
+        display: flex;
         flex-direction: row;
-        align-items: flex-start;
-        gap: 12px;
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.015));
-        border-color: rgba(255, 255, 255, 0.07);
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        margin-top: 4px;
+        margin-bottom: 4px;
+    }
 
-        .cover {
-            width: 140px;
-            flex-shrink: 0;
+    @media (hover: hover) {
+
+        .actions {
+            opacity: 0;
+            transform: translateY(2px);
+            transition: opacity 200ms ease, transform 200ms ease;
+            pointer-events: none;
         }
 
-        .cover a {
-            border-radius: 8px;
-        }
-
-        .issueBadge {
+        &:hover .actions,
+        &:focus-within .actions {
             opacity: 1;
             transform: translateY(0);
+            pointer-events: auto;
         }
 
-        .eventBadge {
+        .actions:has(.isRead) {
             opacity: 1;
-            transform: translateY(0);
+            pointer-events: auto;
         }
 
-        .details {
-            flex: 1;
-            min-width: 0;
-            width: auto;
-            margin-top: 0;
-            align-self: stretch;
-        }
+    }
 
-        .title {
-            text-align: left;
-        }
+}
 
-        .info {
-            flex: 1;
-            max-height: none;
-            opacity: 1;
-            margin-top: 8px;
-            padding-top: 8px;
-            border-color: rgba(255, 255, 255, 0.08);
-        }
+.isRead {
 
-        .rating {
-            justify-content: flex-start;
-        }
+    .cover img {
+        box-shadow:
+            0 0 0 1px rgba(0, 0, 0, 0.15),
+            2px 2px 0 rgba(0, 0, 0, 0.08),
+            6px 6px 14px rgba(0, 0, 0, 0.22);
+    }
 
-        &.isRead {
-            border-color: rgba(19, 166, 41, 0.3);
-        }
+    .board {
+        opacity: 1;
+        transform: translateX(-50%) scaleY(1.035);
+    }
+
+    .bagOverlay {
+        opacity: 1;
+    }
+    
+}
+
+.detailMode {
+
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.015));
+    border-color: rgba(255, 255, 255, 0.07);
+
+    .cover {
+        width: 140px;
+        flex-shrink: 0;
+    }
+
+    .issueBadge {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .eventBadge {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .details {
+        flex: 1;
+        min-width: 0;
+        width: auto;
+        margin-top: 0;
+        align-self: stretch;
+    }
+
+    .title {
+        text-align: left;
+    }
+
+    .info {
+        flex: 1;
+        max-height: none;
+        opacity: 1;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .rating {
+        justify-content: flex-start;
+    }
+
+    .actions {
+        justify-content: flex-start;
+        opacity: 1;
+        transform: none;
+    }
+
+    .actionsBlock {
+        display: flex;
+        gap: 1rem;
     }
 
 }

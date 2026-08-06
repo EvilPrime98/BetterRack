@@ -25,3 +25,9 @@
     align-items: center;
     gap: 10px;
 }
+
+.newFolderButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}

@@ -1,5 +1,7 @@
 .folderCard {
 
+    position: relative;
+    z-index: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -13,7 +15,6 @@
 
     @media (hover: hover) {
         &:hover {
-            border-color: rgba(52, 195, 209, 0.35);
             box-shadow: 0 8px 18px -14px rgba(0, 0, 0, 0.6);
         }
     }
@@ -66,6 +67,52 @@
         box-shadow: 0 8px 16px -8px rgba(0, 0, 0, 0.7);
     }
 
+    .stack {
+        position: relative;
+        width: 80%;
+        margin: 0 auto;
+        overflow: visible;
+        background: none;
+        box-shadow: none;
+    }
+
+    .stack>* {
+        position: absolute;
+        inset: 0;
+        transition: transform 220ms ease, filter 220ms ease;
+    }
+
+    .stack>*:nth-child(1) {
+        z-index: 3;
+        transform: rotate(-2deg);
+    }
+
+    .stack>*:nth-child(2) {
+        z-index: 2;
+        transform: rotate(-7deg) translate(-9%, 5%);
+        filter: brightness(0.9);
+    }
+
+    .stack>*:nth-child(3) {
+        z-index: 1;
+        transform: rotate(7deg) translate(10%, 7%);
+        filter: brightness(0.78);
+    }
+
+    @media (hover: hover) {
+        .cardLink:hover .stack>*:nth-child(1) {
+            transform: rotate(-4deg);
+        }
+
+        .cardLink:hover .stack>*:nth-child(2) {
+            transform: rotate(-10deg) translate(-13%, 7%);
+        }
+
+        .cardLink:hover .stack>*:nth-child(3) {
+            transform: rotate(10deg) translate(14%, 9%);
+        }
+    }
+
     .body {
         display: flex;
         flex-direction: column;
@@ -86,6 +133,7 @@
     }
 
     .title {
+        opacity: 0;
         font-family: var(--font-sans);
         margin: 0;
         padding: 0;
@@ -113,62 +161,160 @@
         display: none;
     }
 
-    &.detailMode {
+}
 
-        .cardLink {
-            flex-direction: row;
-            align-items: center;
-            gap: 14px;
+.folderActions {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    z-index: 3;
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+}
+
+@media (hover: hover) {
+    .folderActions {
+        opacity: 0;
+        transform: translateY(-2px);
+        transition: opacity 200ms ease, transform 200ms ease;
+        pointer-events: none;
+    }
+
+    .folderCard:hover .folderActions,
+    .folderCard:focus-within .folderActions {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+    }
+}
+
+.folderActionButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    color: #fff;
+    background: rgba(18, 18, 18, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.folderActionButton svg {
+    pointer-events: none;
+}
+
+@media (hover: hover) {
+    .folderActionButton:hover {
+        background: rgba(52, 195, 209, 0.18);
+        border-color: rgba(52, 195, 209, 0.45);
+        color: #34c3d1;
+    }
+}
+
+.folderActionButton:active {
+    transform: scale(0.94);
+}
+
+.folderActionButton:focus-visible {
+    outline: 2px solid #34c3d1;
+    outline-offset: 2px;
+}
+
+@media (hover: hover) {
+    .folderDeleteButton:hover {
+        background: rgba(232, 93, 93, 0.18);
+        border-color: rgba(232, 93, 93, 0.45);
+        color: #e85d5d;
+    }
+}
+
+.detailMode {
+
+    .folderActions {
+        top: 50%;
+        right: 8px;
+        transform: translateY(-50%);
+    }
+
+    @media (hover: hover) {
+        .folderActions {
+            transform: translateY(-50%);
         }
 
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.015));
-        border-color: rgba(255, 255, 255, 0.07);
-
-        .cover {
-            width: 56px;
-            aspect-ratio: 1 / 1;
-            flex-shrink: 0;
-            border-radius: 12px;
-            background:
-                radial-gradient(circle at 50% 38%, rgba(52, 195, 209, 0.18), transparent 70%),
-                linear-gradient(160deg, #232222, #1a1a1a);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-        }
-
-        .body {
-            flex: 1;
-            min-width: 0;
-            width: auto;
-            align-items: flex-start;
-            margin-top: 0;
-            gap: 4px;
-        }
-
-        .kind {
-            display: block;
-        }
-
-        .title {
-            text-align: left;
-            font-size: 14px;
-            -webkit-line-clamp: 1;
-        }
-
-        .chevron {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            color: #666;
-            transform: rotate(-90deg);
-            transition: color 220ms ease;
-        }
-
-        @media (hover: hover) {
-            .cardLink:hover .chevron {
-                color: #34c3d1;
-            }
+        .folderCard:hover .folderActions,
+        .folderCard:focus-within .folderActions {
+            transform: translateY(-50%);
         }
     }
 
+    .cardLink {
+        flex-direction: row;
+        align-items: center;
+        gap: 14px;
+    }
+
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.015));
+    border-color: rgba(255, 255, 255, 0.07);
+
+    .cover {
+        width: 56px;
+        aspect-ratio: 1 / 1;
+        flex-shrink: 0;
+        border-radius: 12px;
+        background:
+            radial-gradient(circle at 50% 38%, rgba(52, 195, 209, 0.18), transparent 70%),
+            linear-gradient(160deg, #232222, #1a1a1a);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .stack {
+        width: 46px;
+        margin: 0;
+        background: none;
+        border: none;
+    }
+
+    .stack>* {
+        border-radius: 12px;
+    }
+
+    .body {
+        flex: 1;
+        min-width: 0;
+        width: auto;
+        align-items: flex-start;
+        margin-top: 0;
+        gap: 4px;
+    }
+
+    .kind {
+        display: block;
+    }
+
+    .title {
+        opacity: 1;
+        text-align: left;
+        font-size: 14px;
+        -webkit-line-clamp: 1;
+    }
+
+    .chevron {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        color: #666;
+        transform: rotate(-90deg);
+        transition: color 220ms ease;
+    }
+
+    @media (hover: hover) {
+        .cardLink:hover .chevron {
+            color: #34c3d1;
+        }
+    }
 }

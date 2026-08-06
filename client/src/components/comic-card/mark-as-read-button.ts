@@ -1,7 +1,17 @@
 import { UltraComponent } from "ultra-light-js";
 import styles from './mark-as-read-button.module.css';
 import { COMIC_CACHE_CONTEXT } from "@/context/comic-cache.context";
-import { toast } from "@/services/toast.service";
+import { BookmarkIcon } from "@/icons/bookmark.icon";
+
+export function toggleComicRead(uid: string) {
+    const currCache = COMIC_CACHE_CONTEXT.getCacheById(uid);
+    const isRead = currCache?.read;
+    const newRead = isRead === undefined ? true : !isRead;
+    COMIC_CACHE_CONTEXT.setCacheById(uid, {
+        read: newRead,
+        readPer: newRead ? 100 : 0
+    })
+}
 
 export function MarkAsReadButton({
     uid
@@ -10,7 +20,7 @@ export function MarkAsReadButton({
 }) {
 
     const getCache = () => COMIC_CACHE_CONTEXT.getCacheById(uid);
-    
+
     const getIsRead = () => (getCache())?.read === true;
 
     const onButtonStateChange = ($button: HTMLElement) => {
@@ -20,31 +30,14 @@ export function MarkAsReadButton({
         $button.setAttribute('aria-label', isRead ? 'Mark this comic as unread' : 'Mark this comic as read');
     }
 
-    const onReadStatusChange = ($span: HTMLElement) => {
-        $span.textContent = getIsRead()
-        ? 'Mark as unread'
-        : 'Mark as read'
-    }
-
-    const onClick = () => {
-        const currCache = getCache();
-        const isRead = currCache?.read;
-        COMIC_CACHE_CONTEXT.setCacheById(uid, {
-            read: isRead === undefined ? true : !isRead,
-            readPer: !isRead === true
-            ? 0
-            : currCache?.readPer
-        })
-        toast.success(
-            !isRead === true
-            ? 'Comic marked as read'
-            : 'Comic marked as unread'
-        );
-    }
+    const onClick = () => toggleComicRead(uid);
 
     return UltraComponent({
         component: '<span></span>',
-        className: [styles.markAsReadButton],
+        className: [
+            styles.markAsReadButton,
+            ...(getIsRead() ? [styles.isRead] : [])
+        ],
         attributes: {
             type: 'button',
             'aria-pressed': String(getIsRead()),
@@ -58,14 +51,7 @@ export function MarkAsReadButton({
             triggerFunction: onButtonStateChange
         }],
         children: [
-            UltraComponent({
-                component: '<span></span>',
-                onMount: [onReadStatusChange],
-                trigger: [{
-                    subscriber: COMIC_CACHE_CONTEXT.cache.subscribe,
-                    triggerFunction: onReadStatusChange
-                }]
-            })
+            BookmarkIcon({ size: 16 })
         ]
     })
 

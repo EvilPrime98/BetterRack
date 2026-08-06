@@ -1,5 +1,13 @@
 import { ultraCompState, ultraQuery, type IUltraCompStateStateful } from "ultra-light-js";
-import { getLibrary, refreshLibrary as requestLibraryRefresh } from "../services/library.service";
+import {
+    getLibrary,
+    refreshLibrary as requestLibraryRefresh,
+    deleteFile as requestDeleteFile,
+    deleteFolder as requestDeleteFolder,
+    createFolder as requestCreateFolder,
+    moveFile as requestMoveFile,
+    updateLibraryPref as requestUpdateLibraryPref
+} from "../services/library.service";
 import type { ILibraryGroup, ILibraryResponseItem } from "../library.types";
 import { toast } from "../services/toast.service";
 
@@ -11,6 +19,11 @@ export interface ILibraryCtx {
     searchQuery: IUltraCompStateStateful<string>;
     fetchLibrary: () => Promise<void>;
     refreshLibrary: () => Promise<void>;
+    deleteFile: (uid: string) => Promise<void>;
+    deleteFolder: (uid: string) => Promise<void>;
+    createFolder: (folderName: string, parentFolderUid?: string) => Promise<void>;
+    moveFile: (fileUid: string, targetFolderUid?: string) => Promise<void>;
+    updatePreferences: (uid: string, updates: Partial<{ prefPublisher: string; recursive: boolean; prefCover: string }>) => Promise<void>;
     getLibraryItems: (args: { onlyDir: boolean, uid?: string }) => ILibraryResponseItem[];
 }
 
@@ -44,6 +57,65 @@ export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
             toast.success('Library refreshed');
         } catch (e) {
             toast.error(e instanceof Error ? e.message : 'Failed to refresh library.');
+        }
+    },
+
+    deleteFile: async (comp: ILibraryCtx, uid: string) => {
+        try {
+            const data = await requestDeleteFile(uid);
+            queryClient.invalidateCache('library');
+            await comp.fetchLibrary();
+            toast.success(data.message || 'File deleted');
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : 'Failed to delete file.');
+        }
+    },
+
+    deleteFolder: async (comp: ILibraryCtx, uid: string) => {
+        try {
+            const data = await requestDeleteFolder(uid);
+            queryClient.invalidateCache('library');
+            await comp.fetchLibrary();
+            toast.success(data.message || 'Folder deleted');
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : 'Failed to delete folder.');
+        }
+    },
+
+    createFolder: async (comp: ILibraryCtx, folderName: string, parentFolderUid?: string) => {
+        try {
+            const data = await requestCreateFolder(folderName, parentFolderUid);
+            queryClient.invalidateCache('library');
+            await comp.fetchLibrary();
+            toast.success(data.message || 'Folder created');
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : 'Failed to create folder.');
+        }
+    },
+
+    moveFile: async (comp: ILibraryCtx, fileUid: string, targetFolderUid?: string) => {
+        try {
+            const data = await requestMoveFile(fileUid, targetFolderUid);
+            queryClient.invalidateCache('library');
+            await comp.fetchLibrary();
+            toast.success(data.message || 'File moved');
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : 'Failed to move file.');
+        }
+    },
+
+    updatePreferences: async (
+        comp: ILibraryCtx,
+        uid: string,
+        updates: Partial<{ prefPublisher: string; recursive: boolean; prefCover: string }>
+    ) => {
+        try {
+            const data = await requestUpdateLibraryPref(uid, updates);
+            queryClient.invalidateCache('library');
+            await comp.fetchLibrary();
+            toast.success(data.message || 'Preferences updated');
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : 'Failed to update preferences.');
         }
     },
 

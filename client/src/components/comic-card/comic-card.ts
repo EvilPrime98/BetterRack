@@ -12,7 +12,7 @@ import { READ_TYPES_CTX } from "@/context/read-types.context";
 import { COMIC_CACHE_CONTEXT } from "@/context/comic-cache.context";
 import { COMIC_IDENT_CTX } from "@/context/identifer-modal.context";
 import { IdentifyButton } from "./identify-button";
-import { MarkAsReadButton } from "./mark-as-read-button";
+import { ComicCardActions } from "./actions";
 
 export function ComicCard({
     item
@@ -23,14 +23,14 @@ export function ComicCard({
     const [comic, setComic, subsComic] = ultraState<WikiComic | null>(item.comic ?? null);
     const [identified, setIdentified, subsIdentified] = ultraState(item.identified !== false);
 
-    const [itemCache, setItemCache, subsItemCache] = ultraState<IComicLSCache|null>(
+    const [itemCache, setItemCache, subsItemCache] = ultraState<IComicLSCache | null>(
         COMIC_CACHE_CONTEXT.getCacheById(item.uid) || null
     );
 
     const readerHref = `/${item.uid}/reader`;
-    
+
     const getIsRead = () => itemCache()?.read === true;
-    
+
     const getReadPer = () => {
         const cache = itemCache();
         return cache ? (cache.read === true ? 100 : cache.readPer ?? 0) : 0;
@@ -108,10 +108,18 @@ export function ComicCard({
 
                 children: [
 
+                    UltraComponent({
+                        component: `<div class="${styles.board}"></div>`
+                    }),
+
                     ComicCardCover({
                         comic,
                         subsComic,
                         item
+                    }),
+
+                    UltraComponent({
+                        component: `<div class="${styles.bagOverlay}"></div>`
                     }),
 
                     UltraActivity({
@@ -160,23 +168,24 @@ export function ComicCard({
                         }
                     }),
 
-                    UltraActivity({
-                        component: MarkAsReadButton({ uid: item.uid }),
-                        mode: {
-                            state: () => COMICS_TYPE_CTX.type.get() === 'detail',
-                            subscriber: COMICS_TYPE_CTX.type.subscribe
-                        }
-                    }),
-
                     ComicCardInfo({
                         comic,
                         subsComic
                     }),
 
                     UltraComponent({
-                        component: ComicRating({
-                            uid: item.uid
-                        })
+                        component: '<div></div>',
+                        className: [styles.actionsBlock],
+                        children: [
+                            ComicRating({
+                                uid: item.uid
+                            }),
+
+                            ComicCardActions({
+                                uid: item.uid,
+                                name: item.name
+                            })
+                        ]
                     })
 
                 ]
