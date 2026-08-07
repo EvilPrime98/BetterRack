@@ -1,24 +1,11 @@
-import { UltraComponent } from "ultra-light-js";
-import styles from './state-filter.module.css';
+import { CycleButton } from "@/components/cycle-button/cycle-button";
 import { READ_TYPES_CTX } from "@/context/read-types.context";
 
 export function StateFilter(){
 
-    const onTypeChange = ($button: HTMLElement) => {
-        $button.textContent = READ_TYPES_CTX.type.get();
-    }
-
-    return UltraComponent({
-        component: '<button></button>',
-        className: [styles.filterButton],
-        onMount: [onTypeChange],
-        trigger: [{
-            subscriber: READ_TYPES_CTX.type.subscribe,
-            triggerFunction: onTypeChange
-        }],
-        eventHandler: {
-            click: READ_TYPES_CTX.next
-        }
+    return CycleButton({
+        state: READ_TYPES_CTX.type,
+        onNext: READ_TYPES_CTX.next,
     })
-    
+
 }

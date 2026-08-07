@@ -1,6 +1,5 @@
-import { UltraComponent } from "ultra-light-js";
-import styles from './identify-button.module.css';
 import { COMIC_IDENT_CTX } from "../../context/identifer-modal.context";
+import { CrButton } from "../cr-button/cr-button";
 
 export function IdentifyButton({
     uid
@@ -13,19 +12,14 @@ export function IdentifyButton({
         COMIC_IDENT_CTX.isVisible.set(true);
     }
 
-    return UltraComponent({
-        component: '<span></span>',
-        className: [styles.identifyButton],
+    return CrButton({
+        text: 'Identify',
         attributes: {
-            type: 'button',
             'aria-label': 'Identify this comic'
         },
         eventHandler: {
             click: onClick
-        },
-        children: [
-            '<span>Identify</span>'
-        ]
+        }
     })
 
 }
