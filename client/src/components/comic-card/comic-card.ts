@@ -1,4 +1,4 @@
-import { UltraActivity, UltraComponent, ultraState } from "ultra-light-js";
+import { UltraActivity, UltraComponent, ultraNavigate, ultraState } from "ultra-light-js";
 import type { WikiComic } from "better-wiki";
 import styles from './comic-card.module.css';
 import { ReadBar } from "@/components/read-bar/read-bar";
@@ -13,6 +13,7 @@ import { COMIC_CACHE_CONTEXT } from "@/context/comic-cache.context";
 import { COMIC_IDENT_CTX } from "@/context/identifer-modal.context";
 import { IdentifyButton } from "./identify-button";
 import { ComicCardActions } from "./actions";
+import { CrButton } from "../cr-button/cr-button";
 
 export function ComicCard({
     item
@@ -160,12 +161,34 @@ export function ComicCard({
                         item
                     }),
 
-                    UltraActivity({
-                        component: IdentifyButton({ uid: item.uid }),
-                        mode: {
-                            state: () => COMICS_TYPE_CTX.type.get() === 'detail',
-                            subscriber: COMICS_TYPE_CTX.type.subscribe
-                        }
+                    UltraComponent({
+                        component: '<div></div>',
+                        styles: {
+                            display: 'flex',
+                            gap: '5px'
+                        },
+                        children: [
+                            UltraActivity({
+                                component: IdentifyButton({ uid: item.uid }),
+                                mode: {
+                                    state: () => COMICS_TYPE_CTX.type.get() === 'detail',
+                                    subscriber: COMICS_TYPE_CTX.type.subscribe
+                                }
+                            }),
+                            UltraActivity({
+                                component: CrButton({
+                                    variant: 'orange',
+                                    text: 'Read',
+                                    eventHandler: {
+                                        click: () => ultraNavigate({ href: `/${item.uid}/reader` })
+                                    }
+                                }),
+                                mode: {
+                                    state: () => COMICS_TYPE_CTX.type.get() === 'detail',
+                                    subscriber: COMICS_TYPE_CTX.type.subscribe
+                                }
+                            })
+                        ]
                     }),
 
                     ComicCardInfo({
