@@ -7,6 +7,9 @@ import { SuggestionCard } from "./suggestion-card";
 import { IdentifierDefaultContent } from "./default-content";
 import { COMIC_IDENT_CTX } from "../../context/identifer-modal.context";
 import { fetchComics } from "../../services/wiki.service";
+import { CrButton } from "../cr-button/cr-button";
+import { LIBRARY_CONTEXT } from "../../context/library.context";
+import { CONFIRM_MODAL_CTX } from "../../context/confirm-modal.context";
 
 export function ComicIdentifier(){
 
@@ -17,6 +20,17 @@ export function ComicIdentifier(){
     const [ isSearching, setIsSearching, subsIsSearching ] = ultraState(false);
 
     const close = () => COMIC_IDENT_CTX.isVisible.set(false);
+
+    const onUnidentify = async () => {
+        const confirmed = await CONFIRM_MODAL_CTX.confirmDialog({
+            title: 'Un-identify comic?',
+            message: 'This will remove the identified metadata for this comic.',
+            confirmLabel: 'Un-identify'
+        });
+        if (!confirmed) return;
+        await LIBRARY_CONTEXT.unidentifyFile(COMIC_IDENT_CTX.itemUid.get());
+        close();
+    }
 
     const getSuggestions = async (
         search: string
@@ -130,6 +144,18 @@ export function ComicIdentifier(){
                                 onMount: [
                                     ($input) => ($input as HTMLInputElement).focus()
                                 ]
+                            }),
+
+                            CrButton({
+                                text: 'Unidentify',
+                                variant: 'red',
+                                className: [styles.unidentifyButton],
+                                attributes: {
+                                    'aria-label': 'Un-identify this comic'
+                                },
+                                eventHandler: {
+                                    click: onUnidentify
+                                }
                             }),
 
                             UltraComponent({

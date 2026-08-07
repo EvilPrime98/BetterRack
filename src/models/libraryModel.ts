@@ -352,6 +352,33 @@ export class LibraryModel implements TLibraryModel {
     }
 
     /**
+     * Flags a file as deliberately un-identified, so future scans skip wiki lookup for it
+     * and it falls back to a locally-generated thumbnail instead. This is the same tri-state
+     * `false` used when a wiki search comes back empty — it is a terminal state, not a reset,
+     * so it never re-enters the identify queue on its own.
+     * @param fileUid The uid of the file to un-identify.
+     * @throws If the target is not a file.
+     * @throws If the file does not exist.
+     */
+    unidentifyFile = async (fileUid: string) => {
+        const file = this.get(fileUid);
+        if (!file || Array.isArray(file)) throw new Error('File not found.');
+        if (file.did) throw new Error('Target is not a file.');
+
+        this.comicDataModel.upsert(fileUid, {
+            identified: false,
+            comic: undefined,
+            sourceWiki: undefined,
+            prefId: undefined,
+        });
+
+        file.identified = false;
+        file.comic = undefined;
+        file.thumbnail = true;
+        this.inheritanceCache = null;
+    }
+
+    /**
      * Adds a new library folder and persists it to the preferences store.
      */
     addLibraryPath = async (dir: string) => {

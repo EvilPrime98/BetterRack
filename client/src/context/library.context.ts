@@ -6,6 +6,7 @@ import {
     deleteFolder as requestDeleteFolder,
     createFolder as requestCreateFolder,
     moveFile as requestMoveFile,
+    unidentifyFile as requestUnidentifyFile,
     updateLibraryPref as requestUpdateLibraryPref
 } from "../services/library.service";
 import type { ILibraryGroup, ILibraryResponseItem } from "../library.types";
@@ -23,6 +24,7 @@ export interface ILibraryCtx {
     deleteFolder: (uid: string) => Promise<void>;
     createFolder: (folderName: string, parentFolderUid?: string) => Promise<void>;
     moveFile: (fileUid: string, targetFolderUid?: string) => Promise<void>;
+    unidentifyFile: (uid: string) => Promise<void>;
     updatePreferences: (uid: string, updates: Partial<{ prefPublisher: string; recursive: boolean; prefCover: string }>) => Promise<void>;
     getLibraryItems: (args: { onlyDir: boolean, uid?: string }) => ILibraryResponseItem[];
 }
@@ -101,6 +103,17 @@ export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
             toast.success(data.message || 'File moved');
         } catch (e) {
             toast.error(e instanceof Error ? e.message : 'Failed to move file.');
+        }
+    },
+
+    unidentifyFile: async (comp: ILibraryCtx, uid: string) => {
+        try {
+            const data = await requestUnidentifyFile(uid);
+            queryClient.invalidateCache('library');
+            await comp.fetchLibrary();
+            toast.success(data.message || 'File un-identified');
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : 'Failed to un-identify file.');
         }
     },
 

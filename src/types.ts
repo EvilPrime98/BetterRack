@@ -108,6 +108,7 @@ export type TLibraryModel = {
     moveFile: (fileUid: string, targetFolderUid: string) => Promise<void>,
     deleteFolder: (folderUid: string) => Promise<void>,
     deleteFile: (fileUid: string) => Promise<void>,
+    unidentifyFile: (fileUid: string) => Promise<void>,
     addLibraryPath: (dir: string) => Promise<void>,
     removeLibraryPath: (dir: string) => Promise<void>,
     getLibraryPaths: () => string[],

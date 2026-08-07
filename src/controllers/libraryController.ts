@@ -188,4 +188,30 @@ export class libraryController{
         }
     }
 
+    public async unidentifyFile(
+        c: Context
+    ){
+        try{
+
+            const { fileUid } = await c.req.json();
+
+            await this.libModel.unidentifyFile(fileUid);
+
+            return c.json(
+                { error: false, message: 'File un-identified successfully.'},
+                200
+            )
+
+        }catch(e){
+
+            if (e instanceof Error) console.log(`[ERROR]: ${e.message}`)
+
+            return c.json(
+                { error: true, message: 'There was an issue un-identifying the file. Please, try again later.'},
+                500
+            )
+
+        }
+    }
+
 }

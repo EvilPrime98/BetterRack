@@ -61,6 +61,11 @@
     }
 }
 
+.unidentifyButton {
+    margin-top: 0;
+    align-self: center;
+}
+
 .closeButton {
     display: flex;
     align-items: center;

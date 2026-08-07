@@ -89,6 +89,19 @@ export async function createFolder(
     return data;
 }
 
+export async function unidentifyFile(
+    fileUid: string
+): Promise<ILibraryRefreshResponse> {
+    const response = await fetch(`${API_URL}/api/library/file/unidentify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileUid })
+    });
+    const data: ILibraryRefreshResponse = await response.json();
+    if (!response.ok) throw new Error(data.message);
+    return data;
+}
+
 export async function moveFile(
     fileUid: string,
     targetFolderUid?: string
