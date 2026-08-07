@@ -132,21 +132,8 @@ export function MoveFileModal() {
 
                 children: [
 
-                    UltraComponent({
-                        component: `<p class="${styles.title}"></p>`,
-                        trigger: [{
-                            subscriber: MOVE_FILE_MODAL_CTX.fileName.subscribe,
-                            triggerFunction: ($p: HTMLElement) => {
-                                $p.textContent = `Move "${MOVE_FILE_MODAL_CTX.fileName.get()}"`;
-                            }
-                        }],
-                        onMount: [
-                            ($p: HTMLElement) => {
-                                $p.textContent = `Move "${MOVE_FILE_MODAL_CTX.fileName.get()}"`;
-                            }
-                        ]
-                    }),
-
+                    `<p class="${styles.title}">Move to: </p>`,
+                    
                     UltraComponent({
                         component: `<ul class="${styles.list}"></ul>`,
                         onMount: [
