@@ -53,6 +53,14 @@
         }
     }
 
+    .basicFolderCard {
+        display: flex;
+        flex-direction: column;
+        color: #fff;
+        align-items: center;
+        justify-content: center;
+    }
+
     @media (hover: hover) {
         .cardLink:hover .cover {
             box-shadow: 0 8px 16px -8px rgba(0, 0, 0, 0.7);
@@ -234,9 +242,11 @@
 
 .detailMode {
 
+    justify-content: center;
+
     .folderActions {
         top: 50%;
-        right: 8px;
+        right: 50px;
         transform: translateY(-50%);
     }
 
@@ -269,6 +279,10 @@
             radial-gradient(circle at 50% 38%, rgba(52, 195, 209, 0.18), transparent 70%),
             linear-gradient(160deg, #232222, #1a1a1a);
         border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .basicFolderCard span{
+        display: none;
     }
 
     .stack {

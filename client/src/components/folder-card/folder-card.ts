@@ -1,6 +1,5 @@
 import { UltraComponent, UltraLink } from "ultra-light-js";
 import styles from './folder-card.module.css';
-import { FolderIcon } from "@/icons/folder.icon";
 import { ChevronDownIcon } from "@/icons/chevron.icon";
 import { GearIcon } from "@/icons/gear.icon";
 import { TrashIcon } from "@/icons/trash.icon";
@@ -9,6 +8,7 @@ import { LIBRARY_CONTEXT } from "@/context/library.context";
 import { FolderCardStack } from "./folder-card-stack";
 import { CONFIRM_MODAL_CTX } from "@/context/confirm-modal.context";
 import { FOLDER_PREFS_MODAL_CTX } from "@/context/folder-prefs-modal.context";
+import { FolderCardBasic } from "./folder-card-basic";
 
 export function FolderCard({
     title,
@@ -76,13 +76,7 @@ export function FolderCard({
 
                     (stackCovers.length)
                     ? FolderCardStack({ stackCovers })
-                    : UltraComponent({
-                        component: '<span></span>',
-                        className: [styles.cover],
-                        children: [
-                            FolderIcon({ size: 40, color: '#34c3d1' })
-                        ]
-                    }),
+                    : FolderCardBasic({ title }),
 
                     UltraComponent({
                         component: '<div></div>',
