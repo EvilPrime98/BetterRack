@@ -1,6 +1,7 @@
 import type { IReadResponse, ILibraryGroup, ILibraryRefreshResponse, ILibraryItemPref } from "../library.types";
+import { API_URL } from "./server-config.service";
 
-export const API_URL = import.meta.env.VITE_API_URL;
+export { API_URL };
 
 export async function getLibrary(): Promise<ILibraryGroup[]> {
     const response = await fetch(`${API_URL}/api/library`)

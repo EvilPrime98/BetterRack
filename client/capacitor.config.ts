@@ -2,11 +2,11 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.amin.BetterRackweb',
-  appName: 'better-rack-web',
+  appName: 'BetterRack',
   webDir: 'dist',
   server: {
     androidScheme: 'http',
-    allowNavigation: ['192.168.1.117', '192.168.1.120']
+    allowNavigation: ['*']
   }
 };
 

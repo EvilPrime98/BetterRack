@@ -10,10 +10,13 @@ import { SETTINGS_CONTEXT } from "./context/settings.context";
 import { LIBRARY_CONTEXT } from "./context/library.context";
 import { AppLoader } from "./components/app-loader/app-loader";
 import { APP_CTX } from "./context/app.context";
+import { ServerModal } from "./components/server-modal/server-modal";
+import { SERVER_MODAL_CTX } from "./context/server-modal.context";
 
 export function App() {
 
     async function onMount() {
+        await SERVER_MODAL_CTX.ensureServerConfigured();
         APP_CTX.isLoading.set(true);
         await Promise.all([
             Promise.allSettled([
@@ -59,7 +62,9 @@ export function App() {
                     subscriber: APP_CTX.isLoading.subscribe,
                     triggerFunction: onAppLoad
                 }]
-            })
+            }),
+
+            ServerModal()
 
         ]
 
