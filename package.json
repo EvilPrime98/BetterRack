@@ -22,7 +22,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "build-app": "bun build ./main.ts --outfile dist/main.js --target node --format esm --external electron && bun build ./preload.ts --outfile dist/preload.cjs --target node --format cjs --external electron",
-    "build-server": "bun build ./src/run.ts --compile --outfile dist/server/run",
+    "build-server": "bun build ./src/run.ts --compile --external sharp --outfile dist/server/run && bun run ./scripts/prepare-server-deps.ts",
     "dist": "bun run build:client:electron && bun run build-app && bun run build-server && electron-builder --win nsis --publish=never"
   },
   "devDependencies": {
