@@ -15,13 +15,15 @@ export function PageHeader({
     items,
     subsItems,
     filters,
-    resetFilters
+    resetFilters,
+    showNewFolder = false
 }:{
     uid?: string;
     items: () => ILibraryResponseItem[];
     subsItems: (fn: (value: ILibraryResponseItem[]) => void) => () => void;
     filters: ILibraryFilters;
     resetFilters: () => void;
+    showNewFolder?: boolean;
 }) {
 
     return UltraComponent({
@@ -30,6 +32,8 @@ export function PageHeader({
         className: [styles.pageHeader],
 
         children: [
+
+            ...(uid ? [Breadcrumbs({ uid })] : []),
 
             UltraComponent({
                 component: '<div></div>',
@@ -51,22 +55,27 @@ export function PageHeader({
                         children: [
                             StateFilter(),
                             LayoutSelector(),
-                            BRButton({
-                                text: 'New Folder',
-                                variant: 'secondary',
-                                className: [styles.newFolderButton],
-                                eventHandler: {
-                                    click: () => NEW_FOLDER_MODAL_CTX.openNewFolderModal(uid)
-                                },
-                                children: [FolderIcon({ size: 14 })]
-                            }),
+                            ...(showNewFolder ? [
+                                UltraComponent({
+                                    component: '<span></span>',
+                                    className: [styles.divider],
+                                    attributes: { 'aria-hidden': 'true' }
+                                }),
+                                BRButton({
+                                    text: 'New Folder',
+                                    variant: 'secondary',
+                                    className: [styles.newFolderButton],
+                                    eventHandler: {
+                                        click: () => NEW_FOLDER_MODAL_CTX.openNewFolderModal(uid)
+                                    },
+                                    children: [FolderIcon({ size: 14 })]
+                                })
+                            ] : [])
                         ]
                     })
 
                 ]
-            }),
-
-            ...(uid ? [Breadcrumbs({ uid })] : [])
+            })
 
         ]
 

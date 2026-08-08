@@ -98,7 +98,8 @@ export function LibraryPage({
                     items,
                     subsItems,
                     filters,
-                    resetFilters
+                    resetFilters,
+                    showNewFolder: true
                 }),
 
                 UltraComponent({
