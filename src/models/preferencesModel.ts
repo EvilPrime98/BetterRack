@@ -5,6 +5,9 @@ import { drizzle, type BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
 import { eq } from "drizzle-orm";
 import type { TAppSettings, TLibraryPref, TPreferencesModel } from "#src/types.ts";
 import { appSettings, libraryItemPrefs } from "#src/database/schema.ts";
+import { logger } from "#utils/logger";
+
+const log = logger.child({ module: 'PreferencesModel' });
 
 const DEFAULT_SETTINGS: TAppSettings = {
     outputDirs: [],
@@ -80,7 +83,7 @@ export class PreferencesModel implements TPreferencesModel {
 
         } catch (e) {
 
-            console.error('Failed to migrate app settings from .env:', e);
+            log.error({ err: e }, 'Failed to migrate app settings from .env');
 
         }
 
@@ -110,7 +113,7 @@ export class PreferencesModel implements TPreferencesModel {
 
         } catch (e) {
 
-            console.error('Failed to seed library prefs from file:', e);
+            log.error({ err: e }, 'Failed to seed library prefs from file');
 
         }
         

@@ -1,5 +1,8 @@
 import type { TLibraryModel, TThumbnailModel } from "#src/types.ts";
 import type { Context } from "hono";
+import { logger } from "#utils/logger";
+
+const log = logger.child({ module: 'thumbnailController' });
 
 export class thumbnailController {
 
@@ -61,7 +64,7 @@ export class thumbnailController {
 
         } catch (e) {
 
-            console.log(e);
+            log.error({ err: e }, 'Failed to generate thumbnail');
 
             return c.json({
                 error: true,

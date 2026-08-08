@@ -21,6 +21,7 @@ import { comicsRouter } from './routers/comicsRouter';
 import { downloadsRouter } from './routers/downloadsRouter';
 import { ThumbnailModel } from './models/thumbnailModel';
 import { thumbnailRouter } from './routers/thumbnailRouter';
+import { logger } from '#utils/logger';
 
 const COMIC_TMP_TTL_MS = 30 * 60 * 1000;
 const COMIC_TMP_SWEEP_INTERVAL_MS = 10 * 60 * 1000;
@@ -64,10 +65,10 @@ async function startApp() {
         zipModel.sweepStale({
             baseDir: COMIC_TMP_DIR,
             ttlMs: COMIC_TMP_TTL_MS
-        }).catch(console.error);
+        }).catch((e) => logger.error({ err: e }, 'Failed to sweep stale comic tmp dirs'));
     }, COMIC_TMP_SWEEP_INTERVAL_MS);
 
-    const clientDistDir = './client/dist';
+    const clientDistDir = process.env.CLIENT_DIST_DIR ?? './client/dist';
 
     app.use('/*', serveStatic({ root: clientDistDir }));
 
@@ -81,7 +82,7 @@ async function startApp() {
         idleTimeout: 0
     });
 
-    console.log(`Server running at ${server.url}`);
+    logger.info(`Server running at ${server.url}`);
 
 }
 

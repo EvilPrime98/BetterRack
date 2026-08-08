@@ -12,6 +12,9 @@ import type {
     TWikiModel 
 } from "#src/types.ts";
 import fs from "node:fs";
+import { logger } from "#utils/logger";
+
+const log = logger.child({ module: 'LibraryModel' });
 
 const COMIC_EXTENSIONS = new Set(['.cbz', '.cbr', '.cb7', '.cbt']);
 const IDENTIFY_CONCURRENCY = 4;
@@ -161,7 +164,7 @@ export class LibraryModel implements TLibraryModel {
                         entry.thumbnail = true;
                     }
                 } catch (e) {
-                    if (e instanceof Error) console.log(`[ERROR]: ${e.message}`);
+                    log.error({ err: e }, 'Failed to identify library entry');
                 }
             }));
         }
@@ -380,6 +383,9 @@ export class LibraryModel implements TLibraryModel {
 
     /**
      * Adds a new library folder and persists it to the preferences store.
+     * The rescan is kicked off in the background rather than awaited, so the
+     * caller gets an immediate response; `ready` still lets other reads wait
+     * for it to finish instead of racing a half-built db.
      */
     addLibraryPath = async (dir: string) => {
         const resolved = path.resolve(dir);
@@ -389,17 +395,24 @@ export class LibraryModel implements TLibraryModel {
         }
         this.libPaths = [...this.libPaths, resolved];
         this.prefsModel.updateAppSettings({ outputDirs: this.libPaths });
-        await this.scan();
+        this.scanInBackground();
     }
 
     /**
      * Removes a library folder and persists the change to the preferences store.
+     * See `addLibraryPath` for why the rescan runs in the background.
      */
     removeLibraryPath = async (dir: string) => {
         const resolved = path.resolve(dir);
         this.libPaths = this.libPaths.filter(p => p !== resolved);
         this.prefsModel.updateAppSettings({ outputDirs: this.libPaths });
-        await this.scan();
+        this.scanInBackground();
+    }
+
+    private scanInBackground = () => {
+        const scanPromise = this.scan();
+        scanPromise.catch(e => log.error({ err: e }, 'Background library scan failed'));
+        this.ready = scanPromise;
     }
 
     getLibraryPaths = () => this.libPaths;

@@ -2,6 +2,9 @@ import type { TLibraryEntry, TLibraryModel, TZipModel } from "#src/types.ts";
 import type { Context } from "hono";
 import { existsSync } from "node:fs";
 import path from "node:path";
+import { logger } from "#utils/logger";
+
+const log = logger.child({ module: 'comicReaderController' });
 
 export const COMIC_TMP_DIR = path.resolve('./tmp-decompressor');
 
@@ -64,7 +67,7 @@ export class comicReaderController {
 
         }catch(e){
 
-            console.log(e);
+            log.error({ err: e }, 'Failed to list comic pages');
 
             return c.json({
                 error: true,
@@ -123,7 +126,7 @@ export class comicReaderController {
 
         }catch(e){
 
-            console.log(e);
+            log.error({ err: e }, 'Failed to get comic page');
 
             return c.json({
                 error: true,

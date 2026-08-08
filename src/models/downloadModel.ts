@@ -3,6 +3,9 @@ import { CUSTOM_USER_AGENT, REQUEST_DELAY } from '#src/data.ts';
 import { createWriteStream } from 'fs';
 import { mkdir } from 'fs/promises';
 import { join } from 'path';
+import { logger } from '#utils/logger';
+
+const log = logger.child({ module: 'DownloadModel' });
 
 export class DownloadModel implements TDownloadModel {
 
@@ -22,7 +25,7 @@ export class DownloadModel implements TDownloadModel {
 
         if (!link.downloadLink) return;
 
-        console.log(`${link.title} is downloading`);
+        log.info(`${link.title} is downloading`);
         onProgress?.({ type: 'preparing', title: link.title });
 
         let dest: string | undefined;

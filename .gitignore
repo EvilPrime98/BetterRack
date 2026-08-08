@@ -13,3 +13,4 @@ src/database/*
 tmp-decompressor/
 tmp-thumbnails/
 release/
+logs/

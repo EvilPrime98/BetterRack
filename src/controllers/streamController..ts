@@ -1,6 +1,9 @@
 import type { TLibraryEntry, TLibraryModel } from "#src/types.ts";
 import type { Context } from "hono";
 import { basename } from "node:path";
+import { logger } from "#utils/logger";
+
+const log = logger.child({ module: 'streamController' });
 
 export class streamController {
 
@@ -40,7 +43,7 @@ export class streamController {
 
         }catch(e){
 
-            console.log(e);
+            log.error({ err: e }, 'Failed to stream comic file');
 
             return c.json(
                 {

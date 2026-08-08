@@ -3,6 +3,9 @@ import { mkdir, readdir, rm } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 import type { TThumbnailModel, TZipModel } from "#src/types.ts";
+import { logger } from "#utils/logger";
+
+const log = logger.child({ module: 'ThumbnailModel' });
 
 export const THUMBNAIL_CACHE_DIR = path.resolve('./tmp-thumbnails');
 
@@ -36,7 +39,7 @@ export class ThumbnailModel implements TThumbnailModel {
         filePath?: string
     ): Promise<string | null> => {
 
-        console.log(`[INFO] Generating thumbnail for: ${uid}`);
+        log.info(`Generating thumbnail for: ${uid}`);
 
         const memoised = this.resolved.get(uid);
         if (memoised) return memoised;
@@ -51,7 +54,7 @@ export class ThumbnailModel implements TThumbnailModel {
 
         const job = this.generate(uid, filePath)
             .catch((e) => {
-                if (e instanceof Error) console.log(`[ERROR]: ${e.message}`);
+                log.error({ err: e }, `Failed to generate thumbnail for: ${uid}`);
                 this.unavailable.add(uid);
                 return null;
             })

@@ -1,5 +1,8 @@
 import type { TLibraryModel } from "#src/types.ts";
 import type { Context } from "hono";
+import { logger } from "#utils/logger";
+
+const log = logger.child({ module: 'libraryController' });
 
 export class libraryController{
 
@@ -39,7 +42,7 @@ export class libraryController{
 
             return c.json({ error: false, message: 'Preferences updated successfully.' }, 200);
         } catch (e) {
-            if (e instanceof Error) console.log(`[ERROR]: ${e.message}`);
+            log.error({ err: e }, 'Failed to update preferences');
             return c.json({ error: true, message: 'There was an issue updating preferences. Please, try again later.' }, 500);
         }
     }
@@ -69,7 +72,7 @@ export class libraryController{
 
         }catch(e) {
 
-            if (e instanceof Error) console.log(`[ERROR]: ${e.message}`)
+            log.error({ err: e }, 'Failed to re-scan library');
 
             return c.json(
                 { error: true, message: 'There was an issue re-scanning the library. Please, try again later.'},
@@ -99,7 +102,7 @@ export class libraryController{
 
         }catch(e) {
 
-            if (e instanceof Error) console.log(`[ERROR]: ${e.message}`)
+            log.error({ err: e }, 'Failed to create folder');
 
             return c.json(
                 { error: true, message: 'There was an issue creating the folder. Please, try again later.'},
@@ -126,7 +129,7 @@ export class libraryController{
 
         }catch(e){
 
-            if (e instanceof Error) console.log(`[ERROR]: ${e.message}`)
+            log.error({ err: e }, 'Failed to move file');
 
             return c.json(
                 { error: true, message: 'There was an issue moving the file. Please, try again later.'},
@@ -152,7 +155,7 @@ export class libraryController{
 
         }catch(e){
 
-            if (e instanceof Error) console.log(`[ERROR]: ${e.message}`)
+            log.error({ err: e }, 'Failed to delete folder');
 
             return c.json(
                 { error: true, message: 'There was an issue deleting the folder. Please, try again later.'},
@@ -178,7 +181,7 @@ export class libraryController{
 
         }catch(e){
 
-            if (e instanceof Error) console.log(`[ERROR]: ${e.message}`)
+            log.error({ err: e }, 'Failed to delete file');
 
             return c.json(
                 { error: true, message: 'There was an issue deleting the file. Please, try again later.'},
@@ -204,7 +207,7 @@ export class libraryController{
 
         }catch(e){
 
-            if (e instanceof Error) console.log(`[ERROR]: ${e.message}`)
+            log.error({ err: e }, 'Failed to un-identify file');
 
             return c.json(
                 { error: true, message: 'There was an issue un-identifying the file. Please, try again later.'},

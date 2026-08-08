@@ -1,5 +1,8 @@
 import { wiki, type WikiComic } from "better-wiki";
 import { WIKI_URLS, type TWikiModel, type TWikiUrl } from "#src/types.ts";
+import { logger } from "#utils/logger";
+
+const log = logger.child({ module: 'WikiModel' });
 
 const DEFAULT_THUMBNAIL_SIZE = 120;
 
@@ -25,7 +28,7 @@ export class WikiModel implements TWikiModel {
 
         const results = await Promise.all(
             Object.values(this.clients).map(client => {
-                console.log(`[INFO] BETTERRACK - Searching wiki info for: ${title}`)
+                log.info(`Searching wiki info for: ${title}`)
                 return client.getComic(title, {
                     ...flags,
                     fields: [

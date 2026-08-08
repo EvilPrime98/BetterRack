@@ -2,6 +2,9 @@ import type { TDownloadModel, TGetComicsApiModel, TLibraryModel, TStrat } from "
 import type { Context } from "hono";
 import { streamSSE } from "hono/streaming";
 import type { fsModel } from "#src/types.ts";
+import { logger } from "#utils/logger";
+
+const log = logger.child({ module: 'DownloadController' });
 
 export class DownloadController {
 
@@ -81,7 +84,7 @@ export class DownloadController {
 
         } catch (e) {
 
-            console.log(e);
+            log.error({ err: e }, 'Failed to download comic');
 
             return c.json({
                 error: true,
