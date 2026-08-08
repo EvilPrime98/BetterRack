@@ -4,6 +4,7 @@ import path from "node:path";
 import sharp from "sharp";
 import type { TThumbnailModel, TZipModel } from "#src/types.ts";
 import { logger } from "#utils/logger";
+import { createConcurrencyLimiter } from "#utils/concurrencyLimiter";
 
 const log = logger.child({ module: 'ThumbnailModel' });
 
@@ -27,8 +28,7 @@ export class ThumbnailModel implements TThumbnailModel {
     private unavailable = new Set<string>();
     /** In-flight extractions, so concurrent requests for the same comic share one job. */
     private inFlight = new Map<string, Promise<string | null>>();
-    private running = 0;
-    private queue: (() => void)[] = [];
+    private limiter = createConcurrencyLimiter(EXTRACT_CONCURRENCY);
 
     constructor(zipModel: TZipModel) {
         this.zipModel = zipModel;
@@ -68,7 +68,7 @@ export class ThumbnailModel implements TThumbnailModel {
 
     private generate = async (uid: string, filePath: string): Promise<string | null> => {
 
-        const release = await this.acquire();
+        const release = await this.limiter.acquire();
 
         try {
 
@@ -133,25 +133,6 @@ export class ThumbnailModel implements TThumbnailModel {
         this.resolved.set(uid, outPath);
 
         return outPath;
-
-    }
-
-    private acquire = (): Promise<() => void> => {
-
-        const release = () => {
-            this.running--;
-            this.queue.shift()?.();
-        };
-
-        if (this.running < EXTRACT_CONCURRENCY) {
-            this.running++;
-            return Promise.resolve(release);
-        }
-
-        return new Promise(resolve => this.queue.push(() => {
-            this.running++;
-            resolve(release);
-        }));
 
     }
 
