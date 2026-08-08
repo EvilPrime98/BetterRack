@@ -4,10 +4,7 @@ import { NO_IMAGE_URL } from "../../data";
 import { type WikiComic } from "better-wiki";
 import styles from './comic-card.module.css';
 import { ImageGen } from "../image-generic/image-generic";
-import { wikiImageOptimizer } from "@/services/wiki.service";
 import { API_URL } from "@/services/library.service";
-
-const FALLBACK_RENDER_SIZE = 174;
 
 export function ComicCardCover({
     item,
@@ -20,26 +17,11 @@ export function ComicCardCover({
 }) {
 
     const readerHref = `/${item.uid}/reader`;
+    const coverSrc = `${API_URL}/api/thumbnail/${item.uid}`;
     const [loaded, setIsLoaded, subsIsLoaded] = ultraState(false);
-    let currentSrc: string | null = null;
-
-    const onCoverChange = ($img: HTMLElement) => {
-        
-        const fallbackThumbnail = item.thumbnail 
-        ? `${API_URL}/api/thumbnail/${item.uid}` 
-        : null;
-
-        const nextSrc = comic()?.cover || fallbackThumbnail || NO_IMAGE_URL;
-        if (nextSrc !== currentSrc) {
-            setIsLoaded(false);
-        }
-
-        currentSrc = nextSrc;
-
-        const renderWidth = $img.parentElement?.clientWidth || FALLBACK_RENDER_SIZE;
-
-        ($img as HTMLImageElement).src = wikiImageOptimizer(nextSrc, renderWidth * 1.75);
-        
+    
+    const onCoverMount = ($img: HTMLElement) => {
+        ($img as HTMLImageElement).src = coverSrc;
     }
 
     const onEventChange = ($span: HTMLElement) => {
@@ -82,11 +64,7 @@ export function ComicCardCover({
                     load: () => setIsLoaded(true),
                     error: onCoverError
                 },
-                onMount: [onCoverChange],
-                trigger: [{
-                    subscriber: subsComic,
-                    triggerFunction: onCoverChange
-                }]
+                onMount: [onCoverMount]
             }),
 
             UltraComponent({

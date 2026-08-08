@@ -18,12 +18,10 @@ export interface ILibraryResponseItem {
     "path": string,
     "parentId": string,
     "createdAt": string,
-    /** Tri-state, files only: undefined = not applicable, true = identified (see `comic`), false = scanned, no wiki match. */
+    /** Tri-state, files only: undefined = not yet looked up (fetch GET /api/library/:uid/identify), true = identified (see `comic`), false = looked up, no wiki match. */
     "identified"?: boolean,
-    /** The identified wiki comic, already resolved server-side by LibraryModel.scan(). */
+    /** The identified wiki comic, resolved on demand - metadata only, never the cover source. */
     "comic"?: WikiComic,
-    /** True when wiki identification failed but a local fallback cover was extracted; fetch it at GET /api/thumbnail/:uid. */
-    "thumbnail"?: boolean
 }
 
 export interface ILibraryGroup {

@@ -2,7 +2,6 @@ import { UltraComponent } from "ultra-light-js";
 import styles from './folder-card.module.css';
 import { FolderStackCard } from "./folder-stack-card";
 import type { ILibraryResponseItem } from "@/library.types";
-import { NO_IMAGE_URL } from "@/data";
 import { COMIC_CACHE_CONTEXT } from "@/context/comic-cache.context";
 import { API_URL } from "@/services/library.service";
 
@@ -17,9 +16,8 @@ export function FolderCardStack({
         className: [styles.cover, styles.stack],
         children: stackCovers.map(item => {
             const comicCache = COMIC_CACHE_CONTEXT.getCacheById(item.uid);
-            const fallbackThumbnail = item.thumbnail ? `${API_URL}/api/thumbnail/${item.uid}` : null;
             return FolderStackCard({
-                cover: item.comic?.cover || fallbackThumbnail || NO_IMAGE_URL,
+                cover: `${API_URL}/api/thumbnail/${item.uid}`,
                 isRead: comicCache?.read || false
             })
         })

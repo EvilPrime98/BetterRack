@@ -14,6 +14,7 @@ import { COMIC_IDENT_CTX } from "@/context/identifer-modal.context";
 import { IdentifyButton } from "./identify-button";
 import { ComicCardActions } from "./actions";
 import { CrButton } from "../cr-button/cr-button";
+import { identifyLibraryEntry } from "@/services/library.service";
 
 export function ComicCard({
     item
@@ -73,6 +74,27 @@ export function ComicCard({
         setIdentified(true);
     });
 
+    const onCardMount = ($article: HTMLElement) => {
+
+        if (item.identified !== undefined) return undefined;
+
+        const observer = new IntersectionObserver((entries) => {
+            if (!entries.some(e => e.isIntersecting)) return;
+            observer.disconnect();
+            identifyLibraryEntry(item.uid)
+                .then((resolved) => {
+                    setComic(resolved.comic ?? null);
+                    setIdentified(resolved.identified === true);
+                })
+                .catch(() => {});
+        }, { rootMargin: '200px' });
+
+        observer.observe($article);
+
+        return () => observer.disconnect();
+
+    }
+
     return UltraActivity({
 
         mode: {
@@ -81,6 +103,8 @@ export function ComicCard({
         },
 
         component: '<article></article>',
+
+        onMount: [onCardMount],
 
         className: [
             styles.comicCard,

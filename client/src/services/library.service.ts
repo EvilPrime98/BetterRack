@@ -1,4 +1,4 @@
-import type { IReadResponse, ILibraryGroup, ILibraryRefreshResponse, ILibraryItemPref } from "../library.types";
+import type { IReadResponse, ILibraryGroup, ILibraryRefreshResponse, ILibraryItemPref, ILibraryResponseItem } from "../library.types";
 import { API_URL } from "./server-config.service";
 
 export { API_URL };
@@ -86,6 +86,15 @@ export async function createFolder(
         body: JSON.stringify({ folderName, parentFolderUid })
     });
     const data: ILibraryRefreshResponse = await response.json();
+    if (!response.ok) throw new Error(data.message);
+    return data;
+}
+
+export async function identifyLibraryEntry(
+    uid: string
+): Promise<Pick<ILibraryResponseItem, 'identified' | 'comic'>> {
+    const response = await fetch(`${API_URL}/api/library/${uid}/identify`);
+    const data = await response.json();
     if (!response.ok) throw new Error(data.message);
     return data;
 }

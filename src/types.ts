@@ -73,12 +73,10 @@ export type TLibraryEntry = {
     prefPublisher?: string;
     prefInheritance?: boolean;
     prefCover?: string;
-    /** Tri-state, files only: undefined = not applicable/not yet scanned, true = identified (see `comic`), false = scanned, no wiki match. */
+    /** Tri-state, files only: undefined = not yet looked up (call `identify()`), true = identified (see `comic`), false = looked up, no wiki match. */
     identified?: boolean;
-    /** The identified wiki comic, already resolved by LibraryModel.scan(). */
+    /** The identified wiki comic, resolved on demand via LibraryModel.identify() - never populated by scan(). */
     comic?: WikiComic;
-    /** True when wiki identification failed, so the card should fall back to GET /api/thumbnail/:uid, which extracts a local cover on demand. */
-    thumbnail?: boolean;
 }
 
 export type TLibraryPref = {
@@ -96,7 +94,7 @@ export type TLibraryGroup = {
 }
 
 export type TLibraryModel = {
-    /** Resolves once the initial scan (including wiki identification) has completed. */
+    /** Resolves once the filesystem scan has completed. Wiki identification is on demand and never blocks this. */
     ready: Promise<void>,
     scan: () => Promise<void>,
     get: (uid?: string) => TLibraryEntry[] | TLibraryEntry | undefined,
@@ -109,6 +107,8 @@ export type TLibraryModel = {
     deleteFolder: (folderUid: string) => Promise<void>,
     deleteFile: (fileUid: string) => Promise<void>,
     unidentifyFile: (fileUid: string) => Promise<void>,
+    /** Resolves wiki metadata for a single comic on demand; cached results skip the wiki call. */
+    identify: (uid: string) => Promise<TLibraryEntry>,
     addLibraryPath: (dir: string) => Promise<void>,
     removeLibraryPath: (dir: string) => Promise<void>,
     getLibraryPaths: () => string[],

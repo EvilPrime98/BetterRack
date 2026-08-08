@@ -191,6 +191,30 @@ export class libraryController{
         }
     }
 
+    public async identify(
+        c: Context
+    ){
+        try{
+
+            const uid = c.req.param('uid');
+            if (!uid) return c.json({ error: true, message: 'A valid uid is required.' }, 400);
+
+            const entry = await this.libModel.identify(uid);
+
+            return c.json({ identified: entry.identified, comic: entry.comic }, 200);
+
+        }catch(e){
+
+            log.error({ err: e }, 'Failed to identify comic');
+
+            return c.json(
+                { error: true, message: e instanceof Error ? e.message : 'There was an issue identifying the comic. Please, try again later.'},
+                500
+            )
+
+        }
+    }
+
     public async unidentifyFile(
         c: Context
     ){

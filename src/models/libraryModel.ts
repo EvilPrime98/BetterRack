@@ -2,22 +2,26 @@ import path from "node:path";
 import { readdir, mkdir, rename, rm, stat } from "node:fs/promises";
 import { basename } from "node:path";
 import crypto from 'node:crypto';
-import type { 
-    TComicDataModel, 
-    TLibraryEntry, 
-    TLibraryGroup, 
-    TLibraryModel, 
-    TLibraryPref, 
-    TPreferencesModel, 
-    TWikiModel 
+import type {
+    TComicData,
+    TComicDataModel,
+    TLibraryEntry,
+    TLibraryGroup,
+    TLibraryModel,
+    TLibraryPref,
+    TPreferencesModel,
+    TWikiModel
 } from "#src/types.ts";
 import fs from "node:fs";
 import { logger } from "#utils/logger";
+import { createConcurrencyLimiter } from "#utils/concurrencyLimiter";
 
 const log = logger.child({ module: 'LibraryModel' });
 
 const COMIC_EXTENSIONS = new Set(['.cbz', '.cbr', '.cb7', '.cbt']);
+
 const IDENTIFY_CONCURRENCY = 4;
+
 const STAT_CONCURRENCY = 64;
 
 const uidFromPath = (absPath: string) => {
@@ -53,6 +57,8 @@ export class LibraryModel implements TLibraryModel {
     private entryLibraryIndex = new Map<string, number>();
     private entryByUid = new Map<string, TLibraryEntry>();
     private inheritanceCache: TLibraryEntry[] | null = null;
+    private identifyInFlight = new Map<string, Promise<TLibraryEntry>>();
+    private identifyLimiter = createConcurrencyLimiter(IDENTIFY_CONCURRENCY);
     public ready: Promise<void>;
 
     constructor(
@@ -121,14 +127,13 @@ export class LibraryModel implements TLibraryModel {
         this.entryByUid = new Map(this.db.map(entry => [entry.uid, entry]));
         this.inheritanceCache = null;
 
-        await this.identifyComics();
+        this.hydrateComicData();
 
     };
 
-    private identifyComics = async () => {
+    private hydrateComicData = () => {
 
         const stored = this.comicDataModel.getAll();
-        const toIdentify: TLibraryEntry[] = [];
 
         for (const entry of this.db) {
             if (entry.did) continue;
@@ -138,38 +143,68 @@ export class LibraryModel implements TLibraryModel {
                 entry.comic = existing.comic;
             } else if (existing?.identified === false) {
                 entry.identified = false;
-                entry.thumbnail = true;
-            } else {
-                toIdentify.push(entry);
             }
         }
 
-        for (let i = 0; i < toIdentify.length; i += IDENTIFY_CONCURRENCY) {
-            const batch = toIdentify.slice(i, i + IDENTIFY_CONCURRENCY);
-            await Promise.all(batch.map(async (entry) => {
-                try {
-                    const found = await this.wikiModel.getComic(entry.name);
-                    if (found) {
-                        this.comicDataModel.upsert(entry.uid, {
-                            prefId: found.pageId,
-                            sourceWiki: found.sourceWiki,
-                            identified: true,
-                            comic: found,
-                        });
-                        entry.identified = true;
-                        entry.comic = found;
-                    } else {
-                        this.comicDataModel.upsert(entry.uid, { identified: false });
-                        entry.identified = false;
-                        entry.thumbnail = true;
-                    }
-                } catch (e) {
-                    log.error({ err: e }, 'Failed to identify library entry');
-                }
-            }));
+    };
+
+    private applyStoredComicData = (entry: TLibraryEntry, stored: TComicData) => {
+        entry.identified = stored.identified;
+        entry.comic = stored.comic;
+    };
+
+    identify = async (uid: string): Promise<TLibraryEntry> => {
+
+        const entry = this.entryByUid.get(uid);
+        if (!entry || entry.did) throw new Error('Comic not found.');
+
+        if (entry.identified !== undefined) return entry;
+
+        const stored = this.comicDataModel.getByUid(uid);
+        if (stored?.identified !== undefined) {
+            this.applyStoredComicData(entry, stored);
+            return entry;
         }
 
-        this.inheritanceCache = null;
+        const existing = this.identifyInFlight.get(uid);
+        if (existing) return existing;
+
+        const job = (async () => {
+            const release = await this.identifyLimiter.acquire();
+            try {
+                const found = await this.wikiModel.getComic(entry.name);
+
+                const freshlyStored = this.comicDataModel.getByUid(uid);
+                if (freshlyStored?.identified !== undefined) {
+                    this.applyStoredComicData(entry, freshlyStored);
+                    return entry;
+                }
+
+                if (found) {
+                    this.comicDataModel.upsert(uid, {
+                        prefId: found.pageId,
+                        sourceWiki: found.sourceWiki,
+                        identified: true,
+                        comic: found,
+                    });
+                    entry.identified = true;
+                    entry.comic = found;
+                } else {
+                    this.comicDataModel.upsert(uid, { identified: false });
+                    entry.identified = false;
+                }
+                return entry;
+            } catch (e) {
+                log.error({ err: e }, 'Failed to identify library entry');
+                return entry;
+            } finally {
+                release();
+            }
+        })().finally(() => this.identifyInFlight.delete(uid));
+
+        this.identifyInFlight.set(uid, job);
+
+        return job;
 
     };
 
@@ -198,11 +233,6 @@ export class LibraryModel implements TLibraryModel {
         this.inheritanceCache = null;
     }
 
-    /**
-     * Applies parent-folder publisher inheritance across the whole library.
-     * The result is memoised until the next scan or preference change, so repeat
-     * reads of the library never recompute it.
-     */
     private resolveInheritance = (): TLibraryEntry[] => {
 
         if (this.inheritanceCache) return this.inheritanceCache;
@@ -225,19 +255,11 @@ export class LibraryModel implements TLibraryModel {
 
     }
 
-    /**
-     * Returns the entry with the given uid.
-     * @param uid The uid of the entry to get.
-     * @returns The entry with the given uid.
-     */
     get = (uid?: string) => {
         if (!uid) return this.resolveInheritance();
         return this.entryByUid.get(uid);
     }
 
-    /**
-     * Returns the library entries grouped per configured library (OUTPUT_DIR).
-     */
     getByLibrary = (): TLibraryGroup[] => {
         const resolved = this.resolveInheritance();
         return this.libPaths.map((libPath, libIndex) => ({
@@ -248,22 +270,11 @@ export class LibraryModel implements TLibraryModel {
         }));
     }
 
-    /**
-     * Re-scans the library and refreshes the "db" property.
-     */
     refresh = async () => {
         this.db = [];
         await this.scan();
     }
 
-    /**
-     * Creates a new folder in the library.
-     * @param folderName The name of the new folder.
-     * @param parentFolderUid The uid of the parent folder. If not provided, the folder will be created in the root of the library.
-     * @throws If the parent folder does not exist.
-     * @throws If there are multiple parent folders with the same uid.
-     * @throws If the parent folder is not a folder.
-     */
     createFolder = async (
         folderName: string,
         parentFolderUid?: string,
@@ -291,14 +302,6 @@ export class LibraryModel implements TLibraryModel {
 
     }
 
-    /**
-     * Moves a file to a new folder.
-     * @param fileUid The uid of the file to move.
-     * @param targetFolderUid The uid of the target folder.
-     * @throws If the file does not exist.
-     * @throws If the target does not exist.
-     * @throws If the target is not a folder.
-     */
     moveFile = async (
         fileUid: string,
         targetFolderUid: string,
@@ -326,12 +329,6 @@ export class LibraryModel implements TLibraryModel {
 
     }
 
-    /**
-     * Deletes a folder and all its contents.
-     * @param folderUid The uid of the folder to delete.
-     * @throws If the target is not a folder.
-     * @throws If the folder does not exist.
-     */
     deleteFolder = async (folderUid: string) => {
         const folder = this.get(folderUid);
         if (!folder || Array.isArray(folder)) throw new Error('Folder not found.');
@@ -340,12 +337,6 @@ export class LibraryModel implements TLibraryModel {
         await this.scan();
     }
 
-    /**
-     * Deletes a file.
-     * @param fileUid The uid of the file to delete.
-     * @throws If the target is not a file.
-     * @throws If the file does not exist.
-     */
     deleteFile = async (fileUid: string) => {
         const file = this.get(fileUid);
         if (!file || Array.isArray(file)) throw new Error('File not found.');
@@ -354,15 +345,6 @@ export class LibraryModel implements TLibraryModel {
         await this.scan();
     }
 
-    /**
-     * Flags a file as deliberately un-identified, so future scans skip wiki lookup for it
-     * and it falls back to a locally-generated thumbnail instead. This is the same tri-state
-     * `false` used when a wiki search comes back empty — it is a terminal state, not a reset,
-     * so it never re-enters the identify queue on its own.
-     * @param fileUid The uid of the file to un-identify.
-     * @throws If the target is not a file.
-     * @throws If the file does not exist.
-     */
     unidentifyFile = async (fileUid: string) => {
         const file = this.get(fileUid);
         if (!file || Array.isArray(file)) throw new Error('File not found.');
@@ -377,16 +359,9 @@ export class LibraryModel implements TLibraryModel {
 
         file.identified = false;
         file.comic = undefined;
-        file.thumbnail = true;
         this.inheritanceCache = null;
     }
 
-    /**
-     * Adds a new library folder and persists it to the preferences store.
-     * The rescan is kicked off in the background rather than awaited, so the
-     * caller gets an immediate response; `ready` still lets other reads wait
-     * for it to finish instead of racing a half-built db.
-     */
     addLibraryPath = async (dir: string) => {
         const resolved = path.resolve(dir);
         if (this.libPaths.includes(resolved)) return;
@@ -398,10 +373,6 @@ export class LibraryModel implements TLibraryModel {
         this.scanInBackground();
     }
 
-    /**
-     * Removes a library folder and persists the change to the preferences store.
-     * See `addLibraryPath` for why the rescan runs in the background.
-     */
     removeLibraryPath = async (dir: string) => {
         const resolved = path.resolve(dir);
         this.libPaths = this.libPaths.filter(p => p !== resolved);
