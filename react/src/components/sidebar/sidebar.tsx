@@ -1,0 +1,117 @@
+import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+import styles from './sidebar.module.css';
+import { useSidebarStore } from '@/stores/sidebar.store';
+import { useLibraryStore } from '@/stores/library.store';
+import { SideBarGroup } from './sidebar-group';
+import { RefreshLibraryButton } from './refresh-button';
+import { SidebarCloseButton } from './close-button';
+import { SidebarSearch } from './sidebar-search';
+import { GearIcon } from '@/icons/gear.icon';
+import { ShopIcon } from '@/icons/shop.icon';
+
+export function SideBar() {
+
+    const asideRef = useRef<HTMLElement>(null);
+
+    const isExpanded = useSidebarStore((s) => s.isExpanded);
+    const setIsExpanded = useSidebarStore((s) => s.setIsExpanded);
+    const groups = useLibraryStore((s) => s.groups);
+    const fetchLibrary = useLibraryStore((s) => s.fetchLibrary);
+
+    // useLibraryStore doesn't expose a fetching flag, so this tracks only this component's
+    // own initial fetchLibrary() call to decide between "Loading library…" and "No folders found".
+    const [isLoading, setIsLoading] = useState(false);
+
+    function closeSidebar() {
+        setIsExpanded(false);
+    }
+
+    useEffect(() => {
+        setIsLoading(true);
+        fetchLibrary().finally(() => setIsLoading(false));
+        
+    }, []);
+
+    useEffect(() => {
+        function onKeydown(event: KeyboardEvent) {
+            if (event.key === 'Escape') closeSidebar();
+        }
+        document.addEventListener('keydown', onKeydown);
+        return () => document.removeEventListener('keydown', onKeydown);
+        
+    }, []);
+
+    useEffect(() => {
+        const $aside = asideRef.current;
+        if (!$aside) return;
+        if (isExpanded) {
+            $aside.removeAttribute('inert');
+        } else {
+            if ($aside.contains(document.activeElement)) {
+                (document.activeElement as HTMLElement).blur();
+            }
+            $aside.setAttribute('inert', '');
+        }
+    }, [isExpanded]);
+
+    return (
+        <div>
+
+            <div
+                className={[styles.backdrop, isExpanded ? styles.visible : ''].filter(Boolean).join(' ')}
+                onClick={closeSidebar}
+            />
+
+            <aside
+                ref={asideRef}
+                role="navigation"
+                aria-label="Library folders"
+                className={[styles.sideBar, isExpanded ? styles.expanded : ''].filter(Boolean).join(' ')}
+            >
+
+                <div className={styles.header}>
+                    <span className={styles.title}>Library</span>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <SidebarCloseButton />
+                    </div>
+                </div>
+
+                <div className={styles.section}>
+                    <span className={styles.sectionTitle}>User</span>
+                    <Link to="/settings" className={styles.item} onClick={closeSidebar}>
+                        <GearIcon size={16} />
+                        <span>Settings</span>
+                    </Link>
+                </div>
+
+                <div className={styles.section}>
+                    <span className={styles.sectionTitle}>Store</span>
+                    <Link to="/store" className={styles.item} onClick={closeSidebar}>
+                        <ShopIcon size={16} />
+                        <span>Store</span>
+                    </Link>
+                </div>
+
+                <SidebarSearch />
+
+                <RefreshLibraryButton />
+
+                <nav className={styles.list}>
+                    {!groups.length ? (
+                        <p className={styles.emptyState}>
+                            {isLoading ? 'Loading library…' : 'No folders found'}
+                        </p>
+                    ) : (
+                        groups.map(group => (
+                            <SideBarGroup key={group.uid} group={group} />
+                        ))
+                    )}
+                </nav>
+
+            </aside>
+
+        </div>
+    );
+
+}

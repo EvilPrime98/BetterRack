@@ -68,7 +68,7 @@ async function startApp() {
         }).catch((e) => logger.error({ err: e }, 'Failed to sweep stale comic tmp dirs'));
     }, COMIC_TMP_SWEEP_INTERVAL_MS);
 
-    const clientDistDir = process.env.CLIENT_DIST_DIR ?? './client/dist';
+    const clientDistDir = process.env.CLIENT_DIST_DIR ?? './react/dist';
 
     app.use('/*', serveStatic({ root: clientDistDir }));
 

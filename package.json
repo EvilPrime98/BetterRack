@@ -13,7 +13,9 @@
   },
   "scripts": {
     "start": "tsc && bun run build && bun run ./src/run.ts",
+    "start-react": "tsc && bun run build-react && bun run ./src/run.ts",
     "start-app": "bun run build:client:electron && bun run build-app && electron .",
+    "build-react": "cd react && pnpm run build",
     "build": "cd client && pnpm run build",
     "build:client:electron": "cd client && pnpm run build -- --mode electron",
     "dev": "bun run ./src/run.ts --watch",
