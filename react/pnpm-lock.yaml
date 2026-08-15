@@ -18,8 +18,8 @@ importers:
         specifier: ^5.3.0
         version: 5.3.0
       better-wiki:
-        specifier: ^0.18.0
-        version: 0.18.0
+        specifier: ^0.19.0
+        version: 0.19.0
       notyf:
         specifier: ^3.10.0
         version: 3.10.0
@@ -297,8 +297,8 @@ packages:
       babel-plugin-react-compiler:
         optional: true
 
-  better-wiki@0.18.0:
-    resolution: {integrity: sha512-8KAAmlwl3phGT/+H49Q8xEDg7MVKgjNZiNG0C+dTczLmnrm0vBMuA+HXiwGseyjliQgIhXOPPU01RjeObMVyQA==}
+  better-wiki@0.19.0:
+    resolution: {integrity: sha512-sZcnl/xD6JWpooUH6ETcS0zYMlcUCHsHOaVNjng/LJ0+cejXdBYN8iP9Yul58X/JyVEVyHt1UqzKgVo8pkcoNw==}
     engines: {node: '>=18'}
 
   cookie@1.1.1:
@@ -679,7 +679,7 @@ snapshots:
       '@rolldown/pluginutils': 1.0.1
       vite: 8.2.1(@types/node@24.13.3)
 
-  better-wiki@0.18.0:
+  better-wiki@0.19.0:
     dependencies:
       fuse.js: 7.4.2
 
