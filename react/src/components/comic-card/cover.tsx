@@ -31,7 +31,7 @@ export function ComicCardCover({
     };
 
     return (
-        <Link to={readerHref} className={loaded ? styles.loaded : undefined}>
+        <Link to={readerHref} className={[styles.frame, loaded ? styles.loaded : ''].filter(Boolean).join(' ')}>
 
             <ImageGen
                 src={imgSrc}

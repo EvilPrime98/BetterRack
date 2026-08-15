@@ -30,7 +30,7 @@
         width: 100%;
         gap: 6px;
 
-        a {
+        .frame {
             position: relative;
             display: block;
             width: 100%;
@@ -42,7 +42,7 @@
             transition: transform 220ms ease, box-shadow 220ms ease, border-radius 320ms ease;
         }
 
-        a::after {
+        .frame::after {
             content: "";
             position: absolute;
             inset: 0;
@@ -50,15 +50,15 @@
             animation: coverShimmer 1.6s ease-in-out infinite;
         }
 
-        a.loaded {
+        .frame.loaded {
             background: none;
         }
 
-        a.loaded::after {
+        .frame.loaded::after {
             content: none;
         }
 
-        a:focus-visible {
+        .frame:focus-visible {
             transform: translateY(-3px);
             box-shadow: 0 12px 22px -8px rgba(0, 0, 0, 0.75);
         }
@@ -73,7 +73,7 @@
             transition: opacity 240ms ease, filter 320ms ease;
         }
 
-        a.loaded img {
+        .frame.loaded img {
             opacity: 1;
         }
     }

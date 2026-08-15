@@ -11,10 +11,7 @@ export function FolderStackCard({
 }) {
 
     const RESIZE_DEBOUNCE_MS = 200;
-
-    // ImageGen doesn't forward refs, so this observes the wrapping <a> instead
-    // (same box, img fills it via CSS) rather than modifying that shared leaf component.
-    const anchorRef = useRef<HTMLAnchorElement>(null);
+    const anchorRef = useRef<HTMLDivElement>(null);
     const [src, setSrc] = useState(cover);
     const [loaded, setLoaded] = useState(false);
 
@@ -60,14 +57,14 @@ export function FolderStackCard({
 
                 <div className={styles.board} />
 
-                <a ref={anchorRef} className={loaded ? styles.loaded : undefined}>
+                <div ref={anchorRef} className={[styles.frame, loaded ? styles.loaded : ''].filter(Boolean).join(' ')}>
 
                     <ImageGen
                         src={src}
                         onLoad={onImageLoad}
                     />
 
-                </a>
+                </div>
 
                 <div className={styles.bagOverlay} />
 
