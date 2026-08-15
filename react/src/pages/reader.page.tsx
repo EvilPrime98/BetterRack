@@ -7,6 +7,7 @@ import { ReaderPageHeader } from '@/components/reader-page-header/reader-page-he
 import { ReaderPageProgressBar } from '@/components/reader-page-progress-bar/reader-page-progress-bar';
 import { useComicCacheStore } from '@/stores/comicCache.store';
 import { useDocumentTitleStore } from '@/stores/documentTitle.store';
+import { ReaderNext } from '@/components/reader-next/reader-next';
 
 const PRELOAD_WINDOW = 2;
 
@@ -38,16 +39,20 @@ async function preloadWindow(uid: string, numPages: number, savedPage: number) {
 
 export function ReaderPage() {
 
+    //hooks
     const { uid } = useParams<{ uid: string }>();
     const navigate = useNavigate();
     const setTitle = useDocumentTitleStore((s) => s.setTitle);
 
+    //states
     const [pages, setPages] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [hasError, setHasError] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [zoom, setZoom] = useState(1);
-
+    const [next, setNext] = useState(false);
+    
+    //refs
     const observerRef = useRef<IntersectionObserver | null>(null);
     const viewerRef = useRef<HTMLElement>(null);
     const currentPageRef = useRef(currentPage);
@@ -77,13 +82,22 @@ export function ReaderPage() {
         }
     }, [uid]);
 
-    const zoomIn = useCallback(() => setZoom((z) => Math.min(MAX_ZOOM, +(z + ZOOM_STEP).toFixed(2))), []);
-    const zoomOut = useCallback(() => setZoom((z) => Math.max(MIN_ZOOM, +(z - ZOOM_STEP).toFixed(2))), []);
-    const zoomReset = useCallback(() => setZoom(1), []);
+    const zoomIn = useCallback(() => {
+        setZoom((z) => Math.min(MAX_ZOOM, +(z + ZOOM_STEP).toFixed(2)))
+    }, []);
+
+    const zoomOut = useCallback(() => {
+        setZoom((z) => Math.max(MIN_ZOOM, +(z - ZOOM_STEP).toFixed(2)))
+    }, []);
+    
+    const zoomReset = useCallback(() => {
+        setZoom(1)
+    }, []);
 
     const onWheel = useCallback((e: React.WheelEvent) => {
         if (!e.ctrlKey) return;
-        // hijack the browser/Electron ctrl+wheel pinch-zoom and drive our own page zoom instead
+        // hijack the browser/Electron ctrl+wheel 
+        // pinch-zoom and drive our own page zoom instead
         e.preventDefault();
         if (e.deltaY < 0) zoomIn();
         else if (e.deltaY > 0) zoomOut();
@@ -171,6 +185,10 @@ export function ReaderPage() {
         });
     }, [uid, pages, currentPage]);
 
+    useEffect(() => {
+        setNext(pages.length > 0 && currentPage === pages.length);
+    }, [currentPage, pages.length])
+
     if (!uid) return null;
 
     const numPages = pages.length;
@@ -205,6 +223,8 @@ export function ReaderPage() {
                     />
                 ))}
             </section>
+
+            { next ? <ReaderNext uid={uid} navigate={navigate}/> : null }
 
         </section>
     );

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useParams } from 'react-router-dom';
 import { useAppContext } from '@/context/AppContext';
 import { useLibraryStore } from '@/stores/library.store';
 import { useComicCacheStore } from '@/stores/comicCache.store';
@@ -13,6 +13,14 @@ import { LibraryPage } from '@/pages/library-page';
 import { ReaderPage } from '@/pages/reader.page';
 import { SettingsPage } from '@/pages/settings.page';
 import { StorePage } from '@/pages/store.page';
+
+// Keying by uid forces ReaderPage to fully unmount/remount when navigating
+// between comics (e.g. the "next" button), so stale pages/scroll/zoom from
+// the previous comic never flash before the new one loads.
+function ReaderRoute() {
+    const { uid } = useParams<{ uid: string }>();
+    return <ReaderPage key={uid} />;
+}
 
 export function App() {
 
@@ -42,7 +50,7 @@ export function App() {
 
             {!isLoading && (
                 <Routes>
-                    <Route path="/:uid/reader" element={<ReaderPage />} />
+                    <Route path="/:uid/reader" element={<ReaderRoute />} />
                     <Route path="/settings" element={<SettingsPage />} />
                     <Route path="/store" element={<StorePage />} />
                     <Route path="/:uid" element={<LibraryPage />} />
