@@ -13,6 +13,15 @@ export async function fetchComics(
 
 }
 
+export async function fetchComicById(
+    id: number,
+    sourceWiki: string
+): Promise<WikiComic> {
+    const params = new URLSearchParams({ sourceWiki })
+    const response = await fetch(`${API_URL}/api/wiki/comic/${id}?${params.toString()}`);
+    return await response.json();
+}
+
 export function wikiImageOptimizer(
     wikiImageSrc: string,
     size?: number

@@ -16,10 +16,13 @@ import { IdentifyButton } from './identify-button';
 import { ComicCardActions } from './actions';
 import { CrButton } from '@/components/cr-button/cr-button';
 import { identifyLibraryEntry } from '@/services/library.service';
+import { COMIC_FILTERS, type IComicFilters } from '@/library.types';
 
 export function ComicCard({
-    item
+    item,
+    filters
 }: {
+    filters?: IComicFilters;
     item: ILibraryResponseItem;
 }) {
 
@@ -36,16 +39,20 @@ export function ComicCard({
     const readPer = itemCache ? (itemCache.read === true ? 100 : itemCache.readPer ?? 0) : 0;
 
     const isVisible = (() => {
-        const currReadPer = itemCache?.readPer || 0;
-        if (readFilter === 'all') {
-            return true;
-        } else if (readFilter === 'read') {
-            return currReadPer === 100;
-        } else if (readFilter === 'reading') {
-            return currReadPer > 0 && currReadPer < 100;
-        } else {
-            return currReadPer === 0;
-        }
+        
+        const writerFilter = filters?.[COMIC_FILTERS.writer];
+        const currReadPer = itemCache?.readPer ?? 0;
+
+        const matchesWriter = !writerFilter 
+        || comic?.credits.writers?.some(w => w === writerFilter) === true;
+
+        const matchesReadFilter = readFilter === 'all'
+        || (readFilter === 'read' && currReadPer === 100)
+        || (readFilter === 'reading' && currReadPer > 0 && currReadPer < 100)
+        || (readFilter === 'unread' && currReadPer === 0);
+
+        return matchesWriter && matchesReadFilter;
+
     })();
 
     useEffect(() => {
@@ -58,6 +65,18 @@ export function ComicCard({
 
         if (item.identified !== undefined) return undefined;
 
+        if (filters && Object.keys(filters).length > 0) {
+            let cancelled = false;
+            identifyLibraryEntry(item.uid)
+                .then((resolved) => {
+                    if (cancelled) return;
+                    setComic(resolved.comic ?? null);
+                    setIdentified(resolved.identified === true);
+                })
+                .catch(() => {});
+            return () => { cancelled = true; };
+        }
+
         const node = articleRef.current;
         if (!node) return undefined;
 
@@ -65,18 +84,18 @@ export function ComicCard({
             if (!entries.some(e => e.isIntersecting)) return;
             observer.disconnect();
             identifyLibraryEntry(item.uid)
-                .then((resolved) => {
-                    setComic(resolved.comic ?? null);
-                    setIdentified(resolved.identified === true);
-                })
-                .catch(() => {});
+            .then((resolved) => {
+                setComic(resolved.comic ?? null);
+                setIdentified(resolved.identified === true);
+            })
+            .catch(() => {});
         }, { rootMargin: '200px' });
 
         observer.observe(node);
 
         return () => observer.disconnect();
 
-    }, [item.uid, item.identified]);
+    }, [item.uid, item.identified, filters]);
 
     const articleClassName = [
         styles.comicCard,
@@ -130,7 +149,7 @@ export function ComicCard({
 
                 </div>
 
-                <ComicCardInfo comic={comic} />
+                <ComicCardInfo comic={comic} navigate={navigate}/>
 
                 <div className={styles.actionsBlock}>
                     <ComicRating uid={item.uid} />

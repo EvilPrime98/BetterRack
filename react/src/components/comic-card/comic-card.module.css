@@ -242,6 +242,29 @@
         display: none;
     }
 
+    .infoRowClickable {
+        cursor: pointer;
+        border-radius: 3px;
+        margin: 0 -4px;
+        padding: 0 4px;
+        transition: background-color 0.15s ease;
+    }
+
+    .infoRowClickable:hover,
+    .infoRowClickable:focus-visible {
+        background-color: rgba(255, 255, 255, 0.06);
+    }
+
+    .infoRowClickable:hover .infoValue,
+    .infoRowClickable:focus-visible .infoValue {
+        color: var(--accent);
+    }
+
+    .infoRowClickable:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 1px;
+    }
+
     .infoLabel {
         flex-shrink: 0;
         width: 56px;
@@ -260,6 +283,18 @@
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+    }
+
+    .viewMore {
+        align-self: center;
+        height: 24px;
+        min-width: 0;
+        margin-top: 6px;
+        padding: 0 12px;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-radius: 999px;
     }
 
     .rating {

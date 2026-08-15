@@ -82,6 +82,14 @@ export type TReadTypes = keyof typeof READ_TYPES;
 
 export type TComicsTypes = keyof typeof COMICS_TYPES;
 
+export const COMIC_FILTERS = {
+    writer: 'writer'
+} as const;
+
+export type TComicFilters = keyof typeof COMIC_FILTERS;
+
+export type IComicFilters = Partial<Record<TComicFilters, string>>;
+
 export const FILTER_OPTIONS = {
     nofilters: 'Alphabetically',
     byCreation: 'Creation Date',

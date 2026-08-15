@@ -38,7 +38,8 @@ export class WikiModel implements TWikiModel {
                         'issue',
                         'title',
                         'volume',
-                        'releaseDate'
+                        'releaseDate',
+                        'sourceWiki'
                     ]
                 })
             })

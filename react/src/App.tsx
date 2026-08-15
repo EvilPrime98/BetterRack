@@ -13,6 +13,8 @@ import { LibraryPage } from '@/pages/library-page';
 import { ReaderPage } from '@/pages/reader.page';
 import { SettingsPage } from '@/pages/settings.page';
 import { StorePage } from '@/pages/store.page';
+import { FilterPage } from '@/pages/filtered-page';
+import { DetailsPage } from './pages/details-page';
 
 // Keying by uid forces ReaderPage to fully unmount/remount when navigating
 // between comics (e.g. the "next" button), so stale pages/scroll/zoom from
@@ -28,8 +30,11 @@ export function App() {
 
     useEffect(() => {
         (async () => {
+            
             await useServerModalStore.getState().ensureServerConfigured();
+            
             setIsLoading(true);
+
             await Promise.all([
                 Promise.allSettled([
                     useLibraryStore.getState().fetchLibrary(),
@@ -37,11 +42,13 @@ export function App() {
                     useSettingsStore.getState().fetchSettings()
                 ])
             ]);
+
             useUserPrefStore.getState().init();
             useComicsTypeStore.getState().init();
+            
             setIsLoading(false);
-        })();
-        
+
+        })();      
     }, []);
 
     return (
@@ -50,9 +57,11 @@ export function App() {
 
             {!isLoading && (
                 <Routes>
+                    <Route path="/details/:pageId" element={<DetailsPage />} />
                     <Route path="/:uid/reader" element={<ReaderRoute />} />
                     <Route path="/settings" element={<SettingsPage />} />
                     <Route path="/store" element={<StorePage />} />
+                    <Route path="/filters" element={<FilterPage />} />
                     <Route path="/:uid" element={<LibraryPage />} />
                     <Route path="*" element={<LibraryPage />} />
                 </Routes>
