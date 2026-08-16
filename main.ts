@@ -122,11 +122,6 @@ async function startDesktopApp() {
             ...process.env,
             PORT,
             CLIENT_DIST_DIR: path.join(resourcesPath, "client"),
-            // sharp's native binary can't be embedded by `bun build --compile`, so it ships
-            // as a real node_modules dir next to run.exe (nested under vendor/ so electron-
-            // builder's extraResources copier doesn't drop it, see prepare-server-deps.ts).
-            // NODE_PATH lets Bun resolve it even though the process cwd is userData (kept
-            // writable for the db/cache/logs).
             NODE_PATH: path.join(resourcesPath, "server", "vendor", "node_modules"),
           },
 
