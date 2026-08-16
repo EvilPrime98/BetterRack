@@ -13,14 +13,10 @@ import { ShopIcon } from '@/icons/shop.icon';
 export function SideBar() {
 
     const asideRef = useRef<HTMLElement>(null);
-
     const isExpanded = useSidebarStore((s) => s.isExpanded);
     const setIsExpanded = useSidebarStore((s) => s.setIsExpanded);
     const groups = useLibraryStore((s) => s.groups);
     const fetchLibrary = useLibraryStore((s) => s.fetchLibrary);
-
-    // useLibraryStore doesn't expose a fetching flag, so this tracks only this component's
-    // own initial fetchLibrary() call to decide between "Loading library…" and "No folders found".
     const [isLoading, setIsLoading] = useState(false);
 
     function closeSidebar() {
@@ -29,8 +25,7 @@ export function SideBar() {
 
     useEffect(() => {
         setIsLoading(true);
-        fetchLibrary().finally(() => setIsLoading(false));
-        
+        fetchLibrary().finally(() => setIsLoading(false));      
     }, []);
 
     useEffect(() => {
@@ -39,7 +34,6 @@ export function SideBar() {
         }
         document.addEventListener('keydown', onKeydown);
         return () => document.removeEventListener('keydown', onKeydown);
-        
     }, []);
 
     useEffect(() => {
@@ -58,16 +52,19 @@ export function SideBar() {
     return (
         <div>
 
-            <div
+            {/*<div
                 className={[styles.backdrop, isExpanded ? styles.visible : ''].filter(Boolean).join(' ')}
                 onClick={closeSidebar}
-            />
+            />*/}
 
             <aside
                 ref={asideRef}
                 role="navigation"
                 aria-label="Library folders"
-                className={[styles.sideBar, isExpanded ? styles.expanded : ''].filter(Boolean).join(' ')}
+                className={[
+                    styles.sideBar, 
+                    isExpanded ? styles.expanded : ''
+                ].filter(Boolean).join(' ')}
             >
 
                 <div className={styles.header}>

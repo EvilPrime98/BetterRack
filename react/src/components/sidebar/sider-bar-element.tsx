@@ -15,7 +15,7 @@ export function SideBarElement({
     const setIsExpanded = useSidebarStore((s) => s.setIsExpanded);
 
     const onClick = () => {
-        setSearchQuery(''); //reset search when selecting a comic folder
+        setSearchQuery('');
         setIsExpanded(false);
     };
 

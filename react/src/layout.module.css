@@ -1,0 +1,10 @@
+.layout {
+    width: 100%;
+    min-height: 100dvh;
+}
+
+.content {
+    padding-left: 50px;
+    width: min(100%, var(--content-max-width));
+    margin-inline: auto;
+}

@@ -17,16 +17,7 @@ export function StoreCard({
 
     const [state, setState] = useState<TCardState>({ status: 'idle' });
     const [coverLoaded, setCoverLoaded] = useState(false);
-
-    // There's no loading UI for 'links-loading' — the action area intentionally keeps
-    // showing whatever it last rendered (idle 'Download' or a 'Retry' button) instead of
-    // flashing to empty while links load. `lastRenderable` holds that stale content.
     const lastRenderable = useRef<TCardState>(state);
-    useEffect(() => {
-        if (state.status !== 'links-loading') {
-            lastRenderable.current = state;
-        }
-    }, [state]);
     const displayState = state.status === 'links-loading' ? lastRenderable.current : state;
 
     function onEnterOrSpace(handler: () => void) {
@@ -184,6 +175,12 @@ export function StoreCard({
 
     }
 
+    useEffect(() => {
+        if (state.status !== 'links-loading') {
+            lastRenderable.current = state;
+        }
+    }, [state]);
+
     return (
         <article className={styles.storeCard}>
 
@@ -199,7 +196,9 @@ export function StoreCard({
 
             <div className={styles.details}>
 
-                <p className={styles.title} title={item.title}>{item.title}</p>
+                <a href={item.link} target='_blank'>
+                    <p className={styles.title} title={item.title}>{item.title}</p>
+                </a>
 
                 {item.uploadDate && (
                     <p className={styles.date}>{new Date(item.uploadDate).toLocaleDateString()}</p>

@@ -37,32 +37,35 @@ export function Header() {
     return (
         <header className={styles.header}>
 
-            <div className={styles.left}>
+            <div
+                className={[styles.iconBtn, styles.noDrag, styles.burger].filter(Boolean).join(' ')}
+                role="button"
+                tabIndex={0}
+                aria-label="Toggle sidebar"
+                onClick={toggleSidebar}
+                onKeyDown={onEnterOrSpace(toggleSidebar)}
+            >
+                <BurgerIcon size={iconSize * 1.5} />
+            </div>
 
-                <div
-                    className={[styles.iconBtn, styles.noDrag].filter(Boolean).join(' ')}
-                    role="button"
-                    tabIndex={0}
-                    aria-label="Toggle sidebar"
-                    onClick={toggleSidebar}
-                    onKeyDown={onEnterOrSpace(toggleSidebar)}
-                >
-                    <BurgerIcon size={iconSize * 1.5} />
+            <div className={styles.inner}>
+
+                <div className={styles.left}>
+
+                    <Link
+                        to="/"
+                        aria-label="BetterRack home"
+                        className={[styles.logo, styles.noDrag].filter(Boolean).join(' ')}
+                        onClick={goHome}
+                    >
+                        <BetterRackIcon size={iconSize * 1.3} />
+                    </Link>
+
+                    <div className={styles.text} style={{ userSelect: 'none' }}>
+                        <span className={styles.title} style={{ fontSize: '1.5rem' }}>BetterRack</span>
+                    </div>
+
                 </div>
-
-                <Link
-                    to="/"
-                    aria-label="BetterRack home"
-                    className={[styles.logo, styles.noDrag].filter(Boolean).join(' ')}
-                    onClick={goHome}
-                >
-                    <BetterRackIcon size={iconSize * 1.3} />
-                </Link>
-
-                <div className={styles.text} style={{ userSelect: 'none' }}>
-                    <span className={styles.title} style={{ fontSize: '1.5rem' }}>BetterRack</span>
-                </div>
-
             </div>
 
         </header>

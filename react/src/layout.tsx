@@ -6,6 +6,7 @@ import { ConfirmModal } from '@/components/confirm-modal/confirm-modal';
 import { NewFolderModal } from '@/components/new-folder-modal/new-folder-modal';
 import { FolderPrefsModal } from '@/components/folder-prefs-modal/folder-prefs-modal';
 import { MoveFileModal } from '@/components/move-file-modal/move-file-modal';
+import styles from './layout.module.css';
 
 export function Layout({
     children
@@ -14,13 +15,15 @@ export function Layout({
 }) {
 
     return (
-        <main>
+        <main className={styles.layout}>
 
             <Header />
 
             <SideBar />
 
-            {children}
+            <div className={styles.content}>
+                {children}
+            </div>
 
             <ComicIdentifier />
 

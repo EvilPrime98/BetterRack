@@ -20,8 +20,8 @@ export function SideBarGroup({
     }
 
     const entries = isExpanded
-        ? getLibraryItems({ onlyDir: true, uid: group.uid })
-        : [];
+    ? getLibraryItems({ onlyDir: true, uid: group.uid })
+    : [];
 
     return (
         <div className={styles.group}>

@@ -160,7 +160,7 @@ export function SettingsPage() {
 
                     <div className={styles.fieldGroup}>
 
-                        <h2 className={`${styles.sectionTitle} ${styles.groupDivider}`}>API configuration</h2>
+                        <h2 className={`${styles.sectionTitle} ${styles.groupDivider}`}>Store configuration</h2>
 
                         <TextField
                             fieldKey="apiUrl"
