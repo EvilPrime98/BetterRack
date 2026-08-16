@@ -7,6 +7,20 @@ import { logger } from '#utils/logger';
 
 const log = logger.child({ module: 'DownloadModel' });
 
+const CLOUDFLARE_CHALLENGE_MARKERS = [
+    'cloudflare',
+    'just a moment',
+    'attention required',
+    'challenge-platform',
+    'turnstile',
+    'cf-challenge',
+];
+
+function isCloudflareChallengePage(content: string): boolean {
+    const lower = content.toLowerCase();
+    return CLOUDFLARE_CHALLENGE_MARKERS.some(marker => lower.includes(marker));
+}
+
 export class DownloadModel implements TDownloadModel {
 
     downloadComic = async ({
@@ -41,6 +55,15 @@ export class DownloadModel implements TDownloadModel {
                         'content-type': 'application/octet-stream'
                     }
                 });
+                const contentType = response.headers.get('content-type') ?? '';
+                if (contentType.includes('text/html')) {
+                    const preview = await response.clone().text();
+                    if (isCloudflareChallengePage(preview)) {
+                        const error = 'Cloudflare challenge detected. Open the comic in a browser or use a browser-side download path.';
+                        log.error(error);
+                        throw new Error(error);
+                    }
+                }
                 if (response.ok) break;
                 if (noRetry === true) throw new Error(`HTTP ${response.status}`);
                 onProgress?.({ type: 'retrying', title: link.title, status: response.status, delaySec: REQUEST_DELAY / 1000 });
