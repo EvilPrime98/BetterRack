@@ -180,18 +180,16 @@ export type TZipModel = {
     listPages: ({ filePath }: {
         filePath: string;
     }) => Promise<string[]>,
+    getPageStream: ({ filePath, entryName }: {
+        filePath: string;
+        entryName: string;
+    }) => ReadableStream<Uint8Array>,
     extractPage: ({ filePath, outDir, entryName }: {
         filePath: string;
         outDir: string;
         entryName: string;
     }) => Promise<void>,
-    touchAccess: ({ outDir }: {
-        outDir: string;
-    }) => Promise<void>,
-    sweepStale: ({ baseDir, ttlMs }: {
-        baseDir: string;
-        ttlMs: number;
-    }) => Promise<void>
+    getPageMimeType: (entryName: string) => string
 }
 
 export type WPPost = {

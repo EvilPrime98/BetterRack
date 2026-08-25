@@ -1,5 +1,4 @@
 import { existsSync } from "node:fs";
-import { readdir, rm, stat } from "node:fs/promises";
 import path from "node:path";
 
 const SEVEN_ZIP_BIN_NAMES = process.platform === "win32"
@@ -33,33 +32,133 @@ const FALLBACK_UNRAR_PATHS = process.platform === "win32"
 ];
 
 const IMAGE_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp']);
+
 const RAR_EXTENSIONS = new Set(['.cbr', '.rar']);
 
-const LAST_ACCESS_FILE = ".last-access";
-
-const resolveBin = (names: string[], fallbackPaths: string[]) => {
-    for (const name of names) {
-        const onPath = Bun.which(name);
-        if (onPath) return onPath;
-    }
-    return fallbackPaths.find(existsSync) ?? null;
+const MIME_TYPES: Record<string, string> = {
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.png': 'image/png',
+    '.webp': 'image/webp',
+    '.gif': 'image/gif',
+    '.bmp': 'image/bmp'
 };
-
-const resolve7zPath = () => {
-    const bin = resolveBin(SEVEN_ZIP_BIN_NAMES, FALLBACK_7Z_PATHS);
-    if (!bin) throw new Error("7z executable not found. Install 7-Zip (or p7zip) or add it to PATH.");
-    return bin;
-};
-
-const resolveUnrarPath = () => {
-    const bin = resolveBin(UNRAR_BIN_NAMES, FALLBACK_UNRAR_PATHS);
-    if (!bin) throw new Error("unrar executable not found. 7-Zip does not support RAR decoding on Linux; install unrar to read .cbr/.rar archives.");
-    return bin;
-};
-
-const isRarFile = (filePath: string) => RAR_EXTENSIONS.has(path.extname(filePath).toLowerCase());
 
 export class Zip7Decompressor {
+
+    private resolve7z: () => string;
+    private resolveUnrar: () => string;
+
+    constructor(overrides?: { //overrides for testing
+        resolve7zPath?: () => string,
+        resolveUnrarPath?: () => string
+    }) {
+        this.resolve7z = overrides?.resolve7zPath ?? this.resolve7zPath;
+        this.resolveUnrar = overrides?.resolveUnrarPath ?? this.resolveUnrarPath;
+    }
+
+    private isSafeEntryName = (entryName: string): boolean => {
+        if (!entryName || !entryName.trim()) return false;
+        if (path.isAbsolute(entryName)) return false;
+        if (/^[a-zA-Z]:/.test(entryName)) return false;
+        if (entryName.startsWith('/') || entryName.startsWith('\\')) return false;
+        const segments = entryName.replace(/\\/g, '/').split('/');
+        if (segments.some(segment => segment === '..' || segment === '')) return false;
+        return true;
+    };
+
+    private assertSafeEntryName = (entryName: string) => {
+        if (!this.isSafeEntryName(entryName)) {
+            throw new Error(`Rejected suspicious archive entry path: "${entryName}"`);
+        }
+    };
+
+    private resolveBin = (names: string[], fallbackPaths: string[]) => {
+        for (const name of names) {
+            const onPath = Bun.which(name);
+            if (onPath) return onPath;
+        }
+        return fallbackPaths.find(existsSync) ?? null;
+    };
+
+    private resolve7zPath = () => {
+        const bin = this.resolveBin(SEVEN_ZIP_BIN_NAMES, FALLBACK_7Z_PATHS);
+        if (!bin) throw new Error("7z executable not found. Install 7-Zip (or p7zip) or add it to PATH.");
+        return bin;
+    };
+
+    private resolveUnrarPath = () => {
+        const bin = this.resolveBin(UNRAR_BIN_NAMES, FALLBACK_UNRAR_PATHS);
+        if (!bin) throw new Error("unrar executable not found. 7-Zip does not support RAR decoding on Linux; install unrar to read .cbr/.rar archives.");
+        return bin;
+    };
+
+    private isRarFile = (filePath: string) => RAR_EXTENSIONS.has(path.extname(filePath).toLowerCase());
+
+    private toPageStream = ({
+        proc,
+        filePath,
+        entryName
+    }: {
+        proc: { stdout: ReadableStream<Uint8Array>, stderr: ReadableStream<Uint8Array>, exited: Promise<number>, kill: () => void },
+        filePath: string,
+        entryName: string
+    }): ReadableStream<Uint8Array> => {
+
+        const reader = proc.stdout.getReader();
+        const stderrPromise = new Response(proc.stderr).text();
+        let bytesEmitted = 0;
+
+        return new ReadableStream<Uint8Array>({
+
+            async pull(controller) {
+
+                let result: { done?: boolean, value?: Uint8Array };
+
+                try {
+                    result = await reader.read();
+                } catch (err) {
+                    controller.error(err);
+                    return;
+                }
+
+                if (!result.done && result.value) {
+                    bytesEmitted += result.value.byteLength;
+                    controller.enqueue(result.value);
+                    return;
+                }
+
+                const [exitCode, stderrText] = await Promise.all([proc.exited, stderrPromise]);
+
+                if (exitCode !== 0) {
+                    controller.error(new Error(
+                        `Failed to read page "${entryName}" from "${filePath}": extraction process exited with code ${exitCode}${stderrText.trim() ? `: ${stderrText.trim()}` : ''}`
+                    ));
+                    return;
+                }
+
+                if (bytesEmitted === 0) {
+                    controller.error(new Error(
+                        `Failed to read page "${entryName}" from "${filePath}": no data was produced; the entry may not exist in the archive.`
+                    ));
+                    return;
+                }
+
+                controller.close();
+
+            },
+
+            cancel(reason) {
+                reader.cancel(reason).catch(() => { });
+                try {
+                    proc.kill();
+                } catch { //
+                }
+            }
+
+        });
+
+    }
 
     listPages = async ({
         filePath
@@ -67,7 +166,7 @@ export class Zip7Decompressor {
         filePath: string
     }): Promise<string[]> => {
 
-        const pages = isRarFile(filePath)
+        const pages = this.isRarFile(filePath)
             ? await this.listPagesUnrar(filePath)
             : await this.listPages7z(filePath);
 
@@ -82,7 +181,7 @@ export class Zip7Decompressor {
     listPages7z = async (filePath: string): Promise<string[]> => {
 
         const proc = Bun.spawn([
-            resolve7zPath(),
+            this.resolve7zPath(),
             "l",
             "-slt",
             "-ba",
@@ -116,7 +215,7 @@ export class Zip7Decompressor {
     listPagesUnrar = async (filePath: string): Promise<string[]> => {
 
         const proc = Bun.spawn([
-            resolveUnrarPath(),
+            this.resolveUnrarPath(),
             "lb",
             "-y",
             filePath
@@ -152,7 +251,7 @@ export class Zip7Decompressor {
         entryName: string
     }) => {
 
-        if (isRarFile(filePath)) {
+        if (this.isRarFile(filePath)) {
             await this.extractPageUnrar({ filePath, outDir, entryName });
         } else {
             await this.extractPage7z({ filePath, outDir, entryName });
@@ -171,7 +270,7 @@ export class Zip7Decompressor {
     }) => {
 
         const proc = Bun.spawn([
-            resolve7zPath(),
+            this.resolve7zPath(),
             "x",
             filePath,
             `-o${outDir}`,
@@ -202,7 +301,7 @@ export class Zip7Decompressor {
     }) => {
 
         const proc = Bun.spawn([
-            resolveUnrarPath(),
+            this.resolveUnrarPath(),
             "x",
             "-y",
             filePath,
@@ -222,44 +321,76 @@ export class Zip7Decompressor {
 
     }
 
-    touchAccess = async ({
-        outDir
+    getPageStream = ({
+        filePath,
+        entryName
     }: {
-        outDir: string
-    }) => {
-        await Bun.write(path.join(outDir, LAST_ACCESS_FILE), String(Date.now()));
-    }
+        filePath: string,
+        entryName: string
+    }): ReadableStream<Uint8Array> => {
 
-    sweepStale = async ({
-        baseDir,
-        ttlMs
-    }: {
-        baseDir: string,
-        ttlMs: number
-    }) => {
+        this.assertSafeEntryName(entryName);
 
-        if (!existsSync(baseDir)) return;
-
-        const entries = await readdir(baseDir, { withFileTypes: true });
-        const now = Date.now();
-
-        for (const entry of entries) {
-
-            if (!entry.isDirectory()) continue;
-
-            const dirPath = path.join(baseDir, entry.name);
-            const markerPath = path.join(dirPath, LAST_ACCESS_FILE);
-
-            const lastAccess = existsSync(markerPath)
-                ? Number(await Bun.file(markerPath).text())
-                : (await stat(dirPath)).mtimeMs;
-
-            if (now - lastAccess > ttlMs) {
-                await rm(dirPath, { recursive: true, force: true });
-            }
-
+        if (!existsSync(filePath)) {
+            throw new Error(`Archive not found: "${filePath}"`);
         }
 
+        return this.isRarFile(filePath)
+            ? this.getPageStreamUnrar({ filePath, entryName })
+            : this.getPageStream7z({ filePath, entryName });
+
+    }
+
+    getPageStream7z = ({
+        filePath,
+        entryName
+    }: {
+        filePath: string,
+        entryName: string
+    }): ReadableStream<Uint8Array> => {
+
+        const proc = Bun.spawn([
+            this.resolve7z(),
+            "x",
+            filePath,
+            entryName,
+            "-so",
+            "-y"
+        ], {
+            stdout: "pipe",
+            stderr: "pipe"
+        });
+
+        return this.toPageStream({ proc, filePath, entryName });
+
+    }
+
+    getPageStreamUnrar = ({
+        filePath,
+        entryName
+    }: {
+        filePath: string,
+        entryName: string
+    }): ReadableStream<Uint8Array> => {
+
+        const proc = Bun.spawn([
+            this.resolveUnrar(),
+            "p",
+            "-inul",
+            "-y",
+            filePath,
+            entryName
+        ], {
+            stdout: "pipe",
+            stderr: "pipe"
+        });
+
+        return this.toPageStream({ proc, filePath, entryName });
+
+    }
+
+    getPageMimeType = (entryName: string): string => {
+        return MIME_TYPES[path.extname(entryName).toLowerCase()] ?? 'application/octet-stream';
     }
 
 }

@@ -6,7 +6,6 @@ import { LibraryModel } from './models/libraryModel';
 import { libraryRouter } from './routers/libraryRouter';
 import { comicReaderRouter } from './routers/comic-reader.router';
 import { Zip7Decompressor } from './models/decompressor.model';
-import { COMIC_TMP_DIR } from './controllers/comic-reader.controller';
 import { WikiModel } from './models/wikiModel';
 import { wikiRouter } from './routers/wikiRouter';
 import { ComicDataModel } from './models/comic-data/comicDataModel';
@@ -22,9 +21,6 @@ import { downloadsRouter } from './routers/downloadsRouter';
 import { ThumbnailModel } from './models/thumbnailModel';
 import { thumbnailRouter } from './routers/thumbnailRouter';
 import { logger } from '#utils/logger';
-
-const COMIC_TMP_TTL_MS = 30 * 60 * 1000;
-const COMIC_TMP_SWEEP_INTERVAL_MS = 10 * 60 * 1000;
 
 async function startApp() {
 
@@ -60,13 +56,6 @@ async function startApp() {
         libModel: libModel,
         zipModel: zipModel
     }));
-
-    setInterval(() => {
-        zipModel.sweepStale({
-            baseDir: COMIC_TMP_DIR,
-            ttlMs: COMIC_TMP_TTL_MS
-        }).catch((e) => logger.error({ err: e }, 'Failed to sweep stale comic tmp dirs'));
-    }, COMIC_TMP_SWEEP_INTERVAL_MS);
 
     const clientDistDir = process.env.CLIENT_DIST_DIR ?? './react/dist';
 

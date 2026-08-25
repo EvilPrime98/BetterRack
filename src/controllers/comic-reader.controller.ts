@@ -1,12 +1,8 @@
 import type { TLibraryEntry, TLibraryModel, TZipModel } from "#src/types.ts";
 import type { Context } from "hono";
-import { existsSync } from "node:fs";
-import path from "node:path";
 import { logger } from "#utils/logger";
 
 const log = logger.child({ module: 'comicReaderController' });
-
-export const COMIC_TMP_DIR = path.resolve('./tmp-decompressor');
 
 export class comicReaderController {
 
@@ -23,7 +19,7 @@ export class comicReaderController {
 
     private async getPages(
         uuid?: string
-    ): Promise<{ outDir: string; pages: string[]; archivePath: string }> {
+    ): Promise<{ pages: string[]; archivePath: string }> {
 
         const entry = this.libModel.get(uuid) as TLibraryEntry;
 
@@ -36,16 +32,13 @@ export class comicReaderController {
             throw new Error('File not found');
         }
 
-        const outDir = path.join(COMIC_TMP_DIR, entry.name);
         const pages = await this.zipModel.listPages({ filePath: entry.path });
 
         if (!pages.length) {
             throw new Error('No pages found in comic');
         }
 
-        await this.zipModel.touchAccess({ outDir });
-
-        return { outDir, pages, archivePath: entry.path };
+        return { pages, archivePath: entry.path };
 
     }
 
@@ -95,7 +88,7 @@ export class comicReaderController {
                 }, 400);
             }
 
-            const { outDir, pages, archivePath } = await this.getPages(uuid);
+            const { pages, archivePath } = await this.getPages(uuid);
             const pageEntry = pages[pageNumber - 1];
 
             if (!pageEntry) {
@@ -105,22 +98,14 @@ export class comicReaderController {
                 }, 404);
             }
 
-            const pagePath = path.join(outDir, pageEntry);
+            const stream = this.zipModel.getPageStream({
+                filePath: archivePath,
+                entryName: pageEntry
+            });
 
-            if (!existsSync(pagePath)) {
-                await this.zipModel.extractPage({
-                    filePath: archivePath,
-                    outDir,
-                    entryName: pageEntry
-                });
-            }
-
-            const file = Bun.file(pagePath);
-
-            return new Response(file.stream(), {
+            return new Response(stream, {
                 headers: {
-                    'Content-Type': file.type || 'application/octet-stream',
-                    'Content-Length': String(file.size)
+                    'Content-Type': this.zipModel.getPageMimeType(pageEntry)
                 }
             })
 
