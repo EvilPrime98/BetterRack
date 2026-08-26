@@ -1,5 +1,6 @@
 import { API_URL } from "./library.service";
 import type { IStoreLink, IStorePost, TStoreProgressEvent, TStoreStrat } from "../store.types";
+import { POLL_INTERVAL_MS } from "@/data";
 
 async function parseJsonResponse<T>(response: Response): Promise<T> {
     const data = await response.json();
@@ -41,7 +42,7 @@ export async function getComicLinks(
     return data.links;
 }
 
-export function downloadComic({
+export async function downloadComic({
     id,
     title,
     uuid,
@@ -57,22 +58,26 @@ export function downloadComic({
     onProgress: (event: TStoreProgressEvent) => void;
 }): Promise<void> {
 
+    const searchParams = new URLSearchParams({ id: String(id), title, uuid, outputDir });
+    if (strat) searchParams.set('strat', strat);
+
+    const response = await fetch(`${API_URL}/api/downloads?${searchParams}`);
+    const { jobId } = await parseJsonResponse<{ error: boolean; jobId: string; state: string }>(response);
+
     return new Promise((resolve, reject) => {
 
-        const searchParams = new URLSearchParams({ id: String(id), title, uuid, outputDir });
-        if (strat) searchParams.set('strat', strat);
-
-        const es = new EventSource(`${API_URL}/api/downloads?${searchParams}`);
+        const es = new EventSource(`${API_URL}/api/downloads/${jobId}/stream`);
 
         es.onmessage = (e) => {
-            const event: TStoreProgressEvent = JSON.parse(e.data);
-            onProgress(event);
-            if (event.type === 'done') {
+            const { progress }: { progress?: TStoreProgressEvent } = JSON.parse(e.data);
+            if (!progress) return;
+            onProgress(progress);
+            if (progress.type === 'done') {
                 es.close();
                 resolve();
-            } else if (event.type === 'error') {
+            } else if (progress.type === 'error') {
                 es.close();
-                reject(new Error(event.message));
+                reject(new Error(progress.message));
             }
         };
 
@@ -82,5 +87,83 @@ export function downloadComic({
         };
 
     });
+
+}
+
+export type TJobStatus = {
+    jobId: string;
+    state: 'queued' | 'running' | 'done' | 'error';
+    label: string;
+    progress?: TStoreProgressEvent;
+};
+
+export async function getResourceJob(id: number): Promise<TJobStatus | null> {
+    const response = await fetch(`${API_URL}/api/downloads/resource/${id}`);
+    const data = await parseJsonResponse<{ error: boolean; job: TJobStatus | null }>(response);
+    return data.job;
+}
+
+export async function pollJobStatus(
+    jobId: string,
+    onProgress: (event: TStoreProgressEvent) => void
+): Promise<void> {
+
+    return new Promise((resolve, reject) => {
+
+        const poll = async () => {
+            try {
+
+                const res = await fetch(`${API_URL}/api/downloads/${jobId}`);
+                const { state, progress } = await parseJsonResponse<{
+                    error: boolean;
+                    state: string;
+                    progress?: TStoreProgressEvent;
+                }>(res);
+
+                if (progress) onProgress(progress);
+
+                if (state === 'done') {
+                    resolve();
+                } else if (state === 'error') {
+                    reject(new Error(progress?.type === 'error' ? progress.message : 'Download failed.'));
+                } else {
+                    setTimeout(poll, POLL_INTERVAL_MS);
+                }
+
+            } catch {
+                reject(new Error('Lost connection to the server while downloading.'));
+            }
+        };
+
+        poll();
+
+    });
+
+}
+
+export async function downloadComicPolling({
+    id,
+    title,
+    uuid,
+    outputDir,
+    strat,
+    onProgress
+}: {
+    id: number;
+    title: string;
+    uuid: string;
+    outputDir: string;
+    strat?: TStoreStrat;
+    onProgress: (event: TStoreProgressEvent) => void;
+}): Promise<void> {
+
+    const response = await fetch(`${API_URL}/api/downloads`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, title, uuid, outputDir, strat })
+    });
+    const { jobId } = await parseJsonResponse<{ error: boolean; jobId: string; state: string }>(response);
+
+    return pollJobStatus(jobId, onProgress);
 
 }

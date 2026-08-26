@@ -3,7 +3,7 @@ import styles from './store-card.module.css';
 import { ImageGen } from '@/components/image-generic/image-generic';
 import { NO_IMAGE_URL } from '@/data';
 import { useSettingsStore } from '@/stores/settings.store';
-import { getComicLinks, downloadComic } from '@/services/store.service';
+import { getComicLinks, downloadComicPolling, getResourceJob, pollJobStatus } from '@/services/store.service';
 import { toast } from '@/services/toast.service';
 import { CheckIcon } from '@/icons/check.icon';
 import { STRAT, type IStoreLink, type IStorePost, type TCardState } from '@/store.types';
@@ -44,7 +44,7 @@ export function StoreCard({
         setState({ status: 'downloading', title: link.title, percent: 0 });
 
         try {
-            await downloadComic({
+            await downloadComicPolling({
                 id: item.id,
                 title: link.title,
                 uuid: link.uuid,
@@ -180,6 +180,43 @@ export function StoreCard({
             lastRenderable.current = state;
         }
     }, [state]);
+
+    useEffect(() => {
+
+        if (!item.id) return;
+        let cancelled = false;
+
+        (async () => {
+
+            const job = await getResourceJob(item.id!);
+            if (cancelled || !job || state.status !== 'idle') return;
+
+            const percent = job.progress?.type === 'progress' ? job.progress.percent : 0;
+            setState({ status: 'downloading', title: job.label, percent });
+
+            try {
+                await pollJobStatus(job.jobId, (event) => {
+                    if (cancelled) return;
+                    if (event.type === 'progress') {
+                        setState({ status: 'downloading', title: job.label, percent: event.percent });
+                    }
+                });
+                if (cancelled) return;
+                setState({ status: 'done' });
+                toast.success(`${item.title} downloaded`);
+            } catch (e) {
+                if (cancelled) return;
+                const message = e instanceof Error ? e.message : 'Download failed.';
+                setState({ status: 'error', message });
+                toast.error(message);
+            }
+
+        })();
+
+        return () => { cancelled = true; };
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [item.id]);
 
     return (
         <article className={styles.storeCard}>
