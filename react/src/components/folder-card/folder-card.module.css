@@ -59,6 +59,13 @@
         color: #fff;
         align-items: center;
         justify-content: center;
+        text-align: center;
+        gap: 6px;
+        padding: 0 10px;
+    }
+
+    .basicFolderCard span {
+        width: 100%;
     }
 
     @media (hover: hover) {
