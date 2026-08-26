@@ -8,3 +8,9 @@
     width: min(100%, var(--content-max-width));
     margin-inline: auto;
 }
+
+@media (max-width: 640px) {
+    .content {
+        padding-left: 16px;
+    }
+}

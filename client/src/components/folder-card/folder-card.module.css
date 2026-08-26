@@ -243,6 +243,7 @@
 .detailMode {
 
     justify-content: center;
+    padding: 14px;
 
     .folderActions {
         top: 50%;
@@ -271,7 +272,7 @@
     border-color: rgba(255, 255, 255, 0.07);
 
     .cover {
-        width: 56px;
+        width: 76px;
         aspect-ratio: 1 / 1;
         flex-shrink: 0;
         border-radius: 12px;
@@ -286,7 +287,7 @@
     }
 
     .stack {
-        width: 46px;
+        width: 62px;
         margin: 0;
         background: none;
         border: none;
@@ -312,7 +313,7 @@
     .title {
         opacity: 1;
         text-align: left;
-        font-size: 14px;
+        font-size: 16px;
         -webkit-line-clamp: 1;
     }
 
