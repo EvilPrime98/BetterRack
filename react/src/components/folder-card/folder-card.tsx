@@ -20,16 +20,11 @@ export function FolderCard({
 }) {
 
     const STACK_SIZE = 3;
-
     const comicsType = useComicsTypeStore((s) => s.type);
     const { openFolderPrefsModal } = useFolderPrefsModalContext();
 
     const groups = useLibraryStore((s) => s.groups);
-    // getLibraryItems() builds a fresh array every call — selecting it directly (rather than
-    // deriving it via useMemo off the stable `groups` reference) makes every render produce a
-    // "changed" snapshot, which triggers an infinite update loop under useSyncExternalStore.
-    // getLibraryItems() reads `groups` internally via getState(); the `groups` dep below is
-    // real, just indirect, so the linter can't see it — kept intentionally.
+
     const stackCovers = useMemo(
         () => useLibraryStore.getState().getLibraryItems({ onlyDir: false, uid })
             .filter(item => !item.did)
