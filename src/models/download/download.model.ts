@@ -1,11 +1,11 @@
-import type { TDownloadLink, TDownloadModel, TProgressEvent } from '#src/types';
-import { CUSTOM_USER_AGENT, REQUEST_DELAY } from '#src/data.ts';
 import { createWriteStream } from 'fs';
 import { mkdir } from 'fs/promises';
 import { join } from 'path';
-import { logger } from '#utils/logger';
+import type { TDownloadLink, TLogger, TProgressEvent } from './types';
 
-const log = logger.child({ module: 'DownloadModel' });
+const REQUEST_DELAY = 3 * 1000;
+
+const CUSTOM_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
 const CLOUDFLARE_CHALLENGE_MARKERS = [
     'cloudflare',
@@ -16,31 +16,63 @@ const CLOUDFLARE_CHALLENGE_MARKERS = [
     'cf-challenge',
 ];
 
-function isCloudflareChallengePage(content: string): boolean {
-    const lower = content.toLowerCase();
-    return CLOUDFLARE_CHALLENGE_MARKERS.some(marker => lower.includes(marker));
-}
+export class DownloadModel {
 
-export class DownloadModel implements TDownloadModel {
+    private log: TLogger|undefined;
+
+    constructor(
+        log?: TLogger
+    ){  
+        this.log = log
+    }
+
+    private proxyLogger(quiet: boolean) {
+        return {
+            info: (message: string) => {
+                if (!quiet) {
+                    this.log?.info(message);
+                }
+            },
+
+            error: (message: string) => {
+                if (!quiet) {
+                    this.log?.error(message);
+                }
+            }
+        };
+    }
+
+    private isCloudflareChallengePage(
+        content: string
+    ): boolean {
+        const lower = content.toLowerCase();
+        return CLOUDFLARE_CHALLENGE_MARKERS.some(marker => lower.includes(marker));
+    } 
 
     downloadComic = async ({
         link,
         noRetry = false,
         outputDir,
-        onProgress
+        onProgress,
+        quiet = false
     }: {
         link: TDownloadLink,
         rowIndex?: number,
         totalRows?: number,
         noRetry?: boolean,
         outputDir: string,
-        onProgress?: (event: TProgressEvent) => void
+        onProgress?: (event: TProgressEvent) => void,
+        quiet?: boolean
     }): Promise<string | undefined> => {
 
         if (!link.downloadLink) return;
 
-        log.info(`${link.title} is downloading`);
-        onProgress?.({ type: 'preparing', title: link.title });
+        this.proxyLogger(quiet).info(`${link.title} is downloading`);
+        
+        onProgress?.({ 
+            type: 'preparing', 
+            title: link.title 
+        });
 
         let dest: string | undefined;
 
@@ -58,9 +90,9 @@ export class DownloadModel implements TDownloadModel {
                 const contentType = response.headers.get('content-type') ?? '';
                 if (contentType.includes('text/html')) {
                     const preview = await response.clone().text();
-                    if (isCloudflareChallengePage(preview)) {
+                    if (this.isCloudflareChallengePage(preview)) {
                         const error = 'Cloudflare challenge detected. Open the comic in a browser or use a browser-side download path.';
-                        log.error(error);
+                        this.proxyLogger(quiet).error(error);
                         throw new Error(error);
                     }
                 }

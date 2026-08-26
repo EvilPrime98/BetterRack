@@ -14,13 +14,15 @@ import { PreferencesModel } from './models/preferencesModel';
 import { settingsRouter } from './routers/settingsRouter';
 import { CacheModel } from './models/cacheModel';
 import { GetComicsApiModel } from './models/getComicsApiModel';
-import { DownloadModel } from './models/downloadModel';
+import { DownloadModel } from './models/download/download.model';
+import { JobModel } from './models/jobs/jobs.model';
 import { FileSystemModel } from './models/directoryModel';
 import { comicsRouter } from './routers/comicsRouter';
 import { downloadsRouter } from './routers/downloadsRouter';
 import { ThumbnailModel } from './models/thumbnailModel';
 import { thumbnailRouter } from './routers/thumbnailRouter';
 import { logger } from '#utils/logger';
+import type { TProgressEvent } from './types';
 
 async function startApp() {
 
@@ -33,7 +35,8 @@ async function startApp() {
     const libModel = new LibraryModel(prefsModel, wikiModel, comicDataModel);
     const cacheModel = new CacheModel();
     const gcwModel = new GetComicsApiModel(cacheModel, prefsModel);
-    const dwnModel = new DownloadModel();
+    const dwnModel = new DownloadModel(logger.child({ module: 'DownloadModel' }));
+    const dwnJobModel = new JobModel<TProgressEvent>();
     const fsModel = new FileSystemModel(process.cwd());
 
     app.use(cors());
@@ -48,7 +51,7 @@ async function startApp() {
 
     app.route('/api/comics', comicsRouter(gcwModel));
 
-    app.route('/api/downloads', downloadsRouter(dwnModel, gcwModel, fsModel, libModel));
+    app.route('/api/downloads', downloadsRouter(dwnModel, gcwModel, fsModel, libModel, dwnJobModel));
 
     app.route('/api/thumbnail', thumbnailRouter(thumbnailModel, libModel));
 
