@@ -1,4 +1,4 @@
-import type { IReadResponse, ILibraryGroup, ILibraryRefreshResponse, ILibraryItemPref, ILibraryResponseItem } from "../library.types";
+import type { IReadResponse, ILibraryGroup, ILibraryRefreshResponse, ILibraryResponseItem } from "../library.types";
 import { API_URL } from "./server-config.service";
 
 export { API_URL };
@@ -25,29 +25,6 @@ export async function reader({
     const data: IReadResponse = await response.json();
     if (!response.ok) throw new Error(data.message)
     return data.pages
-}
-
-export async function getLibraryPref(
-    uid: string
-): Promise<ILibraryItemPref | null> {
-    const response = await fetch(`${API_URL}/api/library/preferences/${uid}`);
-    if (response.status === 404) return null;
-    const data = await response.json() as ILibraryItemPref;
-    return data;
-}
-
-export async function updateLibraryPref(
-    uid: string,
-    updates: Partial<{ prefPublisher: string; recursive: boolean; prefCover: string }>
-): Promise<ILibraryRefreshResponse> {
-    const response = await fetch(`${API_URL}/api/library/preferences/${uid}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates)
-    });
-    const data: ILibraryRefreshResponse = await response.json();
-    if (!response.ok) throw new Error(data.message);
-    return data;
 }
 
 export async function deleteFile(

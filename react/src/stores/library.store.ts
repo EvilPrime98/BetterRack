@@ -6,8 +6,7 @@ import {
     deleteFolder as requestDeleteFolder,
     createFolder as requestCreateFolder,
     moveFile as requestMoveFile,
-    unidentifyFile as requestUnidentifyFile,
-    updateLibraryPref as requestUpdateLibraryPref
+    unidentifyFile as requestUnidentifyFile
 } from '../services/library.service';
 import type { ILibraryGroup, ILibraryResponseItem } from '../library.types';
 import { toast } from '../services/toast.service';
@@ -30,7 +29,6 @@ interface ILibraryStore {
     createFolder: (folderName: string, parentFolderUid?: string) => Promise<void>;
     moveFile: (fileUid: string, targetFolderUid?: string) => Promise<void>;
     unidentifyFile: (uid: string) => Promise<void>;
-    updatePreferences: (uid: string, updates: Partial<{ prefPublisher: string; recursive: boolean; prefCover: string }>) => Promise<void>;
     getLibraryItems: (args: { onlyDir: boolean, uid?: string }) => ILibraryResponseItem[];
 }
 
@@ -117,17 +115,6 @@ export const useLibraryStore = create<ILibraryStore>((set, get) => ({
             toast.success(data.message || 'File un-identified');
         } catch (e) {
             toast.error(e instanceof Error ? e.message : 'Failed to un-identify file.');
-        }
-    },
-
-    updatePreferences: async (uid, updates) => {
-        try {
-            const data = await requestUpdateLibraryPref(uid, updates);
-            lastFetchedAt = 0;
-            await get().fetchLibrary();
-            toast.success(data.message || 'Preferences updated');
-        } catch (e) {
-            toast.error(e instanceof Error ? e.message : 'Failed to update preferences.');
         }
     },
 

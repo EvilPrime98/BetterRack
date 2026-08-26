@@ -97,10 +97,3 @@ export const FILTER_OPTIONS = {
 } as const;
 
 export type TFilterOptions = typeof FILTER_OPTIONS[keyof typeof FILTER_OPTIONS];
-
-export interface ILibraryItemPref {
-    uid: string;
-    prefPublisher: string;
-    recursive: boolean;
-    prefCover: string;
-}

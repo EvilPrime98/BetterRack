@@ -2,13 +2,11 @@ import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import styles from './folder-card.module.css';
 import { ChevronDownIcon } from "@/icons/chevron.icon";
-import { GearIcon } from "@/icons/gear.icon";
 import { TrashIcon } from "@/icons/trash.icon";
 import { useComicsTypeStore } from "@/stores/comicsTypes.store";
 import { useLibraryStore } from "@/stores/library.store";
 import { FolderCardStack } from "./folder-card-stack";
 import { useConfirmModalStore } from "@/stores/confirmModal.store";
-import { useFolderPrefsModalContext } from "@/context/FolderPrefsModalContext";
 import { FolderCardBasic } from "./folder-card-basic";
 
 export function FolderCard({
@@ -21,7 +19,6 @@ export function FolderCard({
 
     const STACK_SIZE = 3;
     const comicsType = useComicsTypeStore((s) => s.type);
-    const { openFolderPrefsModal } = useFolderPrefsModalContext();
 
     const groups = useLibraryStore((s) => s.groups);
 
@@ -32,12 +29,6 @@ export function FolderCard({
         
         [groups, uid]
     );
-
-    const onPrefsClick = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        e.preventDefault();
-        openFolderPrefsModal(uid, title);
-    }
 
     const onDeleteClick = async (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -77,15 +68,6 @@ export function FolderCard({
             </Link>
 
             <div className={styles.folderActions}>
-                {/* Source set attributes.type = 'button' on this <span>; that's a no-op on a non-form
-                    element (spans have no `type` attribute) so it's dropped here — no behavior change. */}
-                <span
-                    className={styles.folderActionButton}
-                    aria-label="Folder preferences"
-                    onClick={onPrefsClick}
-                >
-                    <GearIcon size={14} />
-                </span>
                 <span
                     className={[styles.folderActionButton, styles.folderDeleteButton].join(' ')}
                     aria-label="Delete this folder"

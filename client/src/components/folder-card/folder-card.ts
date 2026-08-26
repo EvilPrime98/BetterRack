@@ -1,13 +1,11 @@
 import { UltraComponent, UltraLink } from "ultra-light-js";
 import styles from './folder-card.module.css';
 import { ChevronDownIcon } from "@/icons/chevron.icon";
-import { GearIcon } from "@/icons/gear.icon";
 import { TrashIcon } from "@/icons/trash.icon";
 import { COMICS_TYPE_CTX } from "@/context/comics-types.context";
 import { LIBRARY_CONTEXT } from "@/context/library.context";
 import { FolderCardStack } from "./folder-card-stack";
 import { CONFIRM_MODAL_CTX } from "@/context/confirm-modal.context";
-import { FOLDER_PREFS_MODAL_CTX } from "@/context/folder-prefs-modal.context";
 import { FolderCardBasic } from "./folder-card-basic";
 
 export function FolderCard({
@@ -30,12 +28,6 @@ export function FolderCard({
             styles.detailMode,
             COMICS_TYPE_CTX.type.get() === 'detail'
         );
-    }
-
-    const onPrefsClick = (e: Event) => {
-        e.stopPropagation();
-        e.preventDefault();
-        FOLDER_PREFS_MODAL_CTX.openFolderPrefsModal(uid, title);
     }
 
     const onDeleteClick = async (e: Event) => {
@@ -105,16 +97,6 @@ export function FolderCard({
                 component: '<div></div>',
                 className: [styles.folderActions],
                 children: [
-                    UltraComponent({
-                        component: '<span></span>',
-                        className: [styles.folderActionButton],
-                        attributes: {
-                            type: 'button',
-                            'aria-label': 'Folder preferences'
-                        },
-                        eventHandler: { click: onPrefsClick },
-                        children: [GearIcon({ size: 14 })]
-                    }),
                     UltraComponent({
                         component: '<span></span>',
                         className: [styles.folderActionButton, styles.folderDeleteButton],

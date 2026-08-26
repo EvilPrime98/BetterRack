@@ -96,10 +96,3 @@ export function isIUltraCompStateStateful<T>(
     && Object.hasOwn(candidate, 'set')
     && Object.hasOwn(candidate, 'subscribe')
 }
-
-export interface ILibraryItemPref {
-    uid: string;
-    prefPublisher: string;
-    recursive: boolean;
-    prefCover: string;
-}
