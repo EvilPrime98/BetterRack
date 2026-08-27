@@ -1,4 +1,6 @@
-export const createConcurrencyLimiter = (limit: number) => {
+export const createConcurrencyLimiter = (
+    limit: number
+) => {
 
     let running = 0;
     const queue: (() => void)[] = [];
