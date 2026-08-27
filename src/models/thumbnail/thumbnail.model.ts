@@ -2,71 +2,31 @@ import { existsSync } from "node:fs";
 import { mkdir, readdir, rm } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
-import type { TThumbnailModel, TZipModel } from "#src/types.ts";
-import { logger } from "#utils/logger";
 import { createConcurrencyLimiter } from "#utils/concurrencyLimiter";
+import { EXTRACT_CONCURRENCY, RAW_EXTRACT_DIR, THUMBNAIL_CACHE_DIR, THUMBNAIL_QUALITY, THUMBNAIL_WIDTH } from "./constants";
+import type { TLogger, TCompressorModel } from "./types";
 
-const log = logger.child({ module: 'ThumbnailModel' });
+export class ThumbnailModel {
 
-export const THUMBNAIL_CACHE_DIR = path.resolve('./tmp-thumbnails');
-
-/** Raw pages are extracted here before being re-encoded, then discarded; keeps THUMBNAIL_CACHE_DIR holding only the final webp per uid. */
-const RAW_EXTRACT_DIR = path.join(THUMBNAIL_CACHE_DIR, '.raw');
-/** Extraction spawns a 7z/unrar process per comic, so cap how many can run at once. */
-const EXTRACT_CONCURRENCY = 4;
-/** Cards never render wider than ~340px; this comfortably covers high-DPI grids without shipping full-page scans. */
-const THUMBNAIL_WIDTH = 300;
-/** Image quality for Sharp library */
-const THUMBNAIL_QUALITY = 82;
-
-export class ThumbnailModel implements TThumbnailModel {
-
-    private zipModel: TZipModel;
-    /** uid -> on-disk thumbnail path, so a cache hit never re-walks the cache dir. */
+    private log: TLogger | undefined;
+    private compressorModel: TCompressorModel;
     private resolved = new Map<string, string>();
-    /** Archives that produced no usable page this session; stops us re-spawning 7z for them. */
     private unavailable = new Set<string>();
-    /** In-flight extractions, so concurrent requests for the same comic share one job. */
     private inFlight = new Map<string, Promise<string | null>>();
     private limiter = createConcurrencyLimiter(EXTRACT_CONCURRENCY);
 
-    constructor(zipModel: TZipModel) {
-        this.zipModel = zipModel;
+    constructor(
+        compressorModel: TCompressorModel,
+        log?: TLogger
+    ) {
+        this.log = log;
+        this.compressorModel = compressorModel;
     }
 
-    getThumbnail = async (
-        uid: string, 
-        filePath?: string
+    private generate = async (
+        uid: string,
+        filePath: string
     ): Promise<string | null> => {
-
-        log.info(`Generating thumbnail for: ${uid}`);
-
-        const memoised = this.resolved.get(uid);
-        if (memoised) return memoised;
-
-        const cached = await this.findCached(uid);
-        if (cached) return cached;
-
-        if (!filePath || this.unavailable.has(uid)) return null;
-
-        const existing = this.inFlight.get(uid);
-        if (existing) return existing;
-
-        const job = this.generate(uid, filePath)
-            .catch((e) => {
-                log.error({ err: e }, `Failed to generate thumbnail for: ${uid}`);
-                this.unavailable.add(uid);
-                return null;
-            })
-            .finally(() => this.inFlight.delete(uid));
-
-        this.inFlight.set(uid, job);
-
-        return job;
-
-    }
-
-    private generate = async (uid: string, filePath: string): Promise<string | null> => {
 
         const release = await this.limiter.acquire();
 
@@ -78,7 +38,7 @@ export class ThumbnailModel implements TThumbnailModel {
                 return null;
             }
 
-            const pages = await this.zipModel.listPages({ filePath });
+            const pages = await this.compressorModel.listPages({ filePath });
             if (!pages.length) {
                 this.unavailable.add(uid);
                 return null;
@@ -86,7 +46,7 @@ export class ThumbnailModel implements TThumbnailModel {
 
             const rawDir = path.join(RAW_EXTRACT_DIR, uid);
 
-            await this.zipModel.extractPage({
+            await this.compressorModel.extractPage({
                 filePath,
                 outDir: rawDir,
                 entryName: pages[0]!
@@ -110,8 +70,10 @@ export class ThumbnailModel implements TThumbnailModel {
 
     }
 
-    /** Re-encodes the extracted page into a size-capped webp so thumbnails aren't served at full page resolution/format. */
-    private optimize = async (uid: string, rawDir: string): Promise<string | null> => {
+    private optimize = async (
+        uid: string,
+        rawDir: string
+    ): Promise<string | null> => {
 
         if (!existsSync(rawDir)) return null;
 
@@ -136,7 +98,9 @@ export class ThumbnailModel implements TThumbnailModel {
 
     }
 
-    private findCached = async (uid: string): Promise<string | null> => {
+    private findCached = async (
+        uid: string
+    ): Promise<string | null> => {
 
         const outDir = path.join(THUMBNAIL_CACHE_DIR, uid);
         if (!existsSync(outDir)) return null;
@@ -149,6 +113,38 @@ export class ThumbnailModel implements TThumbnailModel {
         this.resolved.set(uid, resolvedPath);
 
         return resolvedPath;
+
+    }
+
+    getThumbnail = async (
+        uid: string,
+        filePath?: string
+    ): Promise<string | null> => {
+
+        this.log?.info(`Generating thumbnail for: ${uid}`);
+
+        const memoised = this.resolved.get(uid);
+        if (memoised) return memoised;
+
+        const cached = await this.findCached(uid);
+        if (cached) return cached;
+
+        if (!filePath || this.unavailable.has(uid)) return null;
+
+        const existing = this.inFlight.get(uid);
+        if (existing) return existing;
+
+        const job = this.generate(uid, filePath)
+            .catch((e) => {
+                this.log?.error({ err: e }, `Failed to generate thumbnail for: ${uid}`);
+                this.unavailable.add(uid);
+                return null;
+            })
+            .finally(() => this.inFlight.delete(uid));
+
+        this.inFlight.set(uid, job);
+
+        return job;
 
     }
 

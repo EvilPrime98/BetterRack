@@ -7,7 +7,6 @@ import type {
     TComicDataModel,
     TLibraryEntry,
     TLibraryGroup,
-    TLibraryModel,
     TLibraryPref,
     TPreferencesModel,
     TWikiModel
@@ -15,38 +14,11 @@ import type {
 import fs from "node:fs";
 import { logger } from "#utils/logger";
 import { createConcurrencyLimiter } from "#utils/concurrencyLimiter";
+import { COMIC_EXTENSIONS, IDENTIFY_CONCURRENCY, STAT_CONCURRENCY } from "./constants";
 
 const log = logger.child({ module: 'LibraryModel' });
 
-const COMIC_EXTENSIONS = new Set(['.cbz', '.cbr', '.cb7', '.cbt']);
-
-const IDENTIFY_CONCURRENCY = 4;
-
-const STAT_CONCURRENCY = 64;
-
-const uidFromPath = (absPath: string) => {
-    const hash = crypto.createHash('sha256').update(absPath).digest('hex');
-    return `${hash.slice(0,8)}-${hash.slice(8,12)}-${hash.slice(12,16)}-${hash.slice(16,20)}-${hash.slice(20,32)}`;
-};
-
-const mapWithConcurrency = async <T, R>(
-    items: T[],
-    limit: number,
-    fn: (item: T, index: number) => Promise<R>
-): Promise<R[]> => {
-    const results = new Array<R>(items.length);
-    let cursor = 0;
-    const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
-        while (cursor < items.length) {
-            const index = cursor++;
-            results[index] = await fn(items[index]!, index);
-        }
-    });
-    await Promise.all(workers);
-    return results;
-};
-
-export class LibraryModel implements TLibraryModel {
+export class LibraryModel {
 
     private prefsModel: TPreferencesModel;
     private wikiModel: TWikiModel;
@@ -73,6 +45,82 @@ export class LibraryModel implements TLibraryModel {
         this.ready = this.scan();
     }
 
+    private uidFromPath = (absPath: string) => {
+        const hash = crypto.createHash('sha256').update(absPath).digest('hex');
+        return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-${hash.slice(12, 16)}-${hash.slice(16, 20)}-${hash.slice(20, 32)}`;
+    };
+
+    private mapWithConcurrency = async <T, R>(
+        items: T[],
+        limit: number,
+        fn: (item: T, index: number) => Promise<R>
+    ): Promise<R[]> => {
+        const results = new Array<R>(items.length);
+        let cursor = 0;
+        const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+            while (cursor < items.length) {
+                const index = cursor++;
+                results[index] = await fn(items[index]!, index);
+            }
+        });
+        await Promise.all(workers);
+        return results;
+    };
+
+    private hydrateComicData = () => {
+
+        const stored = this.comicDataModel.getAll();
+
+        for (const entry of this.db) {
+            if (entry.did) continue;
+            const existing = stored[entry.uid];
+            if (existing?.identified === true) {
+                entry.identified = true;
+                entry.comic = existing.comic;
+            } else if (existing?.identified === false) {
+                entry.identified = false;
+            }
+        }
+
+    };
+
+    private applyStoredComicData = (entry: TLibraryEntry, stored: TComicData) => {
+        entry.identified = stored.identified;
+        entry.comic = stored.comic;
+    };
+
+    private scanInBackground = () => {
+        const scanPromise = this.scan();
+        scanPromise.catch(e => log.error({ err: e }, 'Background library scan failed'));
+        this.ready = scanPromise;
+    }
+
+    private loadPreferences = () => {
+        this.pref = this.prefsModel.getAllLibraryPrefs();
+    }
+
+    private resolveInheritance = (): TLibraryEntry[] => {
+
+        if (this.inheritanceCache) return this.inheritanceCache;
+
+        this.inheritanceCache = this.db.map(entry => {
+            if (entry.prefPublisher) return entry;
+            let parentId = entry.parentId;
+            while (parentId) {
+                const parent = this.entryByUid.get(parentId);
+                if (!parent) break;
+                if (parent.prefInheritance && parent.prefPublisher) {
+                    return { ...entry, prefPublisher: parent.prefPublisher };
+                }
+                parentId = parent.parentId;
+            }
+            return entry;
+        });
+
+        return this.inheritanceCache;
+
+    }
+
     scan = async () => {
 
         this.loadPreferences();
@@ -81,8 +129,8 @@ export class LibraryModel implements TLibraryModel {
             this.libPaths.map(async (libPath, libIndex) => {
                 const dirEntries = await readdir(libPath, { withFileTypes: true, recursive: true });
                 return dirEntries
-                .filter(entry => entry.isDirectory() || COMIC_EXTENSIONS.has(path.extname(entry.name).toLowerCase()))
-                .map(entry => ({ entry, libIndex }));
+                    .filter(entry => entry.isDirectory() || COMIC_EXTENSIONS.has(path.extname(entry.name).toLowerCase()))
+                    .map(entry => ({ entry, libIndex }));
             })
         )).flat();
 
@@ -90,10 +138,10 @@ export class LibraryModel implements TLibraryModel {
 
         const prefsByUid = new Map(this.pref.map(pref => [pref.uid, pref]));
 
-        this.db = await mapWithConcurrency(entries, STAT_CONCURRENCY, async ({ entry, libIndex }) => {
+        this.db = await this.mapWithConcurrency(entries, STAT_CONCURRENCY, async ({ entry, libIndex }) => {
             const absPath = path.resolve(entry.parentPath, entry.name);
             const stats = await stat(absPath);
-            const uid = uidFromPath(absPath);
+            const uid = this.uidFromPath(absPath);
             const returnable: TLibraryEntry = {
                 uid,
                 did: entry.isDirectory(),
@@ -104,7 +152,7 @@ export class LibraryModel implements TLibraryModel {
             }
             this.entryLibraryIndex.set(uid, libIndex);
             const preferences = prefsByUid.get(uid);
-            if (preferences){
+            if (preferences) {
                 returnable.prefPublisher = preferences.prefPublisher;
                 returnable.prefInheritance = preferences.recursive;
                 returnable.prefCover = preferences.prefCover;
@@ -129,28 +177,6 @@ export class LibraryModel implements TLibraryModel {
 
         this.hydrateComicData();
 
-    };
-
-    private hydrateComicData = () => {
-
-        const stored = this.comicDataModel.getAll();
-
-        for (const entry of this.db) {
-            if (entry.did) continue;
-            const existing = stored[entry.uid];
-            if (existing?.identified === true) {
-                entry.identified = true;
-                entry.comic = existing.comic;
-            } else if (existing?.identified === false) {
-                entry.identified = false;
-            }
-        }
-
-    };
-
-    private applyStoredComicData = (entry: TLibraryEntry, stored: TComicData) => {
-        entry.identified = stored.identified;
-        entry.comic = stored.comic;
     };
 
     identify = async (uid: string): Promise<TLibraryEntry> => {
@@ -208,10 +234,6 @@ export class LibraryModel implements TLibraryModel {
 
     };
 
-    private loadPreferences = () => {
-        this.pref = this.prefsModel.getAllLibraryPrefs();
-    }
-
     getPreferences = (uid: string) => {
         return this.pref.find(pref => pref.uid === uid);
     }
@@ -233,28 +255,6 @@ export class LibraryModel implements TLibraryModel {
         this.inheritanceCache = null;
     }
 
-    private resolveInheritance = (): TLibraryEntry[] => {
-
-        if (this.inheritanceCache) return this.inheritanceCache;
-
-        this.inheritanceCache = this.db.map(entry => {
-            if (entry.prefPublisher) return entry;
-            let parentId = entry.parentId;
-            while (parentId) {
-                const parent = this.entryByUid.get(parentId);
-                if (!parent) break;
-                if (parent.prefInheritance && parent.prefPublisher) {
-                    return { ...entry, prefPublisher: parent.prefPublisher };
-                }
-                parentId = parent.parentId;
-            }
-            return entry;
-        });
-
-        return this.inheritanceCache;
-
-    }
-
     get = (uid?: string) => {
         if (!uid) return this.resolveInheritance();
         return this.entryByUid.get(uid);
@@ -263,7 +263,7 @@ export class LibraryModel implements TLibraryModel {
     getByLibrary = (): TLibraryGroup[] => {
         const resolved = this.resolveInheritance();
         return this.libPaths.map((libPath, libIndex) => ({
-            uid: uidFromPath(libPath),
+            uid: this.uidFromPath(libPath),
             name: basename(libPath),
             path: libPath,
             entries: resolved.filter(entry => this.entryLibraryIndex.get(entry.uid) === libIndex),
@@ -292,7 +292,7 @@ export class LibraryModel implements TLibraryModel {
             throw new Error('Folder does not exist.')
         }
 
-        if (Array.isArray(parentFolder)){
+        if (Array.isArray(parentFolder)) {
             throw new Error('There are multiple folders for that uid.')
         }
 
@@ -378,12 +378,6 @@ export class LibraryModel implements TLibraryModel {
         this.libPaths = this.libPaths.filter(p => p !== resolved);
         this.prefsModel.updateAppSettings({ outputDirs: this.libPaths });
         this.scanInBackground();
-    }
-
-    private scanInBackground = () => {
-        const scanPromise = this.scan();
-        scanPromise.catch(e => log.error({ err: e }, 'Background library scan failed'));
-        this.ready = scanPromise;
     }
 
     getLibraryPaths = () => this.libPaths;

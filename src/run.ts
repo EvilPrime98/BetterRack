@@ -2,7 +2,7 @@ import Bun from 'bun';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { serveStatic } from 'hono/bun';
-import { LibraryModel } from './models/libraryModel';
+import { LibraryModel } from './models/library/library.model';
 import { libraryRouter } from './routers/libraryRouter';
 import { comicReaderRouter } from './routers/comic-reader.router';
 import { Zip7Decompressor } from './models/decompressor.model';
@@ -19,7 +19,7 @@ import { JobModel } from './models/jobs/jobs.model';
 import { FileSystemModel } from './models/directoryModel';
 import { comicsRouter } from './routers/comicsRouter';
 import { downloadsRouter } from './routers/downloadsRouter';
-import { ThumbnailModel } from './models/thumbnailModel';
+import { ThumbnailModel } from './models/thumbnail/thumbnail.model';
 import { thumbnailRouter } from './routers/thumbnailRouter';
 import { logger } from '#utils/logger';
 import type { TProgressEvent } from './types';
@@ -27,15 +27,21 @@ import type { TProgressEvent } from './types';
 async function startApp() {
 
     const app = new Hono();
+    
     const prefsModel = new PreferencesModel();
     const zipModel = new Zip7Decompressor();
     const wikiModel = new WikiModel();
     const comicDataModel = new ComicDataModel();
-    const thumbnailModel = new ThumbnailModel(zipModel);
+    const thumbnailModel = new ThumbnailModel(
+        zipModel, 
+        logger.child({ module: 'ThumbnailModel' })
+    );
     const libModel = new LibraryModel(prefsModel, wikiModel, comicDataModel);
     const cacheModel = new CacheModel();
     const gcwModel = new GetComicsApiModel(cacheModel, prefsModel);
-    const dwnModel = new DownloadModel(logger.child({ module: 'DownloadModel' }));
+    const dwnModel = new DownloadModel(
+        logger.child({ module: 'DownloadModel' })
+    );
     const dwnJobModel = new JobModel<TProgressEvent>();
     const fsModel = new FileSystemModel(process.cwd());
 
