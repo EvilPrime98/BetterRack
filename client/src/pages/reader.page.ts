@@ -33,9 +33,9 @@ export function ReaderPage({
     }
 
     const getWindowRange = (numPages: number, savedPage: number) => {
-        if (numPages < 2) return null;
-        const targetInd = Math.min(Math.max(savedPage - 1, 1), numPages - 1);
-        const start = Math.max(1, targetInd - PRELOAD_WINDOW);
+        if (numPages < 1) return null;
+        const targetInd = Math.min(Math.max(savedPage - 1, 0), numPages - 1);
+        const start = Math.max(0, targetInd - PRELOAD_WINDOW);
         const end = Math.min(numPages - 1, targetInd + PRELOAD_WINDOW);
         return { targetInd, start, end };
     }
@@ -48,7 +48,7 @@ export function ReaderPage({
             loads.push(new Promise<void>(resolve => {
                 const img = new Image();
                 img.onload = img.onerror = () => resolve();
-                img.src = `${API_URL}/read/${uid}/pages/${ind}`;
+                img.src = `${API_URL}/read/${uid}/pages/${ind + 1}`;
             }));
         }
         await Promise.all(loads);
@@ -120,9 +120,9 @@ export function ReaderPage({
         const elements = [];
         let $target: HTMLElement | null = null;
 
-        for (let i = 1; i < numPages; ++i) {
+        for (let i = 0; i < numPages; ++i) {
             const $page = ImageElement({
-                uid, ind: i, index: i + 1, total: numPages,
+                uid, ind: i + 1, index: i + 1, total: numPages,
                 eager: !!range && i >= range.start && i <= range.end
             });
             pageOf.set($page, i + 1);
