@@ -21,7 +21,7 @@ export async function reader({
 }:{
     uid: string
 }){
-    const response = await fetch(`${API_URL}/read/${uid}`);
+    const response = await fetch(`${API_URL}/read/${uid}`, { cache: 'no-store' });
     const data: IReadResponse = await response.json();
     if (!response.ok) throw new Error(data.message)
     return data.pages
