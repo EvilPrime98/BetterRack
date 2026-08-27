@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import styles from './sidebar.module.css';
 import { useSidebarStore } from '@/stores/sidebar.store';
 import { useLibraryStore } from '@/stores/library.store';
+import { useIsDesktop } from '@/hooks/useIsDesktop';
 import { SideBarGroup } from './sidebar-group';
 import { RefreshLibraryButton } from './refresh-button';
 import { SidebarCloseButton } from './close-button';
@@ -15,9 +16,13 @@ export function SideBar() {
     const asideRef = useRef<HTMLElement>(null);
     const isExpanded = useSidebarStore((s) => s.isExpanded);
     const setIsExpanded = useSidebarStore((s) => s.setIsExpanded);
+    const isCollapsed = useSidebarStore((s) => s.isCollapsed);
     const groups = useLibraryStore((s) => s.groups);
     const fetchLibrary = useLibraryStore((s) => s.fetchLibrary);
     const [isLoading, setIsLoading] = useState(false);
+    const isDesktop = useIsDesktop();
+
+    const isHidden = isDesktop ? isCollapsed : !isExpanded;
 
     function closeSidebar() {
         setIsExpanded(false);
@@ -39,7 +44,7 @@ export function SideBar() {
     useEffect(() => {
         const $aside = asideRef.current;
         if (!$aside) return;
-        if (isExpanded) {
+        if (!isHidden) {
             $aside.removeAttribute('inert');
         } else {
             if ($aside.contains(document.activeElement)) {
@@ -47,7 +52,7 @@ export function SideBar() {
             }
             $aside.setAttribute('inert', '');
         }
-    }, [isExpanded]);
+    }, [isHidden]);
 
     return (
         <div>
@@ -62,14 +67,15 @@ export function SideBar() {
                 role="navigation"
                 aria-label="Library folders"
                 className={[
-                    styles.sideBar, 
-                    isExpanded ? styles.expanded : ''
+                    styles.sideBar,
+                    isExpanded ? styles.expanded : '',
+                    isCollapsed ? styles.collapsed : ''
                 ].filter(Boolean).join(' ')}
             >
 
                 <div className={styles.header}>
                     <span className={styles.title}>Library</span>
-                    <div style={{ display: 'flex', gap: '10px' }}>
+                    <div className={styles.headerActions}>
                         <SidebarCloseButton />
                     </div>
                 </div>

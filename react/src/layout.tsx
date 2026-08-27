@@ -5,6 +5,7 @@ import { ComicIdentifier } from '@/components/comic-identifier/comic-identifer';
 import { ConfirmModal } from '@/components/confirm-modal/confirm-modal';
 import { NewFolderModal } from '@/components/new-folder-modal/new-folder-modal';
 import { MoveFileModal } from '@/components/move-file-modal/move-file-modal';
+import { useSidebarStore } from '@/stores/sidebar.store';
 import styles from './layout.module.css';
 
 export function Layout({
@@ -13,8 +14,13 @@ export function Layout({
     children: ReactNode
 }) {
 
+    const isCollapsed = useSidebarStore((s) => s.isCollapsed);
+
     return (
-        <main className={styles.layout}>
+        <main className={[
+            styles.layout,
+            isCollapsed ? styles.sidebarCollapsed : ''
+        ].filter(Boolean).join(' ')}>
 
             <Header />
 

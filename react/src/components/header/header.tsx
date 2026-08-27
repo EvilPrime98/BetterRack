@@ -1,6 +1,7 @@
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import styles from './header.module.css';
 import { useSidebarStore } from '@/stores/sidebar.store';
+import { useIsDesktop } from '@/hooks/useIsDesktop';
 import { BurgerIcon } from '@/icons/burger-icon';
 import { BetterRackIcon } from '@/icons/better-rack.icon';
 import { useLibraryStore } from '@/stores/library.store';
@@ -12,12 +13,23 @@ export function Header() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
 
+    const isDesktop = useIsDesktop();
     const isExpanded = useSidebarStore((s) => s.isExpanded);
     const setIsExpanded = useSidebarStore((s) => s.setIsExpanded);
+    const isCollapsed = useSidebarStore((s) => s.isCollapsed);
+    const setIsCollapsed = useSidebarStore((s) => s.setIsCollapsed);
     const setSearchQuery = useLibraryStore((s) => s.setSearchQuery);
 
+    // Above 800px the sidebar is always visible, so the burger only appears to
+    // bring it back once collapsed; below that it toggles the overlay.
+    const showBurger = !isDesktop || isCollapsed;
+
     function toggleSidebar() {
-        setIsExpanded(!isExpanded);
+        if (isDesktop) {
+            setIsCollapsed(!isCollapsed);
+        } else {
+            setIsExpanded(!isExpanded);
+        }
     }
 
     function goHome() {
@@ -38,10 +50,16 @@ export function Header() {
         <header className={styles.header}>
 
             <div
-                className={[styles.iconBtn, styles.noDrag, styles.burger].filter(Boolean).join(' ')}
+                className={[
+                    styles.iconBtn,
+                    styles.noDrag,
+                    styles.burger,
+                    showBurger ? '' : styles.burgerCollapsed
+                ].filter(Boolean).join(' ')}
                 role="button"
-                tabIndex={0}
+                tabIndex={showBurger ? 0 : -1}
                 aria-label="Toggle sidebar"
+                aria-hidden={!showBurger}
                 onClick={toggleSidebar}
                 onKeyDown={onEnterOrSpace(toggleSidebar)}
             >

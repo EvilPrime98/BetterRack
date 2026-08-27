@@ -37,6 +37,30 @@
     transform: scale(0.96);
 }
 
+@media (min-width: 801px) {
+    .header {
+        grid-template-columns: auto minmax(0, var(--content-max-width)) minmax(20px, 1fr);
+    }
+
+    .burger {
+        max-width: 80px;
+        overflow: hidden;
+        transition:
+            max-width 0.2s ease-in-out,
+            margin 0.2s ease-in-out,
+            opacity 0.2s ease-in-out,
+            transform 0.2s ease-in-out;
+    }
+
+    .burgerCollapsed {
+        max-width: 0;
+        margin-left: 0;
+        opacity: 0;
+        transform: scale(0.6);
+        pointer-events: none;
+    }
+}
+
 .header::after {
     content: '';
     position: absolute;

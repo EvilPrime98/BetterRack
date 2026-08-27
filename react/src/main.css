@@ -15,6 +15,7 @@
     --font-sans: 'Geist Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --font-mono: 'Geist Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
     --content-max-width: 1360px;
+    --sidebar-width: 280px;
     --accent: #34c3d1;
     --accent-soft: rgba(52, 195, 209, 0.35);
     --bg-app: #2b2a2a;
