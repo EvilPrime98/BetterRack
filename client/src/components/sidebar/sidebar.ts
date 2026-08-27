@@ -1,6 +1,7 @@
 import { UltraComponent, UltraLink, ultraState } from "ultra-light-js";
 import styles from './sidebar.module.css';
 import { SIDEBAR_CONTEXT } from "../../context/sidebar.context";
+import { VIEWPORT_CONTEXT } from "../../context/viewport.context";
 import { LIBRARY_CONTEXT } from "../../context/library.context";
 import { SideBarGroup } from "./sidebar-group";
 import type { ILibraryGroup } from "../../library.types";
@@ -23,10 +24,16 @@ export function SideBar() {
 
     function closeSidebar() { SIDEBAR_CONTEXT.isExpanded.set(false) };
 
-    function onExpandChange($aside: HTMLElement) {
-        const isExpanded = SIDEBAR_CONTEXT.isExpanded.get();
-        $aside.classList.toggle(styles.expanded, isExpanded);
-        if (isExpanded) {
+    function isHidden() {
+        return VIEWPORT_CONTEXT.isDesktop.get()
+            ? SIDEBAR_CONTEXT.isCollapsed.get()
+            : !SIDEBAR_CONTEXT.isExpanded.get();
+    }
+
+    function onSidebarStateChange($aside: HTMLElement) {
+        $aside.classList.toggle(styles.expanded, SIDEBAR_CONTEXT.isExpanded.get());
+        $aside.classList.toggle(styles.collapsed, SIDEBAR_CONTEXT.isCollapsed.get());
+        if (!isHidden()) {
             $aside.removeAttribute('inert');
         } else {
             if ($aside.contains(document.activeElement)) {
@@ -81,7 +88,7 @@ export function SideBar() {
             UltraComponent({
 
                 onMount: [
-                    onExpandChange,
+                    onSidebarStateChange,
                     fetchLibrary,
                     () => {
                         document.addEventListener('keydown', onKeydown);
@@ -107,10 +114,7 @@ export function SideBar() {
                             `<span class="${styles.title}">Library</span>`,
                             UltraComponent({
                                 component: '<div></div>',
-                                styles: {
-                                    display: 'flex',
-                                    gap: '10px'
-                                },
+                                className: [styles.headerActions],
                                 children: [
                                     SidebarCloseButton()
                                 ]
@@ -170,8 +174,12 @@ export function SideBar() {
 
                 trigger: [
                     {
-                        subscriber: SIDEBAR_CONTEXT.isExpanded.subscribe,
-                        triggerFunction: onExpandChange
+                        subscriber: [
+                            SIDEBAR_CONTEXT.isExpanded.subscribe,
+                            SIDEBAR_CONTEXT.isCollapsed.subscribe,
+                            VIEWPORT_CONTEXT.isDesktop.subscribe
+                        ],
+                        triggerFunction: onSidebarStateChange
                     }
                 ]
             })

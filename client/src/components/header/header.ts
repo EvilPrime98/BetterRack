@@ -1,6 +1,7 @@
 import { UltraComponent, UltraLink, ultraNavigate, ultraQueryParams } from "ultra-light-js";
 import styles from './header.module.css';
 import { SIDEBAR_CONTEXT } from "@/context/sidebar.context";
+import { VIEWPORT_CONTEXT } from "@/context/viewport.context";
 import { BurgerIcon } from "@/icons/burger-icon";
 import { BetterRackIcon } from "@/icons/better-rack.icon";
 import { LIBRARY_CONTEXT } from "@/context/library.context";
@@ -10,8 +11,23 @@ export function Header() {
     const iconSize = 30;
 
     function toggleSidebar() {
-        SIDEBAR_CONTEXT.isExpanded.set(!SIDEBAR_CONTEXT.isExpanded.get())
+        if (VIEWPORT_CONTEXT.isDesktop.get()) {
+            SIDEBAR_CONTEXT.isCollapsed.set(!SIDEBAR_CONTEXT.isCollapsed.get());
+        } else {
+            SIDEBAR_CONTEXT.isExpanded.set(!SIDEBAR_CONTEXT.isExpanded.get());
+        }
     };
+
+    function showBurger() {
+        return !VIEWPORT_CONTEXT.isDesktop.get() || SIDEBAR_CONTEXT.isCollapsed.get();
+    }
+
+    function onBurgerVisibilityChange($burger: HTMLElement) {
+        const visible = showBurger();
+        $burger.classList.toggle(styles.burgerCollapsed, !visible);
+        $burger.setAttribute('tabindex', visible ? '0' : '-1');
+        $burger.setAttribute('aria-hidden', String(!visible));
+    }
 
     function goHome() {
         LIBRARY_CONTEXT.searchQuery.set('');
@@ -47,7 +63,7 @@ export function Header() {
 
                     UltraComponent({
                         component: BurgerIcon({ size: iconSize * 1.5 }),
-                        className: [styles.iconBtn, styles.noDrag],
+                        className: [styles.iconBtn, styles.noDrag, styles.burger],
                         attributes: {
                             role: 'button',
                             tabindex: '0',
@@ -56,7 +72,15 @@ export function Header() {
                         eventHandler: {
                             click: toggleSidebar,
                             keydown: onEnterOrSpace(toggleSidebar)
-                        }
+                        },
+                        onMount: [onBurgerVisibilityChange],
+                        trigger: [{
+                            subscriber: [
+                                VIEWPORT_CONTEXT.isDesktop.subscribe,
+                                SIDEBAR_CONTEXT.isCollapsed.subscribe
+                            ],
+                            triggerFunction: onBurgerVisibilityChange
+                        }]
                     }),
 
                     UltraLink({
