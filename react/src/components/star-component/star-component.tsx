@@ -11,24 +11,19 @@ export function StarComponent({
     weight,
     initialFill,
     changeRating,
-    onMouseEnter,
-    onMouseLeave
+    onHover
 }: {
     weight: number,
     initialFill: number,
     changeRating: (newRating: number) => void
-    onMouseEnter: (e: MouseEvent) => void,
-    onMouseLeave: (e: MouseEvent) => void
+    onHover: (previewRating: number) => void
 }) {
-
-    const locked = initialFill > 0;
 
     return (
         <StarIcon
             size={18}
             fill={initialFill}
-            onMouseMove={(e) => !locked && onMouseEnter(e)}
-            onMouseLeave={(e) => !locked && onMouseLeave(e)}
+            onMouseMove={(e) => onHover(weight - 1 + getStarFraction(e))}
             onClick={(e) => changeRating(weight - 1 + getStarFraction(e))}
         />
     );

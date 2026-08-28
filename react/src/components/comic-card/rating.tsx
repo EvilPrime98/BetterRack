@@ -1,6 +1,6 @@
-import type { MouseEvent } from 'react';
+import { useState } from 'react';
 import styles from './comic-card.module.css';
-import { StarComponent, getStarFraction } from '@/components/star-component/star-component';
+import { StarComponent } from '@/components/star-component/star-component';
 import { useComicCacheStore } from '@/stores/comicCache.store';
 
 export function ComicRating({
@@ -10,42 +10,31 @@ export function ComicRating({
 }) {
 
     const rating = useComicCacheStore((s) => s.cache[uid]?.rating || 0);
+    const [preview, setPreview] = useState<number | null>(null);
 
     const changeRating = (newRating: number) => {
         useComicCacheStore.getState().setCacheById(uid, { rating: newRating });
     };
 
-    const onMouseEnter = (e: MouseEvent) => {
-        const $svg = e.currentTarget as SVGSVGElement;
-        const $fillRect = $svg.querySelector('.fillRect');
-        const fraction = getStarFraction(e);
-        $fillRect?.setAttribute('width', String(16 * fraction));
-    };
-
-    const onMouseLeave = (e: MouseEvent) => {
-        const $svg = e.currentTarget as SVGSVGElement;
-        const $fillRect = $svg.querySelector('.fillRect');
-        $fillRect?.setAttribute('width', '0');
-    };
+    // While hovering, the whole row previews the rating a click would set;
+    // otherwise it shows the committed rating.
+    const displayRating = Math.max(0, Math.min(5, preview ?? rating));
 
     const stars = [];
-    let remaining = Math.max(0, Math.min(5, rating));
     for (let i = 0; i < 5; i++) {
         stars.push(
             <StarComponent
                 key={i}
                 weight={i + 1}
                 changeRating={changeRating}
-                onMouseEnter={onMouseEnter}
-                onMouseLeave={onMouseLeave}
-                initialFill={Math.max(0, Math.min(1, remaining))}
+                onHover={setPreview}
+                initialFill={Math.max(0, Math.min(1, displayRating - i))}
             />
         );
-        remaining -= 1;
     }
 
     return (
-        <div className={styles.rating}>
+        <div className={styles.rating} onMouseLeave={() => setPreview(null)}>
             {stars}
         </div>
     );
