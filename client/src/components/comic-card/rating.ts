@@ -1,6 +1,6 @@
 import { UltraComponent, ultraState } from "ultra-light-js"
 import styles from './comic-card.module.css'
-import { StarComponent, getStarFraction } from "../star-component/star-component";
+import { StarComponent } from "../star-component/star-component";
 import { COMIC_CACHE_CONTEXT } from "../../context/comic-cache.context";
 
 export function ComicRating({
@@ -19,36 +19,37 @@ export function ComicRating({
 
     const changeRating = (newRating: number) => {
         setRating(newRating);
-        COMIC_CACHE_CONTEXT.setCacheById(uid, { rating: rating() })
+        COMIC_CACHE_CONTEXT.setCacheById(uid, { rating: newRating })
     }
 
-    const onMouseEnter = (e: Event) => {
-        const $svg = e.currentTarget as SVGAElement;
-        const $fillRect = $svg.querySelector('.fillRect');
-        const fraction = getStarFraction(e);
-        $fillRect?.setAttribute('width', String(16 * fraction))
-    }
+    let $container: HTMLElement | null = null;
 
-    const onMouseLeave = (e: Event) => {
-        const $svg = e.currentTarget as SVGAElement;
-        const $fillRect = $svg.querySelector('.fillRect');
-        $fillRect?.setAttribute('width', '0')
+    // Set the fill of every star from one rating value. The stars left of the
+    // target show as full. The target star shows as half or full. The stars
+    // right of the target show as empty. The hover preview and the leave
+    // restore both call this.
+    const applyFill = (value: number) => {
+        const stars = $container?.children;
+        if (!stars) return;
+        for (let i = 0; i < stars.length; i++) {
+            const $fillRect = stars[i].querySelector('.fillRect');
+            const fraction = Math.max(0, Math.min(1, value - i));
+            $fillRect?.setAttribute('width', String(16 * fraction))
+        }
     }
 
     const onRatingChange = ($div: HTMLElement) => {
+        $container = $div;
         const stars = [];
-        let remaining = Math.max(0, Math.min(5, rating()));
         for (let i = 0; i < 5; i++) {
             stars.push(
                 StarComponent({
                     weight: i + 1,
                     changeRating,
-                    onMouseEnter,
-                    onMouseLeave,
-                    initialFill: Math.max(0, Math.min(1, remaining))
+                    onHover: applyFill,
+                    initialFill: Math.max(0, Math.min(1, rating() - i))
                 })
             );
-            remaining -= 1;
         }
         $div.replaceChildren(...stars);
     }
@@ -57,6 +58,9 @@ export function ComicRating({
         component: '<div></div>',
         className: [styles.rating],
         onMount: [onRatingChange],
+        eventHandler: {
+            mouseleave: () => applyFill(rating())
+        },
         trigger: [{
             subscriber: subsRating,
             triggerFunction: onRatingChange
@@ -64,4 +68,3 @@ export function ComicRating({
     });
 
 }
-

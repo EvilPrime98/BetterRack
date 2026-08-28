@@ -11,17 +11,13 @@ export function StarComponent({
     weight,
     initialFill,
     changeRating,
-    onMouseEnter,
-    onMouseLeave
+    onHover
 }: {
     weight: number,
     initialFill: number,
     changeRating: (newRating: number) => void
-    onMouseEnter: (e: Event) => void,
-    onMouseLeave: (e: Event) => void
+    onHover: (previewRating: number) => void
 }) {
-
-    const locked = initialFill > 0;
 
     return UltraComponent({
         component: StarIcon({
@@ -29,8 +25,7 @@ export function StarComponent({
             fill: initialFill
         }),
         eventHandler: {
-            mousemove: (e) => !locked && onMouseEnter(e),
-            mouseleave: (e) => !locked && onMouseLeave(e),
+            mousemove: (e) => onHover(weight - 1 + getStarFraction(e)),
             click: (e) => changeRating(weight - 1 + getStarFraction(e))
         }
     })
