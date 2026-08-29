@@ -42,6 +42,18 @@ export interface IReadResponse {
     pages: string[];
 }
 
+export interface IBookmark {
+    /** The 1-based page index. Use it directly in GET /read/:uid/pages/:page. */
+    page: number;
+    label: string;
+}
+
+export interface IBookmarksResponse {
+    error: boolean;
+    message: string;
+    bookmarks: IBookmark[];
+}
+
 export interface ILibraryRefreshResponse {
     error: boolean;
     message: string;

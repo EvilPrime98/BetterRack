@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { API_URL, reader } from '@/services/library.service';
+import { API_URL, reader, readerBookmarks } from '@/services/library.service';
+import type { IBookmark } from '@/library.types';
 import styles from './reader.page.module.css';
 import { ImageElement } from '@/components/reader-page-image/reader-page-image';
 import { ReaderPageHeader } from '@/components/reader-page-header/reader-page-header';
@@ -51,12 +52,18 @@ export function ReaderPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [zoom, setZoom] = useState(1);
     const [next, setNext] = useState(false);
-    
+    const [bookmarks, setBookmarks] = useState<IBookmark[]>([]);
+
     //refs
     const observerRef = useRef<IntersectionObserver | null>(null);
     const viewerRef = useRef<HTMLElement>(null);
     const currentPageRef = useRef(currentPage);
     currentPageRef.current = currentPage;
+
+    const goToPage = useCallback((page: number) => {
+        const $page = viewerRef.current?.children[page - 1] as HTMLElement | undefined;
+        $page?.scrollIntoView({ block: 'start' });
+    }, []);
 
     const goBack = useCallback(() => {
         if (window.history.length > 1) window.history.back();
@@ -75,6 +82,13 @@ export function ReaderPage() {
             await preloadWindow(uid, data.length, savedPage);
             setCurrentPage(savedPage);
             setPages(data);
+            // Bookmarks are optional comic metadata. A failure here must not
+            // stop the reader from opening.
+            try {
+                setBookmarks(await readerBookmarks({ uid }));
+            } catch {
+                setBookmarks([]);
+            }
         } catch {
             setHasError(true);
         } finally {
@@ -197,7 +211,7 @@ export function ReaderPage() {
     return (
         <section className={styles.page} onWheel={onWheel}>
 
-            <ReaderPageHeader currentPage={currentPage} totalPages={pages.length} goBack={goBack} />
+            <ReaderPageHeader currentPage={currentPage} totalPages={pages.length} bookmarks={bookmarks} goToPage={goToPage} goBack={goBack} />
 
             <ReaderPageProgressBar currentPage={currentPage} totalPages={pages.length} />
 

@@ -1,4 +1,4 @@
-import type { IReadResponse, ILibraryGroup, ILibraryRefreshResponse, ILibraryResponseItem } from "../library.types";
+import type { IReadResponse, IBookmarksResponse, ILibraryGroup, ILibraryRefreshResponse, ILibraryResponseItem } from "../library.types";
 import { API_URL } from "./server-config.service";
 
 export { API_URL };
@@ -25,6 +25,17 @@ export async function reader({
     const data: IReadResponse = await response.json();
     if (!response.ok) throw new Error(data.message)
     return data.pages
+}
+
+export async function readerBookmarks({
+    uid
+}:{
+    uid: string
+}){
+    const response = await fetch(`${API_URL}/read/${uid}/bookmarks`, { cache: 'no-store' });
+    const data: IBookmarksResponse = await response.json();
+    if (!response.ok) throw new Error(data.message)
+    return data.bookmarks
 }
 
 export async function deleteFile(
