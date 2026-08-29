@@ -17,6 +17,7 @@ import { GetComicsApiModel } from './models/getComicsApiModel';
 import { DownloadModel } from './models/download/download.model';
 import { JobModel } from './models/jobs/jobs.model';
 import { FileSystemModel } from './models/directoryModel';
+import { fsRouter } from './routers/fsRouter';
 import { comicsRouter } from './routers/comicsRouter';
 import { downloadsRouter } from './routers/downloadsRouter';
 import { ThumbnailModel } from './models/thumbnail/thumbnail.model';
@@ -58,6 +59,8 @@ async function startApp() {
     app.route('/api/comics', comicsRouter(gcwModel));
 
     app.route('/api/downloads', downloadsRouter(dwnModel, gcwModel, fsModel, libModel, dwnJobModel));
+
+    app.route('/api/directories', fsRouter(fsModel, prefsModel));
 
     app.route('/api/thumbnail', thumbnailRouter(thumbnailModel, libModel));
 
