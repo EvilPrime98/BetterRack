@@ -4,6 +4,7 @@ import { AppProvider } from '@/context/AppContext';
 import { ReadTypesProvider } from '@/context/ReadTypesContext';
 import { MoveFileModalProvider } from '@/context/MoveFileModalContext';
 import { NewFolderModalProvider } from '@/context/NewFolderModalContext';
+import { DownloadDirModalProvider } from '@/context/DownloadDirModalContext';
 
 export function Providers({ children }: { children: ReactNode }) {
     return (
@@ -12,7 +13,9 @@ export function Providers({ children }: { children: ReactNode }) {
                 <ReadTypesProvider>
                     <MoveFileModalProvider>
                         <NewFolderModalProvider>
-                            {children}
+                            <DownloadDirModalProvider>
+                                {children}
+                            </DownloadDirModalProvider>
                         </NewFolderModalProvider>
                     </MoveFileModalProvider>
                 </ReadTypesProvider>

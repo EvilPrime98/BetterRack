@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, 
 import styles from './store-card.module.css';
 import { ImageGen } from '@/components/image-generic/image-generic';
 import { NO_IMAGE_URL } from '@/data';
-import { useSettingsStore } from '@/stores/settings.store';
+import { useDownloadDirModalContext } from '@/context/DownloadDirModalContext';
 import { getComicLinks, downloadComicPolling, getResourceJob, pollJobStatus } from '@/services/store.service';
 import { toast } from '@/services/toast.service';
 import { CheckIcon } from '@/icons/check.icon';
@@ -14,6 +14,8 @@ export function StoreCard({
 }: {
     item: IStorePost
 }) {
+
+    const { openDownloadDirModal } = useDownloadDirModalContext();
 
     const [state, setState] = useState<TCardState>({ status: 'idle' });
     const [coverLoaded, setCoverLoaded] = useState(false);
@@ -30,16 +32,15 @@ export function StoreCard({
 
     async function startDownload(link: IStoreLink) {
 
-        const outputDir = useSettingsStore.getState().settings.downloadDir;
+        if (!item.id) return;
+
+        const prev = state;
+        const outputDir = await openDownloadDirModal(link.title);
 
         if (!outputDir) {
-            const message = 'Set a download folder in Settings before downloading.';
-            toast.error(message);
-            setState({ status: 'error', message });
+            setState(prev.status === 'links-ready' ? prev : { status: 'idle' });
             return;
         }
-
-        if (!item.id) return;
 
         setState({ status: 'downloading', title: link.title, percent: 0 });
 
