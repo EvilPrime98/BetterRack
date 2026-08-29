@@ -3,6 +3,7 @@ import styles from './store-card.module.css';
 import { ImageGen } from '@/components/image-generic/image-generic';
 import { NO_IMAGE_URL } from '@/data';
 import { useDownloadDirModalContext } from '@/context/DownloadDirModalContext';
+import { useLibraryStore } from '@/stores/library.store';
 import { getComicLinks, downloadComicPolling, getResourceJob, pollJobStatus } from '@/services/store.service';
 import { toast } from '@/services/toast.service';
 import { CheckIcon } from '@/icons/check.icon';
@@ -28,6 +29,12 @@ export function StoreCard({
             e.preventDefault();
             handler();
         };
+    }
+
+    async function completeDownload() {
+        setState({ status: 'done' });
+        toast.success(`${item.title} downloaded`);
+        await useLibraryStore.getState().refreshLibrary({ silent: true });
     }
 
     async function startDownload(link: IStoreLink) {
@@ -57,8 +64,7 @@ export function StoreCard({
                     }
                 }
             });
-            setState({ status: 'done' });
-            toast.success(`${item.title} downloaded`);
+            await completeDownload();
         } catch (e) {
             const message = e instanceof Error ? e.message : 'Download failed.';
             setState({ status: 'error', message });
@@ -203,8 +209,7 @@ export function StoreCard({
                     }
                 });
                 if (cancelled) return;
-                setState({ status: 'done' });
-                toast.success(`${item.title} downloaded`);
+                await completeDownload();
             } catch (e) {
                 if (cancelled) return;
                 const message = e instanceof Error ? e.message : 'Download failed.';
