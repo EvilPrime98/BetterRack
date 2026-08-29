@@ -47,9 +47,16 @@ export class DownloadController {
         this.dwnModel.downloadComic({
             link,
             outputDir,
-            onProgress: (event) => this.jobModel.update(jobId, STATE_BY_EVENT_TYPE[event.type], event)
-        }).then(() => {
-            this.libModel.scan();
+            onProgress: async (event) => {
+                if (event.type === 'done') {
+                    try {
+                        await this.libModel.scan();
+                    } catch (err) {
+                        log.error({ err }, 'Library rescan after download failed');
+                    }
+                }
+                this.jobModel.update(jobId, STATE_BY_EVENT_TYPE[event.type], event);
+            }
         }).catch((e) => {
             log.error({ err: e }, 'Download job failed');
             this.jobModel.update(jobId, 'error', {

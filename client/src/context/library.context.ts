@@ -18,7 +18,7 @@ export interface ILibraryCtx {
     queryClient: IUltraCompStateStateful<typeof queryClient>;
     searchQuery: IUltraCompStateStateful<string>;
     fetchLibrary: () => Promise<void>;
-    refreshLibrary: () => Promise<void>;
+    refreshLibrary: (options?: { silent?: boolean }) => Promise<void>;
     deleteFile: (uid: string) => Promise<void>;
     deleteFolder: (uid: string) => Promise<void>;
     createFolder: (folderName: string, parentFolderUid?: string) => Promise<void>;
@@ -44,7 +44,7 @@ export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
         if (comp.groups.get() !== data) comp.groups.set(data);
     },
 
-    refreshLibrary: async (comp: ILibraryCtx) => {
+    refreshLibrary: async (comp: ILibraryCtx, options?: { silent?: boolean }) => {
         try {
             await queryClient.fetch(
                 'library-refresh',
@@ -54,7 +54,7 @@ export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
             queryClient.invalidateCache('library-refresh');
             queryClient.invalidateCache('library');
             await comp.fetchLibrary();
-            toast.success('Library refreshed');
+            if (!options?.silent) toast.success('Library refreshed');
         } catch (e) {
             toast.error(e instanceof Error ? e.message : 'Failed to refresh library.');
         }
