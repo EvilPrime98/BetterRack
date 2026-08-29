@@ -2,6 +2,8 @@ import path from "node:path";
 
 export const THUMBNAIL_CACHE_DIR = path.resolve('./tmp-thumbnails');
 
+export const META_EXTRACT_DIR = path.resolve('./tmp-meta');
+
 export const RAW_EXTRACT_DIR = path.join(THUMBNAIL_CACHE_DIR, '.raw');
 
 export const EXTRACT_CONCURRENCY = 4;

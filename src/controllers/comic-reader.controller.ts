@@ -128,4 +128,37 @@ export class comicReaderController {
 
     }
 
+    public async getBookmarks(
+        c: Context
+    ) {
+
+        try {
+
+            c.header('Cache-Control', 'no-store');
+
+            const uuid = c.req.param('uuid');
+            const { archivePath } = await this.getPages(uuid);
+
+            const bookmarks = await this.zipModel.extractBookmarks({ filePath: archivePath });
+
+            return c.json({
+                error: false,
+                message: 'Comic bookmarks listed successfully',
+                bookmarks
+            }, 200);
+
+        }catch(e){
+
+            log.error({ err: e }, 'Failed to list comic bookmarks');
+
+            return c.json({
+                error: true,
+                message: e instanceof Error ? e.message : 'There was an error reading the comic.',
+                bookmarks: []
+            }, 500);
+
+        }
+
+    }
+
 }

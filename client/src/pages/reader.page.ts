@@ -1,5 +1,6 @@
 import { UltraActivity, UltraComponent, ultraNavigate, ultraState } from "ultra-light-js"
-import { API_URL, reader } from "../services/library.service"
+import { API_URL, reader, readerBookmarks } from "../services/library.service"
+import type { IBookmark } from "../library.types"
 import styles from './reader.page.module.css'
 import { ImageElement } from "../components/reader-page-image/reader-page-image";
 import { ReaderPageHeader } from "../components/reader-page-header/reader-page-header";
@@ -25,7 +26,14 @@ export function ReaderPage({
     const [hasError, setHasError, subsHasError] = ultraState(false);
     const [currentPage, setCurrentPage, subsCurrentPage] = ultraState(comicCache?.currentPage || 1);
     const [zoom, setZoom, subsZoom] = ultraState(1);
+    const [bookmarks, setBookmarks, subsBookmarks] = ultraState<IBookmark[]>([]);
     let observer: IntersectionObserver | null = null;
+    let viewer: HTMLElement | null = null;
+
+    const goToPage = (page: number) => {
+        const $page = viewer?.children[page - 1] as HTMLElement | undefined;
+        $page?.scrollIntoView({ block: 'start' });
+    }
 
     const goBack = () => {
         if (window.history.length > 1) window.history.back();
@@ -66,6 +74,13 @@ export function ReaderPage({
             await preloadWindow(data.length, savedPage);
             setCurrentPage(savedPage);
             setPages(data);
+            // Bookmarks are optional comic metadata. A failure here must not
+            // stop the reader from opening.
+            try {
+                setBookmarks(await readerBookmarks({ uid }));
+            } catch {
+                setBookmarks([]);
+            }
         } catch {
             setHasError(true);
         } finally {
@@ -112,6 +127,7 @@ export function ReaderPage({
     const onPagesChange = ($section: HTMLElement) => {
 
         observer?.disconnect();
+        viewer = $section;
 
         const numPages = pages().length;
         const savedPage = comicCache?.currentPage || 1;
@@ -186,6 +202,8 @@ export function ReaderPage({
             ReaderPageHeader({
                 currentPage, subsCurrentPage,
                 pages, subsPages,
+                bookmarks, subsBookmarks,
+                goToPage,
                 goBack
             }),
 

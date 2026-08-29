@@ -189,7 +189,16 @@ export type TZipModel = {
         outDir: string;
         entryName: string;
     }) => Promise<void>,
+    extractBookmarks: ({ filePath }: {
+        filePath: string;
+    }) => Promise<TComicBookmark[]>,
     getPageMimeType: (entryName: string) => string
+}
+
+export type TComicBookmark = {
+    /** The 1-based index into the reader's page list. Use it directly in GET /read/:uuid/pages/:page. */
+    page: number;
+    label: string;
 }
 
 export type WPPost = {
@@ -238,3 +247,39 @@ export const VALID_STRATS = {
 }
 
 export type TStrat = keyof typeof VALID_STRATS;
+
+export interface IComicInfoPage {
+    "@_Image": string;
+    "@_Bookmark"?: string;
+    "@_ImageWidth"?: string;
+    "@_ImageHeight"?: string;
+    "@_Type"?: string;
+}
+
+export interface IComicInfoXML {
+
+    '?xml': {
+        '@_version': string;
+    };
+
+    ComicInfo: {
+        Series: string;
+        Number: number;
+        Volume: number;
+        Summary: string;
+        Notes: string;
+        Year: number;
+        Month: number;
+        Pages?: {
+            /** An object for a single <Page>, an array for several. */
+            Page?: IComicInfoPage | IComicInfoPage[];
+        };
+        Publisher: string;
+        Web: string;
+        PageCount: number;
+        LanguageISO: string;
+        '@_xmlns:xsd': string;
+        '@_xmlns:xsi': string;
+    };
+
+}

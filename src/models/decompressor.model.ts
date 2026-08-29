@@ -1,5 +1,7 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
+import { XMLParser } from 'fast-xml-parser';
+import type { IComicInfoXML } from "#src/types.ts";
 
 const SEVEN_ZIP_BIN_NAMES = process.platform === "win32"
 ? ["7z"]
@@ -178,7 +180,7 @@ export class Zip7Decompressor {
 
     }
 
-    listPages7z = async (filePath: string): Promise<string[]> => {
+    listEntries7z = async (filePath: string): Promise<string[]> => {
 
         const proc = Bun.spawn([
             this.resolve7zPath(),
@@ -206,13 +208,21 @@ export class Zip7Decompressor {
                 isDir: (block.match(/^Attributes = (.+)$/m)?.[1] ?? '').includes('D')
             }))
             .filter((entry): entry is { entryPath: string, isDir: boolean } => !!entry.entryPath && !entry.isDir)
-            .map(entry => entry.entryPath)
+            .map(entry => entry.entryPath);
+
+    }
+
+    listPages7z = async (filePath: string): Promise<string[]> => {
+
+        const entries = await this.listEntries7z(filePath);
+
+        return entries
             .filter(entryPath => IMAGE_EXTENSIONS.has(path.extname(entryPath).toLowerCase()))
             .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 
     }
 
-    listPagesUnrar = async (filePath: string): Promise<string[]> => {
+    listEntriesUnrar = async (filePath: string): Promise<string[]> => {
 
         const proc = Bun.spawn([
             this.resolveUnrarPath(),
@@ -235,9 +245,64 @@ export class Zip7Decompressor {
         return output
             .split(/\r?\n/)
             .map(line => line.trim())
-            .filter(Boolean)
+            .filter(Boolean);
+
+    }
+
+    listPagesUnrar = async (filePath: string): Promise<string[]> => {
+
+        const entries = await this.listEntriesUnrar(filePath);
+
+        return entries
             .filter(entryPath => IMAGE_EXTENSIONS.has(path.extname(entryPath).toLowerCase()))
             .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+
+    }
+
+    // ComicInfo.xml is the ComicRack metadata standard. It has an optional
+    // <Pages> list. Each <Page> entry can hold a Bookmark label and a
+    // 0-based Image index. Most archives have no ComicInfo.xml. A missing
+    // file, or a missing <Pages> block, gives an empty result. This is
+    // normal and not an error.
+    extractBookmarks = async ({
+        filePath
+    }: {
+        filePath: string
+    }): Promise<{ page: number, label: string }[]> => {
+
+        const entries = this.isRarFile(filePath)
+            ? await this.listEntriesUnrar(filePath)
+            : await this.listEntries7z(filePath);
+
+        const comicInfoEntry = entries.find(
+            entry => path.basename(entry).toLowerCase() === 'comicinfo.xml'
+        );
+
+        if (!comicInfoEntry) return [];
+
+        // getPageStream checks the entry name and the archive path again
+        // before it spawns a process. A crafted ComicInfo.xml path cannot
+        // reach another location.
+        const xml = await new Response(
+            this.getPageStream({ filePath, entryName: comicInfoEntry })
+        ).text();
+
+        const data = new XMLParser({
+            ignoreAttributes: false
+        }).parse(xml) as IComicInfoXML;
+
+        // fast-xml-parser returns an object for a single <Page>. It returns
+        // an array for several. It returns undefined when <Pages> is absent.
+        const rawPages = data?.ComicInfo?.Pages?.Page;
+        const pageList = Array.isArray(rawPages) ? rawPages : rawPages ? [rawPages] : [];
+
+        return pageList
+            .filter(page => page["@_Bookmark"]?.trim())
+            .map(page => ({
+                page: Number(page["@_Image"]) + 1,
+                label: page["@_Bookmark"]!.trim()
+            }))
+            .filter(bookmark => Number.isInteger(bookmark.page) && bookmark.page >= 1);
 
     }
 
