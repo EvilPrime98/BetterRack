@@ -2,7 +2,7 @@ import { UltraComponent, ultraState } from "ultra-light-js";
 import styles from './store-card.module.css';
 import { ImageGen } from "@/components/image-generic/image-generic";
 import { NO_IMAGE_URL } from "@/data";
-import { SETTINGS_CONTEXT } from "@/context/settings.context";
+import { DOWNLOAD_DIR_MODAL_CTX } from "@/context/download-dir-modal.context";
 import { getComicLinks, downloadComicPolling, getResourceJob, pollJobStatus } from "@/services/store.service";
 import { toast } from "@/services/toast.service";
 import { CheckIcon } from "@/icons/check.icon";
@@ -32,18 +32,15 @@ export function StoreCard({
 
     async function startDownload(link: IStoreLink) {
 
-        const outputDir = SETTINGS_CONTEXT
-            .settings
-            .get().downloadDir;
+        if (!item.id) return;
+
+        const prev = state();
+        const outputDir = await DOWNLOAD_DIR_MODAL_CTX.openDownloadDirModal(link.title);
 
         if (!outputDir) {
-            const message = 'Set a download folder in Settings before downloading.';
-            toast.error(message);
-            setState({ status: 'error', message });
+            setState(prev.status === 'links-ready' ? prev : { status: 'idle' });
             return;
         }
-
-        if (!item.id) return;
 
         setState({ status: 'downloading', title: link.title, percent: 0 });
 

@@ -25,6 +25,36 @@ export class FileSystemModel {
         return ['', ...await recurse('')];
     }
 
+    async getDirectoriesUnder(roots: string[]): Promise<string[]> {
+
+        const recurse = async (abs: string): Promise<string[]> => {
+            let entries;
+            try {
+                entries = (await readdir(abs, { withFileTypes: true }))
+                    .filter(entry => entry.isDirectory())
+                    .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+            } catch {
+                return [];
+            }
+            const results: string[] = [];
+            for (const entry of entries) {
+                const childAbs = path.join(abs, entry.name);
+                results.push(childAbs);
+                results.push(...await recurse(childAbs));
+            }
+            return results;
+        };
+
+        const seen = new Set<string>();
+        for (const root of roots) {
+            const absRoot = path.resolve(root);
+            seen.add(absRoot);
+            for (const dir of await recurse(absRoot)) seen.add(dir);
+        }
+
+        return [...seen];
+    }
+
     async getFullPath(dir: string): Promise<string> {
         return path.resolve(this.rootPath, dir);
     }

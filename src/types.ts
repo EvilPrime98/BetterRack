@@ -216,6 +216,7 @@ export type TGCWArgumentFactory = {
 
 export type fsModel = {
     getListofDirectories: () => Promise<string[]>;
+    getDirectoriesUnder: (roots: string[]) => Promise<string[]>;
     getFullPath: (dir: string) => Promise<string>;
 }
 
