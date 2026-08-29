@@ -23,7 +23,7 @@ interface ILibraryStore {
     searchQuery: string;
     setSearchQuery: (query: string) => void;
     fetchLibrary: () => Promise<void>;
-    refreshLibrary: () => Promise<void>;
+    refreshLibrary: (options?: { silent?: boolean }) => Promise<void>;
     deleteFile: (uid: string) => Promise<void>;
     deleteFolder: (uid: string) => Promise<void>;
     createFolder: (folderName: string, parentFolderUid?: string) => Promise<void>;
@@ -52,12 +52,12 @@ export const useLibraryStore = create<ILibraryStore>((set, get) => ({
         await inFlight;
     },
 
-    refreshLibrary: async () => {
+    refreshLibrary: async (options) => {
         try {
             await requestLibraryRefresh();
             lastFetchedAt = 0;
             await get().fetchLibrary();
-            toast.success('Library refreshed');
+            if (!options?.silent) toast.success('Library refreshed');
         } catch (e) {
             toast.error(e instanceof Error ? e.message : 'Failed to refresh library.');
         }
