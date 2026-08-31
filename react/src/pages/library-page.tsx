@@ -17,21 +17,19 @@ export function LibraryPage() {
     const { uid } = useParams<{ uid?: string }>();
     const [searchParams] = useSearchParams();
     const search = searchParams.get('search');
-
     const groups = useLibraryStore((s) => s.groups);
     const searchQuery = useLibraryStore((s) => s.searchQuery);
     const comicsType = useComicsTypeStore((s) => s.type);
     const setTitle = useDocumentTitleStore((s) => s.setTitle);
-
+    const [items, setItems] = useState<ILibraryResponseItem[]>([]);
+    const { filters, setFilters, resetFilters, applyFilters } = useFilters({ rawItems: getLibraryItems, setItems });
+    
     function getLibraryItems(): ILibraryResponseItem[] {
         const items = useLibraryStore.getState().getLibraryItems({ onlyDir: !uid, uid });
         const query = useLibraryStore.getState().searchQuery.trim().toLowerCase();
         if (!query) return items;
         return items.filter(item => item.name.toLowerCase().includes(query));
     }
-
-    const [items, setItems] = useState<ILibraryResponseItem[]>([]);
-    const { filters, setFilters, resetFilters, applyFilters } = useFilters({ rawItems: getLibraryItems, setItems });
 
     useEffect(() => {
         setTitle('Library');
