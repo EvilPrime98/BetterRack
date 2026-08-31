@@ -42,7 +42,7 @@
   "dependencies": {
     "@types/he": "^1.2.3",
     "@types/node": "^25.9.1",
-    "better-wiki": "^0.16.0",
+    "better-wiki": "^0.21.5",
     "drizzle-orm": "^0.45.2",
     "fast-xml-parser": "^5.11.1",
     "he": "^1.2.0",
