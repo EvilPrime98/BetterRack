@@ -7,7 +7,11 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "android:sync": "pnpm build && cap sync android",
+    "android:apk": "pnpm android:sync && cd android && gradlew assembleDebug",
+    "android:apk:release": "pnpm android:sync && cd android && gradlew assembleRelease",
+    "android:open": "cap open android"
   },
   "dependencies": {
     "@capacitor/core": "^8.5.0",
@@ -21,6 +25,8 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/cli": "^8.5.0",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
