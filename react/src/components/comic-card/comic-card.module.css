@@ -6,6 +6,8 @@
     justify-content: flex-start;
     width: 100%;
     padding: 10px;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 340px;
     border-radius: 14px;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0));
     border: 1px solid rgba(255, 255, 255, 0);
