@@ -30,6 +30,18 @@ export function SideBar() {
             : !SIDEBAR_CONTEXT.isExpanded.get();
     }
 
+    // Set the visibility classes before the element is inserted.
+    // ultra-light-js defers onMount with requestAnimationFrame, so
+    // onSidebarStateChange runs one frame later. A route change rebuilds
+    // this component. Without these classes, the sidebar paints open for
+    // one frame and then animates shut.
+    function initialSidebarClasses() {
+        const classes = [styles.sideBar];
+        if (SIDEBAR_CONTEXT.isExpanded.get()) classes.push(styles.expanded);
+        if (SIDEBAR_CONTEXT.isCollapsed.get()) classes.push(styles.collapsed);
+        return classes;
+    }
+
     function onSidebarStateChange($aside: HTMLElement) {
         $aside.classList.toggle(styles.expanded, SIDEBAR_CONTEXT.isExpanded.get());
         $aside.classList.toggle(styles.collapsed, SIDEBAR_CONTEXT.isCollapsed.get());
@@ -77,7 +89,9 @@ export function SideBar() {
 
             UltraComponent({
                 component: '<div></div>',
-                className: [styles.backdrop],
+                className: SIDEBAR_CONTEXT.isExpanded.get()
+                    ? [styles.backdrop, styles.visible]
+                    : [styles.backdrop],
                 eventHandler: { click: closeSidebar },
                 trigger: [{
                     subscriber: SIDEBAR_CONTEXT.isExpanded.subscribe,
@@ -100,10 +114,11 @@ export function SideBar() {
 
                 attributes: {
                     role: 'navigation',
-                    'aria-label': 'Library folders'
+                    'aria-label': 'Library folders',
+                    ...(isHidden() ? { inert: '' } : {})
                 },
 
-                className: [styles.sideBar],
+                className: initialSidebarClasses(),
 
                 children: [
 
