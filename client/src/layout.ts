@@ -17,9 +17,19 @@ export function Layout(
         $main.classList.toggle(styles.sidebarCollapsed, SIDEBAR_CONTEXT.isCollapsed.get());
     }
 
+    // Seed the class before insertion. onCollapsedChange runs one frame later
+    // (ultra-light-js defers onMount with requestAnimationFrame), and a route
+    // change rebuilds this element. Without the class, .content keeps its full
+    // padding-left for one frame and then animates to zero.
+    const initialClasses = SIDEBAR_CONTEXT.isCollapsed.get()
+        ? [styles.sidebarCollapsed]
+        : [];
+
     return UltraComponent({
 
         component: '<main></main>',
+
+        className: initialClasses,
 
         onMount: [onCollapsedChange],
 

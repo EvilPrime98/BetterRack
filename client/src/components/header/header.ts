@@ -45,6 +45,15 @@ export function Header() {
         };
     }
 
+    // Resolve the burger state before insertion. onBurgerVisibilityChange runs
+    // one frame later (ultra-light-js defers onMount with requestAnimationFrame),
+    // and a route change rebuilds this element. Without the initial class, the
+    // burger shows at full size for one frame and then animates shut.
+    const burgerVisible = showBurger();
+    const burgerClasses = burgerVisible
+        ? [styles.iconBtn, styles.noDrag, styles.burger]
+        : [styles.iconBtn, styles.noDrag, styles.burger, styles.burgerCollapsed];
+
     return UltraComponent({
 
         component: '<header></header>',
@@ -63,10 +72,11 @@ export function Header() {
 
                     UltraComponent({
                         component: BurgerIcon({ size: iconSize * 1.5 }),
-                        className: [styles.iconBtn, styles.noDrag, styles.burger],
+                        className: burgerClasses,
                         attributes: {
                             role: 'button',
-                            tabindex: '0',
+                            tabindex: burgerVisible ? '0' : '-1',
+                            'aria-hidden': String(!burgerVisible),
                             'aria-label': 'Toggle sidebar'
                         },
                         eventHandler: {
