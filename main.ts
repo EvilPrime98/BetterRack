@@ -70,12 +70,25 @@ function waitForServer(
 
 }
 
+const APP_NAME = "Better Rack";
+
 async function startDesktopApp() {
 
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const PORT = process.env.PORT || "3000";
   const SERVER_URL = `http://localhost:${PORT}/`;
   let serverProcess: ChildProcess | null = null;
+
+  const iconPath = path.join(__dirname, "..", "build", "icon.png");
+
+  app.setName(APP_NAME);
+
+  app.setAboutPanelOptions({
+    applicationName: APP_NAME,
+    applicationVersion: app.getVersion(),
+    copyright: `Copyright © ${new Date().getFullYear()} AminPerez`,
+    website: "https://github.com/EvilPrime98/BetterRack",
+  });
 
   function createWindow(): void {
 
@@ -86,6 +99,8 @@ async function startDesktopApp() {
       height: 950,
       minWidth: 900,
       minHeight: 600,
+      title: APP_NAME,
+      ...(app.isPackaged ? {} : { icon: iconPath }),
       backgroundColor: "#0a0a0a",
       titleBarStyle: isMac ? "hiddenInset" : "hidden",
       ...(isMac ? {} : {
@@ -141,8 +156,8 @@ async function startDesktopApp() {
       serverProcess.stdout?.on("data", (data) =>
         console.log(`[server] ${data}`)
       );
-      
-      serverProcess.stderr?.on("data", (data) => 
+
+      serverProcess.stderr?.on("data", (data) =>
         console.error(`[server] ${data}`)
       );
 
@@ -151,16 +166,15 @@ async function startDesktopApp() {
     } catch (e) {
 
       dialog.showErrorBox(
-        "Better Rack", 
-        `Failed to start the server: ${
-          e instanceof Error 
-            ? e.message 
-            : String(e)
+        APP_NAME,
+        `Failed to start the server: ${e instanceof Error
+          ? e.message
+          : String(e)
         }`
       );
-      
+
       app.quit();
-      
+
       return;
 
     }
