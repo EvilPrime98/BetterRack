@@ -1,4 +1,4 @@
-import { UltraComponent, ultraState, type UltraLightElement } from "ultra-light-js";
+import { UltraActivity, UltraComponent, ultraState, type UltraLightElement } from "ultra-light-js";
 import styles from './search-page.module.css';
 import { PageHeader } from "../components/page-header/page-header";
 import { LIBRARY_CONTEXT } from "../context/library.context";
@@ -22,8 +22,13 @@ export function SearchPage({
     }
 
     const [items, setItems, subsItems] = ultraState<ILibraryResponseItem[]>([]);
-    
+
     const [visibleCount, setVisibleCount, subsVisibleCount] = ultraState(PAGE_SIZE);
+
+    // Client-side search scans the library in memory. The result set is not
+    // complete while entry pages still load. Show this to the user.
+    const [libLoading, setLibLoading, subsLibLoading] = ultraState(!LIBRARY_CONTEXT.libraryLoaded.get());
+    LIBRARY_CONTEXT.libraryLoaded.subscribe(loaded => setLibLoading(!loaded));
     
     const { filters, resetFilters, applyFilters } = ultraFilters({
         rawItems: getSearchItems,
@@ -124,6 +129,13 @@ export function SearchPage({
                     subsItems,
                     filters,
                     resetFilters
+                }),
+
+                UltraActivity({
+                    mode: { state: libLoading, subscriber: subsLibLoading },
+                    component: '<p></p>',
+                    className: [styles.loadingNote],
+                    children: ['Still loading your library — search results may be incomplete.']
                 }),
 
                 UltraComponent({
