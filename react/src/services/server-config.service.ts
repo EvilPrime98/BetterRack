@@ -6,6 +6,10 @@ export function isAndroidPlatform(): boolean {
     return Capacitor.getPlatform() === 'android';
 }
 
+export function hasNativeFolderPicker(): boolean {
+    return typeof window.desktop?.pickLibraryFolder === 'function';
+}
+
 export function getStoredServerUrl(): string {
     return localStorage.getItem(STORAGE_KEY) ?? '';
 }

@@ -124,6 +124,13 @@
     gap: 8px;
 }
 
+.browseBtn {
+    flex-shrink: 0;
+    height: 34px;
+    min-width: 0;
+    padding: 0 14px;
+}
+
 .field {
     display: flex;
     flex-direction: column;
