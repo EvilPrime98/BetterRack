@@ -16,6 +16,7 @@ export function libraryRouter(
     app.delete('/folder', (c) => cc.deleteFolder(c));
     app.delete('/file', (c) => cc.deleteFile(c));
     app.post('/file/unidentify', (c) => cc.unidentifyFile(c));
+    app.post('/file/identify', (c) => cc.commitIdentify(c));
     app.get('/:uid/identify', (c) => cc.identify(c));
     return app;
 }
