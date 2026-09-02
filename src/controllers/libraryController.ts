@@ -72,6 +72,17 @@ export class libraryController{
         return c.json(page, 200);
     }
 
+    public async getRecent(
+        c: Context
+    ) {
+        await this.libModel.ready;
+        // The model applies its default when windowHours is not a positive number.
+        const recent = this.libModel.getRecentlyAdded({
+            windowHours: this.parsePageOption(c.req.query('windowHours')),
+        });
+        return c.json(recent, 200);
+    }
+
     public async refresh(
         c: Context
     ){

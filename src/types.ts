@@ -107,6 +107,15 @@ export type TLibraryPage = {
     hasMore: boolean;
 }
 
+export type TRecentlyAddedResponse = {
+    /** File entries added within the window, newest first. Folders are never included. */
+    items: TLibraryEntry[];
+    /** The look-back window this result was built with, in hours. */
+    windowHours: number;
+    /** The `Date.now()` value the window was measured against. */
+    generatedAt: number;
+}
+
 export type TLibraryModel = {
     /** Resolves once the filesystem scan has completed. Wiki identification is on demand and never blocks this. */
     ready: Promise<void>,
@@ -117,6 +126,8 @@ export type TLibraryModel = {
     getLibraryIndex: () => TLibraryIndexGroup[],
     /** A slice of the flat entry list in group order, re-nested into its groups, with pagination metadata. `limit` and `offset` count entries, not groups. */
     getLibraryPage: (options?: { limit?: number; offset?: number }) => TLibraryPage,
+    /** A flat list of file entries, newest first, whose `createdAt` is inside the look-back window. `windowHours` defaults to 24. */
+    getRecentlyAdded: (options?: { windowHours?: number; nowMs?: number }) => TRecentlyAddedResponse,
     getPreferences: (uid: string) => TLibraryPref | undefined,
     updatePreferences: (uid: string, updates: Partial<Omit<TLibraryPref, 'uid'>>) => Promise<void>,
     refresh: () => Promise<void>,

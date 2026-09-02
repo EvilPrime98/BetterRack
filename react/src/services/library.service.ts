@@ -1,5 +1,5 @@
 import type { WikiComic } from "better-wiki";
-import type { IReadResponse, IBookmarksResponse, ILibraryGroup, ILibraryPage, ILibraryRefreshResponse, ILibraryResponseItem } from "../library.types";
+import type { IReadResponse, IBookmarksResponse, ILibraryGroup, ILibraryPage, ILibraryRefreshResponse, ILibraryResponseItem, IRecentlyAddedResponse } from "../library.types";
 import { API_URL } from "./server-config.service";
 
 export { API_URL };
@@ -35,6 +35,13 @@ export async function getLibrary(): Promise<ILibraryGroup[]> {
     }
 
     return [...merged.values()];
+}
+
+export async function getRecentlyAdded(): Promise<IRecentlyAddedResponse> {
+    const response = await fetch(`${API_URL}/api/library/recent`);
+    const data = await response.json();
+    if (!response.ok) throw new Error((data as { message?: string })?.message || 'Failed to load recently added comics.');
+    return data as IRecentlyAddedResponse;
 }
 
 export async function refreshLibrary(): Promise<ILibraryRefreshResponse> {
