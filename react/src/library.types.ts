@@ -70,14 +70,6 @@ export interface IComicLSCache {
     read: boolean;
 }
 
-/** Persisted alongside IComicLSCache in comic_data, but manages identity rather than reading progress. */
-export interface IComicIdentity {
-    prefId?: number;
-    sourceWiki?: string;
-    identified?: boolean;
-    comic?: WikiComic;
-}
-
 export const COMICS_TYPES = {
     'cover': 'cover',
     detail: 'detail'

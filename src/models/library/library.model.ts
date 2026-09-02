@@ -2,6 +2,7 @@ import path from "node:path";
 import { readdir, mkdir, rename, rm, stat } from "node:fs/promises";
 import { basename } from "node:path";
 import crypto from 'node:crypto';
+import type { WikiComic } from "better-wiki";
 import type {
     TComicData,
     TComicDataModel,
@@ -359,6 +360,23 @@ export class LibraryModel {
 
         file.identified = false;
         file.comic = undefined;
+        this.inheritanceCache = null;
+    }
+
+    commitIdentify = async (fileUid: string, comic: WikiComic) => {
+        const file = this.get(fileUid);
+        if (!file || Array.isArray(file)) throw new Error('File not found.');
+        if (file.did) throw new Error('Target is not a file.');
+
+        this.comicDataModel.upsert(fileUid, {
+            identified: true,
+            comic,
+            sourceWiki: comic.sourceWiki,
+            prefId: comic.pageId,
+        });
+
+        file.identified = true;
+        file.comic = comic;
         this.inheritanceCache = null;
     }
 

@@ -107,6 +107,8 @@ export type TLibraryModel = {
     deleteFolder: (folderUid: string) => Promise<void>,
     deleteFile: (fileUid: string) => Promise<void>,
     unidentifyFile: (fileUid: string) => Promise<void>,
+    /** Writes a manual identify pick to the comic-data store and the in-memory entry. This makes `getByLibrary()` show the pick without a rescan. */
+    commitIdentify: (fileUid: string, comic: WikiComic) => Promise<void>,
     /** Resolves wiki metadata for a single comic on demand; cached results skip the wiki call. */
     identify: (uid: string) => Promise<TLibraryEntry>,
     addLibraryPath: (dir: string) => Promise<void>,

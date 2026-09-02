@@ -241,4 +241,32 @@ export class libraryController{
         }
     }
 
+    public async commitIdentify(
+        c: Context
+    ){
+        try{
+
+            const { fileUid, comic } = await c.req.json();
+
+            if (!fileUid || !comic) return c.json({ error: true, message: 'A file uid and comic are required.' }, 400);
+
+            await this.libModel.commitIdentify(fileUid, comic);
+
+            return c.json(
+                { error: false, message: 'File identified successfully.'},
+                200
+            )
+
+        }catch(e){
+
+            log.error({ err: e }, 'Failed to identify file');
+
+            return c.json(
+                { error: true, message: 'There was an issue identifying the file. Please, try again later.'},
+                500
+            )
+
+        }
+    }
+
 }

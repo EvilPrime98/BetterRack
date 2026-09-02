@@ -1,3 +1,4 @@
+import type { WikiComic } from "better-wiki";
 import type { IReadResponse, IBookmarksResponse, ILibraryGroup, ILibraryRefreshResponse, ILibraryResponseItem } from "../library.types";
 import { API_URL } from "./server-config.service";
 
@@ -94,6 +95,20 @@ export async function unidentifyFile(
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fileUid })
+    });
+    const data: ILibraryRefreshResponse = await response.json();
+    if (!response.ok) throw new Error(data.message);
+    return data;
+}
+
+export async function commitIdentifyFile(
+    fileUid: string,
+    comic: WikiComic
+): Promise<ILibraryRefreshResponse> {
+    const response = await fetch(`${API_URL}/api/library/file/identify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileUid, comic })
     });
     const data: ILibraryRefreshResponse = await response.json();
     if (!response.ok) throw new Error(data.message);
