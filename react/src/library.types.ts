@@ -30,6 +30,15 @@ export interface ILibraryGroup {
     "entries": ILibraryResponseItem[]
 }
 
+/** One page of GET /api/library. `limit`/`offset` count entries, not groups; `hasMore` is true while further pages remain. */
+export interface ILibraryPage {
+    "groups": ILibraryGroup[],
+    "total": number,
+    "limit": number,
+    "offset": number,
+    "hasMore": boolean
+}
+
 /** Filter toggles for the library grid; owned by the `useFilters` hook (react/src/hooks/useFilters.ts). */
 export interface ILibraryFilters {
     sortByCreation: boolean;
