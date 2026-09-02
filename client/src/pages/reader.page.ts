@@ -10,6 +10,11 @@ import { DOCUMENT_TITLE_CONTEXT } from "../context/document-title.context";
 
 const PRELOAD_WINDOW = 2;
 
+// Rolling prefetch band around the active page. It is forward-biased so a
+// continuous read keeps landing on pages that are already in the browser cache.
+const PREFETCH_AHEAD = 4;
+const PREFETCH_BEHIND = 1;
+
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 3;
 const ZOOM_STEP = 0.1;
@@ -30,9 +35,39 @@ export function ReaderPage({
     let observer: IntersectionObserver | null = null;
     let viewer: HTMLElement | null = null;
 
+    // 1-based page numbers already handed to an Image(). loadPages() clears it
+    // for a fresh comic. The browser cache holds the bytes after that.
+    const requested = new Set<number>();
+
+    // Warm the in-range pages that are not yet requested. The returned promise
+    // settles when they all load or fail. Fire-and-forget callers ignore it.
+    const warmPages = (numPages: number, pageNumbers: number[]): Promise<void> => {
+        const fresh = pageNumbers.filter(
+            page => page >= 1 && page <= numPages && !requested.has(page)
+        );
+        if (!fresh.length) return Promise.resolve();
+        const loads = fresh.map(page => new Promise<void>(resolve => {
+            requested.add(page);
+            const img = new Image();
+            img.onload = img.onerror = () => resolve();
+            img.src = `${API_URL}/read/${uid}/pages/${page}`;
+        }));
+        return Promise.all(loads).then(() => undefined);
+    }
+
+    const prefetchAround = (page: number) => {
+        const numPages = pages().length;
+        if (!numPages) return;
+        const targets: number[] = [];
+        for (let p = page + 1; p <= page + PREFETCH_AHEAD; ++p) targets.push(p);
+        for (let p = page - PREFETCH_BEHIND; p < page; ++p) targets.push(p);
+        void warmPages(numPages, targets);
+    }
+
     const goToPage = (page: number) => {
         const $page = viewer?.children[page - 1] as HTMLElement | undefined;
         $page?.scrollIntoView({ block: 'start' });
+        prefetchAround(page);
     }
 
     const goBack = () => {
@@ -48,24 +83,18 @@ export function ReaderPage({
         return { targetInd, start, end };
     }
 
-    const preloadWindow = async (numPages: number, savedPage: number) => {
+    const preloadWindow = (numPages: number, savedPage: number): Promise<void> => {
         const range = getWindowRange(numPages, savedPage);
         if (!range) return Promise.resolve();
-        const loads: Promise<void>[] = [];
-        for (let ind = range.start; ind <= range.end; ++ind) {
-            loads.push(new Promise<void>(resolve => {
-                const img = new Image();
-                img.onload = img.onerror = () => resolve();
-                img.src = `${API_URL}/read/${uid}/pages/${ind + 1}`;
-            }));
-        }
-        await Promise.all(loads);
-        return undefined;
+        const pageNumbers: number[] = [];
+        for (let ind = range.start; ind <= range.end; ++ind) pageNumbers.push(ind + 1);
+        return warmPages(numPages, pageNumbers);
     }
 
     const loadPages = async () => {
         setHasError(false);
         setIsLoading(true);
+        requested.clear();
         try {
             await COMIC_CACHE_CONTEXT.ready();
             comicCache = COMIC_CACHE_CONTEXT.getCacheById(uid);
@@ -158,7 +187,10 @@ export function ReaderPage({
                 .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
             if (!mostVisible) return;
             const page = pageOf.get(mostVisible.target as HTMLElement);
-            if (page) setCurrentPage(page);
+            if (page) {
+                setCurrentPage(page);
+                prefetchAround(page);
+            }
         }, { threshold: [0.25, 0.5, 0.75] });
 
         elements.forEach($page => observer!.observe($page));
