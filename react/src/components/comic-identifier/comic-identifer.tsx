@@ -36,7 +36,9 @@ export function ComicIdentifier() {
             confirmLabel: 'Un-identify'
         });
         if (!confirmed) return;
-        await useLibraryStore.getState().unidentifyFile(useComicIdentStore.getState().itemUid);
+        const itemUid = useComicIdentStore.getState().itemUid;
+        await useLibraryStore.getState().unidentifyFile(itemUid);
+        useComicIdentStore.getState().setLastUnidentified({ uid: itemUid });
         close();
     }
 
