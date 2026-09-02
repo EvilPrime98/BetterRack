@@ -12,12 +12,13 @@ import type {
     TLibraryPage,
     TLibraryPref,
     TPreferencesModel,
+    TRecentlyAddedResponse,
     TWikiModel
 } from "#src/types.ts";
 import fs from "node:fs";
 import { logger } from "#utils/logger";
 import { createConcurrencyLimiter } from "#utils/concurrencyLimiter";
-import { COMIC_EXTENSIONS, DEFAULT_LIBRARY_PAGE_SIZE, IDENTIFY_CONCURRENCY, MAX_LIBRARY_PAGE_SIZE, STAT_CONCURRENCY } from "./constants";
+import { COMIC_EXTENSIONS, DEFAULT_LIBRARY_PAGE_SIZE, IDENTIFY_CONCURRENCY, MAX_LIBRARY_PAGE_SIZE, RECENT_WINDOW_HOURS, STAT_CONCURRENCY } from "./constants";
 
 const log = logger.child({ module: 'LibraryModel' });
 
@@ -327,6 +328,33 @@ export class LibraryModel {
             offset,
             hasMore: end < total,
         };
+
+    }
+
+    getRecentlyAdded = (
+        options: { windowHours?: number; nowMs?: number } = {},
+    ): TRecentlyAddedResponse => {
+
+        const windowHours = Number.isFinite(options.windowHours) && options.windowHours! > 0
+            ? options.windowHours!
+            : RECENT_WINDOW_HOURS;
+
+        const nowMs = options.nowMs ?? Date.now();
+        const sinceMs = nowMs - windowHours * 60 * 60 * 1000;
+
+        // The upper bound removes files with an mtime in the future.
+        // A future mtime comes from clock skew or an archive copied with a forward timestamp.
+        // Without the bound, these files stay at the top of the list.
+        const items = this.resolveInheritance()
+            .filter(entry =>
+                !entry.did &&
+                typeof entry.createdAt === 'number' &&
+                entry.createdAt >= sinceMs &&
+                entry.createdAt <= nowMs
+            )
+            .sort((a, b) => b.createdAt! - a.createdAt!);
+
+        return { items, windowHours, generatedAt: nowMs };
 
     }
 

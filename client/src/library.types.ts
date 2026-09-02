@@ -17,7 +17,8 @@ export interface ILibraryResponseItem {
     "name": string,
     "path": string,
     "parentId": string,
-    "createdAt": string,
+    /** Milliseconds since the epoch, from the file's mtime at scan time. */
+    "createdAt": number,
     /** Tri-state, files only: undefined = not yet looked up (fetch GET /api/library/:uid/identify), true = identified (see `comic`), false = looked up, no wiki match. */
     "identified"?: boolean,
     /** The identified wiki comic, resolved on demand - metadata only, never the cover source. */
@@ -29,6 +30,15 @@ export interface ILibraryGroup {
     "name": string,
     "path": string,
     "entries": ILibraryResponseItem[]
+}
+
+/** The response body of GET /api/library/recent. It is a flat list of files added within the window, newest first. */
+export interface IRecentlyAddedResponse {
+    "items": ILibraryResponseItem[],
+    /** The look-back window the list was built with, in hours. */
+    "windowHours": number,
+    /** The `Date.now()` value the window was measured against. */
+    "generatedAt": number
 }
 
 export interface ILibraryIndexGroup {
