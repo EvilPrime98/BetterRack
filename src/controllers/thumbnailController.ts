@@ -1,6 +1,7 @@
 import type { TLibraryModel, TThumbnailModel } from "#src/types.ts";
 import type { Context } from "hono";
 import { logger } from "#utils/logger";
+import { buildStrongETag, ifNoneMatchSatisfied } from "#utils/http-cache";
 
 const log = logger.child({ module: 'thumbnailController' });
 
@@ -54,11 +55,25 @@ export class thumbnailController {
                 }, 404);
             }
 
+            // A re-identify can regenerate the thumbnail at the same path. So the
+            // ETag (path + size + mtime) pairs with a day-long max-age, not
+            // `immutable`. The client revalidates and gets a 304 while the file
+            // is unchanged.
+            const etag = buildStrongETag(thumbnailPath, file.size, file.lastModified);
+            const cacheHeaders = {
+                'Cache-Control': 'private, max-age=86400',
+                'ETag': etag,
+            };
+
+            if (ifNoneMatchSatisfied(c.req.header('if-none-match'), etag)) {
+                return new Response(null, { status: 304, headers: cacheHeaders });
+            }
+
             return new Response(file.stream(), {
                 headers: {
+                    ...cacheHeaders,
                     'Content-Type': file.type || 'application/octet-stream',
-                    'Content-Length': String(file.size),
-                    'Cache-Control': 'private, max-age=86400'
+                    'Content-Length': String(file.size)
                 }
             })
 
