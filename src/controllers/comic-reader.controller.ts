@@ -1,6 +1,8 @@
+import { statSync } from "node:fs";
 import type { TLibraryEntry, TLibraryModel, TZipModel } from "#src/types.ts";
 import type { Context } from "hono";
 import { logger } from "#utils/logger";
+import { buildStrongETag, ifNoneMatchSatisfied } from "#utils/http-cache";
 
 const log = logger.child({ module: 'comicReaderController' });
 
@@ -104,6 +106,21 @@ export class comicReaderController {
                 }, 404);
             }
 
+            // An archive page is immutable for a given (archive, entry). The ETag
+            // uses the archive size and mtime, so a file replacement on disk
+            // still changes it. `statSync` reads metadata only. It does not open
+            // the archive.
+            const archiveStat = statSync(archivePath);
+            const etag = buildStrongETag(archivePath, pageEntry, archiveStat.size, archiveStat.mtimeMs);
+            const cacheHeaders = {
+                'Cache-Control': 'private, max-age=31536000, immutable',
+                'ETag': etag,
+            };
+
+            if (ifNoneMatchSatisfied(c.req.header('if-none-match'), etag)) {
+                return new Response(null, { status: 304, headers: cacheHeaders });
+            }
+
             const stream = this.zipModel.getPageStream({
                 filePath: archivePath,
                 entryName: pageEntry
@@ -111,6 +128,7 @@ export class comicReaderController {
 
             return new Response(stream, {
                 headers: {
+                    ...cacheHeaders,
                     'Content-Type': this.zipModel.getPageMimeType(pageEntry)
                 }
             })
