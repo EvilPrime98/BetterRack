@@ -31,6 +31,15 @@ export interface ILibraryGroup {
     "entries": ILibraryResponseItem[]
 }
 
+/** One page of GET /api/library. `limit`/`offset` count entries, not groups; `hasMore` is true while further pages remain. */
+export interface ILibraryPage {
+    "groups": ILibraryGroup[],
+    "total": number,
+    "limit": number,
+    "offset": number,
+    "hasMore": boolean
+}
+
 /** The response body of GET /api/library/recent. It is a flat list of files added within the window, newest first. */
 export interface IRecentlyAddedResponse {
     items: ILibraryResponseItem[];

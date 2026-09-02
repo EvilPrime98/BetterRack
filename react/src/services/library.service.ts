@@ -1,13 +1,40 @@
 import type { WikiComic } from "better-wiki";
-import type { IReadResponse, IBookmarksResponse, ILibraryGroup, ILibraryRefreshResponse, ILibraryResponseItem, IRecentlyAddedResponse } from "../library.types";
+import type { IReadResponse, IBookmarksResponse, ILibraryGroup, ILibraryPage, ILibraryRefreshResponse, ILibraryResponseItem, IRecentlyAddedResponse } from "../library.types";
 import { API_URL } from "./server-config.service";
 
 export { API_URL };
 
+// GET /api/library is paginated (ILibraryPage, not a bare group array). Walk every
+// page and merge the slices back into one group list, because the store and
+// getLibraryItems() expect the whole library in memory.
 export async function getLibrary(): Promise<ILibraryGroup[]> {
-    const response = await fetch(`${API_URL}/api/library`)
-    const data = await response.json();
-    return data
+    const merged = new Map<string, ILibraryGroup>();
+    let offset = 0;
+
+    for (;;) {
+        const response = await fetch(`${API_URL}/api/library?offset=${offset}`);
+        const page = await response.json();
+        if (!response.ok) throw new Error((page as { message?: string })?.message || 'Failed to load library.');
+
+        const { groups, hasMore, limit } = page as ILibraryPage;
+
+        for (const group of groups) {
+            const existing = merged.get(group.uid);
+            if (!existing) {
+                merged.set(group.uid, { ...group, entries: [...group.entries] });
+                continue;
+            }
+            const seen = new Set(existing.entries.map(entry => entry.uid));
+            for (const entry of group.entries) {
+                if (!seen.has(entry.uid)) existing.entries.push(entry);
+            }
+        }
+
+        if (!hasMore) break;
+        offset += limit;
+    }
+
+    return [...merged.values()];
 }
 
 export async function getRecentlyAdded(): Promise<IRecentlyAddedResponse> {
