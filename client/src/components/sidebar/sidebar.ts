@@ -10,6 +10,7 @@ import { SidebarCloseButton } from "./close-button";
 import { SidebarSearch } from "./sidebar-search";
 import { GearIcon } from "../../icons/gear.icon";
 import { ShopIcon } from "../../icons/shop.icon";
+import { BookmarkIcon } from "../../icons/bookmark.icon";
 
 export function SideBar() {
 
@@ -166,6 +167,23 @@ export function SideBar() {
                                 children: [
                                     ShopIcon({ size: 16 }),
                                     `<span>Store</span>`
+                                ]
+                            })
+                        ]
+                    }),
+
+                    UltraComponent({
+                        component: '<div></div>',
+                        className: [styles.section],
+                        children: [
+                            `<span class="${styles.sectionTitle}">Browse</span>`,
+                            UltraLink({
+                                href: '/new',
+                                className: [styles.item],
+                                eventHandler: { click: closeSidebar },
+                                children: [
+                                    BookmarkIcon({ size: 16 }),
+                                    `<span>Recently added</span>`
                                 ]
                             })
                         ]

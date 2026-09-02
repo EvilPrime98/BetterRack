@@ -14,6 +14,9 @@ GET http://localhost:3000/api/download?id=13320&uuid=e33ed398-356a-4cee-a986-957
 ### Get Library
 GET http://localhost:3000/api/library
 
+### Recently Added (last 24h; optional ?windowHours=)
+GET http://localhost:3000/api/library/recent
+
 ### Read Comic
 GET http://localhost:3000/read/11fb27fb-92eb-c926-d02f-c3f6ff258858
 

@@ -1,10 +1,17 @@
-import type { IReadResponse, IBookmarksResponse, ILibraryIndexGroup, ILibraryPage, ILibraryRefreshResponse, ILibraryResponseItem } from "../library.types";
+import type { IReadResponse, IBookmarksResponse, ILibraryIndexGroup, ILibraryPage, ILibraryRefreshResponse, ILibraryResponseItem, IRecentlyAddedResponse } from "../library.types";
 import { API_URL } from "./server-config.service";
 
 export { API_URL };
 
 /** The default entries-per-page for the incremental library load. It matches the server default. */
 export const LIBRARY_PAGE_SIZE = 100;
+
+export async function getRecentlyAdded(): Promise<IRecentlyAddedResponse> {
+    const response = await fetch(`${API_URL}/api/library/recent`);
+    const data = await response.json();
+    if (!response.ok) throw new Error((data as { message?: string })?.message || 'Failed to load recently added comics.');
+    return data as IRecentlyAddedResponse;
+}
 
 export async function getLibraryIndex(): Promise<ILibraryIndexGroup[]> {
     const response = await fetch(`${API_URL}/api/library/index`);

@@ -9,3 +9,6 @@ export const DEFAULT_LIBRARY_PAGE_SIZE = 100;
 
 /** The maximum client-supplied page size. This stops one request from pulling the whole library. */
 export const MAX_LIBRARY_PAGE_SIZE = 500;
+
+/** The default look-back window, in hours, for the "recently added" view. */
+export const RECENT_WINDOW_HOURS = 24;
