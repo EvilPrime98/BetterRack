@@ -35,6 +35,7 @@ export function ComicCard({
     const { type: readFilter } = useReadTypesContext();
     const itemCache = useComicCacheStore((s) => s.cache[item.uid] ?? null);
     const lastIdentified = useComicIdentStore((s) => s.lastIdentified);
+    const lastUnidentified = useComicIdentStore((s) => s.lastUnidentified);
     const isRead = itemCache?.read === true;
     const readPer = itemCache ? (itemCache.read === true ? 100 : itemCache.readPer ?? 0) : 0;
 
@@ -60,6 +61,12 @@ export function ComicCard({
         setComic(lastIdentified.comic);
         setIdentified(true);
     }, [lastIdentified, item.uid]);
+
+    useEffect(() => {
+        if (lastUnidentified?.uid !== item.uid) return;
+        setComic(null);
+        setIdentified(false);
+    }, [lastUnidentified, item.uid]);
 
     useEffect(() => {
 
