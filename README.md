@@ -37,13 +37,13 @@ Run as a desktop app (builds the client for Electron and launches it):
 bun run start-app
 ```
 
-Build a distributable Windows installer (output in `release/`) -> for now it requires local bun installation:
+Build a distributable Windows installer for the desktop app (output in `release/`):
 
 ```bash
 bun run dist
 ```
 
-Build for Android (from `client/`, requires Capacitor Android tooling):
+Build client (requires backend deployment) for Android (from `client/` or `react/`, requires Capacitor Android tooling):
 
 ```bash
 pnpm android:sync
