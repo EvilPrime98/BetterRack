@@ -93,12 +93,30 @@ export type TLibraryGroup = {
     entries: TLibraryEntry[];
 }
 
+export type TLibraryIndexGroup = {
+    uid: string;
+    name: string;
+    count: number;
+}
+
+export type TLibraryPage = {
+    groups: TLibraryGroup[];
+    total: number;
+    limit: number;
+    offset: number;
+    hasMore: boolean;
+}
+
 export type TLibraryModel = {
     /** Resolves once the filesystem scan has completed. Wiki identification is on demand and never blocks this. */
     ready: Promise<void>,
     scan: () => Promise<void>,
     get: (uid?: string) => TLibraryEntry[] | TLibraryEntry | undefined,
     getByLibrary: () => TLibraryGroup[],
+    /** Per-library index (uid, name, entry count) with no entry payloads. The sidebar tree can render before the entries load. */
+    getLibraryIndex: () => TLibraryIndexGroup[],
+    /** A slice of the flat entry list in group order, re-nested into its groups, with pagination metadata. `limit` and `offset` count entries, not groups. */
+    getLibraryPage: (options?: { limit?: number; offset?: number }) => TLibraryPage,
     getPreferences: (uid: string) => TLibraryPref | undefined,
     updatePreferences: (uid: string, updates: Partial<Omit<TLibraryPref, 'uid'>>) => Promise<void>,
     refresh: () => Promise<void>,

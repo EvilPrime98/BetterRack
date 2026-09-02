@@ -47,15 +47,29 @@ export class libraryController{
         }
     }
 
+    private parsePageOption(raw: string | undefined): number | undefined {
+        if (raw === undefined || raw === '') return undefined;
+        const value = Number(raw);
+        if (!Number.isFinite(value) || value < 0) return undefined;
+        return Math.trunc(value);
+    }
+
+    public async getIndex(
+        c: Context
+    ) {
+        await this.libModel.ready;
+        return c.json(this.libModel.getLibraryIndex(), 200);
+    }
+
     public async get(
         c: Context
     ) {
         await this.libModel.ready;
-        const content = this.libModel.getByLibrary();
-        return c.json(
-            content,
-            200
-        );
+        const page = this.libModel.getLibraryPage({
+            limit: this.parsePageOption(c.req.query('limit')),
+            offset: this.parsePageOption(c.req.query('offset')),
+        });
+        return c.json(page, 200);
     }
 
     public async refresh(
@@ -66,7 +80,14 @@ export class libraryController{
             await this.libModel.refresh();
 
             return c.json(
-                { error: false, message: 'Library re-scan completed.'},
+                {
+                    error: false,
+                    message: 'Library re-scan completed.',
+                    page: this.libModel.getLibraryPage({
+                        limit: this.parsePageOption(c.req.query('limit')),
+                        offset: this.parsePageOption(c.req.query('offset')),
+                    }),
+                },
                 200
             )
 

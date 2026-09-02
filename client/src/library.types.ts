@@ -31,6 +31,20 @@ export interface ILibraryGroup {
     "entries": ILibraryResponseItem[]
 }
 
+export interface ILibraryIndexGroup {
+    "uid": string,
+    "name": string,
+    "count": number
+}
+
+export interface ILibraryPage {
+    "groups": ILibraryGroup[],
+    "total": number,
+    "limit": number,
+    "offset": number,
+    "hasMore": boolean
+}
+
 export interface ILibraryFilters {
     sortByReleaseDate: IUltraCompStateStateful<boolean>;
 }
@@ -56,6 +70,8 @@ export interface IBookmarksResponse {
 export interface ILibraryRefreshResponse {
     error: boolean;
     message: string;
+    /** The first page of the re-scanned library. Present on success. */
+    page?: ILibraryPage;
 }
 
 export interface IComicLSCache {

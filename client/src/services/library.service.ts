@@ -1,12 +1,30 @@
-import type { IReadResponse, IBookmarksResponse, ILibraryGroup, ILibraryRefreshResponse, ILibraryResponseItem } from "../library.types";
+import type { IReadResponse, IBookmarksResponse, ILibraryIndexGroup, ILibraryPage, ILibraryRefreshResponse, ILibraryResponseItem } from "../library.types";
 import { API_URL } from "./server-config.service";
 
 export { API_URL };
 
-export async function getLibrary(): Promise<ILibraryGroup[]> {
-    const response = await fetch(`${API_URL}/api/library`)
+/** The default entries-per-page for the incremental library load. It matches the server default. */
+export const LIBRARY_PAGE_SIZE = 100;
+
+export async function getLibraryIndex(): Promise<ILibraryIndexGroup[]> {
+    const response = await fetch(`${API_URL}/api/library/index`);
     const data = await response.json();
-    return data
+    if (!response.ok) throw new Error((data as { message?: string })?.message || 'Failed to load library index.');
+    return data as ILibraryIndexGroup[];
+}
+
+export async function getLibraryPage({
+    limit = LIBRARY_PAGE_SIZE,
+    offset = 0
+}: {
+    limit?: number;
+    offset?: number;
+} = {}): Promise<ILibraryPage> {
+    const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+    const response = await fetch(`${API_URL}/api/library?${params}`);
+    const data = await response.json();
+    if (!response.ok) throw new Error((data as { message?: string })?.message || 'Failed to load library.');
+    return data as ILibraryPage;
 }
 
 export async function refreshLibrary(): Promise<ILibraryRefreshResponse> {

@@ -8,6 +8,8 @@ import type {
     TComicDataModel,
     TLibraryEntry,
     TLibraryGroup,
+    TLibraryIndexGroup,
+    TLibraryPage,
     TLibraryPref,
     TPreferencesModel,
     TWikiModel
@@ -15,7 +17,7 @@ import type {
 import fs from "node:fs";
 import { logger } from "#utils/logger";
 import { createConcurrencyLimiter } from "#utils/concurrencyLimiter";
-import { COMIC_EXTENSIONS, IDENTIFY_CONCURRENCY, STAT_CONCURRENCY } from "./constants";
+import { COMIC_EXTENSIONS, DEFAULT_LIBRARY_PAGE_SIZE, IDENTIFY_CONCURRENCY, MAX_LIBRARY_PAGE_SIZE, STAT_CONCURRENCY } from "./constants";
 
 const log = logger.child({ module: 'LibraryModel' });
 
@@ -269,6 +271,63 @@ export class LibraryModel {
             path: libPath,
             entries: resolved.filter(entry => this.entryLibraryIndex.get(entry.uid) === libIndex),
         }));
+    }
+
+    getLibraryIndex = (): TLibraryIndexGroup[] => {
+        const resolved = this.resolveInheritance();
+        return this.libPaths.map((libPath, libIndex) => ({
+            uid: this.uidFromPath(libPath),
+            name: basename(libPath),
+            count: resolved.reduce(
+                (total, entry) => total + (this.entryLibraryIndex.get(entry.uid) === libIndex ? 1 : 0),
+                0,
+            ),
+        }));
+    }
+
+    getLibraryPage = (
+        options: { limit?: number; offset?: number } = {},
+    ): TLibraryPage => {
+
+        const groups = this.getByLibrary();
+        const total = groups.reduce((sum, group) => sum + group.entries.length, 0);
+
+        const limit = Math.min(
+            Math.max(1, Math.trunc(options.limit ?? DEFAULT_LIBRARY_PAGE_SIZE)),
+            MAX_LIBRARY_PAGE_SIZE,
+        );
+        const offset = Math.min(Math.max(0, Math.trunc(options.offset ?? 0)), total);
+        const end = Math.min(offset + limit, total);
+
+        // Keep only the groups that overlap the [offset, end) window. Trim each
+        // one to its part inside the window.
+        const pagedGroups: TLibraryGroup[] = [];
+        let cursor = 0;
+
+        for (const group of groups) {
+            const groupStart = cursor;
+            const groupEnd = cursor + group.entries.length;
+            cursor = groupEnd;
+
+            if (groupEnd <= offset || groupStart >= end) continue;
+
+            pagedGroups.push({
+                ...group,
+                entries: group.entries.slice(
+                    Math.max(offset, groupStart) - groupStart,
+                    Math.min(end, groupEnd) - groupStart,
+                ),
+            });
+        }
+
+        return {
+            groups: pagedGroups,
+            total,
+            limit,
+            offset,
+            hasMore: end < total,
+        };
+
     }
 
     refresh = async () => {

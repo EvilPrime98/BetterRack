@@ -1,6 +1,8 @@
 import { ultraCompState, ultraQuery, type IUltraCompStateStateful } from "ultra-light-js";
 import {
-    getLibrary,
+    getLibraryIndex,
+    getLibraryPage,
+    LIBRARY_PAGE_SIZE,
     refreshLibrary as requestLibraryRefresh,
     deleteFile as requestDeleteFile,
     deleteFolder as requestDeleteFolder,
@@ -8,16 +10,53 @@ import {
     moveFile as requestMoveFile,
     unidentifyFile as requestUnidentifyFile
 } from "../services/library.service";
-import type { ILibraryGroup, ILibraryResponseItem } from "../library.types";
+import type { ILibraryGroup, ILibraryIndexGroup, ILibraryPage, ILibraryResponseItem } from "../library.types";
 import { toast } from "../services/toast.service";
 
 const queryClient = ultraQuery();
 
+const LIBRARY_STALE_TIME = 60 * 5 * 10000;
+
+// Overlapping mounts (sidebar and page) share one load run. Without this guard,
+// each mount starts its own pagination sweep.
+let libraryLoadInFlight: Promise<void> | null = null;
+
+/** Merge a page of entries into the groups in the store. Keep group order. Do not add an entry twice. */
+function mergeLibraryPage(existing: ILibraryGroup[], page: ILibraryPage): ILibraryGroup[] {
+    const byUid = new Map<string, ILibraryGroup>(
+        existing.map(group => [group.uid, { ...group, entries: [...group.entries] }])
+    );
+    for (const incoming of page.groups) {
+        const current = byUid.get(incoming.uid);
+        if (!current) {
+            byUid.set(incoming.uid, { ...incoming, entries: [...incoming.entries] });
+            continue;
+        }
+        current.name = incoming.name;
+        current.path = incoming.path;
+        const seen = new Set(current.entries.map(entry => entry.uid));
+        for (const entry of incoming.entries) {
+            if (!seen.has(entry.uid)) current.entries.push(entry);
+        }
+    }
+    return [...byUid.values()];
+}
+
+async function reloadLibrary(comp: ILibraryCtx) {
+    queryClient.invalidateCache('library');
+    queryClient.invalidateCache('library-index');
+    await comp.fetchLibrary({ force: true });
+}
+
 export interface ILibraryCtx {
     groups: IUltraCompStateStateful<ILibraryGroup[]>;
+    /** Per-library index (uid, name, entry count). It is set before the entry pages arrive. */
+    indexGroups: IUltraCompStateStateful<ILibraryIndexGroup[]>;
+    /** False while entry pages still load. True after the whole library is in the store. */
+    libraryLoaded: IUltraCompStateStateful<boolean>;
     queryClient: IUltraCompStateStateful<typeof queryClient>;
     searchQuery: IUltraCompStateStateful<string>;
-    fetchLibrary: () => Promise<void>;
+    fetchLibrary: (options?: { force?: boolean }) => Promise<void>;
     refreshLibrary: (options?: { silent?: boolean }) => Promise<void>;
     deleteFile: (uid: string) => Promise<void>;
     deleteFolder: (uid: string) => Promise<void>;
@@ -31,17 +70,72 @@ export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
 
     groups: [] as ILibraryGroup[],
 
+    indexGroups: [] as ILibraryIndexGroup[],
+
+    libraryLoaded: false as boolean,
+
     queryClient: queryClient,
 
     searchQuery: '' as string,
 
-    fetchLibrary: async (comp: ILibraryCtx) => {
-        const { data } = await queryClient.fetch(
-            'library',
-            getLibrary,
-            60 * 5 * 10000
-        ) as { data: ILibraryGroup[] };
-        if (comp.groups.get() !== data) comp.groups.set(data);
+    fetchLibrary: async (comp: ILibraryCtx, options?: { force?: boolean }) => {
+
+        if (options?.force) {
+            libraryLoadInFlight = null;
+            comp.libraryLoaded.set(false);
+        }
+
+        if (comp.libraryLoaded.get() && comp.groups.get().length) return;
+        if (libraryLoadInFlight) return libraryLoadInFlight;
+
+        libraryLoadInFlight = (async () => {
+            try {
+                const { data: index } = await queryClient.fetch(
+                    'library-index',
+                    getLibraryIndex,
+                    LIBRARY_STALE_TIME
+                ) as { data: ILibraryIndexGroup[] };
+
+                comp.indexGroups.set(index);
+
+                // Build the tree structure from the index first. Then each entry
+                // page fills its group when it arrives.
+                let merged: ILibraryGroup[] = index.map(group => ({
+                    uid: group.uid,
+                    name: group.name,
+                    path: '',
+                    entries: []
+                }));
+                comp.groups.set([...merged]);
+
+                const { data: firstPage } = await queryClient.fetch(
+                    'library',
+                    () => getLibraryPage({ offset: 0 }),
+                    LIBRARY_STALE_TIME
+                ) as { data: ILibraryPage };
+
+                merged = mergeLibraryPage(merged, firstPage);
+                comp.groups.set([...merged]);
+
+                const pageSize = firstPage.limit || LIBRARY_PAGE_SIZE;
+                let offset = firstPage.offset + pageSize;
+                let hasMore = firstPage.hasMore;
+
+                while (hasMore) {
+                    const nextPage = await getLibraryPage({ offset, limit: pageSize });
+                    merged = mergeLibraryPage(merged, nextPage);
+                    comp.groups.set([...merged]);
+                    offset = nextPage.offset + pageSize;
+                    hasMore = nextPage.hasMore;
+                }
+
+                comp.libraryLoaded.set(true);
+            } finally {
+                libraryLoadInFlight = null;
+            }
+        })();
+
+        return libraryLoadInFlight;
     },
 
     refreshLibrary: async (comp: ILibraryCtx, options?: { silent?: boolean }) => {
@@ -52,8 +146,7 @@ export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
                 0
             );
             queryClient.invalidateCache('library-refresh');
-            queryClient.invalidateCache('library');
-            await comp.fetchLibrary();
+            await reloadLibrary(comp);
             if (!options?.silent) toast.success('Library refreshed');
         } catch (e) {
             toast.error(e instanceof Error ? e.message : 'Failed to refresh library.');
@@ -63,8 +156,7 @@ export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
     deleteFile: async (comp: ILibraryCtx, uid: string) => {
         try {
             const data = await requestDeleteFile(uid);
-            queryClient.invalidateCache('library');
-            await comp.fetchLibrary();
+            await reloadLibrary(comp);
             toast.success(data.message || 'File deleted');
         } catch (e) {
             toast.error(e instanceof Error ? e.message : 'Failed to delete file.');
@@ -74,8 +166,7 @@ export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
     deleteFolder: async (comp: ILibraryCtx, uid: string) => {
         try {
             const data = await requestDeleteFolder(uid);
-            queryClient.invalidateCache('library');
-            await comp.fetchLibrary();
+            await reloadLibrary(comp);
             toast.success(data.message || 'Folder deleted');
         } catch (e) {
             toast.error(e instanceof Error ? e.message : 'Failed to delete folder.');
@@ -85,8 +176,7 @@ export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
     createFolder: async (comp: ILibraryCtx, folderName: string, parentFolderUid?: string) => {
         try {
             const data = await requestCreateFolder(folderName, parentFolderUid);
-            queryClient.invalidateCache('library');
-            await comp.fetchLibrary();
+            await reloadLibrary(comp);
             toast.success(data.message || 'Folder created');
         } catch (e) {
             toast.error(e instanceof Error ? e.message : 'Failed to create folder.');
@@ -96,8 +186,7 @@ export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
     moveFile: async (comp: ILibraryCtx, fileUid: string, targetFolderUid?: string) => {
         try {
             const data = await requestMoveFile(fileUid, targetFolderUid);
-            queryClient.invalidateCache('library');
-            await comp.fetchLibrary();
+            await reloadLibrary(comp);
             toast.success(data.message || 'File moved');
         } catch (e) {
             toast.error(e instanceof Error ? e.message : 'Failed to move file.');
@@ -107,8 +196,7 @@ export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
     unidentifyFile: async (comp: ILibraryCtx, uid: string) => {
         try {
             const data = await requestUnidentifyFile(uid);
-            queryClient.invalidateCache('library');
-            await comp.fetchLibrary();
+            await reloadLibrary(comp);
             toast.success(data.message || 'File un-identified');
         } catch (e) {
             toast.error(e instanceof Error ? e.message : 'Failed to un-identify file.');
