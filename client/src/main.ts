@@ -10,6 +10,9 @@ declare global {
             electron: string;
             platform: string;
         };
+        desktop?: {
+            pickLibraryFolder(): Promise<string | null>;
+        };
     }
 }
 

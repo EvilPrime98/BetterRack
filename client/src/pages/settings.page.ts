@@ -8,7 +8,7 @@ import { LibraryFolderRow } from "@/components/library-folder-row/library-folder
 import { toast } from "../services/toast.service";
 import { DOCUMENT_TITLE_CONTEXT } from "../context/document-title.context";
 import { BRButton } from "../components/br-button/br-button";
-import { isAndroidPlatform, getStoredServerUrl } from "../services/server-config.service";
+import { isAndroidPlatform, getStoredServerUrl, hasNativeFolderPicker } from "../services/server-config.service";
 import { SERVER_MODAL_CTX } from "../context/server-modal.context";
 
 export function SettingsPage() {
@@ -66,8 +66,8 @@ export function SettingsPage() {
         );
     }
 
-    async function onAddFolder() {
-        const value = fieldsState.folderPath.get().trim();
+    async function addFolder(rawValue: string) {
+        const value = rawValue.trim();
         if (!value) return;
         clearFolderError();
         try {
@@ -81,6 +81,28 @@ export function SettingsPage() {
             setFolderError(message);
             toast.error(message);
         }
+    }
+
+    function onAddFolder() {
+        addFolder(fieldsState.folderPath.get());
+    }
+
+    async function onBrowseFolder() {
+        const picker = window.desktop?.pickLibraryFolder;
+        if (!picker) return;
+        clearFolderError();
+        let selected: string | null;
+        try {
+            selected = await picker();
+        } catch (e) {
+            const message = e instanceof Error
+                ? e.message
+                : 'Could not open the folder picker.';
+            setFolderError(message);
+            toast.error(message);
+            return;
+        }
+        if (selected) addFolder(selected);
     }
 
     async function onSave() {
@@ -212,6 +234,15 @@ export function SettingsPage() {
                                         }
                                     }
                                 }),
+
+                                ...(hasNativeFolderPicker() ? [
+                                    BRButton({
+                                        text: 'Browse…',
+                                        variant: 'secondary',
+                                        className: [styles.browseBtn],
+                                        eventHandler: { click: onBrowseFolder }
+                                    })
+                                ] : []),
 
                                 BRButton({
                                     text: 'Add Folder',

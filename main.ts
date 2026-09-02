@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog } from "electron";
+import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import { spawn, type ChildProcess } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -119,6 +119,23 @@ async function startDesktopApp() {
     win.setMenu(null)
 
   }
+
+  ipcMain.handle("dialog:pick-folder", async (event) => {
+
+    const win = BrowserWindow.fromWebContents(event.sender);
+
+    const options: Electron.OpenDialogOptions = {
+      title: "Select library folder",
+      properties: ["openDirectory"],
+    };
+
+    const { canceled, filePaths } = win
+      ? await dialog.showOpenDialog(win, options)
+      : await dialog.showOpenDialog(options);
+
+    return canceled || filePaths.length === 0 ? null : filePaths[0];
+
+  });
 
   app.whenReady().then(async () => {
 
