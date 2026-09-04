@@ -50,6 +50,70 @@
     min-width: 0;
 }
 
+.filter {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    flex-shrink: 0;
+    cursor: pointer;
+    user-select: none;
+}
+
+.filter:hover .filterLabel,
+.filter:hover > svg {
+    opacity: 0.8;
+}
+
+.filter svg {
+    transition: transform 0.15s ease-in-out, opacity 0.15s ease-in-out;
+}
+
+.filterOpen svg {
+    transform: rotate(180deg);
+}
+
+.filterLabel {
+    transition: opacity 0.15s ease-in-out;
+    font-family: var(--font-sans);
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.filterMenu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 160px;
+    margin: 0;
+    padding: 6px;
+    list-style: none;
+    background: #1c1c1c;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    z-index: 10;
+}
+
+.filterOption {
+    padding: 8px 10px;
+    border-radius: 5px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: #d8d8d8;
+    cursor: pointer;
+    transition: background 0.15s ease-in-out, color 0.15s ease-in-out;
+}
+
+.filterOption:hover {
+    background: rgba(232, 163, 61, 0.12);
+    color: var(--accent);
+}
+
 .eyebrow {
     font-family: var(--font-sans);
     font-size: 10px;
