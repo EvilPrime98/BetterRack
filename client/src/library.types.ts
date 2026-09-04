@@ -41,6 +41,18 @@ export interface IRecentlyAddedResponse {
     "generatedAt": number
 }
 
+/** The look-back windows for the "recently added" view. The view sends `hours`
+ *  as ?windowHours= to GET /api/library/recent. The server changes a missing or
+ *  invalid value to 24. */
+export const RECENT_WINDOW_OPTIONS = [
+    { label: 'Last 24 hours', hours: 24 },
+    { label: 'Last week', hours: 168 },
+    { label: 'Last month', hours: 720 },
+    { label: 'Last year', hours: 8760 },
+] as const;
+
+export type TRecentWindow = typeof RECENT_WINDOW_OPTIONS[number];
+
 export interface ILibraryIndexGroup {
     "uid": string,
     "name": string,

@@ -1,10 +1,11 @@
-import { UltraActivity, UltraComponent, ultraCompState, type IUltraCompStateStateful, type UltraLightElement } from "ultra-light-js";
+import { UltraActivity, UltraComponent, ultraCompState, ultraState, type IUltraCompStateStateful, type UltraLightElement } from "ultra-light-js";
 import styles from './recent-page.module.css';
 import { Layout } from "../layout";
 import { ComicCard } from "@/components/comic-card/comic-card";
 import { getRecentlyAdded } from "../services/library.service";
 import { toast } from "../services/toast.service";
-import type { ILibraryResponseItem } from "../library.types";
+import { ChevronDownIcon } from "../icons/chevron.icon";
+import { RECENT_WINDOW_OPTIONS, type ILibraryResponseItem } from "../library.types";
 import { DOCUMENT_TITLE_CONTEXT } from "../context/document-title.context";
 
 interface IRecentPageState {
@@ -13,6 +14,93 @@ interface IRecentPageState {
     isLoading: IUltraCompStateStateful<boolean>;
     error: IUltraCompStateStateful<string>;
     load: () => Promise<void>;
+}
+
+function labelForWindow(hours: number): string {
+    return RECENT_WINDOW_OPTIONS.find(option => option.hours === hours)?.label
+        ?? `Last ${hours} hours`;
+}
+
+function WindowFilter(store: IRecentPageState) {
+
+    const [isOpen, setOpen, subsOpen] = ultraState(false);
+
+    const closeMenu = () => setOpen(false);
+
+    const onOpenChange = ($root: HTMLElement) => {
+        $root.classList.toggle(styles.filterOpen, isOpen());
+    };
+
+    return UltraComponent({
+
+        component: '<div></div>',
+
+        className: [styles.filter],
+
+        eventHandler: {
+            click: (e: Event) => {
+                e.stopPropagation();
+                setOpen(!isOpen());
+            }
+        },
+
+        onMount: [
+            onOpenChange,
+            () => {
+                document.addEventListener('click', closeMenu);
+                return () => document.removeEventListener('click', closeMenu);
+            }
+        ],
+
+        trigger: [{
+            subscriber: subsOpen,
+            triggerFunction: onOpenChange
+        }],
+
+        children: [
+
+            UltraComponent({
+                component: `<span class="${styles.filterLabel}"></span>`,
+                trigger: [{
+                    subscriber: store.windowHours.subscribe,
+                    triggerFunction: ($span: HTMLElement) => {
+                        $span.textContent = labelForWindow(store.windowHours.get());
+                    }
+                }]
+            }),
+
+            ChevronDownIcon({ size: 14 }),
+
+            UltraActivity({
+
+                component: `<ul class="${styles.filterMenu}"></ul>`,
+
+                mode: {
+                    state: isOpen,
+                    subscriber: subsOpen
+                },
+
+                children: RECENT_WINDOW_OPTIONS.map(option =>
+                    UltraComponent({
+                        component: `<li class="${styles.filterOption}">${option.label}</li>`,
+                        eventHandler: {
+                            click: (e: Event) => {
+                                e.stopPropagation();
+                                setOpen(false);
+                                if (store.windowHours.get() === option.hours) return;
+                                store.windowHours.set(option.hours);
+                                store.load();
+                            }
+                        }
+                    })
+                )
+
+            })
+
+        ]
+
+    });
+
 }
 
 export function RecentPage() {
@@ -28,9 +116,8 @@ export function RecentPage() {
             comp.isLoading.set(true);
             comp.error.set('');
             try {
-                const data = await getRecentlyAdded();
+                const data = await getRecentlyAdded(comp.windowHours.get());
                 comp.items.set(data.items);
-                comp.windowHours.set(data.windowHours);
             } catch (e) {
                 const message = e instanceof Error ? e.message : 'Failed to load recently added comics.';
                 comp.error.set(message);
@@ -93,10 +180,11 @@ export function RecentPage() {
                             trigger: [{
                                 subscriber: store.windowHours.subscribe,
                                 triggerFunction: ($h1: HTMLElement) => {
-                                    $h1.textContent = `Last ${store.windowHours.get()} hours`;
+                                    $h1.textContent = labelForWindow(store.windowHours.get());
                                 }
                             }]
-                        })
+                        }),
+                        WindowFilter(store)
                     ]
                 }),
 
@@ -125,7 +213,7 @@ export function RecentPage() {
                                 ? 'Loading recently added comics…'
                                 : store.error.get()
                                     ? store.error.get()
-                                    : `Nothing added in the last ${store.windowHours.get()} hours.`;
+                                    : `Nothing added in the ${labelForWindow(store.windowHours.get()).toLowerCase()}.`;
                         }
                     }]
                 }),

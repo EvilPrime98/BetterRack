@@ -2,10 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { getRecentlyAdded } from '@/services/library.service';
 import type { ILibraryResponseItem } from '@/library.types';
 
-export function useRecentlyAdded() {
+export function useRecentlyAdded(windowHours: number) {
 
     const [items, setItems] = useState<ILibraryResponseItem[]>([]);
-    const [windowHours, setWindowHours] = useState(24);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const requestId = useRef(0);
@@ -16,11 +15,10 @@ export function useRecentlyAdded() {
         setIsLoading(true);
         setError(null);
 
-        getRecentlyAdded()
+        getRecentlyAdded(windowHours)
             .then(data => {
                 if (requestId.current !== currentRequest) return;
                 setItems(data.items);
-                setWindowHours(data.windowHours);
             })
             .catch(() => {
                 if (requestId.current === currentRequest)
@@ -31,8 +29,8 @@ export function useRecentlyAdded() {
                     setIsLoading(false);
             });
 
-    }, []);
+    }, [windowHours]);
 
-    return { items, windowHours, isLoading, error };
+    return { items, isLoading, error };
 
 }

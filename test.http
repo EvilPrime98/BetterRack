@@ -17,6 +17,12 @@ GET http://localhost:3000/api/library
 ### Recently Added (last 24h; optional ?windowHours=)
 GET http://localhost:3000/api/library/recent
 
+### Recently Added - last week
+GET http://localhost:3000/api/library/recent?windowHours=168
+
+### Recently Added - last year
+GET http://localhost:3000/api/library/recent?windowHours=8760
+
 ### Read Comic
 GET http://localhost:3000/read/11fb27fb-92eb-c926-d02f-c3f6ff258858
 

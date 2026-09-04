@@ -6,8 +6,11 @@ export { API_URL };
 /** The default entries-per-page for the incremental library load. It matches the server default. */
 export const LIBRARY_PAGE_SIZE = 100;
 
-export async function getRecentlyAdded(): Promise<IRecentlyAddedResponse> {
-    const response = await fetch(`${API_URL}/api/library/recent`);
+export async function getRecentlyAdded(windowHours?: number): Promise<IRecentlyAddedResponse> {
+    const query = typeof windowHours === 'number' && windowHours > 0
+        ? `?${new URLSearchParams({ windowHours: String(windowHours) })}`
+        : '';
+    const response = await fetch(`${API_URL}/api/library/recent${query}`);
     const data = await response.json();
     if (!response.ok) throw new Error((data as { message?: string })?.message || 'Failed to load recently added comics.');
     return data as IRecentlyAddedResponse;
