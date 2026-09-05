@@ -9,6 +9,7 @@ Better Rack is a desktop app for organizing and reading a local comic book libra
 - Store page to search and download comics from a configurable external source
 - Wiki-backed metadata lookup for comic info
 - Configurable settings for source URLs and download/output directories
+- Desktop app can optionally connect to a remote BetterRack deployment instead of its local server, sharing that deployment's library and data
 - Packaged as a Windows desktop app (NSIS installer) via Electron Builder, with an Android build via Capacitor
 
 ## Installation
@@ -20,7 +21,9 @@ bun install
 cd client && pnpm install
 ```
 
-Optional environment variables (place in a `.env` file at the project root): `PORT`, `API_URL`, `BASE_URL`, `HOST_DOMAIN`, `DOWNLOAD_DIR`, `OUTPUT_DIR`.
+Optional environment variables (place in a `.env` file at the project root): `PORT`, `API_URL`, `BASE_URL`, `HOST_DOMAIN`, `DOWNLOAD_DIR`, `OUTPUT_DIR`, `BR_API_KEY`.
+
+Set `BR_API_KEY` to require that key on every `/api/*` and `/read/*` request — needed when exposing the server beyond a trusted LAN, such as for a desktop client's remote-mode connection. Leave it unset to keep the default open, LAN-trust behavior.
 
 ## Usage
 
