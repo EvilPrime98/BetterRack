@@ -8,7 +8,7 @@ import { LibraryFolderRow } from "@/components/library-folder-row/library-folder
 import { toast } from "../services/toast.service";
 import { DOCUMENT_TITLE_CONTEXT } from "../context/document-title.context";
 import { BRButton } from "../components/br-button/br-button";
-import { isAndroidPlatform, isRemoteModeEnabled, getStoredServerUrl, hasNativeFolderPicker } from "../services/server-config.service";
+import { getStoredServerUrl, hasNativeFolderPicker } from "../services/server-config.service";
 import { SERVER_MODAL_CTX } from "../context/server-modal.context";
 
 export function SettingsPage() {
@@ -147,40 +147,38 @@ export function SettingsPage() {
 
                 `<h1 class="${styles.title}">Settings</h1>`,
 
-                ...((isAndroidPlatform() || isRemoteModeEnabled()) ? [
-                    UltraComponent({
+                UltraComponent({
 
-                        component: '<section></section>',
+                    component: '<section></section>',
 
-                        className: [styles.section],
+                    className: [styles.section],
 
-                        children: [
+                    children: [
 
-                            `<h2 class="${styles.sectionTitle}">Server</h2>`,
+                        `<h2 class="${styles.sectionTitle}">Server</h2>`,
 
-                            UltraComponent({
-                                component: `<p class="${styles.empty}"></p>`,
-                                onMount: [($p: HTMLElement) => {
+                        UltraComponent({
+                            component: `<p class="${styles.empty}"></p>`,
+                            onMount: [($p: HTMLElement) => {
+                                $p.textContent = getStoredServerUrl() || 'No server configured';
+                            }],
+                            trigger: [{
+                                subscriber: SERVER_MODAL_CTX.isVisible.subscribe,
+                                triggerFunction: ($p: HTMLElement) => {
+                                    if (SERVER_MODAL_CTX.isVisible.get()) return;
                                     $p.textContent = getStoredServerUrl() || 'No server configured';
-                                }],
-                                trigger: [{
-                                    subscriber: SERVER_MODAL_CTX.isVisible.subscribe,
-                                    triggerFunction: ($p: HTMLElement) => {
-                                        if (SERVER_MODAL_CTX.isVisible.get()) return;
-                                        $p.textContent = getStoredServerUrl() || 'No server configured';
-                                    }
-                                }]
-                            }),
+                                }
+                            }]
+                        }),
 
-                            BRButton({
-                                text: 'Change server',
-                                eventHandler: { click: () => SERVER_MODAL_CTX.openServerModal() }
-                            })
+                        BRButton({
+                            text: 'Change server',
+                            eventHandler: { click: () => SERVER_MODAL_CTX.openServerModal() }
+                        })
 
-                        ]
+                    ]
 
-                    })
-                ] : []),
+                }),
 
                 UltraComponent({
 
