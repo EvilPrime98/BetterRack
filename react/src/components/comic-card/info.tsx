@@ -1,7 +1,7 @@
 import type { WikiComic } from 'better-wiki';
 import styles from './comic-card.module.css';
 import { InfoRow } from './info-row';
-import { CrButton } from '../cr-button/cr-button';
+//import { CrButton } from '../cr-button/cr-button';
 
 export function ComicCardInfo({
     navigate,
@@ -22,7 +22,7 @@ export function ComicCardInfo({
     const writers = (comic?.credits?.writers || []);
     const firstWriter = writers[0];
 
-    const viewMoreURL = `/details/${comic?.pageId}?sourceWiki=${comic?.sourceWiki}`;
+    //const viewMoreURL = `/details/${comic?.pageId}?sourceWiki=${comic?.sourceWiki}`;
 
     return (
         <div className={styles.info}>
@@ -48,11 +48,11 @@ export function ComicCardInfo({
 
             <InfoRow label="Released" value={released} />
 
-            <CrButton
+            {/* <CrButton
                 text="View More"
                 className={styles.viewMore}
                 onClick={() => navigate(viewMoreURL)}
-            />
+            /> */}
 
         </div>
     );

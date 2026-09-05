@@ -47,7 +47,6 @@ export function FolderStackCard({
         <article
             className={[
                 styles.comicCard,
-                styles.isRead,
                 styles.stackLayer
             ].join(' ')}
             style={{ padding: '0' }}

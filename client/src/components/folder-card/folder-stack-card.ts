@@ -50,7 +50,6 @@ export function FolderStackCard({
         className: [
             styles.comicCard,
             //(isRead) ? styles.isRead : '',
-            styles.isRead,
             styles.stackLayer
         ],
 
