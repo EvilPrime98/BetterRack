@@ -68,7 +68,6 @@
 @media (min-width: 801px) {
     .burger {
         max-width: 80px;
-        overflow: hidden;
         transition:
             max-width 0.2s ease-in-out,
             margin 0.2s ease-in-out,

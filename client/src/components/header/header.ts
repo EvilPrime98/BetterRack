@@ -18,17 +18,6 @@ export function Header() {
         }
     };
 
-    function showBurger() {
-        return !VIEWPORT_CONTEXT.isDesktop.get() || SIDEBAR_CONTEXT.isCollapsed.get();
-    }
-
-    function onBurgerVisibilityChange($burger: HTMLElement) {
-        const visible = showBurger();
-        $burger.classList.toggle(styles.burgerCollapsed, !visible);
-        $burger.setAttribute('tabindex', visible ? '0' : '-1');
-        $burger.setAttribute('aria-hidden', String(!visible));
-    }
-
     function goHome() {
         LIBRARY_CONTEXT.searchQuery.set('');
         if (ultraQueryParams().search) ultraNavigate({ href: '/' });
@@ -44,15 +33,6 @@ export function Header() {
             handler();
         };
     }
-
-    // Resolve the burger state before insertion. onBurgerVisibilityChange runs
-    // one frame later (ultra-light-js defers onMount with requestAnimationFrame),
-    // and a route change rebuilds this element. Without the initial class, the
-    // burger shows at full size for one frame and then animates shut.
-    const burgerVisible = showBurger();
-    const burgerClasses = burgerVisible
-        ? [styles.iconBtn, styles.noDrag, styles.burger]
-        : [styles.iconBtn, styles.noDrag, styles.burger, styles.burgerCollapsed];
 
     return UltraComponent({
 
@@ -72,25 +52,17 @@ export function Header() {
 
                     UltraComponent({
                         component: BurgerIcon({ size: iconSize * 1.5 }),
-                        className: burgerClasses,
+                        className: [styles.iconBtn, styles.noDrag, styles.burger],
                         attributes: {
                             role: 'button',
-                            tabindex: burgerVisible ? '0' : '-1',
-                            'aria-hidden': String(!burgerVisible),
+                            tabindex: '0',
+                            'aria-hidden': 'false',
                             'aria-label': 'Toggle sidebar'
                         },
                         eventHandler: {
                             click: toggleSidebar,
                             keydown: onEnterOrSpace(toggleSidebar)
-                        },
-                        onMount: [onBurgerVisibilityChange],
-                        trigger: [{
-                            subscriber: [
-                                VIEWPORT_CONTEXT.isDesktop.subscribe,
-                                SIDEBAR_CONTEXT.isCollapsed.subscribe
-                            ],
-                            triggerFunction: onBurgerVisibilityChange
-                        }]
+                        }
                     }),
 
                     UltraLink({

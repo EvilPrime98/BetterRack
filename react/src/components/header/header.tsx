@@ -9,24 +9,18 @@ import { useLibraryStore } from '@/stores/library.store';
 export function Header() {
 
     const iconSize = 30;
-
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-
     const isDesktop = useIsDesktop();
     const isExpanded = useSidebarStore((s) => s.isExpanded);
     const setIsExpanded = useSidebarStore((s) => s.setIsExpanded);
-    const isCollapsed = useSidebarStore((s) => s.isCollapsed);
+    const isSideBarCollapsed = useSidebarStore((s) => s.isCollapsed);
     const setIsCollapsed = useSidebarStore((s) => s.setIsCollapsed);
     const setSearchQuery = useLibraryStore((s) => s.setSearchQuery);
 
-    // Above 800px the sidebar is always visible, so the burger only appears to
-    // bring it back once collapsed; below that it toggles the overlay.
-    const showBurger = !isDesktop || isCollapsed;
-
     function toggleSidebar() {
         if (isDesktop) {
-            setIsCollapsed(!isCollapsed);
+            setIsCollapsed(!isSideBarCollapsed);
         } else {
             setIsExpanded(!isExpanded);
         }
@@ -53,13 +47,12 @@ export function Header() {
                 className={[
                     styles.iconBtn,
                     styles.noDrag,
-                    styles.burger,
-                    showBurger ? '' : styles.burgerCollapsed
+                    styles.burger
                 ].filter(Boolean).join(' ')}
                 role="button"
-                tabIndex={showBurger ? 0 : -1}
+                tabIndex={0}
                 aria-label="Toggle sidebar"
-                aria-hidden={!showBurger}
+                aria-hidden={false}
                 onClick={toggleSidebar}
                 onKeyDown={onEnterOrSpace(toggleSidebar)}
             >
@@ -79,8 +72,16 @@ export function Header() {
                         <BetterRackIcon size={iconSize * 1.3} />
                     </Link>
 
-                    <div className={styles.text} style={{ userSelect: 'none' }}>
-                        <span className={styles.title} style={{ fontSize: '1.5rem' }}>BetterRack</span>
+                    <div 
+                        className={styles.text} 
+                        style={{ userSelect: 'none' }}
+                    >
+                        <span 
+                            className={styles.title} 
+                            style={{ fontSize: '1.5rem' }}
+                        >
+                            BetterRack
+                        </span>
                     </div>
 
                 </div>
