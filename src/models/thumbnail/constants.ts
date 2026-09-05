@@ -8,6 +8,6 @@ export const RAW_EXTRACT_DIR = path.join(THUMBNAIL_CACHE_DIR, '.raw');
 
 export const EXTRACT_CONCURRENCY = 4;
 
-export const THUMBNAIL_WIDTH = 300;
+export const THUMBNAIL_WIDTH = 180;
 
 export const THUMBNAIL_QUALITY = 82;
