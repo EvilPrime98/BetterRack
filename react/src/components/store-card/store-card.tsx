@@ -116,7 +116,10 @@ export function StoreCard({
         if (curr.status === 'idle') {
 
             return (
-                <BRButton text="" onClick={onDownloadClick}>
+                <BRButton 
+                    text="" onClick={onDownloadClick}
+                    variant='classic'
+                >
                     <span>Download</span>
                 </BRButton>
             );
@@ -150,7 +153,11 @@ export function StoreCard({
         if (curr.status === 'error') {
 
             return (
-                <BRButton text="" className={styles.retryBtn} onClick={onDownloadClick}>
+                <BRButton 
+                    text="" 
+                    variant='classic'
+                    className={styles.retryBtn} 
+                    onClick={onDownloadClick}>
                     <span>Retry</span>
                 </BRButton>
             );

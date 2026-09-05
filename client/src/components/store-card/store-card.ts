@@ -155,6 +155,7 @@ export function StoreCard({
 
             return BRButton({
                 text: '',
+                variant: 'classic',
                 className:  retry ? [styles.retryBtn] : [],
                 attributes: disabled ? { type: 'button', disabled: 'true' } : { type: 'button' },
                 eventHandler: { click: onDownloadClick },

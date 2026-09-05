@@ -6,6 +6,7 @@ import { searchComics, getLatestComics } from '@/services/store.service';
 import { toast } from '@/services/toast.service';
 import type { IStorePost } from '@/store.types';
 import { useDocumentTitleStore } from '@/stores/documentTitle.store';
+import { BRButton } from '@/components/br-button/br-button';
 
 const PAGE_SIZE = 30;
 
@@ -118,8 +119,12 @@ export function StorePage() {
                         onKeyDown={(e) => { if (e.key === 'Enter') runSearch(); }}
                     />
 
-                    <button type="button" className={styles.searchBtn} onClick={runSearch}>Search</button>
-
+                    <BRButton
+                        text='Search'
+                        onClick={runSearch}
+                    >
+                    </BRButton>
+                    
                 </div>
 
                 <p className={styles.errorText}>{error}</p>

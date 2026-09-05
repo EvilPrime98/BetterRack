@@ -6,6 +6,7 @@ import { searchComics, getLatestComics } from "../services/store.service";
 import { toast } from "../services/toast.service";
 import type { IStorePost } from "../store.types";
 import { DOCUMENT_TITLE_CONTEXT } from "../context/document-title.context";
+import { BRButton } from "../components/br-button/br-button";
 
 interface IStorePageState {
     query: IUltraCompStateStateful<string>;
@@ -208,9 +209,8 @@ export function StorePage() {
                             }
                         }),
 
-                        UltraComponent({
-                            component: `<button type="button">Search</button>`,
-                            className: [styles.searchBtn],
+                        BRButton({
+                            text: 'Search',
                             eventHandler: { click: store.runSearch }
                         })
 
