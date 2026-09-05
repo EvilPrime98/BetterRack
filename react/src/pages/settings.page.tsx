@@ -164,7 +164,6 @@ export function SettingsPage() {
 
                         <BRButton
                             text="Add Folder"
-                            className={styles.addBtn}
                             onClick={onAddFolder}
                         />
 
@@ -216,7 +215,11 @@ export function SettingsPage() {
 
                     </div>
 
-                    <BRButton text="Save" onClick={onSave} />
+                    <BRButton
+                        className={styles.saveButton}
+                        text="Save" 
+                        onClick={onSave} 
+                    />
 
                     <p className={styles.errorText}>{settingsError}</p>
 

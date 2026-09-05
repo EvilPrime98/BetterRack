@@ -246,7 +246,6 @@ export function SettingsPage() {
 
                                 BRButton({
                                     text: 'Add Folder',
-                                    className: [styles.addBtn],
                                     eventHandler: { click: onAddFolder }
                                 })
                             ]
@@ -350,6 +349,7 @@ export function SettingsPage() {
 
                         BRButton({
                             text: 'Save',
+                            className: [styles.saveButton],
                             eventHandler: { click: onSave }
                         }),
 
