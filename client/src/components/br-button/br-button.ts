@@ -1,13 +1,14 @@
 import { UltraComponent, type UltraElementProps } from "ultra-light-js";
 import styles from './br-button.module.css';
+import { BR_BUTTON_VARIANTS, type TBrButtonVariant } from './variants';
 
 export function BRButton({
     text,
-    variant = 'primary',
+    variant = BR_BUTTON_VARIANTS.classic,
     ...props
 }: {
     text: string;
-    variant?: 'primary' | 'secondary' | 'ghost';
+    variant?: TBrButtonVariant;
 } & UltraElementProps) {
 
     return UltraComponent({
