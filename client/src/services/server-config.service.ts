@@ -1,21 +1,31 @@
 import { Capacitor } from "@capacitor/core";
 
 const STORAGE_KEY = 'br_server_url';
+const REMOTE_MODE_KEY = 'br_remote_mode';
+const API_KEY_STORAGE_KEY = 'br_server_api_key';
 
 export function isAndroidPlatform(): boolean {
     return Capacitor.getPlatform() === 'android';
 }
 
+export function isRemoteModeEnabled(): boolean {
+    return localStorage.getItem(REMOTE_MODE_KEY) === '1';
+}
+
 export function hasNativeFolderPicker(): boolean {
-    return typeof window.desktop?.pickLibraryFolder === 'function';
+    return typeof window.desktop?.pickLibraryFolder === 'function' && !isRemoteModeEnabled();
 }
 
 export function getStoredServerUrl(): string {
     return localStorage.getItem(STORAGE_KEY) ?? '';
 }
 
+export function getStoredApiKey(): string {
+    return localStorage.getItem(API_KEY_STORAGE_KEY) ?? '';
+}
+
 export function needsServerSetup(): boolean {
-    return isAndroidPlatform() && !getStoredServerUrl();
+    return (isAndroidPlatform() || isRemoteModeEnabled()) && !getStoredServerUrl();
 }
 
 function normalizeServerUrl(rawUrl: string): string {
@@ -30,9 +40,34 @@ export function setServerUrl(rawUrl: string): void {
     API_URL = normalized;
 }
 
+/** Desktop-only opt-in path: pairs a server URL with the remote-mode flag and an optional API key. */
+export function setRemoteServer(rawUrl: string, apiKey: string): void {
+    setServerUrl(rawUrl);
+    localStorage.setItem(REMOTE_MODE_KEY, '1');
+    if (apiKey) localStorage.setItem(API_KEY_STORAGE_KEY, apiKey);
+    else localStorage.removeItem(API_KEY_STORAGE_KEY);
+}
+
 function resolveInitialApiUrl(): string {
-    if (isAndroidPlatform()) return getStoredServerUrl();
+    if (isAndroidPlatform() || isRemoteModeEnabled()) return getStoredServerUrl();
     return import.meta.env.VITE_API_URL ?? '';
 }
 
 export let API_URL = resolveInitialApiUrl();
+
+const API_KEY_HEADER = 'x-br-api-key';
+const API_KEY_QUERY_PARAM = 'key';
+
+/** Merge this header into fetch() calls when remote mode and an API key are set. */
+export function authHeaders(): Record<string, string> {
+    const key = getStoredApiKey();
+    return isRemoteModeEnabled() && key ? { [API_KEY_HEADER]: key } : {};
+}
+
+/** Add the API key as a query parameter. Use this for URLs that cannot carry a custom header, such as <img src> and EventSource. */
+export function withAuthQuery(url: string): string {
+    const key = getStoredApiKey();
+    if (!isRemoteModeEnabled() || !key) return url;
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}${API_KEY_QUERY_PARAM}=${encodeURIComponent(key)}`;
+}

@@ -1,5 +1,6 @@
 import { UltraComponent, ultraState } from "ultra-light-js";
 import { API_URL } from "../../services/library.service";
+import { withAuthQuery } from "../../services/server-config.service";
 import styles from '../../pages/reader.page.module.css';
 import { ImageGen } from "../image-generic/image-generic";
 
@@ -37,7 +38,7 @@ export function ImageElement({
         children: [
             ImageGen({
                 attributes: {
-                    src: `${API_URL}/read/${uid}/pages/${ind}`,
+                    src: withAuthQuery(`${API_URL}/read/${uid}/pages/${ind}`),
                     alt: `${uid} — page ${index} of ${total}`,
                     loading: (eager || index <= 2) ? 'eager' : 'lazy'
                 },

@@ -8,7 +8,7 @@ import { LibraryFolderRow } from '@/components/library-folder-row/library-folder
 import { toast } from '@/services/toast.service';
 import { useDocumentTitleStore } from '@/stores/documentTitle.store';
 import { BRButton } from '@/components/br-button/br-button';
-import { isAndroidPlatform, getStoredServerUrl, hasNativeFolderPicker } from '@/services/server-config.service';
+import { getStoredServerUrl, hasNativeFolderPicker } from '@/services/server-config.service';
 import { useServerModalStore } from '@/stores/serverModal.store';
 
 export function SettingsPage() {
@@ -106,22 +106,20 @@ export function SettingsPage() {
 
                 <h1 className={styles.title}>Settings</h1>
 
-                {isAndroidPlatform() && (
-                    <section className={styles.section}>
+                <section className={styles.section}>
 
-                        <h2 className={styles.sectionTitle}>Server</h2>
+                    <h2 className={styles.sectionTitle}>Server</h2>
 
-                        <p className={styles.empty}>
-                            {isServerModalVisible ? undefined : (getStoredServerUrl() || 'No server configured')}
-                        </p>
+                    <p className={styles.empty}>
+                        {isServerModalVisible ? undefined : (getStoredServerUrl() || 'No server configured')}
+                    </p>
 
-                        <BRButton
-                            text="Change server"
-                            onClick={() => useServerModalStore.getState().openServerModal()}
-                        />
+                    <BRButton
+                        text="Change server"
+                        onClick={() => useServerModalStore.getState().openServerModal()}
+                    />
 
-                    </section>
-                )}
+                </section>
 
                 <section className={styles.section}>
 

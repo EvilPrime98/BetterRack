@@ -2,15 +2,23 @@ import { UltraActivity, UltraComponent, ultraState } from "ultra-light-js";
 import styles from './server-modal.module.css';
 import { BRButton } from "@/components/br-button/br-button";
 import { SERVER_MODAL_CTX } from "@/context/server-modal.context";
-import { getStoredServerUrl } from "@/services/server-config.service";
+import { getStoredServerUrl, isAndroidPlatform, isRemoteModeEnabled, getStoredApiKey } from "@/services/server-config.service";
 
 export function ServerModal() {
 
     const [text, setText] = ultraState('');
+    const [remoteMode, setRemoteMode, subscribeRemoteMode] = ultraState(false);
+    const [apiKey, setApiKey] = ultraState('');
+
+    const showRemoteModeOption = !isAndroidPlatform();
+
+    const buildRemoteOpts = () => showRemoteModeOption
+        ? { enabled: remoteMode(), apiKey: apiKey() }
+        : undefined;
 
     const cancel = () => SERVER_MODAL_CTX.closeServerModal();
 
-    const submit = () => SERVER_MODAL_CTX.submitServer(text());
+    const submit = () => SERVER_MODAL_CTX.submitServer(text(), buildRemoteOpts());
 
     const onKeydown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') cancel();
@@ -22,11 +30,18 @@ export function ServerModal() {
         const current = getStoredServerUrl();
         setText(current);
         ($input as HTMLInputElement).value = current;
+        setRemoteMode(isRemoteModeEnabled());
+        setApiKey(getStoredApiKey());
         $input.focus();
     }
 
     const onError = ($p: HTMLElement) => {
         $p.textContent = SERVER_MODAL_CTX.error.get();
+    }
+
+    const syncRemoteModeCheckbox = ($label: HTMLElement) => {
+        const $checkbox = $label.querySelector('input') as HTMLInputElement;
+        $checkbox.checked = remoteMode();
     }
 
     const onMount = () => {
@@ -89,6 +104,46 @@ export function ServerModal() {
                             defer: true
                         }]
                     }),
+
+                    ...(showRemoteModeOption ? [
+
+                        UltraComponent({
+                            component: `<label class="${styles.hint}"><input type="checkbox" /> Use this as my library server</label>`,
+                            onMount: [($label: HTMLElement) => {
+                                syncRemoteModeCheckbox($label);
+                                $label.querySelector('input')?.addEventListener(
+                                    'change',
+                                    (e) => setRemoteMode((e.currentTarget as HTMLInputElement).checked)
+                                );
+                            }],
+                            trigger: [{
+                                subscriber: subscribeRemoteMode,
+                                triggerFunction: syncRemoteModeCheckbox
+                            }]
+                        }),
+
+                        UltraActivity({
+                            mode: { state: remoteMode, subscriber: subscribeRemoteMode },
+                            component: '<input/>',
+                            className: [styles.field],
+                            attributes: {
+                                type: 'text',
+                                placeholder: 'API key (optional)'
+                            },
+                            eventHandler: {
+                                input: (e: Event) => setApiKey((e.currentTarget as HTMLInputElement).value)
+                            },
+                            trigger: [{
+                                subscriber: SERVER_MODAL_CTX.isVisible.subscribe,
+                                triggerFunction: ($input: HTMLElement) => {
+                                    if (!SERVER_MODAL_CTX.isVisible.get()) return;
+                                    ($input as HTMLInputElement).value = apiKey();
+                                },
+                                defer: true
+                            }]
+                        })
+
+                    ] : []),
 
                     UltraComponent({
                         component: `<p class="${styles.errorText}"></p>`,
