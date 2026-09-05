@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import styles from './server-modal.module.css';
 import { BRButton } from '@/components/br-button/br-button';
 import { useServerModalStore, getStoredServerUrl } from '@/stores/serverModal.store';
+import { isAndroidPlatform, isRemoteModeEnabled, getStoredApiKey } from '@/services/server-config.service';
 
 export function ServerModal() {
 
@@ -10,30 +11,44 @@ export function ServerModal() {
     const error = useServerModalStore((s) => s.error);
 
     const [text, setText] = useState('');
+    const [remoteMode, setRemoteMode] = useState(false);
+    const [apiKey, setApiKey] = useState('');
     const inputRef = useRef<HTMLInputElement>(null);
 
-    // The keydown listener is registered once, so it reads through this ref rather than
-    // `text` directly, letting Escape/Enter always act on the latest value.
+    // The keydown listener registers once. It reads the refs, not the state.
+    // This lets Escape and Enter always use the latest values.
     const textRef = useRef(text);
     textRef.current = text;
+    const remoteModeRef = useRef(remoteMode);
+    remoteModeRef.current = remoteMode;
+    const apiKeyRef = useRef(apiKey);
+    apiKeyRef.current = apiKey;
+
+    const showRemoteModeOption = !isAndroidPlatform();
+
+    const buildRemoteOpts = () => showRemoteModeOption
+        ? { enabled: remoteModeRef.current, apiKey: apiKeyRef.current }
+        : undefined;
 
     const cancel = () => useServerModalStore.getState().closeServerModal();
-    const submit = () => useServerModalStore.getState().submitServer(textRef.current);
+    const submit = () => useServerModalStore.getState().submitServer(textRef.current, buildRemoteOpts());
 
     useEffect(() => {
         const onKeydown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') useServerModalStore.getState().closeServerModal();
-            if (e.key === 'Enter') useServerModalStore.getState().submitServer(textRef.current);
+            if (e.key === 'Enter') useServerModalStore.getState().submitServer(textRef.current, buildRemoteOpts());
         };
         document.addEventListener('keydown', onKeydown);
         return () => document.removeEventListener('keydown', onKeydown);
     }, []);
 
-    // Re-seed the input from storage and (re-)focus it every time the modal becomes visible.
+    // Reseed the fields from storage. Focus the address input again each time the modal becomes visible.
     useLayoutEffect(() => {
         if (!isVisible) return;
         const current = getStoredServerUrl();
         setText(current);
+        setRemoteMode(isRemoteModeEnabled());
+        setApiKey(getStoredApiKey());
         inputRef.current?.focus();
     }, [isVisible]);
 
@@ -61,6 +76,29 @@ export function ServerModal() {
                     value={text}
                     onChange={(e) => setText(e.currentTarget.value)}
                 />
+
+                {showRemoteModeOption && (
+                    <>
+                        <label className={styles.hint}>
+                            <input
+                                type="checkbox"
+                                checked={remoteMode}
+                                onChange={(e) => setRemoteMode(e.currentTarget.checked)}
+                            />
+                            {' '}Use this as my library server
+                        </label>
+
+                        {remoteMode && (
+                            <input
+                                className={styles.field}
+                                type="text"
+                                placeholder="API key (optional)"
+                                value={apiKey}
+                                onChange={(e) => setApiKey(e.currentTarget.value)}
+                            />
+                        )}
+                    </>
+                )}
 
                 <p className={styles.errorText}>{error}</p>
 

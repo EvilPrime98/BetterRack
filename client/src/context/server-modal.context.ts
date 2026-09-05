@@ -1,5 +1,5 @@
 import { ultraCompState, type IUltraCompStateStateful } from "ultra-light-js";
-import { getStoredServerUrl, needsServerSetup, setServerUrl } from "../services/server-config.service";
+import { getStoredServerUrl, needsServerSetup, setServerUrl, setRemoteServer } from "../services/server-config.service";
 
 let resolver: (() => void) | null = null;
 
@@ -11,7 +11,7 @@ export interface IServerModalCtx {
     ensureServerConfigured: () => Promise<void>;
     openServerModal: () => void;
     closeServerModal: () => void;
-    submitServer: (url: string) => void;
+    submitServer: (url: string, remote?: { enabled: boolean; apiKey: string }) => void;
 }
 
 export const SERVER_MODAL_CTX: IServerModalCtx = ultraCompState({
@@ -41,13 +41,14 @@ export const SERVER_MODAL_CTX: IServerModalCtx = ultraCompState({
         comp.isVisible.set(false);
     },
 
-    submitServer: (comp: IServerModalCtx, url: string) => {
+    submitServer: (comp: IServerModalCtx, url: string, remote?: { enabled: boolean; apiKey: string }) => {
         const trimmed = url.trim();
         if (!trimmed) {
             comp.error.set('Enter a server address.');
             return;
         }
-        setServerUrl(trimmed);
+        if (remote?.enabled) setRemoteServer(trimmed, remote.apiKey.trim());
+        else setServerUrl(trimmed);
         comp.isVisible.set(false);
         comp.isMandatory.set(false);
         resolver?.();

@@ -22,6 +22,7 @@ import { comicsRouter } from './routers/comicsRouter';
 import { downloadsRouter } from './routers/downloadsRouter';
 import { ThumbnailModel } from './models/thumbnail/thumbnail.model';
 import { thumbnailRouter } from './routers/thumbnailRouter';
+import { apiKeyAuth } from './middleware/apiKeyAuthMiddleware';
 import { logger } from '#utils/logger';
 import type { TProgressEvent } from './types';
 
@@ -47,6 +48,9 @@ async function startApp() {
     const fsModel = new FileSystemModel(process.cwd());
 
     app.use(cors());
+
+    app.use('/api/*', apiKeyAuth());
+    app.use('/read/*', apiKeyAuth());
 
     app.route('/api/library', libraryRouter(libModel));
 

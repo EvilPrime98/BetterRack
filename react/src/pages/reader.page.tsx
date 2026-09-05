@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { API_URL, reader, readerBookmarks } from '@/services/library.service';
+import { withAuthQuery } from '@/services/server-config.service';
 import type { IBookmark } from '@/library.types';
 import styles from './reader.page.module.css';
 import { ImageElement } from '@/components/reader-page-image/reader-page-image';
@@ -32,7 +33,7 @@ async function preloadWindow(uid: string, numPages: number, savedPage: number) {
         loads.push(new Promise<void>(resolve => {
             const img = new Image();
             img.onload = img.onerror = () => resolve();
-            img.src = `${API_URL}/read/${uid}/pages/${ind}`;
+            img.src = withAuthQuery(`${API_URL}/read/${uid}/pages/${ind}`);
         }));
     }
     await Promise.all(loads);

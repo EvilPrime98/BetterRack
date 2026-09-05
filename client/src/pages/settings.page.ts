@@ -8,7 +8,7 @@ import { LibraryFolderRow } from "@/components/library-folder-row/library-folder
 import { toast } from "../services/toast.service";
 import { DOCUMENT_TITLE_CONTEXT } from "../context/document-title.context";
 import { BRButton } from "../components/br-button/br-button";
-import { isAndroidPlatform, getStoredServerUrl, hasNativeFolderPicker } from "../services/server-config.service";
+import { isAndroidPlatform, isRemoteModeEnabled, getStoredServerUrl, hasNativeFolderPicker } from "../services/server-config.service";
 import { SERVER_MODAL_CTX } from "../context/server-modal.context";
 
 export function SettingsPage() {
@@ -147,7 +147,7 @@ export function SettingsPage() {
 
                 `<h1 class="${styles.title}">Settings</h1>`,
 
-                ...(isAndroidPlatform() ? [
+                ...((isAndroidPlatform() || isRemoteModeEnabled()) ? [
                     UltraComponent({
 
                         component: '<section></section>',

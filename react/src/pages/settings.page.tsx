@@ -8,7 +8,7 @@ import { LibraryFolderRow } from '@/components/library-folder-row/library-folder
 import { toast } from '@/services/toast.service';
 import { useDocumentTitleStore } from '@/stores/documentTitle.store';
 import { BRButton } from '@/components/br-button/br-button';
-import { isAndroidPlatform, getStoredServerUrl, hasNativeFolderPicker } from '@/services/server-config.service';
+import { isAndroidPlatform, isRemoteModeEnabled, getStoredServerUrl, hasNativeFolderPicker } from '@/services/server-config.service';
 import { useServerModalStore } from '@/stores/serverModal.store';
 
 export function SettingsPage() {
@@ -106,7 +106,7 @@ export function SettingsPage() {
 
                 <h1 className={styles.title}>Settings</h1>
 
-                {isAndroidPlatform() && (
+                {(isAndroidPlatform() || isRemoteModeEnabled()) && (
                     <section className={styles.section}>
 
                         <h2 className={styles.sectionTitle}>Server</h2>
