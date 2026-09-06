@@ -8,11 +8,6 @@ const currentYear = new Date().getFullYear();
 
 export default {
   appId: "com.better.rack",
-  // productName, version, description, author and homepage are read
-  // from package.json ("Better Rack") so the installer, the .exe
-  // version resource and the running app share one identity no
-  // matter which frontend bundle is packaged. Only the bundled
-  // frontend (extraResources) switches on ELECTRON_FRONTEND.
   copyright: `Copyright © ${currentYear} AminPerez`,
   directories: {
     output: "release",
