@@ -12,6 +12,14 @@ Better Rack is a desktop app for organizing and reading a local comic book libra
 - Desktop app can optionally connect to a remote BetterRack deployment instead of its local server, sharing that deployment's library and data
 - Packaged as a Windows desktop app (NSIS installer) via Electron Builder, with an Android build via Capacitor
 
+<img width="1916" height="917" alt="image" src="https://github.com/user-attachments/assets/21d98172-f3ba-468e-b404-33bf962fcffa" />
+
+<img width="1915" height="914" alt="image" src="https://github.com/user-attachments/assets/9e595f6d-77ad-420b-bde0-b0b183f2f381" />
+
+<img width="1919" height="916" alt="image" src="https://github.com/user-attachments/assets/a2594be6-9b85-4364-bd99-2fffb82890fc" />
+
+<img width="1915" height="915" alt="image" src="https://github.com/user-attachments/assets/3b70fb94-75e8-449f-87dd-65783e31886d" />
+
 ## Installation
 
 Requires [Bun](https://bun.sh) (server/runtime) and [pnpm](https://pnpm.io) (client build).
@@ -52,10 +60,6 @@ Build client (requires backend deployment) for Android (from `client/` or `react
 pnpm android:sync
 pnpm android:apk
 ```
-
-## Contributing
-
-<!-- TODO: no CONTRIBUTING.md found -->
 
 ## License
 
