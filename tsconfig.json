@@ -27,5 +27,5 @@
       "#controllers/*": ["./src/controllers/*"],
     },
   },
-  "include": ["src", "preload.ts", "main.ts"],
+  "include": ["src", "electron"],
 }

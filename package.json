@@ -22,6 +22,7 @@
   "scripts": {
     "prepare": "git config core.hooksPath .githooks || true",
     "start": "tsc && bun run build && bun run ./src/run.ts",
+    "start:fresh": "tsc && bun run build && bun run refresh && bun run ./src/run.ts",
     "start-react": "tsc && bun run build-react && bun run ./src/run.ts",
     "start-react:fresh": "tsc && bun run build-react && bun run refresh && bun run ./src/run.ts",
     "start-app": "bun run build:react:electron && bun run build-app && electron .",
@@ -38,7 +39,7 @@
     "refresh": "bash ./scripts/refresh.sh",
     "typecheck": "tsc --noEmit",
     "test": "bun test src/",
-    "build-app": "bun build ./main.ts --outfile dist/main.js --target node --format esm --external electron && bun build ./preload.ts --outfile dist/preload.cjs --target node --format cjs --external electron",
+    "build-app": "bun build ./electron/main.ts --outfile dist/main.js --target node --format esm --external electron && bun build ./electron/preload.ts --outfile dist/preload.cjs --target node --format cjs --external electron",
     "build-server": "bun build ./src/run.ts --compile --external sharp --outfile dist/server/run && bun run ./scripts/prepare-server-deps.ts",
     "dist": "bun run build:react:electron && bun run build-app && bun run build-server && electron-builder --config electron-builder.config.js --win nsis --publish=never",
     "dist:client": "bun run build:client:electron && bun run build-app && bun run build-server && ELECTRON_FRONTEND=client electron-builder --config electron-builder.config.js --win nsis --publish=never"
