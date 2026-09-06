@@ -26,7 +26,8 @@ Requires [Bun](https://bun.sh) (server/runtime) and [pnpm](https://pnpm.io) (cli
 
 ```bash
 bun install
-cd client && pnpm install
+cd client && pnpm install //for the ultra-light-js client
+cd react && pnpm install //for the React client
 ```
 
 Optional environment variables (place in a `.env` file at the project root): `PORT`, `API_URL`, `BASE_URL`, `HOST_DOMAIN`, `DOWNLOAD_DIR`, `OUTPUT_DIR`, `BR_API_KEY`.
