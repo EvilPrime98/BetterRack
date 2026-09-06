@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type SyntheticEvent } from 'react';
+import { useEffect, useRef, useState, type SyntheticEvent } from 'react';
 import styles from './store-card.module.css';
 import { ImageGen } from '@/components/image-generic/image-generic';
 import { NO_IMAGE_URL } from '@/data';
 import { useDownloadDirModalContext } from '@/context/DownloadDirModalContext';
+import { useLinkPickerModalContext } from '@/context/LinkPickerModalContext';
 import { useLibraryStore } from '@/stores/library.store';
 import { getComicLinks, downloadComicPolling, getResourceJob, pollJobStatus } from '@/services/store.service';
 import { toast } from '@/services/toast.service';
@@ -17,19 +18,12 @@ export function StoreCard({
 }) {
 
     const { openDownloadDirModal } = useDownloadDirModalContext();
+    const { openLinkPickerModal } = useLinkPickerModalContext();
 
     const [state, setState] = useState<TCardState>({ status: 'idle' });
     const [coverLoaded, setCoverLoaded] = useState(false);
     const lastRenderable = useRef<TCardState>(state);
     const displayState = state.status === 'links-loading' ? lastRenderable.current : state;
-
-    function onEnterOrSpace(handler: () => void) {
-        return (e: ReactKeyboardEvent) => {
-            if (e.key !== 'Enter' && e.key !== ' ') return;
-            e.preventDefault();
-            handler();
-        };
-    }
 
     async function completeDownload() {
         setState({ status: 'done' });
@@ -41,11 +35,10 @@ export function StoreCard({
 
         if (!item.id) return;
 
-        const prev = state;
         const outputDir = await openDownloadDirModal(link.title);
 
         if (!outputDir) {
-            setState(prev.status === 'links-ready' ? prev : { status: 'idle' });
+            setState({ status: 'idle' });
             return;
         }
 
@@ -87,9 +80,17 @@ export function StoreCard({
             }
             if (links.length === 1) {
                 await startDownload(links[0]);
-            } else {
-                setState({ status: 'links-ready', links });
+                return;
             }
+
+            const chosen = await openLinkPickerModal(links, item.title);
+
+            if (!chosen) {
+                setState({ status: 'idle' });
+                return;
+            }
+
+            await startDownload(chosen);
         } catch (e) {
             const message = e instanceof Error ? e.message : 'Failed to fetch links.';
             setState({ status: 'error', message });
@@ -160,27 +161,6 @@ export function StoreCard({
                     onClick={onDownloadClick}>
                     <span>Retry</span>
                 </BRButton>
-            );
-
-        }
-
-        if (curr.status === 'links-ready') {
-
-            return (
-                <ul className={styles.linkList} role="listbox">
-                    {curr.links.map((link) => (
-                        <li
-                            key={link.uuid}
-                            className={styles.linkItem}
-                            role="option"
-                            tabIndex={0}
-                            onClick={() => startDownload(link)}
-                            onKeyDown={onEnterOrSpace(() => startDownload(link))}
-                        >
-                            {link.title}
-                        </li>
-                    ))}
-                </ul>
             );
 
         }

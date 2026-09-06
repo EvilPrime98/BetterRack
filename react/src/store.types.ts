@@ -23,7 +23,6 @@ export type TStoreProgressEvent =
 export type TCardState =
 | { status: 'idle' }
 | { status: 'links-loading' }
-| { status: 'links-ready'; links: IStoreLink[] }
 | { status: 'downloading'; title: string; percent: number }
 | { status: 'done' }
 | { status: 'error'; message: string };

@@ -3,6 +3,7 @@ import styles from './store-card.module.css';
 import { ImageGen } from "@/components/image-generic/image-generic";
 import { NO_IMAGE_URL } from "@/data";
 import { DOWNLOAD_DIR_MODAL_CTX } from "@/context/download-dir-modal.context";
+import { LINK_PICKER_MODAL_CTX } from "@/context/link-picker-modal.context";
 import { LIBRARY_CONTEXT } from "@/context/library.context";
 import { getComicLinks, downloadComicPolling, getResourceJob, pollJobStatus } from "@/services/store.service";
 import { toast } from "@/services/toast.service";
@@ -22,15 +23,6 @@ export function StoreCard({
 
     const [coverLoaded, setCoverLoaded, subsCoverLoaded] = ultraState(false);
 
-    function onEnterOrSpace(handler: () => void) {
-        return (e: Event) => {
-            const key = (e as KeyboardEvent).key;
-            if (key !== 'Enter' && key !== ' ') return;
-            e.preventDefault();
-            handler();
-        };
-    }
-
     async function completeDownload() {
         setState({ status: 'done' });
         toast.success(`${item.title} downloaded`);
@@ -41,11 +33,10 @@ export function StoreCard({
 
         if (!item.id) return;
 
-        const prev = state();
         const outputDir = await DOWNLOAD_DIR_MODAL_CTX.openDownloadDirModal(link.title);
 
         if (!outputDir) {
-            setState(prev.status === 'links-ready' ? prev : { status: 'idle' });
+            setState({ status: 'idle' });
             return;
         }
 
@@ -112,9 +103,17 @@ export function StoreCard({
             }
             if (links.length === 1) {
                 await startDownload(links[0]);
-            } else {
-                setState({ status: 'links-ready', links });
+                return;
             }
+
+            const chosen = await LINK_PICKER_MODAL_CTX.openLinkPickerModal(links, item.title);
+
+            if (!chosen) {
+                setState({ status: 'idle' });
+                return;
+            }
+
+            await startDownload(chosen);
         } catch (e) {
             const message = e instanceof Error ? e.message : 'Failed to fetch links.';
             setState({ status: 'error', message });
@@ -205,27 +204,6 @@ export function StoreCard({
 
             $div.replaceChildren(
                 $button('Retry', { retry: true })
-            );
-
-        } else if (curr.status === 'links-ready') {
-
-            $div.replaceChildren(
-
-                UltraComponent({
-                    component: `<ul class="${styles.linkList}" role="listbox"></ul>`,
-                    children: curr.links.map(link => UltraComponent({
-                        component: `<li class="${styles.linkItem}">${link.title}</li>`,
-                        attributes: {
-                            role: 'option',
-                            tabindex: '0'
-                        },
-                        eventHandler: {
-                            click: () => startDownload(link),
-                            keydown: onEnterOrSpace(() => startDownload(link))
-                        }
-                    }))
-                })
-
             );
 
         }

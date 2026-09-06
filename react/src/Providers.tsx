@@ -5,6 +5,7 @@ import { ReadTypesProvider } from '@/context/ReadTypesContext';
 import { MoveFileModalProvider } from '@/context/MoveFileModalContext';
 import { NewFolderModalProvider } from '@/context/NewFolderModalContext';
 import { DownloadDirModalProvider } from '@/context/DownloadDirModalContext';
+import { LinkPickerModalProvider } from '@/context/LinkPickerModalContext';
 
 export function Providers({ children }: { children: ReactNode }) {
     return (
@@ -14,7 +15,9 @@ export function Providers({ children }: { children: ReactNode }) {
                     <MoveFileModalProvider>
                         <NewFolderModalProvider>
                             <DownloadDirModalProvider>
-                                {children}
+                                <LinkPickerModalProvider>
+                                    {children}
+                                </LinkPickerModalProvider>
                             </DownloadDirModalProvider>
                         </NewFolderModalProvider>
                     </MoveFileModalProvider>
