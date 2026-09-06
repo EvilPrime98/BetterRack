@@ -20,6 +20,7 @@
     "#controllers/*": "./src/controllers/*"
   },
   "scripts": {
+    "prepare": "git config core.hooksPath .githooks || true",
     "start": "tsc && bun run build && bun run ./src/run.ts",
     "start-react": "tsc && bun run build-react && bun run ./src/run.ts",
     "start-react:fresh": "tsc && bun run build-react && bun run refresh && bun run ./src/run.ts",
