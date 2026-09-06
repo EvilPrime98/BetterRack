@@ -1,6 +1,7 @@
 import { createWriteStream } from 'fs';
-import { mkdir } from 'fs/promises';
+import { mkdir, stat } from 'fs/promises';
 import { join } from 'path';
+import type { PackExtractor } from './pack-extractor.model';
 import type { TDownloadLink, TLogger, TProgressEvent } from './types';
 
 const REQUEST_DELAY = 3 * 1000;
@@ -19,11 +20,14 @@ const CLOUDFLARE_CHALLENGE_MARKERS = [
 export class DownloadModel {
 
     private log: TLogger|undefined;
+    private packExtractor: PackExtractor|undefined;
 
     constructor(
-        log?: TLogger
-    ){  
+        log?: TLogger,
+        packExtractor?: PackExtractor
+    ){
         this.log = log
+        this.packExtractor = packExtractor
     }
 
     private proxyLogger(quiet: boolean) {
@@ -133,6 +137,28 @@ export class DownloadModel {
                 };
                 pump();
             });
+
+            if (this.packExtractor && dest) {
+                try {
+                    const { size } = await stat(dest);
+                    if (this.packExtractor.shouldInspect(dest, size)) {
+                        const result = await this.packExtractor.extractPack({
+                            filePath: dest,
+                            outputDir,
+                            onProgress: (done, total) =>
+                                onProgress?.({ type: 'extracting', title: link.title, done, total })
+                        });
+                        if (result.action === 'extracted') dest = result.destDir ?? dest;
+                        if (result.action === 'renamed') dest = result.renamedTo ?? dest;
+                    }
+                } catch (err) {
+                    // A failed unpack keeps the wrapper on disk. The library
+                    // still rescans below, so the download is not lost.
+                    this.proxyLogger(quiet).error(
+                        `Pack extraction failed: ${err instanceof Error ? err.message : 'unknown error'}`
+                    );
+                }
+            }
 
             onProgress?.({ type: 'done', filename });
 

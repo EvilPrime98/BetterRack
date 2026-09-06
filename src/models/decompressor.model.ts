@@ -458,4 +458,51 @@ export class Zip7Decompressor {
         return MIME_TYPES[path.extname(entryName).toLowerCase()] ?? 'application/octet-stream';
     }
 
+    // Write the named entries to outDir. Keep the in-archive path of each
+    // entry. The zip-slip guard checks every entry name before a process
+    // starts, so a crafted path cannot escape outDir. The caller gives a
+    // fresh outDir for each pack and moves the result into place.
+    extractEntries = async ({
+        filePath,
+        outDir,
+        entryNames
+    }: {
+        filePath: string,
+        outDir: string,
+        entryNames: string[]
+    }): Promise<void> => {
+
+        for (const entryName of entryNames) {
+            this.assertSafeEntryName(entryName);
+        }
+
+        if (entryNames.length === 0) return;
+
+        const proc = this.isRarFile(filePath)
+            ? Bun.spawn([
+                this.resolveUnrarPath(),
+                "x",
+                "-y",
+                filePath,
+                ...entryNames,
+                `${outDir}${path.sep}`
+            ], { stdout: "ignore", stderr: "pipe" })
+            : Bun.spawn([
+                this.resolve7zPath(),
+                "x",
+                filePath,
+                `-o${outDir}`,
+                ...entryNames,
+                "-y"
+            ], { stdout: "ignore", stderr: "pipe" });
+
+        const errorOutput = await new Response(proc.stderr).text();
+        const exitCode = await proc.exited;
+
+        if (exitCode !== 0) {
+            throw new Error(`Extraction failed with code ${exitCode}${errorOutput.trim() ? `: ${errorOutput.trim()}` : ''}`);
+        }
+
+    }
+
 }

@@ -54,6 +54,9 @@ export function StoreCard({
                 onProgress: (event) => {
                     if (event.type === 'progress') {
                         setState({ status: 'downloading', title: link.title, percent: event.percent });
+                    } else if (event.type === 'extracting') {
+                        const percent = event.total ? Math.floor((event.done / event.total) * 100) : 0;
+                        setState({ status: 'downloading', title: `${link.title} — extracting`, percent });
                     }
                 }
             });
@@ -193,6 +196,9 @@ export function StoreCard({
                     if (cancelled) return;
                     if (event.type === 'progress') {
                         setState({ status: 'downloading', title: job.label, percent: event.percent });
+                    } else if (event.type === 'extracting') {
+                        const percent = event.total ? Math.floor((event.done / event.total) * 100) : 0;
+                        setState({ status: 'downloading', title: `${job.label} — extracting`, percent });
                     }
                 });
                 if (cancelled) return;

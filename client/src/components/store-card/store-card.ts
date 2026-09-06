@@ -52,6 +52,9 @@ export function StoreCard({
                 onProgress: (event) => {
                     if (event.type === 'progress') {
                         setState({ status: 'downloading', title: link.title, percent: event.percent });
+                    } else if (event.type === 'extracting') {
+                        const percent = event.total ? Math.floor((event.done / event.total) * 100) : 0;
+                        setState({ status: 'downloading', title: `${link.title} — extracting`, percent });
                     }
                 }
             });
@@ -78,6 +81,9 @@ export function StoreCard({
             await pollJobStatus(job.jobId, (event) => {
                 if (event.type === 'progress') {
                     setState({ status: 'downloading', title: job.label, percent: event.percent });
+                } else if (event.type === 'extracting') {
+                    const percent = event.total ? Math.floor((event.done / event.total) * 100) : 0;
+                    setState({ status: 'downloading', title: `${job.label} — extracting`, percent });
                 }
             });
             await completeDownload();

@@ -15,6 +15,7 @@ import { settingsRouter } from './routers/settingsRouter';
 import { CacheModel } from './models/cacheModel';
 import { GetComicsApiModel } from './models/getComicsApiModel';
 import { DownloadModel } from './models/download/download.model';
+import { PackExtractor } from './models/download/pack-extractor.model';
 import { JobModel } from './models/jobs/jobs.model';
 import { FileSystemModel } from './models/directoryModel';
 import { fsRouter } from './routers/fsRouter';
@@ -42,7 +43,8 @@ async function startApp() {
     const cacheModel = new CacheModel();
     const gcwModel = new GetComicsApiModel(cacheModel, prefsModel);
     const dwnModel = new DownloadModel(
-        logger.child({ module: 'DownloadModel' })
+        logger.child({ module: 'DownloadModel' }),
+        new PackExtractor(zipModel)
     );
     const dwnJobModel = new JobModel<TProgressEvent>();
     const fsModel = new FileSystemModel(process.cwd());
