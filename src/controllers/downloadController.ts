@@ -11,6 +11,7 @@ const STATE_BY_EVENT_TYPE: Record<TProgressEvent['type'], TJobState> = {
     preparing: 'running',
     retrying: 'running',
     progress: 'running',
+    extracting: 'running',
     done: 'done',
     error: 'error',
 };
