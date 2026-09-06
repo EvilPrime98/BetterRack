@@ -4,10 +4,42 @@
     gap: 28px;
     width: 100%;
     height: calc(100dvh - var(--header-height));
-    padding: 24px 20px 40px;
-    max-width: 560px;
+    padding: 24px 24px 40px;
+    max-width: 1040px;
     margin-inline: auto;
     overflow-y: auto;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    align-items: start;
+}
+
+.colLeft {
+    grid-column: 1;
+}
+
+.colRight {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+}
+
+@media (max-width: 760px) {
+    .page {
+        max-width: 560px;
+    }
+
+    .grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .colLeft,
+    .colRight {
+        grid-column: 1;
+        grid-row: auto;
+    }
 }
 
 .title {

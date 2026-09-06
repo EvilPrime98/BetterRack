@@ -8,7 +8,7 @@ import { LibraryFolderRow } from '@/components/library-folder-row/library-folder
 import { toast } from '@/services/toast.service';
 import { useDocumentTitleStore } from '@/stores/documentTitle.store';
 import { BRButton } from '@/components/br-button/br-button';
-import { isAndroidPlatform, isRemoteModeEnabled, getStoredServerUrl, hasNativeFolderPicker } from '@/services/server-config.service';
+import { getStoredServerUrl, hasNativeFolderPicker } from '@/services/server-config.service';
 import { useServerModalStore } from '@/stores/serverModal.store';
 
 export function SettingsPage() {
@@ -106,24 +106,24 @@ export function SettingsPage() {
 
                 <h1 className={styles.title}>Settings</h1>
 
-                {(isAndroidPlatform() || isRemoteModeEnabled()) && (
-                    <section className={styles.section}>
+                <div className={styles.grid}>
 
-                        <h2 className={styles.sectionTitle}>Server</h2>
+                <section className={`${styles.section} ${styles.colLeft}`}>
 
-                        <p className={styles.empty}>
-                            {isServerModalVisible ? undefined : (getStoredServerUrl() || 'No server configured')}
-                        </p>
+                    <h2 className={styles.sectionTitle}>Server</h2>
 
-                        <BRButton
-                            text="Change server"
-                            onClick={() => useServerModalStore.getState().openServerModal()}
-                        />
+                    <p className={styles.empty}>
+                        {isServerModalVisible ? undefined : (getStoredServerUrl() || 'No server configured')}
+                    </p>
 
-                    </section>
-                )}
+                    <BRButton
+                        text="Change server"
+                        onClick={() => useServerModalStore.getState().openServerModal()}
+                    />
 
-                <section className={styles.section}>
+                </section>
+        
+                <section className={`${styles.section} ${styles.colLeft}`}>
 
                     <h2 className={styles.sectionTitle}>Library folders</h2>
 
@@ -173,7 +173,7 @@ export function SettingsPage() {
 
                 </section>
 
-                <section className={styles.section}>
+                <section className={`${styles.section} ${styles.colRight}`}>
 
                     <div className={styles.fieldGroup}>
 
@@ -224,6 +224,8 @@ export function SettingsPage() {
                     <p className={styles.errorText}>{settingsError}</p>
 
                 </section>
+
+                </div>
 
             </section>
         </Layout>
