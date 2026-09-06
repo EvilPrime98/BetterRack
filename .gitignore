@@ -14,3 +14,4 @@ tmp-decompressor/
 tmp-thumbnails/
 release/
 logs/
+knip-report*.json
