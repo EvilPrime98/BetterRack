@@ -15,3 +15,13 @@ export type TLogger = {
     info: (log:string) => void | Promise<void>;
     error: (log:string) => void | Promise<void>;
 }
+
+export type TPackExtractProgress = (done: number, total: number) => void;
+
+export type TPackExtractResult = {
+    action: 'extracted' | 'renamed' | 'skipped';
+    members: string[];
+    wrapperRemoved: boolean;
+    destDir?: string;
+    renamedTo?: string;
+};
