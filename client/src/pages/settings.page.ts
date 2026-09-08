@@ -24,6 +24,12 @@ export function SettingsPage() {
         folderPath: ''
     })
 
+    // The stored server URL, captured when the server modal opens. A runtime
+    // server switch changes API_URL, but no code reloads the settings from the
+    // new server. On modal close, the page compares the current URL against this
+    // value. It refetches only when the URL changed.
+    let serverUrlAtModalOpen = getStoredServerUrl();
+
     function onFolderError($p: HTMLElement) {
         $p.textContent = folderError();
     }
@@ -42,6 +48,29 @@ export function SettingsPage() {
         fieldsState.baseUrl.set(settings.baseUrl);
         fieldsState.hostDomain.set(settings.hostDomain);
         fieldsState.downloadDir.set(settings.downloadDir);
+    }
+
+    async function refreshSettingsFromServer() {
+        setSettingsError('');
+        try {
+            await SETTINGS_CONTEXT.fetchSettings();
+        } catch (e) {
+            const message = e instanceof Error
+                ? e.message
+                : 'Could not load settings from the server.';
+            setSettingsError(message);
+            toast.error(message);
+        }
+    }
+
+    function onServerModalToggle() {
+        if (SERVER_MODAL_CTX.isVisible.get()) {
+            serverUrlAtModalOpen = getStoredServerUrl();
+            return;
+        }
+        if (getStoredServerUrl() === serverUrlAtModalOpen) return;
+        serverUrlAtModalOpen = getStoredServerUrl();
+        refreshSettingsFromServer();
     }
 
     function renderFolders(
@@ -170,13 +199,19 @@ export function SettingsPage() {
                             onMount: [($p: HTMLElement) => {
                                 $p.textContent = getStoredServerUrl() || 'No server configured';
                             }],
-                            trigger: [{
-                                subscriber: SERVER_MODAL_CTX.isVisible.subscribe,
-                                triggerFunction: ($p: HTMLElement) => {
-                                    if (SERVER_MODAL_CTX.isVisible.get()) return;
-                                    $p.textContent = getStoredServerUrl() || 'No server configured';
+                            trigger: [
+                                {
+                                    subscriber: SERVER_MODAL_CTX.isVisible.subscribe,
+                                    triggerFunction: ($p: HTMLElement) => {
+                                        if (SERVER_MODAL_CTX.isVisible.get()) return;
+                                        $p.textContent = getStoredServerUrl() || 'No server configured';
+                                    }
+                                },
+                                {
+                                    subscriber: SERVER_MODAL_CTX.isVisible.subscribe,
+                                    triggerFunction: onServerModalToggle
                                 }
-                            }]
+                            ]
                         }),
 
                         BRButton({
