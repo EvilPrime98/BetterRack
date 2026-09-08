@@ -101,6 +101,7 @@ async function startDesktopApp() {
       minHeight: 600,
       title: APP_NAME,
       ...(app.isPackaged ? {} : { icon: iconPath }),
+      show: false,
       backgroundColor: "#0a0a0a",
       titleBarStyle: isMac ? "hiddenInset" : "hidden",
       ...(isMac ? {} : {
@@ -117,6 +118,10 @@ async function startDesktopApp() {
 
     win.loadURL(SERVER_URL);
     win.setMenu(null)
+
+    win.once("ready-to-show", () => {
+      win.show();
+    });
 
   }
 
