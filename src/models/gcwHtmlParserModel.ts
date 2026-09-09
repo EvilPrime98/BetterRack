@@ -100,6 +100,37 @@ export class GcwHtmlParser {
         return this;
     }
 
+    private stratSingleIssue_3(): this {
+        
+        if (this.issuesCache.length > 0) return this;
+
+        const $a = this.document.querySelector<HTMLAnchorElement>(
+            'a.aio-red[title="Download Now" i]'
+        ); if (!$a) return this;
+
+        const $heading = Array.from(this.document.querySelectorAll('h2'))
+        .find(el => {
+            const text = el.textContent?.toLocaleLowerCase() ?? '';
+            return text.includes('download') &&
+            (text.includes('comic') || text.includes('free'));
+        });
+        
+        const title = $heading?.nextElementSibling?.querySelector('strong')?.textContent
+        || this.document.querySelector('p strong')?.textContent
+        || '';
+
+        const [normalized] = this.normalizeLinks([
+            {
+                title: this.normalizeText(title),
+                downloadLink: $a.href,
+            }
+        ]);
+
+        if (normalized) this.issuesCache.push(normalized);
+        return this;
+        
+    }
+
     //multiple issue strategies
     private stratMultiple_1(): this{
         if (this.issuesCache.length > 0) return this;
@@ -126,6 +157,7 @@ export class GcwHtmlParser {
     //proxies
     private singleStrats(): this{
         return this
+        .stratSingleIssue_3()
         .stratSingleIssue_1()
         .stratSingleIssue_2()
     }
