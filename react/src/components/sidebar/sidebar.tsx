@@ -10,6 +10,7 @@ import { SidebarCloseButton } from './close-button';
 import { SidebarSearch } from './sidebar-search';
 import { GearIcon } from '@/icons/gear.icon';
 import { ShopIcon } from '@/icons/shop.icon';
+import { DownloadIcon } from '@/icons/download.icon';
 import { BookmarkIcon } from '@/icons/bookmark.icon';
 
 export function SideBar() {
@@ -94,6 +95,10 @@ export function SideBar() {
                     <Link to="/store" className={styles.item} onClick={closeSidebar}>
                         <ShopIcon size={16} />
                         <span>Store</span>
+                    </Link>
+                    <Link to="/store/downloads" className={styles.item} onClick={closeSidebar}>
+                        <DownloadIcon size={16} />
+                        <span>Downloads</span>
                     </Link>
                 </div>
 

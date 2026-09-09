@@ -214,6 +214,22 @@ export class DownloadController {
 
     }
 
+    public async listJobs(
+        c: Context
+    ) {
+        // createdAt, not updatedAt: progress ticks bump updatedAt and churn the order.
+        const rank: Record<TJobState, number> = { running: 0, queued: 1, error: 2, done: 3 };
+
+        const jobs = this.jobModel.list()
+            .sort((a, b) =>
+                rank[a.state] - rank[b.state]
+                || b.createdAt - a.createdAt
+                || a.id.localeCompare(b.id))
+            .map((job) => this.toStatusPayload(job));
+
+        return c.json({ error: false, jobs });
+    }
+
     public async getJobByResource(
         c: Context
     ) {

@@ -104,6 +104,12 @@ export async function getResourceJob(id: number): Promise<TJobStatus | null> {
     return data.job;
 }
 
+export async function getDownloadJobs(): Promise<TJobStatus[]> {
+    const response = await fetch(`${API_URL}/api/downloads/jobs`, { headers: authHeaders() });
+    const data = await parseJsonResponse<{ error: boolean; jobs: TJobStatus[] }>(response);
+    return data.jobs;
+}
+
 export async function pollJobStatus(
     jobId: string,
     onProgress: (event: TStoreProgressEvent) => void
