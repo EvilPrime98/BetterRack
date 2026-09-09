@@ -1,10 +1,22 @@
 import { createWriteStream } from 'fs';
-import { mkdir, stat } from 'fs/promises';
+import { mkdir, stat, unlink } from 'fs/promises';
 import { join } from 'path';
 import type { PackExtractor } from './pack-extractor.model';
 import type { TDownloadLink, TLogger, TProgressEvent } from './types';
 
 const REQUEST_DELAY = 3 * 1000;
+
+// getcomics mirror hosts drop connections mid-transfer under load. A
+// retry usually succeeds. Treat a thrown fetch or stream error as
+// transient and start again from the first byte. The budget and backoff
+// match src/models/rotating-fetch/constants.ts.
+const MAX_NETWORK_RETRIES = 3;
+const RETRY_BACKOFF_MS = 2000;
+const RETRY_BACKOFF_CAP_MS = 30_000;
+
+// Raised for a failure the retry loop must not swallow. A Cloudflare
+// challenge page does not clear when you try again.
+class FatalDownloadError extends Error {}
 
 const CUSTOM_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
@@ -21,13 +33,20 @@ export class DownloadModel {
 
     private log: TLogger|undefined;
     private packExtractor: PackExtractor|undefined;
+    private retry: { maxRetries: number; backoffMs: number; backoffCapMs: number };
 
     constructor(
         log?: TLogger,
-        packExtractor?: PackExtractor
+        packExtractor?: PackExtractor,
+        retryOpts: { maxRetries?: number; backoffMs?: number; backoffCapMs?: number } = {}
     ){
         this.log = log
         this.packExtractor = packExtractor
+        this.retry = {
+            maxRetries: retryOpts.maxRetries ?? MAX_NETWORK_RETRIES,
+            backoffMs: retryOpts.backoffMs ?? RETRY_BACKOFF_MS,
+            backoffCapMs: retryOpts.backoffCapMs ?? RETRY_BACKOFF_CAP_MS,
+        }
     }
 
     private proxyLogger(quiet: boolean) {
@@ -82,61 +101,46 @@ export class DownloadModel {
 
         try {
 
-            let response: Response;
-            while (true) {
-                response = await fetch(link.downloadLink, {
-                    method: 'GET',
-                    headers: {
-                        'User-Agent': CUSTOM_USER_AGENT,
-                        'content-type': 'application/octet-stream'
-                    }
-                });
-                const contentType = response.headers.get('content-type') ?? '';
-                if (contentType.includes('text/html')) {
-                    const preview = await response.clone().text();
-                    if (this.isCloudflareChallengePage(preview)) {
-                        const error = 'Cloudflare challenge detected. Open the comic in a browser or use a browser-side download path.';
-                        this.proxyLogger(quiet).error(error);
-                        throw new Error(error);
-                    }
+            // Treat a thrown fetch or stream error as transient. Try again
+            // from the first byte, up to the retry budget, with exponential
+            // backoff. streamToDisk retries a non-2xx status with the same budget.
+            let lastErr: unknown;
+
+            for (let attempt = 0; attempt <= this.retry.maxRetries; attempt++) {
+
+                if (attempt > 0) {
+                    const base = Math.min(2 ** attempt * this.retry.backoffMs, this.retry.backoffCapMs);
+                    const backoff = base + Math.random() * Math.min(this.retry.backoffMs, 1000);
+                    onProgress?.({
+                        type: 'retrying',
+                        title: link.title,
+                        reason: 'network',
+                        delaySec: Math.round(backoff / 1000)
+                    });
+                    await new Promise(r => setTimeout(r, backoff));
                 }
-                if (response.ok) break;
-                if (noRetry === true) throw new Error(`HTTP ${response.status}`);
-                onProgress?.({ type: 'retrying', title: link.title, status: response.status, delaySec: REQUEST_DELAY / 1000 });
-                await new Promise(r => setTimeout(r, REQUEST_DELAY));
+
+                try {
+                    // streamToDisk removes its own partial file on failure.
+                    dest = await this.streamToDisk({ link, noRetry, outputDir, onProgress, quiet });
+                    lastErr = undefined;
+                    break;
+                } catch (err) {
+                    // A Cloudflare challenge or a no-retry request does not
+                    // resolve when you try again.
+                    if (err instanceof FatalDownloadError || noRetry === true) throw err;
+                    lastErr = err;
+                    this.proxyLogger(quiet).error(
+                        `Download attempt ${attempt + 1}/${this.retry.maxRetries + 1} for ${link.title} failed: `
+                        + (err instanceof Error ? err.message : 'unknown error')
+                    );
+                }
             }
 
-            const filename = decodeURIComponent(response.url.split('/').pop()!);
-            dest = join(outputDir, filename);
-            const total = Number(response.headers.get('content-length') ?? 0);
-            const totalMB = (total / 1024 / 1024).toFixed(1);
+            if (lastErr) throw lastErr;
 
-            await mkdir(outputDir, { recursive: true });
-
-            const reader = response.body!.getReader();
-            const fileStream = createWriteStream(dest);
-            let received = 0;
-
-            await new Promise<void>((resolve, reject) => {
-                fileStream.on('error', reject);
-                const pump = async () => {
-                    try {
-                        while (true) {
-                            const { done, value } = await reader.read();
-                            if (done) { fileStream.end(); break; }
-                            received += value.length;
-                            const receivedMB = (received / 1024 / 1024).toFixed(1);
-                            const percent = total ? Math.floor((received / total) * 100) : 0;
-                            onProgress?.({ type: 'progress', title: link.title, percent, receivedMB, totalMB });
-                            if (!fileStream.write(value)) {
-                                await new Promise(r => fileStream.once('drain', r));
-                            }
-                        }
-                        fileStream.once('finish', resolve);
-                    } catch (err) { reject(err); }
-                };
-                pump();
-            });
+            // Capture the name now. Pack extraction can change dest to a directory.
+            const filename = dest ? dest.split(/[\\/]/).pop()! : link.title;
 
             if (this.packExtractor && dest) {
                 try {
@@ -170,6 +174,103 @@ export class DownloadModel {
 
         }
 
+    }
+
+    private streamToDisk = async ({
+        link,
+        noRetry,
+        outputDir,
+        onProgress,
+        quiet
+    }: {
+        link: TDownloadLink,
+        noRetry: boolean,
+        outputDir: string,
+        onProgress?: (event: TProgressEvent) => void,
+        quiet: boolean
+    }): Promise<string> => {
+
+        let response: Response;
+        let statusRetries = 0;
+
+        while (true) {
+            response = await fetch(link.downloadLink!, {
+                method: 'GET',
+                headers: {
+                    'User-Agent': CUSTOM_USER_AGENT,
+                    'content-type': 'application/octet-stream'
+                }
+            });
+            const contentType = response.headers.get('content-type') ?? '';
+            if (contentType.includes('text/html')) {
+                const preview = await response.clone().text();
+                if (this.isCloudflareChallengePage(preview)) {
+                    const error = 'Cloudflare challenge detected. Open the comic in a browser or use a browser-side download path.';
+                    this.proxyLogger(quiet).error(error);
+                    throw new FatalDownloadError(error);
+                }
+            }
+            if (response.ok) break;
+            // A persistent non-2xx status must terminate, not loop forever.
+            if (noRetry === true || statusRetries >= this.retry.maxRetries) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            statusRetries++;
+            onProgress?.({
+                type: 'retrying',
+                title: link.title,
+                status: response.status,
+                reason: 'http',
+                delaySec: REQUEST_DELAY / 1000
+            });
+            await new Promise(r => setTimeout(r, REQUEST_DELAY));
+        }
+
+        const filename = decodeURIComponent(response.url.split('/').pop()!);
+        const dest = join(outputDir, filename);
+        const total = Number(response.headers.get('content-length') ?? 0);
+        const totalMB = (total / 1024 / 1024).toFixed(1);
+
+        await mkdir(outputDir, { recursive: true });
+
+        const reader = response.body!.getReader();
+        const fileStream = createWriteStream(dest);
+        let received = 0;
+
+        try {
+            await new Promise<void>((resolve, reject) => {
+                fileStream.on('error', reject);
+                const pump = async () => {
+                    try {
+                        while (true) {
+                            const { done, value } = await reader.read();
+                            if (done) { fileStream.end(); break; }
+                            received += value.length;
+                            const receivedMB = (received / 1024 / 1024).toFixed(1);
+                            const percent = total ? Math.floor((received / total) * 100) : 0;
+                            onProgress?.({ type: 'progress', title: link.title, percent, receivedMB, totalMB });
+                            if (!fileStream.write(value)) {
+                                await new Promise(r => fileStream.once('drain', r));
+                            }
+                        }
+                        fileStream.once('finish', resolve);
+                    } catch (err) { reject(err); }
+                };
+                pump();
+            });
+        } catch (err) {
+            // A broken transfer leaves a truncated file on disk. Wait for the
+            // stream to release the handle. Then delete the file, before the
+            // caller retries or reports a terminal failure.
+            fileStream.destroy();
+            if (!fileStream.closed) {
+                await new Promise<void>(res => fileStream.once('close', () => res()));
+            }
+            await unlink(dest).catch(() => {});
+            throw err;
+        }
+
+        return dest;
     }
 
     downloadComicBundle = async ({

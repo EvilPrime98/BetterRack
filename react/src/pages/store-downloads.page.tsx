@@ -30,7 +30,9 @@ function detailFor(progress?: TStoreProgressEvent): string {
         case 'preparing':
             return 'Preparing…';
         case 'retrying':
-            return `Retrying after HTTP ${progress.status} — waiting ${progress.delaySec}s`;
+            return progress.status
+                ? `Retrying after HTTP ${progress.status} — waiting ${progress.delaySec}s`
+                : `Connection lost — retrying in ${progress.delaySec}s`;
         case 'progress':
             return `${progress.receivedMB} / ${progress.totalMB} MB`;
         case 'extracting':

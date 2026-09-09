@@ -31,7 +31,7 @@ export type TGetComicsApiModel = {
 
 export type TProgressEvent =
     | { type: 'preparing'; title: string }
-    | { type: 'retrying'; title: string; status: number; delaySec: number }
+    | { type: 'retrying'; title: string; status?: number; reason?: 'network' | 'http'; delaySec: number }
     | { type: 'progress'; title: string; percent: number; receivedMB: string; totalMB: string }
     | { type: 'extracting'; title: string; done: number; total: number }
     | { type: 'done'; filename: string }
