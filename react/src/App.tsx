@@ -13,6 +13,7 @@ import { LibraryPage } from '@/pages/library-page';
 import { ReaderPage } from '@/pages/reader.page';
 import { SettingsPage } from '@/pages/settings.page';
 import { StorePage } from '@/pages/store.page';
+import { StoreDownloadsPage } from '@/pages/store-downloads.page';
 import { FilterPage } from '@/pages/filtered-page';
 import { RecentPage } from '@/pages/recent-page';
 import { DetailsPage } from './pages/details-page';
@@ -61,6 +62,7 @@ export function App() {
                     <Route path="/details/:pageId" element={<DetailsPage />} />
                     <Route path="/:uid/reader" element={<ReaderRoute />} />
                     <Route path="/settings" element={<SettingsPage />} />
+                    <Route path="/store/downloads" element={<StoreDownloadsPage />} />
                     <Route path="/store" element={<StorePage />} />
                     <Route path="/filters" element={<FilterPage />} />
                     <Route path="/new" element={<RecentPage />} />
