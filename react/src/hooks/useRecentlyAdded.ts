@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { getRecentlyAdded } from '@/services/library.service';
+import { useLibraryStore } from '@/stores/library.store';
 import type { ILibraryResponseItem } from '@/library.types';
 
 export function useRecentlyAdded(windowHours: number) {
@@ -8,6 +9,7 @@ export function useRecentlyAdded(windowHours: number) {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const requestId = useRef(0);
+    const lastDeleted = useLibraryStore((s) => s.lastDeleted);
 
     useEffect(() => {
 
@@ -30,6 +32,13 @@ export function useRecentlyAdded(windowHours: number) {
             });
 
     }, [windowHours]);
+
+    // A delete goes through the library store. This view does not read that store for anything else.
+    // Remove the deleted entry from the local list, so its card leaves the /new view without a reload.
+    useEffect(() => {
+        if (!lastDeleted) return;
+        setItems(prev => prev.filter(item => item.uid !== lastDeleted.uid));
+    }, [lastDeleted]);
 
     return { items, isLoading, error };
 
