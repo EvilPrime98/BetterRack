@@ -15,6 +15,7 @@ export function downloadsRouter(
     const cc = new DownloadController(dwnModel, gcwModel, fsModel, libModel, jobModel);
     app.get('/', (c) => cc.downloadComicSSE(c));
     app.post('/', (c) => cc.downloadComic(c));
+    app.get('/jobs', (c) => cc.listJobs(c));
     app.get('/resource/:id', (c) => cc.getJobByResource(c));
     app.get('/:jobId', (c) => cc.getJobStatus(c));
     app.get('/:jobId/stream', (c) => cc.streamJob(c));

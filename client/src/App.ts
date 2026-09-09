@@ -3,6 +3,7 @@ import { LibraryPage } from "./pages/library-page";
 import { ReaderPage } from "./pages/reader.page";
 import { SettingsPage } from "./pages/settings.page";
 import { StorePage } from "./pages/store.page";
+import { StoreDownloadsPage } from "./pages/store-downloads.page";
 import { RecentPage } from "./pages/recent-page";
 import { COMIC_CACHE_CONTEXT } from "./context/comic-cache.context";
 import { USER_PREF } from "./context/user-pref-cache.context";
@@ -37,6 +38,7 @@ export function App() {
             UltraRouter(
                 { path: '/:uid/reader', component: ({ uid } = {}) => ReaderPage({ uid }) },
                 { path: '/settings', component: () => SettingsPage() },
+                { path: '/store/downloads', component: () => StoreDownloadsPage() },
                 { path: '/store', component: () => StorePage() },
                 { path: '/new', component: () => RecentPage() },
                 { path: '/:uid', component: ({ uid } = {}) => LibraryPage({ uid }) },

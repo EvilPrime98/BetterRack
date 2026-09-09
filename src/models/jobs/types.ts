@@ -19,6 +19,8 @@ export type TJobModel<TProgress = unknown> = {
     getByResource: (resourceKey: string) => TJob<TProgress> | undefined,
     /** Returns a job's information */
     get: (jobId: string) => TJob<TProgress> | undefined,
+    /** Returns every tracked job, in-flight and within the retention window. */
+    list: () => TJob<TProgress>[],
     /** Updates a job's information */
     update: (jobId: string, state: TJobState, progress?: TProgress) => void,
     /** Subscribe to a job's state */

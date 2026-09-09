@@ -64,6 +64,10 @@ export class JobModel<TProgress = unknown> implements TJobModel<TProgress> {
         return this.jobs.get(jobId);
     }
 
+    public list(): TJob<TProgress>[] {
+        return [...this.jobs.values()];
+    }
+
     public update(
         jobId: string,
         state: TJobState,
