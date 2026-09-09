@@ -21,6 +21,13 @@ let inFlight: Promise<void> | null = null;
 interface ILibraryStore {
     groups: ILibraryGroup[];
     searchQuery: string;
+    /**
+     * Holds the uid of the last deleted entry. The /new view (through useRecentlyAdded)
+     * reads this to remove that entry from its own list snapshot without an app reload.
+     * Each deletion sets a new object, so repeated deletes of the same uid stay distinct
+     * and the consuming effect runs again.
+     */
+    lastDeleted: { uid: string } | null;
     setSearchQuery: (query: string) => void;
     fetchLibrary: () => Promise<void>;
     refreshLibrary: (options?: { silent?: boolean }) => Promise<void>;
@@ -36,6 +43,7 @@ export const useLibraryStore = create<ILibraryStore>((set, get) => ({
 
     groups: [],
     searchQuery: '',
+    lastDeleted: null,
 
     setSearchQuery: (searchQuery) => set({ searchQuery }),
 
@@ -68,6 +76,7 @@ export const useLibraryStore = create<ILibraryStore>((set, get) => ({
             const data = await requestDeleteFile(uid);
             lastFetchedAt = 0;
             await get().fetchLibrary();
+            set({ lastDeleted: { uid } });
             toast.success(data.message || 'File deleted');
         } catch (e) {
             toast.error(e instanceof Error ? e.message : 'Failed to delete file.');
@@ -79,6 +88,7 @@ export const useLibraryStore = create<ILibraryStore>((set, get) => ({
             const data = await requestDeleteFolder(uid);
             lastFetchedAt = 0;
             await get().fetchLibrary();
+            set({ lastDeleted: { uid } });
             toast.success(data.message || 'Folder deleted');
         } catch (e) {
             toast.error(e instanceof Error ? e.message : 'Failed to delete folder.');
