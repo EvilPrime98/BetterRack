@@ -1,8 +1,10 @@
 import { UltraComponent, ultraState } from "ultra-light-js";
 import styles from './sidebar.module.css';
 import { LIBRARY_CONTEXT } from "../../context/library.context";
+import { NEW_FOLDER_MODAL_CTX } from "../../context/new-folder-modal.context";
 import { SideBarElement } from "./sider-bar-element";
 import { FolderIcon } from "../../icons/folder.icon";
+import { FolderPlusIcon } from "../../icons/folder-plus.icon";
 import { ChevronDownIcon } from "../../icons/chevron.icon";
 import type { ILibraryGroup } from "../../library.types";
 
@@ -16,6 +18,11 @@ export function SideBarGroup({
 
     function toggle() {
         setIsExpanded(!isExpanded());
+    }
+
+    function onNewFolder(e: Event) {
+        e.stopPropagation();
+        NEW_FOLDER_MODAL_CTX.openNewFolderModal(group.uid);
     }
 
     function onExpandChange($nav: HTMLElement) {
@@ -43,6 +50,13 @@ export function SideBarGroup({
                 children: [
                     FolderIcon({ size: 16 }),
                     `<span>${group.name}</span>`,
+                    UltraComponent({
+                        component: '<button type="button"></button>',
+                        className: [styles.groupHeaderAction],
+                        attributes: { 'aria-label': `New folder in ${group.name}` },
+                        eventHandler: { click: onNewFolder },
+                        children: [FolderPlusIcon({ size: 14 })]
+                    }),
                     UltraComponent({
                         component: ChevronDownIcon({ size: 14 }),
                         className: [styles.chevron],

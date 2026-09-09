@@ -374,6 +374,13 @@ export class LibraryModel {
             return;
         }
 
+        const libRoot = this.libPaths.find(libPath => this.uidFromPath(libPath) === parentFolderUid);
+
+        if (libRoot) {
+            await mkdir(path.resolve(libRoot, folderName), { recursive: true });
+            return;
+        }
+
         const parentFolder = this.get(parentFolderUid);
 
         if (!parentFolder) {
