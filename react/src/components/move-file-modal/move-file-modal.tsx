@@ -37,15 +37,32 @@ function buildFolderPath(uid: string, groups: ILibraryGroup[]): string {
 
 export function MoveFileModal() {
 
-    const { isVisible, closeMoveFileModal, selectMoveTarget } = useMoveFileModalContext();
+    const { isVisible, fileUid, closeMoveFileModal, selectMoveTarget } = useMoveFileModalContext();
     const groups = useLibraryStore((s) => s.groups);
     // getLibraryItems() builds a fresh array every call — selecting it directly (rather than
     // deriving it via useMemo off the stable `groups` reference) makes every render produce a
     // "changed" snapshot, which triggers an infinite update loop under useSyncExternalStore.
     const folders = useMemo(
-        () => useLibraryStore.getState().getLibraryItems({ onlyDir: true }),
-        
-        [groups]
+        () => {
+            const allItems = useLibraryStore.getState().getLibraryItems({ onlyDir: false });
+            // The entry to move can be a folder. A folder cannot move into itself
+            // or into a folder nested under it.
+            const excluded = new Set<string>([fileUid]);
+            for (let added = true; added; ) {
+                added = false;
+                for (const item of allItems) {
+                    if (item.parentId && excluded.has(item.parentId) && !excluded.has(item.uid)) {
+                        excluded.add(item.uid);
+                        added = true;
+                    }
+                }
+            }
+            return useLibraryStore.getState()
+                .getLibraryItems({ onlyDir: true })
+                .filter(folder => !excluded.has(folder.uid));
+        },
+
+        [groups, fileUid]
     );
 
     const cancel = () => closeMoveFileModal();
@@ -67,7 +84,7 @@ export function MoveFileModal() {
             <div
                 role="dialog"
                 aria-modal="true"
-                aria-label="Move comic"
+                aria-label="Move to another folder"
                 className={styles.modal}
             >
 

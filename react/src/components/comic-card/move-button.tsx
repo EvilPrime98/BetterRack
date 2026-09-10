@@ -22,7 +22,7 @@ export function MoveFileButton({
     return (
         <span
             className={styles.moveButton}
-            aria-label="Move this comic to another folder"
+            aria-label="Move to another folder"
             onClick={onClick}
         >
             <FolderIcon size={18} />

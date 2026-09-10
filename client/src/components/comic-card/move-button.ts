@@ -22,7 +22,7 @@ export function MoveFileButton({
         className: [styles.moveButton],
         attributes: {
             type: 'button',
-            'aria-label': 'Move this comic to another folder'
+            'aria-label': 'Move to another folder'
         },
         eventHandler: {
             click: onClick

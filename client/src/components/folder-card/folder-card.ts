@@ -7,6 +7,7 @@ import { LIBRARY_CONTEXT } from "@/context/library.context";
 import { FolderCardStack } from "./folder-card-stack";
 import { CONFIRM_MODAL_CTX } from "@/context/confirm-modal.context";
 import { FolderCardBasic } from "./folder-card-basic";
+import { MoveFileButton } from "@/components/comic-card/move-button";
 
 export function FolderCard({
     title,
@@ -97,6 +98,7 @@ export function FolderCard({
                 component: '<div></div>',
                 className: [styles.folderActions],
                 children: [
+                    MoveFileButton({ uid, name: title }),
                     UltraComponent({
                         component: '<span></span>',
                         className: [styles.folderActionButton, styles.folderDeleteButton],
