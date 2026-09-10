@@ -26,6 +26,7 @@ import { thumbnailRouter } from './routers/thumbnailRouter';
 import { apiKeyAuth } from './middleware/apiKeyAuthMiddleware';
 import { logger } from '#utils/logger';
 import type { TProgressEvent } from './types';
+import pkg from '../package.json' with { type: 'json' };
 
 async function startApp() {
 
@@ -75,6 +76,12 @@ async function startApp() {
         zipModel: zipModel
     }));
 
+    // This is an unauthenticated identity probe. The desktop shell polls this
+    // route to confirm that the process on the chosen port is this server. The
+    // check prevents the shell from loading another local service that holds
+    // the port.
+    app.get('/healthz', (c) => c.json({ app: 'betterrack', version: pkg.version }));
+
     const clientDistDir = process.env.CLIENT_DIST_DIR ?? './react/dist';
 
     app.use('/*', serveStatic({ root: clientDistDir }));
@@ -83,11 +90,31 @@ async function startApp() {
 
     app.notFound((c) => c.text('Not Found', 404));
 
-    const server = Bun.serve({
-        port: Number(process.env.PORT) || 3000,
-        fetch: app.fetch,
-        idleTimeout: 0
-    });
+    // An unset PORT gives 3000 for standalone use. A PORT of 0 passes through,
+    // so the OS assigns a free port. The desktop shell reads that port from the
+    // BR_SERVER_LISTENING line below.
+    const portEnv = process.env.PORT;
+    const port = portEnv === undefined || portEnv === '' ? 3000 : Number(portEnv);
+
+    let server: ReturnType<typeof Bun.serve>;
+
+    try {
+        server = Bun.serve({
+            port,
+            fetch: app.fetch,
+            idleTimeout: 0
+        });
+    } catch (err) {
+        if (port !== 0 && (err as { code?: string }).code === 'EADDRINUSE') {
+            logger.error(
+                `Port ${port} is already in use. Set PORT=0 to let the OS pick a free port.`
+            );
+        }
+        throw err;
+    }
+
+    // This line has a fixed format. The desktop shell reads it to get the bound port.
+    console.log(`BR_SERVER_LISTENING ${server.port}`);
 
     logger.info(`Server running at ${server.url}`);
 
