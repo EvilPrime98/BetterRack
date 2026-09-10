@@ -83,6 +83,7 @@ export class DownloadModel {
         name: string
     ): string {
         return name
+            // eslint-disable-next-line no-control-regex -- stripping ASCII control chars from filenames is intentional
             .replace(/[<>:"/\\|?*\x00-\x1f]/g, ' ')
             .replace(/\s+/g, ' ')
             .trim()
