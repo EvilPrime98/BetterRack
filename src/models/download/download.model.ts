@@ -3,6 +3,12 @@ import { mkdir, stat, unlink } from 'fs/promises';
 import { join } from 'path';
 import { HOST as PIXELDRAIN_HOST } from '../pixel-drain/constants';
 import { RotatingFetchModel } from '../rotating-fetch/rotating-fetch.model';
+import {
+    CLOUDFLARE_CHALLENGE_USER_MESSAGE,
+    CloudflareChallengeError,
+    detectCloudflareChallenge,
+    isCloudflareChallengeError,
+} from '../rotating-fetch/cloudflare';
 import type { PackExtractor } from './pack-extractor.model';
 import type { TDownloadLink, TLogger, TProgressEvent } from './types';
 
@@ -14,18 +20,7 @@ const RETRY_BACKOFF_MS = 2000;
 
 const RETRY_BACKOFF_CAP_MS = 30_000;
 
-class FatalDownloadError extends Error {}
-
 const CUSTOM_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
-
-const CLOUDFLARE_CHALLENGE_MARKERS = [
-    'cloudflare',
-    'just a moment',
-    'attention required',
-    'challenge-platform',
-    'turnstile',
-    'cf-challenge',
-];
 
 export class DownloadModel {
 
@@ -135,13 +130,6 @@ export class DownloadModel {
         };
     }
 
-    private isCloudflareChallengePage(
-        content: string
-    ): boolean {
-        const lower = content.toLowerCase();
-        return CLOUDFLARE_CHALLENGE_MARKERS.some(marker => lower.includes(marker));
-    } 
-
     downloadComic = async ({
         link,
         noRetry = false,
@@ -198,7 +186,7 @@ export class DownloadModel {
                 } catch (err) {
                     // A Cloudflare challenge or a no-retry request does not
                     // resolve when you try again.
-                    if (err instanceof FatalDownloadError || noRetry === true) throw err;
+                    if (isCloudflareChallengeError(err) || noRetry === true) throw err;
                     lastErr = err;
                     this.proxyLogger(quiet).error(
                         `Download attempt ${attempt + 1}/${this.retry.maxRetries + 1} for ${link.title} failed: `
@@ -240,7 +228,11 @@ export class DownloadModel {
 
         } catch (error) {
 
-            onProgress?.({ type: 'error', message: error instanceof Error ? error.message : 'Failed to download' });
+            const message = isCloudflareChallengeError(error)
+                ? CLOUDFLARE_CHALLENGE_USER_MESSAGE
+                : error instanceof Error ? error.message : 'Failed to download';
+
+            onProgress?.({ type: 'error', message });
 
         }
 
@@ -266,13 +258,16 @@ export class DownloadModel {
         while (true) {
             response = await this.fetchSource(link.downloadLink!);
             const contentType = response.headers.get('content-type') ?? '';
-            if (contentType.includes('text/html')) {
-                const preview = await response.clone().text();
-                if (this.isCloudflareChallengePage(preview)) {
-                    const error = 'Cloudflare challenge detected. Open the comic in a browser or use a browser-side download path.';
-                    this.proxyLogger(quiet).error(error);
-                    throw new FatalDownloadError(error);
-                }
+            const challengeBody = contentType.includes('text/html')
+                ? await response.clone().text().catch(() => undefined)
+                : undefined;
+            const challenge = detectCloudflareChallenge(response, challengeBody?.slice(0, 8192));
+            if (challenge) {
+                this.proxyLogger(quiet).error(
+                    `${CLOUDFLARE_CHALLENGE_USER_MESSAGE} `
+                    + `(status ${challenge.status}, reason ${challenge.reason})`
+                );
+                throw new CloudflareChallengeError(link.downloadLink!, challenge);
             }
             if (response.ok) break;
             // A persistent non-2xx status must terminate, not loop forever.

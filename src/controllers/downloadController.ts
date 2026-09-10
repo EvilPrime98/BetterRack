@@ -3,6 +3,7 @@ import type { Context } from "hono";
 import { streamSSE } from "hono/streaming";
 import type { fsModel } from "#src/types.ts";
 import { logger } from "#utils/logger";
+import { CLOUDFLARE_CHALLENGE_USER_MESSAGE, isCloudflareChallengeError } from "#src/models/rotating-fetch/cloudflare.ts";
 import type { TJob, TJobModel, TJobState } from "#src/types/jobs.types.ts";
 
 const log = logger.child({ module: 'DownloadController' });
@@ -62,7 +63,9 @@ export class DownloadController {
             log.error({ err: e }, 'Download job failed');
             this.jobModel.update(jobId, 'error', {
                 type: 'error',
-                message: e instanceof Error ? e.message : 'Failed to download'
+                message: isCloudflareChallengeError(e)
+                    ? CLOUDFLARE_CHALLENGE_USER_MESSAGE
+                    : e instanceof Error ? e.message : 'Failed to download'
             });
         });
     }
@@ -130,6 +133,14 @@ export class DownloadController {
             }, created ? 201 : 200);
 
         } catch (e) {
+
+            if (isCloudflareChallengeError(e)) {
+                log.error({ err: e }, 'Comic download blocked by a Cloudflare challenge');
+                return c.json({
+                    error: true,
+                    message: CLOUDFLARE_CHALLENGE_USER_MESSAGE
+                }, 502);
+            }
 
             log.error({ err: e }, 'Failed to start comic download');
 
@@ -202,6 +213,14 @@ export class DownloadController {
             }, created ? 201 : 200);
 
         } catch (e) {
+
+            if (isCloudflareChallengeError(e)) {
+                log.error({ err: e }, 'Comic download blocked by a Cloudflare challenge');
+                return c.json({
+                    error: true,
+                    message: CLOUDFLARE_CHALLENGE_USER_MESSAGE
+                }, 502);
+            }
 
             log.error({ err: e }, 'Failed to start comic download');
 

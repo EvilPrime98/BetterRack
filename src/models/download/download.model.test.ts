@@ -14,6 +14,7 @@ function fakeResponse({
     contentDisposition,
     htmlBody = '',
     throwAfterChunk,
+    extraHeaders,
 }: {
     url: string;
     chunks?: Uint8Array[];
@@ -22,6 +23,7 @@ function fakeResponse({
     contentDisposition?: string;
     htmlBody?: string;
     throwAfterChunk?: number;
+    extraHeaders?: Record<string, string>;
 }): Response {
     const total = chunks.reduce((n, c) => n + c.length, 0);
     const headers = new Headers({
@@ -29,6 +31,7 @@ function fakeResponse({
         'content-length': String(total),
     });
     if (contentDisposition) headers.set('content-disposition', contentDisposition);
+    for (const [key, value] of Object.entries(extraHeaders ?? {})) headers.set(key, value);
     let i = 0;
     const response = {
         ok: status >= 200 && status < 300,
@@ -215,6 +218,32 @@ describe('DownloadModel.downloadComic — transient network failures', () => {
         const errors = events.filter(e => e.type === 'error');
         expect(errors).toHaveLength(1);
         expect((errors[0] as { message: string }).message).toContain('Cloudflare');
+    });
+
+    test('does not retry a response carrying cf-mitigated: challenge', async () => {
+        const url = 'https://example.test/files/mitigated.cbz';
+        const { callCount } = stubFetch([
+            fakeResponse({
+                url,
+                status: 403,
+                contentType: 'text/html',
+                extraHeaders: { 'cf-mitigated': 'challenge', 'server': 'cloudflare' },
+            }),
+        ]);
+        const { events, onProgress } = collect();
+
+        await makeModel().downloadComic({
+            link: { title: 'Mitigated', downloadLink: url },
+            outputDir: workDir,
+            onProgress,
+            quiet: true,
+        });
+
+        expect(callCount()).toBe(1);
+        const errors = events.filter(e => e.type === 'error');
+        expect(errors).toHaveLength(1);
+        expect((errors[0] as { message: string }).message).toContain('Cloudflare');
+        expect(existsSync(path.join(workDir, 'mitigated.cbz'))).toBe(false);
     });
 
     test('names a pixeldrain file from Content-Disposition, not the ?download URL tail', async () => {

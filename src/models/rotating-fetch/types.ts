@@ -38,4 +38,11 @@ export type TRotatedFetchOptions = {
     retryStatuses?: number[];
     /** The base backoff between attempts, in ms. The backoff grows exponentially and adds random jitter. */
     backoffMs?: number;
+    /**
+     * Detect Cloudflare challenge responses. A fresh identity is tried for
+     * each remaining attempt; if none clears the challenge, the model throws
+     * `CloudflareChallengeError` instead of returning the interstitial. The
+     * default is true.
+     */
+    detectChallenge?: boolean;
 };
