@@ -1,21 +1,19 @@
 import { createWriteStream } from 'fs';
 import { mkdir, stat, unlink } from 'fs/promises';
 import { join } from 'path';
+import { HOST as PIXELDRAIN_HOST } from '../pixel-drain/constants';
+import { RotatingFetchModel } from '../rotating-fetch/rotating-fetch.model';
 import type { PackExtractor } from './pack-extractor.model';
 import type { TDownloadLink, TLogger, TProgressEvent } from './types';
 
 const REQUEST_DELAY = 3 * 1000;
 
-// getcomics mirror hosts drop connections mid-transfer under load. A
-// retry usually succeeds. Treat a thrown fetch or stream error as
-// transient and start again from the first byte. The budget and backoff
-// match src/models/rotating-fetch/constants.ts.
 const MAX_NETWORK_RETRIES = 3;
+
 const RETRY_BACKOFF_MS = 2000;
+
 const RETRY_BACKOFF_CAP_MS = 30_000;
 
-// Raised for a failure the retry loop must not swallow. A Cloudflare
-// challenge page does not clear when you try again.
 class FatalDownloadError extends Error {}
 
 const CUSTOM_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
@@ -34,11 +32,13 @@ export class DownloadModel {
     private log: TLogger|undefined;
     private packExtractor: PackExtractor|undefined;
     private retry: { maxRetries: number; backoffMs: number; backoffCapMs: number };
+    private rotatingFetch: RotatingFetchModel;
 
     constructor(
         log?: TLogger,
         packExtractor?: PackExtractor,
-        retryOpts: { maxRetries?: number; backoffMs?: number; backoffCapMs?: number } = {}
+        retryOpts: { maxRetries?: number; backoffMs?: number; backoffCapMs?: number } = {},
+        rotatingFetch?: RotatingFetchModel
     ){
         this.log = log
         this.packExtractor = packExtractor
@@ -47,6 +47,76 @@ export class DownloadModel {
             backoffMs: retryOpts.backoffMs ?? RETRY_BACKOFF_MS,
             backoffCapMs: retryOpts.backoffCapMs ?? RETRY_BACKOFF_CAP_MS,
         }
+        this.rotatingFetch = rotatingFetch ?? new RotatingFetchModel({ logger: log })
+    }
+
+    private isPixelDrainUrl(
+        url: string
+    ): boolean {
+        try {
+            const { hostname } = new URL(url);
+            return hostname === PIXELDRAIN_HOST || hostname.endsWith(`.${PIXELDRAIN_HOST}`);
+        } catch {
+            return false;
+        }
+    }
+
+    private fetchSource = (
+        url: string
+    ): Promise<Response> => {
+        if (this.isPixelDrainUrl(url)) {
+            return this.rotatingFetch.fetch(url, {
+                method: 'GET',
+                headers: { 'content-type': 'application/octet-stream' },
+            });
+        }
+        return fetch(url, {
+            method: 'GET',
+            headers: {
+                'User-Agent': CUSTOM_USER_AGENT,
+                'content-type': 'application/octet-stream',
+            },
+        });
+    }
+
+    private sanitizeFilename(
+        name: string
+    ): string {
+        return name
+            .replace(/[<>:"/\\|?*\x00-\x1f]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .replace(/[. ]+$/, '');
+    }
+
+    private filenameFromDisposition(
+        header: string | null
+    ): string | undefined {
+        if (!header) return undefined;
+        const encoded = header.match(/filename\*=(?:UTF-8'')?([^;]+)/i);
+        if (encoded?.[1]) {
+            try {
+                return decodeURIComponent(encoded[1].trim().replace(/^["']|["']$/g, ''));
+            } catch { /* fall through to the plain form */ }
+        }
+        const plain = header.match(/filename="?([^";]+)"?/i);
+        return plain?.[1]?.trim() || undefined;
+    }
+
+    private resolveFilename(
+        response: Response,
+        link: TDownloadLink
+    ): string {
+        const fromDisposition = this.filenameFromDisposition(
+            response.headers.get('content-disposition')
+        );
+        const fromUrl = decodeURIComponent(
+            (response.url.split('/').pop() ?? '').split(/[?#]/)[0]!
+        );
+        const raw = this.isPixelDrainUrl(link.downloadLink ?? '')
+            ? (fromDisposition || link.title || fromUrl)
+            : (fromUrl || fromDisposition || link.title);
+        return this.sanitizeFilename(raw) || 'download';
     }
 
     private proxyLogger(quiet: boolean) {
@@ -194,13 +264,7 @@ export class DownloadModel {
         let statusRetries = 0;
 
         while (true) {
-            response = await fetch(link.downloadLink!, {
-                method: 'GET',
-                headers: {
-                    'User-Agent': CUSTOM_USER_AGENT,
-                    'content-type': 'application/octet-stream'
-                }
-            });
+            response = await this.fetchSource(link.downloadLink!);
             const contentType = response.headers.get('content-type') ?? '';
             if (contentType.includes('text/html')) {
                 const preview = await response.clone().text();
@@ -226,7 +290,7 @@ export class DownloadModel {
             await new Promise(r => setTimeout(r, REQUEST_DELAY));
         }
 
-        const filename = decodeURIComponent(response.url.split('/').pop()!);
+        const filename = this.resolveFilename(response, link);
         const dest = join(outputDir, filename);
         const total = Number(response.headers.get('content-length') ?? 0);
         const totalMB = (total / 1024 / 1024).toFixed(1);

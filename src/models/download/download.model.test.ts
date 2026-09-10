@@ -6,15 +6,12 @@ import path from 'node:path';
 import { DownloadModel } from './download.model';
 import type { TProgressEvent } from './types';
 
-// A stand-in Response covering only the surface DownloadModel touches:
-// ok/status/url, the content-type and content-length headers, clone().text()
-// for the Cloudflare probe, and a body reader that yields scripted chunks or
-// throws mid-stream.
 function fakeResponse({
     url,
     chunks = [],
     status = 200,
     contentType = 'application/octet-stream',
+    contentDisposition,
     htmlBody = '',
     throwAfterChunk,
 }: {
@@ -22,6 +19,7 @@ function fakeResponse({
     chunks?: Uint8Array[];
     status?: number;
     contentType?: string;
+    contentDisposition?: string;
     htmlBody?: string;
     throwAfterChunk?: number;
 }): Response {
@@ -30,6 +28,7 @@ function fakeResponse({
         'content-type': contentType,
         'content-length': String(total),
     });
+    if (contentDisposition) headers.set('content-disposition', contentDisposition);
     let i = 0;
     const response = {
         ok: status >= 200 && status < 300,
@@ -57,8 +56,6 @@ function fakeResponse({
 
 const bytes = (s: string) => new TextEncoder().encode(s);
 
-// Queue one outcome per fetch() call. A function is invoked, anything else is
-// returned as-is; an Error is thrown to simulate a connection failure.
 function stubFetch(outcomes: Array<Response | Error | (() => Response | Error)>) {
     let calls = 0;
     const impl = async () => {
@@ -84,7 +81,6 @@ afterEach(async () => {
     await rm(workDir, { recursive: true, force: true });
 });
 
-// Zero backoff keeps the retry tests instant.
 const makeModel = () => new DownloadModel(undefined, undefined, {
     maxRetries: 2,
     backoffMs: 0,
@@ -221,13 +217,46 @@ describe('DownloadModel.downloadComic — transient network failures', () => {
         expect((errors[0] as { message: string }).message).toContain('Cloudflare');
     });
 
+    test('names a pixeldrain file from Content-Disposition, not the ?download URL tail', async () => {
+        const url = 'https://pixeldrain.com/api/file/aB3xK9m2?download';
+        stubFetch([
+            fakeResponse({
+                url,
+                chunks: [bytes('data')],
+                contentDisposition: 'attachment; filename="Uncanny X-Men 001 (2019).cbz"',
+            }),
+        ]);
+
+        const dest = await makeModel().downloadComic({
+            link: { title: 'Uncanny X-Men (2019) #1', downloadLink: url },
+            outputDir: workDir,
+            quiet: true,
+        });
+
+        expect(dest).toBe(path.join(workDir, 'Uncanny X-Men 001 (2019).cbz'));
+        expect(existsSync(path.join(workDir, 'Uncanny X-Men 001 (2019).cbz'))).toBe(true);
+    });
+
+    test('falls back to the resolved link title and strips illegal characters', async () => {
+        const url = 'https://pixeldrain.com/api/file/z9Y8x7?download';
+        stubFetch([fakeResponse({ url, chunks: [bytes('data')] })]);
+
+        const dest = await makeModel().downloadComic({
+            link: { title: 'What If...? / Spider-Man', downloadLink: url },
+            outputDir: workDir,
+            quiet: true,
+        });
+
+        expect(dest).toBe(path.join(workDir, 'What If... Spider-Man'));
+        expect(existsSync(path.join(workDir, 'What If... Spider-Man'))).toBe(true);
+    });
+
     test('retries a non-2xx status and stops after the budget', async () => {
+
         const url = 'https://example.test/files/five-oh-three.cbz';
         const { callCount } = stubFetch([fakeResponse({ url, status: 503 })]);
         const { events, onProgress } = collect();
 
-        // REQUEST_DELAY between status retries is real; keep this to the
-        // default 3-retry budget and just assert the shape.
         const model = new DownloadModel(undefined, undefined, { maxRetries: 1, backoffMs: 0, backoffCapMs: 0 });
         const dest = await model.downloadComic({
             link: { title: '503', downloadLink: url },
@@ -240,6 +269,7 @@ describe('DownloadModel.downloadComic — transient network failures', () => {
         expect(callCount()).toBeGreaterThanOrEqual(2);
         expect(events.some(e => e.type === 'retrying' && e.reason === 'http' && e.status === 503)).toBe(true);
         expect(events.filter(e => e.type === 'error')).toHaveLength(1);
+        
     }, 15_000);
 
 });
