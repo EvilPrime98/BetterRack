@@ -1,7 +1,15 @@
 import path from 'path';
+import { readFileSync } from 'node:fs';
 import { defineConfig } from 'vite';
 
+const pkg = JSON.parse(
+  readFileSync(path.resolve(__dirname, '../package.json'), 'utf-8'),
+) as { version: string };
+
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+  },
   server: {
     host: '0.0.0.0',
   },

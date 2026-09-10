@@ -1,11 +1,19 @@
 import path from 'path'
+import { readFileSync } from 'node:fs'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 const root = import.meta.dirname
 
+const pkg = JSON.parse(
+  readFileSync(path.resolve(root, '../package.json'), 'utf-8'),
+) as { version: string }
+
 export default defineConfig({
   plugins: [react()],
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+  },
   server: {
     host: '0.0.0.0',
   },

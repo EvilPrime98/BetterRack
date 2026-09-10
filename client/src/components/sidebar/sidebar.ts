@@ -8,6 +8,7 @@ import type { ILibraryGroup } from "../../library.types";
 import { RefreshLibraryButton } from "./refresh-button";
 import { SidebarCloseButton } from "./close-button";
 import { SidebarSearch } from "./sidebar-search";
+import { Footer } from "../footer/footer";
 import { GearIcon } from "../../icons/gear.icon";
 import { ShopIcon } from "../../icons/shop.icon";
 import { DownloadIcon } from "../../icons/download.icon";
@@ -211,7 +212,9 @@ export function SideBar() {
                             subscriber: subsItems,
                             triggerFunction: onItemsChange
                         }]
-                    })
+                    }),
+
+                    Footer()
 
                 ],
 
