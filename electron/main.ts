@@ -94,6 +94,12 @@ async function startDesktopApp() {
 
     const isMac = process.platform === "darwin";
 
+    const titleBarOverlay = {
+      color: "#0a0a0a",
+      symbolColor: "#ffffff",
+      height: 54,
+    };
+
     const win = new BrowserWindow({
       width: 1240,
       height: 950,
@@ -104,13 +110,7 @@ async function startDesktopApp() {
       show: false,
       backgroundColor: "#0a0a0a",
       titleBarStyle: isMac ? "hiddenInset" : "hidden",
-      ...(isMac ? {} : {
-        titleBarOverlay: {
-          color: "#0a0a0a",
-          symbolColor: "#ffffff",
-          height: 54,
-        },
-      }),
+      ...(isMac ? {} : { titleBarOverlay }),
       webPreferences: {
         preload: path.join(__dirname, "preload.cjs"),
       },
@@ -118,6 +118,31 @@ async function startDesktopApp() {
 
     win.loadURL(SERVER_URL);
     win.setMenu(null)
+
+    // setMenu(null) removes the application menu. This also removes the
+    // default Electron accelerator for "View -> Toggle Full Screen". Bind
+    // the fullscreen keys on the web contents so the desktop app can still
+    // enter fullscreen: F11 on all platforms, Ctrl+Cmd+F on mac.
+    win.webContents.on("before-input-event", (event, input) => {
+
+      if (input.type !== "keyDown") return;
+
+      const isF11 = input.key === "F11";
+      const isMacFullscreen =
+        isMac && input.meta && input.control && input.key.toLowerCase() === "f";
+
+      if (isF11 || isMacFullscreen) {
+        event.preventDefault();
+        win.setFullScreen(!win.isFullScreen());
+      }
+
+    });
+
+    // On Windows, titleBarOverlay draws the title bar. Leaving fullscreen
+    // can drop that style. Re-assert the overlay.
+    if (!isMac) {
+      win.on("leave-full-screen", () => win.setTitleBarOverlay(titleBarOverlay));
+    }
 
     // Keep every link inside this window. A target=_blank or window.open()
     // call otherwise spawns a second Electron window. Send it to the user's
