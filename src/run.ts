@@ -26,6 +26,7 @@ import { thumbnailRouter } from './routers/thumbnailRouter';
 import { apiKeyAuth } from './middleware/apiKeyAuthMiddleware';
 import { logger } from '#utils/logger';
 import type { TProgressEvent } from './types';
+import pkg from '../package.json' with { type: 'json' };
 
 async function startApp() {
 
@@ -75,6 +76,8 @@ async function startApp() {
         zipModel: zipModel
     }));
 
+    app.get('/healthz', (c) => c.json({ app: 'betterrack', version: pkg.version }));
+
     const clientDistDir = process.env.CLIENT_DIST_DIR ?? './react/dist';
 
     app.use('/*', serveStatic({ root: clientDistDir }));
@@ -83,11 +86,27 @@ async function startApp() {
 
     app.notFound((c) => c.text('Not Found', 404));
 
-    const server = Bun.serve({
-        port: Number(process.env.PORT) || 3000,
-        fetch: app.fetch,
-        idleTimeout: 0
-    });
+    const portEnv = process.env.PORT;
+    const port = portEnv === undefined || portEnv === '' ? 3000 : Number(portEnv);
+
+    let server: ReturnType<typeof Bun.serve>;
+
+    try {
+        server = Bun.serve({
+            port,
+            fetch: app.fetch,
+            idleTimeout: 0
+        });
+    } catch (err) {
+        if (port !== 0 && (err as { code?: string }).code === 'EADDRINUSE') {
+            logger.error(
+                `Port ${port} is already in use. Set PORT=0 to let the OS pick a free port.`
+            );
+        }
+        throw err;
+    }
+
+    console.log(`BR_SERVER_LISTENING ${server.port}`);
 
     logger.info(`Server running at ${server.url}`);
 

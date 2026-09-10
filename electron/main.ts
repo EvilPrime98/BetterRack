@@ -4,8 +4,60 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import http from "node:http";
 
+function waitForServerPort(
+  serverProcess: ChildProcess,
+  timeoutMs = 30000
+): Promise<number> {
+
+  return new Promise((resolve, reject) => {
+
+    let settled = false;
+    let buffer = "";
+
+    const finish = (fn: () => void) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      serverProcess.stdout?.off("data", onData);
+      serverProcess.off("exit", onExit);
+      serverProcess.off("error", onError);
+      fn();
+    };
+
+    const onData = (data: Buffer) => {
+      buffer += data.toString();
+      const match = /BR_SERVER_LISTENING (\d+)/.exec(buffer);
+      if (match) finish(() => resolve(Number(match[1])));
+    };
+
+    const onExit = (code: number | null) => {
+      finish(() => reject(new Error(
+        `Server process exited before announcing its port (code ${code})`
+      )));
+    };
+
+    const onError = (err: Error) => {
+      finish(() => reject(new Error(
+        `Failed to start server process: ${err.message}`
+      )));
+    };
+
+    const timer = setTimeout(() => {
+      finish(() => reject(new Error(
+        "Timed out waiting for the server to announce its port"
+      )));
+    }, timeoutMs);
+
+    serverProcess.stdout?.on("data", onData);
+    serverProcess.once("exit", onExit);
+    serverProcess.once("error", onError);
+
+  });
+
+}
+
 function waitForServer(
-  url: string,
+  healthUrl: string,
   serverProcess: ChildProcess,
   retries = 60,
   delayMs = 500
@@ -39,27 +91,57 @@ function waitForServer(
       serverProcess.off("error", onError);
     };
 
+    const retryOrFail = (
+      remaining: number,
+      reason: string
+    ) => {
+      if (settled) return;
+      if (remaining <= 0) {
+        settled = true;
+        cleanup();
+        reject(new Error(
+          `Server at ${healthUrl} did not identify as BetterRack (${reason})`
+        ));
+        return;
+      }
+      setTimeout(() => attempt(remaining - 1), delayMs);
+    };
+
     const attempt = (remaining: number) => {
 
       if (settled) return;
 
-      const req = http.get(url, (res) => {
-        res.destroy();
-        if (settled) return;
-        settled = true;
-        cleanup();
-        resolve();
+      const req = http.get(healthUrl, (res) => {
+
+        if (res.statusCode !== 200) {
+          res.resume();
+          retryOrFail(remaining, `status ${res.statusCode}`);
+          return;
+        }
+
+        let body = "";
+        res.setEncoding("utf8");
+        res.on("data", (chunk) => { body += chunk; });
+        res.on("end", () => {
+          if (settled) return;
+          try {
+            const parsed = JSON.parse(body) as { app?: string };
+            if (parsed.app === "betterrack") {
+              settled = true;
+              cleanup();
+              resolve();
+              return;
+            }
+            retryOrFail(remaining, "identity mismatch");
+          } catch {
+            retryOrFail(remaining, "invalid response body");
+          }
+        });
+
       });
 
       req.on("error", () => {
-        if (settled) return;
-        if (remaining <= 0) {
-          settled = true;
-          cleanup();
-          reject(new Error(`Server did not respond at ${url}`));
-          return;
-        }
-        setTimeout(() => attempt(remaining - 1), delayMs);
+        retryOrFail(remaining, "connection refused");
       });
 
     };
@@ -75,8 +157,8 @@ const APP_NAME = "Better Rack";
 async function startDesktopApp() {
 
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
-  const PORT = process.env.PORT || "3000";
-  const SERVER_URL = `http://localhost:${PORT}/`;
+  const PORT = process.env.PORT || "0";
+  let serverUrl = "";
   let serverProcess: ChildProcess | null = null;
 
   const iconPath = path.join(__dirname, "..", "build", "icon.png");
@@ -116,13 +198,9 @@ async function startDesktopApp() {
       },
     });
 
-    win.loadURL(SERVER_URL);
+    win.loadURL(serverUrl);
     win.setMenu(null)
 
-    // setMenu(null) removes the application menu. This also removes the
-    // default Electron accelerator for "View -> Toggle Full Screen". Bind
-    // the fullscreen keys on the web contents so the desktop app can still
-    // enter fullscreen: F11 on all platforms, Ctrl+Cmd+F on mac.
     win.webContents.on("before-input-event", (event, input) => {
 
       if (input.type !== "keyDown") return;
@@ -138,15 +216,10 @@ async function startDesktopApp() {
 
     });
 
-    // On Windows, titleBarOverlay draws the title bar. Leaving fullscreen
-    // can drop that style. Re-assert the overlay.
     if (!isMac) {
       win.on("leave-full-screen", () => win.setTitleBarOverlay(titleBarOverlay));
     }
 
-    // Keep every link inside this window. A target=_blank or window.open()
-    // call otherwise spawns a second Electron window. Send it to the user's
-    // browser instead.
     win.webContents.setWindowOpenHandler(({ url }) => {
       shell.openExternal(url);
       return { action: "deny" };
@@ -216,7 +289,9 @@ async function startDesktopApp() {
         console.error(`[server] ${data}`)
       );
 
-      await waitForServer(SERVER_URL, serverProcess);
+      const port = await waitForServerPort(serverProcess);
+      serverUrl = `http://localhost:${port}/`;
+      await waitForServer(`${serverUrl}healthz`, serverProcess);
 
     } catch (e) {
 
