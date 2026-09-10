@@ -1,8 +1,9 @@
 import { parseHTML } from "linkedom";
 import type { TDownloadLink, TStrat } from "#src/types.ts";
 import { VALID_STRATS } from "#src/types.ts";
+import { PixelDrainModel } from "#src/models/pixel-drain/pixel-drain.model.ts";
 
-const FORBIDDEN_PROVIDERS = ['terabox', 'mega', 'pixeldrain', 'wetransfer'];
+const FORBIDDEN_PROVIDERS = ['terabox', 'mega', 'wetransfer'];
 
 export class GcwHtmlParser {
 
@@ -154,6 +155,52 @@ export class GcwHtmlParser {
         return this;
     }
 
+    private async stratMultiple_2(): Promise<this> {
+        
+        if (this.issuesCache.length > 0) return this;
+
+        const $list = this.document.querySelector('ul');
+        if (!$list) return this;
+
+        const pixelDrain = new PixelDrainModel();
+        const candidates: { title: string; maskedUrl: string }[] = [];
+
+        for (const $li of Array.from($list.querySelectorAll('li'))) {
+            const directText = [...$li.childNodes]
+            .filter(node => node.nodeType === this.Node.TEXT_NODE)
+            .map(node => node.textContent)
+            .join('');
+            if (directText.toLocaleLowerCase().includes('difficulties to download')) break;
+
+            const $pd = Array.from($li.querySelectorAll('a'))
+            .find($a => ($a.textContent?.toLocaleLowerCase() ?? '').includes('pixeldrain'));
+            if (!$pd?.href) continue;
+
+            candidates.push({ title: this.normalizeText(directText), maskedUrl: $pd.href });
+        }
+
+        const resolved = await Promise.all(
+            candidates.map(async ({ title, maskedUrl }) => {
+                try {
+                    const files = await pixelDrain.resolve(maskedUrl);
+                    return files
+                    .filter(file => file.canDownload)
+                    .map(file => ({
+                        title: files.length > 1
+                            ? this.normalizeText(`${title} - ${file.name}`)
+                            : title,
+                        downloadLink: file.downloadLink,
+                    }));
+                } catch {
+                    return [];
+                }
+            })
+        );
+
+        this.issuesCache = this.issuesCache.concat(this.normalizeLinks(resolved.flat()));
+        return this;
+    }
+
     //proxies
     private singleStrats(): this{
         return this
@@ -162,21 +209,19 @@ export class GcwHtmlParser {
         .stratSingleIssue_2()
     }
 
-    private multipleStrats(): this{
-        return this
-        .stratMultiple_1()
+    private async multipleStrats(): Promise<this>{
+        await this.stratMultiple_2();
+        return this.stratMultiple_1();
     }
 
-    strategize(
+    async strategize(
         strat: TStrat
-    ): TDownloadLink[]{
+    ): Promise<TDownloadLink[]>{
         this.issuesCache = [];
-        if (strat === VALID_STRATS.multiple) return this.multipleStrats().getIssues();
+        if (strat === VALID_STRATS.multiple) return (await this.multipleStrats()).getIssues();
         if (strat === VALID_STRATS.single) return this.singleStrats().getIssues();
-        return this
-        .multipleStrats()
-        .singleStrats()
-        .getIssues()
+        await this.multipleStrats();
+        return this.singleStrats().getIssues();
     }
     
 }
