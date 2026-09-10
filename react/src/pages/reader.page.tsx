@@ -17,6 +17,8 @@ const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 3;
 const ZOOM_STEP = 0.1;
 
+const clampZoom = (value: number) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, +value.toFixed(2)));
+
 function getWindowRange(numPages: number, savedPage: number) {
     if (numPages < 2) return null;
     const targetInd = Math.min(Math.max(savedPage - 1, 1), numPages - 1);
@@ -58,8 +60,11 @@ export function ReaderPage() {
     //refs
     const observerRef = useRef<IntersectionObserver | null>(null);
     const viewerRef = useRef<HTMLElement>(null);
+    const pageRef = useRef<HTMLElement>(null);
     const currentPageRef = useRef(currentPage);
     currentPageRef.current = currentPage;
+    const zoomRef = useRef(zoom);
+    zoomRef.current = zoom;
 
     const goToPage = useCallback((page: number) => {
         const $page = viewerRef.current?.children[page - 1] as HTMLElement | undefined;
@@ -98,11 +103,11 @@ export function ReaderPage() {
     }, [uid]);
 
     const zoomIn = useCallback(() => {
-        setZoom((z) => Math.min(MAX_ZOOM, +(z + ZOOM_STEP).toFixed(2)))
+        setZoom((z) => clampZoom(z + ZOOM_STEP))
     }, []);
 
     const zoomOut = useCallback(() => {
-        setZoom((z) => Math.max(MIN_ZOOM, +(z - ZOOM_STEP).toFixed(2)))
+        setZoom((z) => clampZoom(z - ZOOM_STEP))
     }, []);
     
     const zoomReset = useCallback(() => {
@@ -155,6 +160,89 @@ export function ReaderPage() {
     useEffect(() => {
         if (viewerRef.current) viewerRef.current.style.setProperty('--reader-zoom', String(zoom));
     }, [zoom]);
+
+    useEffect(() => {
+        const $page = pageRef.current;
+        if (!$page) return;
+
+        const pointers = new Map<number, { x: number; y: number }>();
+        let startDistance = 0;
+        let startZoom = 1;
+        let pinching = false;
+        let usedTwoPointers = false;
+        let lastTapTime = 0;
+        let lastTapX = 0;
+        let lastTapY = 0;
+
+        const gap = () => {
+            const points = Array.from(pointers.values());
+            if (points.length < 2) return 0;
+            return Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+        };
+
+        const settle = () => {
+            if (pointers.size >= 2) return;
+            pinching = false;
+            startDistance = 0;
+        };
+
+        const onPointerDown = (e: PointerEvent) => {
+            if (e.pointerType === 'mouse') return;
+            pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            if (pointers.size === 2) {
+                usedTwoPointers = true;
+                pinching = true;
+                startDistance = gap();
+                startZoom = zoomRef.current;
+            }
+        };
+
+        const onPointerMove = (e: PointerEvent) => {
+            if (!pointers.has(e.pointerId)) return;
+            pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            if (!pinching || pointers.size < 2) return;
+            const current = gap();
+            if (startDistance <= 0 || current <= 0) return;
+            e.preventDefault();
+            setZoom(clampZoom(startZoom * (current / startDistance)));
+        };
+
+        const onPointerUp = (e: PointerEvent) => {
+            const tracked = pointers.delete(e.pointerId);
+            settle();
+            if (tracked && e.pointerType === 'touch' && !usedTwoPointers) {
+                const now = Date.now();
+                const quick = now - lastTapTime < 300;
+                const close = Math.hypot(e.clientX - lastTapX, e.clientY - lastTapY) < 24;
+                if (quick && close) {
+                    setZoom(1);
+                    lastTapTime = 0;
+                } else {
+                    lastTapTime = now;
+                    lastTapX = e.clientX;
+                    lastTapY = e.clientY;
+                }
+            }
+            if (pointers.size === 0) usedTwoPointers = false;
+        };
+
+        const onPointerCancel = (e: PointerEvent) => {
+            pointers.delete(e.pointerId);
+            settle();
+            if (pointers.size === 0) usedTwoPointers = false;
+        };
+
+        $page.addEventListener('pointerdown', onPointerDown);
+        $page.addEventListener('pointermove', onPointerMove, { passive: false });
+        $page.addEventListener('pointerup', onPointerUp);
+        $page.addEventListener('pointercancel', onPointerCancel);
+        return () => {
+            $page.removeEventListener('pointerdown', onPointerDown);
+            $page.removeEventListener('pointermove', onPointerMove);
+            $page.removeEventListener('pointerup', onPointerUp);
+            $page.removeEventListener('pointercancel', onPointerCancel);
+        };
+    }, []);
 
     useEffect(() => {
         observerRef.current?.disconnect();
@@ -210,7 +298,7 @@ export function ReaderPage() {
     const range = getWindowRange(numPages, currentPageRef.current);
 
     return (
-        <section className={styles.page} onWheel={onWheel}>
+        <section className={styles.page} onWheel={onWheel} ref={pageRef}>
 
             <ReaderPageHeader currentPage={currentPage} totalPages={pages.length} bookmarks={bookmarks} goToPage={goToPage} goBack={goBack} />
 
