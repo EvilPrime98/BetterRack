@@ -36,6 +36,15 @@ export function ReaderPage({
     let observer: IntersectionObserver | null = null;
     let viewer: HTMLElement | null = null;
 
+    const activePointers = new Map<number, { x: number; y: number }>();
+    let pinchStartDistance = 0;
+    let pinchStartZoom = 1;
+    let isPinching = false;
+    let gestureUsedTwoPointers = false;
+    let lastTapTime = 0;
+    let lastTapX = 0;
+    let lastTapY = 0;
+
     // 1-based page numbers already handed to an Image(). loadPages() clears it
     // for a fresh comic. The browser cache holds the bytes after that.
     const requested = new Set<number>();
@@ -118,9 +127,73 @@ export function ReaderPage({
         }
     }
 
-    const zoomIn = () => setZoom(Math.min(MAX_ZOOM, +(zoom() + ZOOM_STEP).toFixed(2)));
-    const zoomOut = () => setZoom(Math.max(MIN_ZOOM, +(zoom() - ZOOM_STEP).toFixed(2)));
+    const clampZoom = (value: number) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, +value.toFixed(2)));
+
+    const zoomIn = () => setZoom(clampZoom(zoom() + ZOOM_STEP));
+    const zoomOut = () => setZoom(clampZoom(zoom() - ZOOM_STEP));
     const zoomReset = () => setZoom(1);
+
+    const pointerGap = () => {
+        const points = [...activePointers.values()];
+        if (points.length < 2) return 0;
+        return Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+    }
+
+    const settlePinch = () => {
+        if (activePointers.size >= 2) return;
+        isPinching = false;
+        pinchStartDistance = 0;
+    }
+
+    const onPointerDown = (evt: Event) => {
+        const e = evt as PointerEvent;
+        if (e.pointerType === 'mouse') return;
+        activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (activePointers.size === 2) {
+            gestureUsedTwoPointers = true;
+            isPinching = true;
+            pinchStartDistance = pointerGap();
+            pinchStartZoom = zoom();
+        }
+    }
+
+    const onPointerMove = (evt: Event) => {
+        const e = evt as PointerEvent;
+        if (!activePointers.has(e.pointerId)) return;
+        activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (!isPinching || activePointers.size < 2) return;
+        const gap = pointerGap();
+        if (pinchStartDistance <= 0 || gap <= 0) return;
+        e.preventDefault();
+        setZoom(clampZoom(pinchStartZoom * (gap / pinchStartDistance)));
+    }
+
+    const onPointerUp = (evt: Event) => {
+        const e = evt as PointerEvent;
+        const tracked = activePointers.delete(e.pointerId);
+        settlePinch();
+        if (tracked && e.pointerType === 'touch' && !gestureUsedTwoPointers) {
+            const now = Date.now();
+            const quick = now - lastTapTime < 300;
+            const close = Math.hypot(e.clientX - lastTapX, e.clientY - lastTapY) < 24;
+            if (quick && close) {
+                zoomReset();
+                lastTapTime = 0;
+            } else {
+                lastTapTime = now;
+                lastTapX = e.clientX;
+                lastTapY = e.clientY;
+            }
+        }
+        if (activePointers.size === 0) gestureUsedTwoPointers = false;
+    }
+
+    const onPointerCancel = (evt: Event) => {
+        const e = evt as PointerEvent;
+        activePointers.delete(e.pointerId);
+        settlePinch();
+        if (activePointers.size === 0) gestureUsedTwoPointers = false;
+    }
 
     const onZoomChange = ($viewer: HTMLElement) => {
         $viewer.style.setProperty('--reader-zoom', String(zoom()));
@@ -218,6 +291,18 @@ export function ReaderPage({
                 return () => {
                     window.removeEventListener('keydown', onKeydown);
                     observer?.disconnect();
+                }
+            },
+            ($page: HTMLElement) => {
+                $page.addEventListener('pointerdown', onPointerDown);
+                $page.addEventListener('pointermove', onPointerMove, { passive: false });
+                $page.addEventListener('pointerup', onPointerUp);
+                $page.addEventListener('pointercancel', onPointerCancel);
+                return () => {
+                    $page.removeEventListener('pointerdown', onPointerDown);
+                    $page.removeEventListener('pointermove', onPointerMove);
+                    $page.removeEventListener('pointerup', onPointerUp);
+                    $page.removeEventListener('pointercancel', onPointerCancel);
                 }
             }
         ],

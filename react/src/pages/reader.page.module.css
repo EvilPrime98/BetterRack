@@ -5,6 +5,7 @@
     background-color: var(--bg-canvas);
     scrollbar-width: none;
     -ms-overflow-style: none;
+    touch-action: pan-y;
 }
 
 .page::-webkit-scrollbar {
@@ -146,6 +147,7 @@
     background: #1d1d1d;
     scroll-margin-top: calc(var(--header-height) + 2px);
     transition: max-width 0.12s ease;
+    touch-action: pan-y;
 }
 
 .pageWrapper::after {
