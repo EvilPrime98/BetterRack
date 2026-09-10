@@ -76,10 +76,6 @@ async function startApp() {
         zipModel: zipModel
     }));
 
-    // This is an unauthenticated identity probe. The desktop shell polls this
-    // route to confirm that the process on the chosen port is this server. The
-    // check prevents the shell from loading another local service that holds
-    // the port.
     app.get('/healthz', (c) => c.json({ app: 'betterrack', version: pkg.version }));
 
     const clientDistDir = process.env.CLIENT_DIST_DIR ?? './react/dist';
@@ -90,9 +86,6 @@ async function startApp() {
 
     app.notFound((c) => c.text('Not Found', 404));
 
-    // An unset PORT gives 3000 for standalone use. A PORT of 0 passes through,
-    // so the OS assigns a free port. The desktop shell reads that port from the
-    // BR_SERVER_LISTENING line below.
     const portEnv = process.env.PORT;
     const port = portEnv === undefined || portEnv === '' ? 3000 : Number(portEnv);
 
@@ -113,7 +106,6 @@ async function startApp() {
         throw err;
     }
 
-    // This line has a fixed format. The desktop shell reads it to get the bound port.
     console.log(`BR_SERVER_LISTENING ${server.port}`);
 
     logger.info(`Server running at ${server.url}`);

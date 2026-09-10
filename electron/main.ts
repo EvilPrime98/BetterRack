@@ -4,10 +4,6 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import http from "node:http";
 
-// The bundled server binds port 0. The OS then assigns a free port, so the
-// server does not compete with another local service for a fixed port. The
-// server prints the assigned port on a dedicated stdout line. This function
-// reads that line.
 function waitForServerPort(
   serverProcess: ChildProcess,
   timeoutMs = 30000
@@ -60,9 +56,6 @@ function waitForServerPort(
 
 }
 
-// This function polls the identity endpoint. It resolves only after the
-// response is this server's own /healthz payload. A 200 response from an
-// unrelated local service does not satisfy the check.
 function waitForServer(
   healthUrl: string,
   serverProcess: ChildProcess,
@@ -164,8 +157,6 @@ const APP_NAME = "Better Rack";
 async function startDesktopApp() {
 
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
-  // A value of "0" tells the OS to pick a free port. An explicit PORT value
-  // overrides this default.
   const PORT = process.env.PORT || "0";
   let serverUrl = "";
   let serverProcess: ChildProcess | null = null;
@@ -210,10 +201,6 @@ async function startDesktopApp() {
     win.loadURL(serverUrl);
     win.setMenu(null)
 
-    // setMenu(null) removes the application menu. This also removes the
-    // default Electron accelerator for "View -> Toggle Full Screen". Bind
-    // the fullscreen keys on the web contents so the desktop app can still
-    // enter fullscreen: F11 on all platforms, Ctrl+Cmd+F on mac.
     win.webContents.on("before-input-event", (event, input) => {
 
       if (input.type !== "keyDown") return;
@@ -229,15 +216,10 @@ async function startDesktopApp() {
 
     });
 
-    // On Windows, titleBarOverlay draws the title bar. Leaving fullscreen
-    // can drop that style. Re-assert the overlay.
     if (!isMac) {
       win.on("leave-full-screen", () => win.setTitleBarOverlay(titleBarOverlay));
     }
 
-    // Keep every link inside this window. A target=_blank or window.open()
-    // call otherwise spawns a second Electron window. Send it to the user's
-    // browser instead.
     win.webContents.setWindowOpenHandler(({ url }) => {
       shell.openExternal(url);
       return { action: "deny" };
