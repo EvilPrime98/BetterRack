@@ -8,6 +8,7 @@ import { useLibraryStore } from "@/stores/library.store";
 import { FolderCardStack } from "./folder-card-stack";
 import { useConfirmModalStore } from "@/stores/confirmModal.store";
 import { FolderCardBasic } from "./folder-card-basic";
+import { MoveFileButton } from "@/components/comic-card/move-button";
 
 export function FolderCard({
     title,
@@ -68,6 +69,7 @@ export function FolderCard({
             </Link>
 
             <div className={styles.folderActions}>
+                <MoveFileButton uid={uid} name={title} />
                 <span
                     className={[styles.folderActionButton, styles.folderDeleteButton].join(' ')}
                     aria-label="Delete this folder"

@@ -50,7 +50,25 @@ export function MoveFileModal() {
         if (!$list) return;
 
         const groups = LIBRARY_CONTEXT.groups.get();
-        const folders = LIBRARY_CONTEXT.getLibraryItems({ onlyDir: true });
+
+        // The entry to move can be a folder. A folder cannot move into itself
+        // or into a folder nested under it.
+        const movedUid = MOVE_FILE_MODAL_CTX.fileUid.get();
+        const allItems = LIBRARY_CONTEXT.getLibraryItems({ onlyDir: false });
+        const excluded = new Set<string>([movedUid]);
+        for (let added = true; added; ) {
+            added = false;
+            for (const item of allItems) {
+                if (item.parentId && excluded.has(item.parentId) && !excluded.has(item.uid)) {
+                    excluded.add(item.uid);
+                    added = true;
+                }
+            }
+        }
+
+        const folders = LIBRARY_CONTEXT
+            .getLibraryItems({ onlyDir: true })
+            .filter(folder => !excluded.has(folder.uid));
 
         $list.replaceChildren(
 
@@ -125,7 +143,7 @@ export function MoveFileModal() {
                 attributes: {
                     role: 'dialog',
                     'aria-modal': 'true',
-                    'aria-label': 'Move comic'
+                    'aria-label': 'Move to another folder'
                 },
 
                 className: [styles.modal],

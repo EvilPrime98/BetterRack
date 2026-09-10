@@ -1,6 +1,7 @@
 import type { TLibraryModel } from "#src/types.ts";
 import type { Context } from "hono";
 import { logger } from "#utils/logger";
+import { MoveError } from "#models/library/library.model";
 
 const log = logger.child({ module: 'libraryController' });
 
@@ -160,6 +161,10 @@ export class libraryController{
             )
 
         }catch(e){
+
+            if (e instanceof MoveError) {
+                return c.json({ error: true, message: e.message }, 400);
+            }
 
             log.error({ err: e }, 'Failed to move file');
 

@@ -22,6 +22,11 @@ import { COMIC_EXTENSIONS, DEFAULT_LIBRARY_PAGE_SIZE, IDENTIFY_CONCURRENCY, MAX_
 
 const log = logger.child({ module: 'LibraryModel' });
 
+// A move the caller cannot make. The message is safe to show the user.
+// Causes: the target is the folder itself or one of its descendants, the
+// move does nothing, or the destination already has that name.
+export class MoveError extends Error {}
+
 export class LibraryModel {
 
     private prefsModel: TPreferencesModel;
@@ -419,6 +424,25 @@ export class LibraryModel {
             })();
 
         const newPath = path.resolve(targetPath, basename(file.path));
+
+        if (file.did) {
+            const source = path.resolve(file.path);
+            const target = path.resolve(targetPath);
+            if (target === source) {
+                throw new MoveError('A folder cannot be moved into itself.');
+            }
+            if (target === path.dirname(source)) {
+                throw new MoveError('The folder is already in that location.');
+            }
+            if (target.startsWith(source + path.sep)) {
+                throw new MoveError('A folder cannot be moved into one of its own subfolders.');
+            }
+        }
+
+        if (fs.existsSync(newPath)) {
+            throw new MoveError(`An entry named "${basename(file.path)}" already exists in the target location.`);
+        }
+
         await rename(file.path, newPath);
         await this.scan();
 
