@@ -16,6 +16,11 @@ export function hasNativeFolderPicker(): boolean {
     return typeof window.desktop?.pickLibraryFolder === 'function' && !isRemoteModeEnabled();
 }
 
+/** True inside the Electron desktop app, where the preload bridge is present. */
+export function isDesktopApp(): boolean {
+    return typeof window.desktop?.pickLibraryFolder === 'function';
+}
+
 export function getStoredServerUrl(): string {
     return localStorage.getItem(STORAGE_KEY) ?? '';
 }

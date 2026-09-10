@@ -10,6 +10,7 @@ import { toast } from '@/services/toast.service';
 import { CheckIcon } from '@/icons/check.icon';
 import { STRAT, type IStoreLink, type IStorePost, type TCardState } from '@/store.types';
 import { BRButton } from '@/components/br-button/br-button';
+import { isDesktopApp } from '@/services/server-config.service';
 
 export function StoreCard({
     item
@@ -232,9 +233,13 @@ export function StoreCard({
 
             <div className={styles.details}>
 
-                <a href={item.link} target='_blank'>
+                {isDesktopApp() ? (
                     <p className={styles.title} title={item.title}>{item.title}</p>
-                </a>
+                ) : (
+                    <a href={item.link} target='_blank' rel='noopener noreferrer'>
+                        <p className={styles.title} title={item.title}>{item.title}</p>
+                    </a>
+                )}
 
                 {item.uploadDate && (
                     <p className={styles.date}>{new Date(item.uploadDate).toLocaleDateString()}</p>

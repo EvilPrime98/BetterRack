@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, shell } from "electron";
 import { spawn, type ChildProcess } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -118,6 +118,14 @@ async function startDesktopApp() {
 
     win.loadURL(SERVER_URL);
     win.setMenu(null)
+
+    // Keep every link inside this window. A target=_blank or window.open()
+    // call otherwise spawns a second Electron window. Send it to the user's
+    // browser instead.
+    win.webContents.setWindowOpenHandler(({ url }) => {
+      shell.openExternal(url);
+      return { action: "deny" };
+    });
 
     win.once("ready-to-show", () => {
       win.show();
