@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+
+set -u
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+POST_PUSH="${REPO_ROOT}/.githooks/post-push"
+REMOTE="${1:-origin}"
+
+[[ "${SKIP_BETTER_RACK:-}" == "1" ]] && exit 0
+[[ -f "$POST_PUSH" ]] || exit 0
+
+# collect "<remote_ref>=<local_sha>" for every ref that carries commits
+targets=()
+while read -r _local_ref local_sha remote_ref _remote_sha; do
+  [[ -z "${local_sha:-}" ]] && continue
+  [[ "$local_sha" =~ ^0+$ ]] && continue   # branch/tag delete -> nothing to build
+  targets+=("${remote_ref}=${local_sha}")
+done
+[[ ${#targets[@]} -gt 0 ]] || exit 0
+
+LOG="${REPO_ROOT}/.git/better-rack-post-push.log"
+
+# --- detached watcher: run post-push once the push has landed -------------
+(
+  timeout=90        # max seconds to wait for the push to land
+  interval=3
+  waited=0
+  while (( waited < timeout )); do
+    landed=1
+    for t in "${targets[@]}"; do
+      ref="${t%%=*}"; want="${t##*=}"
+      have="$(git ls-remote "$REMOTE" "$ref" 2>/dev/null | awk 'NR==1{print $1}')"
+      [[ "$have" == "$want" ]] || { landed=0; break; }
+    done
+    if (( landed )); then
+      echo "[$(date '+%F %T')] push landed on ${REMOTE}, running post-push" >>"$LOG"
+      bash "$POST_PUSH" </dev/null >>"$LOG" 2>&1
+      exit 0
+    fi
+    sleep "$interval"
+    (( waited += interval ))
+  done
+  echo "[$(date '+%F %T')] push did not land within ${timeout}s, skipping post-push" >>"$LOG"
+) </dev/null >/dev/null 2>&1 &
+
+disown 2>/dev/null || true
+echo "pre-push: better-rack will run after the push lands (log: .git/better-rack-post-push.log)" >&2
+exit 0

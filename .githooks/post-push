@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+set -u
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+RUNNER="${REPO_ROOT}/scripts/run-better-rack.sh"
+
+if [[ "${SKIP_BETTER_RACK:-}" == "1" ]]; then
+  echo "post-push: SKIP_BETTER_RACK=1 set, skipping better-rack run." >&2
+  exit 0
+fi
+
+if [[ ! -f "$RUNNER" ]]; then
+  echo "post-push: ${RUNNER} not found, nothing to do." >&2
+  exit 0
+fi
+
+echo "post-push: triggering better-rack ..." >&2
+if bash "$RUNNER"; then
+  echo "post-push: better-rack completed." >&2
+else
+  status=$?
+  echo "post-push: better-rack run failed (exit ${status})." >&2
+  echo "           re-run manually with: bash scripts/run-better-rack.sh" >&2
+  exit "$status"
+fi
