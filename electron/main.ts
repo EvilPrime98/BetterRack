@@ -157,7 +157,7 @@ const APP_NAME = "Better Rack";
 async function startDesktopApp() {
 
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
-  const PORT = process.env.PORT || "0";
+  const PORT = process.env.PORT || "3000";
   let serverUrl = "";
   let serverProcess: ChildProcess | null = null;
 
