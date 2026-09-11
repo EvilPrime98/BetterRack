@@ -19,12 +19,12 @@ export function ComicCardTitle({
     const onTitleChange = ($p: HTMLElement) => {
         const currType = COMICS_TYPE_CTX.type.get();
         const currComic = comic();
-        if (!currComic){
-          $p.textContent = item.name;  
+        if (!currComic || !currComic.title){
+          $p.textContent = item.name;
         }else{
-            const series = currComic?.title.split('Vol')[0];
-            const issue = currComic?.issue ? `#${currComic?.issue}` : '';
-            const year = currComic?.releaseDate.releaseYear || '';
+            const series = currComic.title.split('Vol')[0];
+            const issue = currComic.issue ? `#${currComic.issue}` : '';
+            const year = currComic.releaseDate?.releaseYear || '';
             $p.textContent =  currType === 'cover'
             ? `${series} ${issue} (${year})`
             : item.name;

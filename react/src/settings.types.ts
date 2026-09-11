@@ -4,6 +4,7 @@ export interface IAppSettings {
     baseUrl: string;
     hostDomain: string;
     downloadDir: string;
+    identifyFromMeta: boolean;
 }
 
 export type TFieldKey = 'apiUrl'

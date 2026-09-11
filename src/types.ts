@@ -10,7 +10,7 @@ export type TPostLink = {
 
 export type TDownloadLink = {
     title: string;
-    downloadLink: string|null;
+    downloadLink: string | null;
 }
 
 export type TDownloadableObject = {
@@ -20,7 +20,7 @@ export type TDownloadableObject = {
 
 
 export type TGetComicsApiModel = {
-    getPostLinks: (params: { search: string; page?: number|number[]; perPage?: number }) => Promise<TPostLink[]>,
+    getPostLinks: (params: { search: string; page?: number | number[]; perPage?: number }) => Promise<TPostLink[]>,
     getDownloadLinkFromPost: (postId: number, strat: TStrat, uuid?: string) => Promise<string | null>,
     //getDownloadLinksFromPosts: (postLinks: TPostLink[], limit?: number) => Promise<TDownloadLink[]>,
     getWeeklyListPosts: (group?: string) => Promise<TPostLink[]>,
@@ -45,7 +45,7 @@ export type TDownloadModel = {
         noRetry,
         outputDir,
         onProgress
-    }:{
+    }: {
         link: TDownloadLink,
         rowIndex?: number,
         totalRows?: number,
@@ -57,7 +57,7 @@ export type TDownloadModel = {
         postLinks,
         noRetry,
         outputDir
-    }:{
+    }: {
         postLinks: TDownloadLink[],
         noRetry?: boolean,
         outputDir: string
@@ -152,6 +152,7 @@ export type TAppSettings = {
     baseUrl: string;
     hostDomain: string;
     downloadDir: string;
+    identifyFromMeta: boolean;
 }
 
 export type TPreferencesModel = {
@@ -221,6 +222,9 @@ export type TZipModel = {
         outDir: string;
         entryName: string;
     }) => Promise<void>,
+    extractComicInfo: ({ filePath }: {
+        filePath: string;
+    }) => Promise<IComicInfoXML|null>,
     extractBookmarks: ({ filePath }: {
         filePath: string;
     }) => Promise<TComicBookmark[]>,
@@ -295,21 +299,33 @@ export interface IComicInfoXML {
     };
 
     ComicInfo: {
+        Title?: string;
         Series: string;
         Number: number;
         Volume: number;
         Summary: string;
         Notes: string;
+        Writer?: string;
+        Penciller?: string;
+        Inker?: string;
+        Colorist?: string;
+        Letterer?: string;
+        CoverArtist?: string;
+        Editor?: string;
         Year: number;
         Month: number;
         Pages?: {
-            /** An object for a single <Page>, an array for several. */
             Page?: IComicInfoPage | IComicInfoPage[];
         };
         Publisher: string;
+        Imprint?: string;
         Web: string;
         PageCount: number;
         LanguageISO: string;
+        Characters?: string;
+        Teams?: string;
+        Locations?: string;
+        ScanInformation?: string;
         '@_xmlns:xsd': string;
         '@_xmlns:xsi': string;
     };

@@ -22,10 +22,12 @@ const makeModel = () => {
     };
     const comicDataModel = { getAll: () => ({}) };
     const wikiModel = {};
+    const zipModel = {};
     return new LibraryModel(
         prefsModel as unknown as ConstructorParameters<typeof LibraryModel>[0],
         wikiModel as unknown as ConstructorParameters<typeof LibraryModel>[1],
         comicDataModel as unknown as ConstructorParameters<typeof LibraryModel>[2],
+        zipModel as unknown as ConstructorParameters<typeof LibraryModel>[3],
     );
 };
 

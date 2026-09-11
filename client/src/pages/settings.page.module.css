@@ -236,3 +236,66 @@
     width: fit-content;
     align-self: center;
 }
+
+.toggleRow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.toggleLabel {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: #f2f2f2;
+}
+
+.infoIcon {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    padding: 0;
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    border-radius: 50%;
+    color: #808080;
+    font-family: var(--font-sans);
+    font-size: 10px;
+    line-height: 1;
+    cursor: help;
+}
+
+.infoTooltip {
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: 200px;
+    padding: 6px 10px;
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    color: #d4d4d4;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.4;
+    text-align: left;
+    pointer-events: none;
+    transition: opacity 0.1s ease;
+    z-index: 10;
+}
+
+.infoIcon:hover .infoTooltip,
+.infoIcon:focus-visible .infoTooltip {
+    visibility: visible;
+    opacity: 1;
+}

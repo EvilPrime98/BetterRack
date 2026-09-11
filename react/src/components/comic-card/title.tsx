@@ -17,10 +17,10 @@ export function ComicCardTitle({
     const type = useComicsTypeStore((s) => s.type);
 
     const titleText = (() => {
-        if (!comic) return item.name;
+        if (!comic || !comic.title) return item.name;
         const series = comic.title.split('Vol')[0];
         const issue = comic.issue ? `#${comic.issue}` : '';
-        const year = comic.releaseDate.releaseYear || '';
+        const year = comic.releaseDate?.releaseYear || '';
         return type === 'cover'
             ? `${series} ${issue} (${year})`
             : item.name;

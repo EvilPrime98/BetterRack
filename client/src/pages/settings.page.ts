@@ -21,7 +21,8 @@ export function SettingsPage() {
         baseUrl: '',
         hostDomain: '',
         downloadDir: '',
-        folderPath: ''
+        folderPath: '',
+        identifyFromMeta: false
     })
 
     // The stored server URL, captured when the server modal opens. A runtime
@@ -48,6 +49,12 @@ export function SettingsPage() {
         fieldsState.baseUrl.set(settings.baseUrl);
         fieldsState.hostDomain.set(settings.hostDomain);
         fieldsState.downloadDir.set(settings.downloadDir);
+        fieldsState.identifyFromMeta.set(settings.identifyFromMeta);
+    }
+
+    function syncIdentifyFromMetaCheckbox($el: HTMLElement) {
+        const $checkbox = $el.querySelector('input') as HTMLInputElement;
+        $checkbox.checked = fieldsState.identifyFromMeta.get();
     }
 
     async function refreshSettingsFromServer() {
@@ -141,6 +148,7 @@ export function SettingsPage() {
             baseUrl: fieldsState.baseUrl.get(),
             hostDomain: fieldsState.hostDomain.get(),
             downloadDir: fieldsState.downloadDir.get(),
+            identifyFromMeta: fieldsState.identifyFromMeta.get(),
         };
 
         setSettingsError('');
@@ -382,6 +390,45 @@ export function SettingsPage() {
                                             fieldsState.hostDomain.set($input.value)
                                         }
                                     }
+                                }),
+
+                            ]
+
+                        }),
+
+                        UltraComponent({
+
+                            component: '<div></div>',
+
+                            className: [styles.fieldGroup],
+
+                            children: [
+
+                                `<h2 class="${styles.sectionTitle} ${styles.groupDivider}">Identification</h2>`,
+
+                                UltraComponent({
+                                    component: `<div class="${styles.toggleRow}">
+                                        <label class="${styles.toggleLabel}"><input type="checkbox" /> Identify from metadata</label>
+                                        <span class="${styles.infoIcon}" tabindex="0">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+                                                <circle cx="12" cy="12" r="10" />
+                                                <line x1="12" y1="16" x2="12" y2="12" />
+                                                <line x1="12" y1="8" x2="12.01" y2="8" />
+                                            </svg>
+                                            <span class="${styles.infoTooltip}" role="tooltip">Reads ComicInfo.xml when present, otherwise uses the wiki.</span>
+                                        </span>
+                                    </div>`,
+                                    onMount: [($el: HTMLElement) => {
+                                        syncIdentifyFromMetaCheckbox($el);
+                                        $el.querySelector('input')?.addEventListener(
+                                            'change',
+                                            (e) => fieldsState.identifyFromMeta.set((e.currentTarget as HTMLInputElement).checked)
+                                        );
+                                    }],
+                                    trigger: [{
+                                        subscriber: fieldsState.identifyFromMeta.subscribe,
+                                        triggerFunction: syncIdentifyFromMetaCheckbox
+                                    }]
                                 }),
 
                             ]
