@@ -1,5 +1,7 @@
 # Better Rack
 
+[![CI](https://github.com/EvilPrime98/BetterRack/actions/workflows/ci.yml/badge.svg)](https://github.com/EvilPrime98/BetterRack/actions/workflows/ci.yml)
+
 Better Rack is a desktop app for organizing and reading a local comic book library (CBR/CBZ), with built-in search and download from a configurable comics source and metadata lookups via an integrated wiki.
 
 ## Features
