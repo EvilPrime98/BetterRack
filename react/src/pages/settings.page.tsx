@@ -221,19 +221,48 @@ export function SettingsPage() {
 
                         <h2 className={`${styles.sectionTitle} ${styles.groupDivider}`}>Identification</h2>
 
-                        <label className={styles.toggleRow}>
-                            <input
-                                type="checkbox"
-                                checked={draft.identifyFromMeta}
-                                onChange={(e) => {
-                                    const checked = e.currentTarget.checked;
-                                    setDraft((d) => ({ ...d, identifyFromMeta: checked }));
-                                }}
-                            />
-                            {' '}Identify from embedded metadata (ComicInfo.xml)
-                        </label>
+                        <div className={styles.toggleRow}>
 
-                        <p className={styles.toggleHint}>When on, reads the comic's own ComicInfo.xml instead of the wiki. Falls back to the wiki if no usable file is found.</p>
+                            <label className={styles.toggleLabel}>
+                                <input
+                                    type="checkbox"
+                                    checked={draft.identifyFromMeta}
+                                    onChange={(e) => {
+                                        const checked = e.currentTarget.checked;
+                                        setDraft((d) => ({ ...d, identifyFromMeta: checked }));
+                                    }}
+                                />
+                                {' '}Identify from metadata
+                            </label>
+
+                            <span 
+                                className={styles.infoIcon} 
+                                tabIndex={0}
+                            >
+                                <svg
+                                    width={16}
+                                    height={16}
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="#fff"
+                                    strokeWidth={1.5}
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    >
+                                    <circle cx={12} cy={12} r={10} />
+                                    <line x1={12} y1={16} x2={12} y2={12} />
+                                    <line x1={12} y1={8} x2={12.01} y2={8} />
+                                </svg>
+                                <span 
+                                    className={styles.infoTooltip} 
+                                    role="tooltip"
+                                >
+                                    Reads ComicInfo.xml when present, otherwise uses the wiki.
+                                </span>
+                            </span>
+
+                        </div>
 
                     </div>
 

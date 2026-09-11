@@ -52,8 +52,8 @@ export function SettingsPage() {
         fieldsState.identifyFromMeta.set(settings.identifyFromMeta);
     }
 
-    function syncIdentifyFromMetaCheckbox($label: HTMLElement) {
-        const $checkbox = $label.querySelector('input') as HTMLInputElement;
+    function syncIdentifyFromMetaCheckbox($el: HTMLElement) {
+        const $checkbox = $el.querySelector('input') as HTMLInputElement;
         $checkbox.checked = fieldsState.identifyFromMeta.get();
     }
 
@@ -407,10 +407,20 @@ export function SettingsPage() {
                                 `<h2 class="${styles.sectionTitle} ${styles.groupDivider}">Identification</h2>`,
 
                                 UltraComponent({
-                                    component: `<label class="${styles.toggleRow}"><input type="checkbox" /> Identify from embedded metadata (ComicInfo.xml)</label>`,
-                                    onMount: [($label: HTMLElement) => {
-                                        syncIdentifyFromMetaCheckbox($label);
-                                        $label.querySelector('input')?.addEventListener(
+                                    component: `<div class="${styles.toggleRow}">
+                                        <label class="${styles.toggleLabel}"><input type="checkbox" /> Identify from metadata</label>
+                                        <span class="${styles.infoIcon}" tabindex="0">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+                                                <circle cx="12" cy="12" r="10" />
+                                                <line x1="12" y1="16" x2="12" y2="12" />
+                                                <line x1="12" y1="8" x2="12.01" y2="8" />
+                                            </svg>
+                                            <span class="${styles.infoTooltip}" role="tooltip">Reads ComicInfo.xml when present, otherwise uses the wiki.</span>
+                                        </span>
+                                    </div>`,
+                                    onMount: [($el: HTMLElement) => {
+                                        syncIdentifyFromMetaCheckbox($el);
+                                        $el.querySelector('input')?.addEventListener(
                                             'change',
                                             (e) => fieldsState.identifyFromMeta.set((e.currentTarget as HTMLInputElement).checked)
                                         );
@@ -420,8 +430,6 @@ export function SettingsPage() {
                                         triggerFunction: syncIdentifyFromMetaCheckbox
                                     }]
                                 }),
-
-                                `<p class="${styles.toggleHint}">When on, reads the comic's own ComicInfo.xml instead of the wiki. Falls back to the wiki if no usable file is found.</p>`,
 
                             ]
 
