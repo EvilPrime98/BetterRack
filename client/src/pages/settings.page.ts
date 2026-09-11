@@ -333,7 +333,7 @@ export function SettingsPage() {
                                     label: 'API URL',
                                     placeholder: 'https://example.com/wp-json/wp/v2',
                                     eventHandler: {
-                                        keydown: (e: Event) => {
+                                        input: (e: Event) => {
                                             const $input = e.target as HTMLInputElement;
                                             fieldsState.apiUrl.set($input.value)
                                         }
@@ -345,7 +345,7 @@ export function SettingsPage() {
                                     label: 'Base URL',
                                     placeholder: 'https://example.com',
                                     eventHandler: {
-                                        keydown: (e: Event) => {
+                                        input: (e: Event) => {
                                             const $input = e.target as HTMLInputElement;
                                             fieldsState.baseUrl.set($input.value)
                                         }
@@ -357,7 +357,7 @@ export function SettingsPage() {
                                     label: 'Host domain',
                                     placeholder: 'https://example.com',
                                     eventHandler: {
-                                        keydown: (e: Event) => {
+                                        input: (e: Event) => {
                                             const $input = e.target as HTMLInputElement;
                                             fieldsState.hostDomain.set($input.value)
                                         }

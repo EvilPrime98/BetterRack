@@ -203,21 +203,21 @@ export function SettingsPage() {
                             fieldKey="apiUrl"
                             label="API URL"
                             placeholder="https://example.com/wp-json/wp/v2"
-                            onKeyDown={(e) => setDraft((d) => ({ ...d, apiUrl: (e.target as HTMLInputElement).value }))}
+                            onChange={(e) => setDraft((d) => ({ ...d, apiUrl: (e.target as HTMLInputElement).value }))}
                         />
 
                         <TextField
                             fieldKey="baseUrl"
                             label="Base URL"
                             placeholder="https://example.com"
-                            onKeyDown={(e) => setDraft((d) => ({ ...d, baseUrl: (e.target as HTMLInputElement).value }))}
+                            onChange={(e) => setDraft((d) => ({ ...d, baseUrl: (e.target as HTMLInputElement).value }))}
                         />
 
                         <TextField
                             fieldKey="hostDomain"
                             label="Host domain"
                             placeholder="https://example.com"
-                            onKeyDown={(e) => setDraft((d) => ({ ...d, hostDomain: (e.target as HTMLInputElement).value }))}
+                            onChange={(e) => setDraft((d) => ({ ...d, hostDomain: (e.target as HTMLInputElement).value }))}
                         />
 
                     </div>
