@@ -225,7 +225,10 @@ export function SettingsPage() {
                             <input
                                 type="checkbox"
                                 checked={draft.identifyFromMeta}
-                                onChange={(e) => setDraft((d) => ({ ...d, identifyFromMeta: e.currentTarget.checked }))}
+                                onChange={(e) => {
+                                    const checked = e.currentTarget.checked;
+                                    setDraft((d) => ({ ...d, identifyFromMeta: checked }));
+                                }}
                             />
                             {' '}Identify from embedded metadata (ComicInfo.xml)
                         </label>
