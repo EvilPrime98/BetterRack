@@ -141,6 +141,7 @@ export type TLibraryModel = {
     commitIdentify: (fileUid: string, comic: WikiComic) => Promise<void>,
     /** Resolves wiki metadata for a single comic on demand; cached results skip the wiki call. */
     identify: (uid: string) => Promise<TLibraryEntry>,
+    reidentifyAll: () => Promise<void>,
     addLibraryPath: (dir: string) => Promise<void>,
     removeLibraryPath: (dir: string) => Promise<void>,
     getLibraryPaths: () => string[],
@@ -197,7 +198,8 @@ export type TComicData = {
 export type TComicDataModel = {
     getAll: () => Record<string, TComicData>,
     getByUid: (uid: string) => TComicData | undefined,
-    upsert: (uid: string, partial: Partial<Omit<TComicData, 'uid'>>) => TComicData
+    upsert: (uid: string, partial: Partial<Omit<TComicData, 'uid'>>) => TComicData,
+    resetIdentification: () => void
 }
 
 export type TThumbnailModel = {

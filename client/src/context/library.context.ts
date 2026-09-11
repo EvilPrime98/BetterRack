@@ -8,7 +8,8 @@ import {
     deleteFolder as requestDeleteFolder,
     createFolder as requestCreateFolder,
     moveFile as requestMoveFile,
-    unidentifyFile as requestUnidentifyFile
+    unidentifyFile as requestUnidentifyFile,
+    reidentifyAllLibrary as requestReidentifyAllLibrary
 } from "../services/library.service";
 import type { ILibraryGroup, ILibraryIndexGroup, ILibraryPage, ILibraryResponseItem } from "../library.types";
 import { toast } from "../services/toast.service";
@@ -63,6 +64,7 @@ export interface ILibraryCtx {
     createFolder: (folderName: string, parentFolderUid?: string) => Promise<void>;
     moveFile: (fileUid: string, targetFolderUid?: string) => Promise<void>;
     unidentifyFile: (uid: string) => Promise<void>;
+    reidentifyAll: () => Promise<void>;
     getLibraryItems: (args: { onlyDir: boolean, uid?: string }) => ILibraryResponseItem[];
 }
 
@@ -200,6 +202,16 @@ export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
             toast.success(data.message || 'File un-identified');
         } catch (e) {
             toast.error(e instanceof Error ? e.message : 'Failed to un-identify file.');
+        }
+    },
+
+    reidentifyAll: async (comp: ILibraryCtx) => {
+        try {
+            const data = await requestReidentifyAllLibrary();
+            await reloadLibrary(comp);
+            toast.success(data.message || 'Library flagged for re-identification');
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : 'Failed to flag library for re-identification.');
         }
     },
 

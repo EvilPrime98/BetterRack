@@ -9,6 +9,7 @@ import { toast } from '@/services/toast.service';
 import { useDocumentTitleStore } from '@/stores/documentTitle.store';
 import { BRButton } from '@/components/br-button/br-button';
 import { getStoredServerUrl, hasNativeFolderPicker } from '@/services/server-config.service';
+import { useLibraryStore } from '@/stores/library.store';
 import { useServerModalStore } from '@/stores/serverModal.store';
 
 export function SettingsPage() {
@@ -83,6 +84,10 @@ export function SettingsPage() {
             return;
         }
         if (selected) addFolder(selected);
+    }
+
+    function onReidentifyAll() {
+        useLibraryStore.getState().reidentifyAll();
     }
 
     async function onSave() {
@@ -263,6 +268,12 @@ export function SettingsPage() {
                             </span>
 
                         </div>
+
+                        <BRButton
+                            variant="secondary"
+                            text="Re-identify all"
+                            onClick={onReidentifyAll}
+                        />
 
                     </div>
 

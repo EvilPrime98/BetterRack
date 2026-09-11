@@ -128,6 +128,16 @@ export async function unidentifyFile(
     return data;
 }
 
+export async function reidentifyAllLibrary(): Promise<{ error: boolean; message: string }> {
+    const response = await fetch(`${API_URL}/api/library/identify/reset-all`, {
+        method: 'POST',
+        headers: authHeaders()
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message);
+    return data;
+}
+
 export async function moveFile(
     fileUid: string,
     targetFolderUid?: string

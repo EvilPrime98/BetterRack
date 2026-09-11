@@ -502,6 +502,16 @@ export class LibraryModel {
         this.inheritanceCache = null;
     }
 
+    reidentifyAll = async (): Promise<void> => {
+        this.comicDataModel.resetIdentification();
+        for (const entry of this.db) {
+            if (entry.did) continue;
+            entry.identified = undefined;
+            entry.comic = undefined;
+        }
+        this.inheritanceCache = null;
+    }
+
     commitIdentify = async (fileUid: string, comic: WikiComic) => {
         const file = this.get(fileUid);
         if (!file || Array.isArray(file)) throw new Error('File not found.');

@@ -285,6 +285,30 @@ export class libraryController{
         }
     }
 
+    public async reidentifyAll(
+        c: Context
+    ){
+        try{
+
+            await this.libModel.reidentifyAll();
+
+            return c.json(
+                { error: false, message: 'Library flagged for re-identification.'},
+                200
+            )
+
+        }catch(e){
+
+            log.error({ err: e }, 'Failed to flag library for re-identification');
+
+            return c.json(
+                { error: true, message: 'There was an issue flagging the library for re-identification. Please, try again later.'},
+                500
+            )
+
+        }
+    }
+
     public async commitIdentify(
         c: Context
     ){
