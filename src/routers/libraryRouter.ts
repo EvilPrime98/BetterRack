@@ -19,6 +19,7 @@ export function libraryRouter(
     app.delete('/file', (c) => cc.deleteFile(c));
     app.post('/file/unidentify', (c) => cc.unidentifyFile(c));
     app.post('/file/identify', (c) => cc.commitIdentify(c));
+    app.post('/identify/reset-all', (c) => cc.reidentifyAll(c));
     app.get('/:uid/identify', (c) => cc.identify(c));
     return app;
 }

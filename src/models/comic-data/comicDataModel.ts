@@ -99,4 +99,15 @@ export class ComicDataModel implements TComicDataModel {
         return merged;
     }
 
+    resetIdentification = (): void => {
+        this.db.update(comicData)
+            .set({
+                identified: null,
+                comic: null,
+                sourceWiki: null,
+                prefId: null,
+            })
+            .run();
+    }
+
 }

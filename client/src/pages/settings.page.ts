@@ -9,6 +9,7 @@ import { toast } from "../services/toast.service";
 import { DOCUMENT_TITLE_CONTEXT } from "../context/document-title.context";
 import { BRButton } from "../components/br-button/br-button";
 import { getStoredServerUrl, hasNativeFolderPicker } from "../services/server-config.service";
+import { LIBRARY_CONTEXT } from "../context/library.context";
 import { SERVER_MODAL_CTX } from "../context/server-modal.context";
 
 export function SettingsPage() {
@@ -139,6 +140,10 @@ export function SettingsPage() {
             return;
         }
         if (selected) addFolder(selected);
+    }
+
+    function onReidentifyAll() {
+        LIBRARY_CONTEXT.reidentifyAll();
     }
 
     async function onSave() {
@@ -429,6 +434,12 @@ export function SettingsPage() {
                                         subscriber: fieldsState.identifyFromMeta.subscribe,
                                         triggerFunction: syncIdentifyFromMetaCheckbox
                                     }]
+                                }),
+
+                                BRButton({
+                                    text: 'Re-identify all',
+                                    variant: 'secondary',
+                                    eventHandler: { click: onReidentifyAll }
                                 }),
 
                             ]
