@@ -18,6 +18,7 @@ export const useSettingsStore = create<ISettingsStore>((set) => ({
         baseUrl: '',
         hostDomain: '',
         downloadDir: '',
+        identifyFromMeta: false,
     },
 
     fetchSettings: async () => {

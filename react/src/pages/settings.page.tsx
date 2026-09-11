@@ -25,6 +25,7 @@ export function SettingsPage() {
         baseUrl: settings.baseUrl,
         hostDomain: settings.hostDomain,
         downloadDir: settings.downloadDir,
+        identifyFromMeta: settings.identifyFromMeta,
     });
 
     useEffect(() => {
@@ -37,6 +38,7 @@ export function SettingsPage() {
             baseUrl: settings.baseUrl,
             hostDomain: settings.hostDomain,
             downloadDir: settings.downloadDir,
+            identifyFromMeta: settings.identifyFromMeta,
         });
     }, [settings]);
 
@@ -215,10 +217,27 @@ export function SettingsPage() {
 
                     </div>
 
+                    <div className={styles.fieldGroup}>
+
+                        <h2 className={`${styles.sectionTitle} ${styles.groupDivider}`}>Identification</h2>
+
+                        <label className={styles.toggleRow}>
+                            <input
+                                type="checkbox"
+                                checked={draft.identifyFromMeta}
+                                onChange={(e) => setDraft((d) => ({ ...d, identifyFromMeta: e.currentTarget.checked }))}
+                            />
+                            {' '}Identify from embedded metadata (ComicInfo.xml)
+                        </label>
+
+                        <p className={styles.toggleHint}>When on, reads the comic's own ComicInfo.xml instead of the wiki. Falls back to the wiki if no usable file is found.</p>
+
+                    </div>
+
                     <BRButton
                         className={styles.saveButton}
-                        text="Save" 
-                        onClick={onSave} 
+                        text="Save"
+                        onClick={onSave}
                     />
 
                     <p className={styles.errorText}>{settingsError}</p>

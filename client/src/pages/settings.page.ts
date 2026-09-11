@@ -21,7 +21,8 @@ export function SettingsPage() {
         baseUrl: '',
         hostDomain: '',
         downloadDir: '',
-        folderPath: ''
+        folderPath: '',
+        identifyFromMeta: false
     })
 
     // The stored server URL, captured when the server modal opens. A runtime
@@ -48,6 +49,12 @@ export function SettingsPage() {
         fieldsState.baseUrl.set(settings.baseUrl);
         fieldsState.hostDomain.set(settings.hostDomain);
         fieldsState.downloadDir.set(settings.downloadDir);
+        fieldsState.identifyFromMeta.set(settings.identifyFromMeta);
+    }
+
+    function syncIdentifyFromMetaCheckbox($label: HTMLElement) {
+        const $checkbox = $label.querySelector('input') as HTMLInputElement;
+        $checkbox.checked = fieldsState.identifyFromMeta.get();
     }
 
     async function refreshSettingsFromServer() {
@@ -141,6 +148,7 @@ export function SettingsPage() {
             baseUrl: fieldsState.baseUrl.get(),
             hostDomain: fieldsState.hostDomain.get(),
             downloadDir: fieldsState.downloadDir.get(),
+            identifyFromMeta: fieldsState.identifyFromMeta.get(),
         };
 
         setSettingsError('');
@@ -383,6 +391,37 @@ export function SettingsPage() {
                                         }
                                     }
                                 }),
+
+                            ]
+
+                        }),
+
+                        UltraComponent({
+
+                            component: '<div></div>',
+
+                            className: [styles.fieldGroup],
+
+                            children: [
+
+                                `<h2 class="${styles.sectionTitle} ${styles.groupDivider}">Identification</h2>`,
+
+                                UltraComponent({
+                                    component: `<label class="${styles.toggleRow}"><input type="checkbox" /> Identify from embedded metadata (ComicInfo.xml)</label>`,
+                                    onMount: [($label: HTMLElement) => {
+                                        syncIdentifyFromMetaCheckbox($label);
+                                        $label.querySelector('input')?.addEventListener(
+                                            'change',
+                                            (e) => fieldsState.identifyFromMeta.set((e.currentTarget as HTMLInputElement).checked)
+                                        );
+                                    }],
+                                    trigger: [{
+                                        subscriber: fieldsState.identifyFromMeta.subscribe,
+                                        triggerFunction: syncIdentifyFromMetaCheckbox
+                                    }]
+                                }),
+
+                                `<p class="${styles.toggleHint}">When on, reads the comic's own ComicInfo.xml instead of the wiki. Falls back to the wiki if no usable file is found.</p>`,
 
                             ]
 

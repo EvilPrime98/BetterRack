@@ -18,6 +18,7 @@ export const SETTINGS_CONTEXT: ISettingsCtx = ultraCompState({
         baseUrl: '',
         hostDomain: '',
         downloadDir: '',
+        identifyFromMeta: false,
     } as IAppSettings,
 
     fetchSettings: async (comp: ISettingsCtx) => {
