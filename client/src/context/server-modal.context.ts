@@ -1,5 +1,5 @@
 import { ultraCompState, type IUltraCompStateStateful } from "ultra-light-js";
-import { getStoredServerUrl, needsServerSetup, setServerUrl, setRemoteServer } from "../services/server-config.service";
+import { getStoredServerUrl, isRemoteModeEnabled, needsServerSetup, setServerUrl, setRemoteServer } from "../services/server-config.service";
 
 let resolver: (() => void) | null = null;
 
@@ -47,12 +47,17 @@ export const SERVER_MODAL_CTX: IServerModalCtx = ultraCompState({
             comp.error.set('Enter a server address.');
             return;
         }
+        const urlBefore = getStoredServerUrl();
+        const remoteBefore = isRemoteModeEnabled();
         if (remote?.enabled) setRemoteServer(trimmed, remote.apiKey.trim());
         else setServerUrl(trimmed);
         comp.isVisible.set(false);
         comp.isMandatory.set(false);
         resolver?.();
         resolver = null;
+        if (getStoredServerUrl() !== urlBefore || isRemoteModeEnabled() !== remoteBefore) {
+            window.location.reload();
+        }
     }
 
 });

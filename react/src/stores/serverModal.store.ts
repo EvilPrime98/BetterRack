@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getStoredServerUrl, needsServerSetup, setServerUrl, setRemoteServer } from '../services/server-config.service';
+import { getStoredServerUrl, isRemoteModeEnabled, needsServerSetup, setServerUrl, setRemoteServer } from '../services/server-config.service';
 
 export { getStoredServerUrl };
 
@@ -45,11 +45,16 @@ export const useServerModalStore = create<IServerModalStore>((set, get) => ({
             set({ error: 'Enter a server address.' });
             return;
         }
+        const urlBefore = getStoredServerUrl();
+        const remoteBefore = isRemoteModeEnabled();
         if (remote?.enabled) setRemoteServer(trimmed, remote.apiKey.trim());
         else setServerUrl(trimmed);
         set({ isVisible: false, isMandatory: false });
         resolver?.();
         resolver = null;
+        if (getStoredServerUrl() !== urlBefore || isRemoteModeEnabled() !== remoteBefore) {
+            window.location.reload();
+        }
     }
 
 }));
