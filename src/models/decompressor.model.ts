@@ -1,4 +1,5 @@
 import { existsSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { XMLParser } from 'fast-xml-parser';
 import type { IComicInfoXML } from "#src/types.ts";
@@ -259,11 +260,6 @@ export class Zip7Decompressor {
 
     }
 
-    // ComicInfo.xml is the ComicRack metadata standard. It has an optional
-    // <Pages> list. Each <Page> entry can hold a Bookmark label and a
-    // 0-based Image index. Most archives have no ComicInfo.xml. A missing
-    // file, or a missing <Pages> block, gives an empty result. This is
-    // normal and not an error.
     extractBookmarks = async ({
         filePath
     }: {
@@ -280,9 +276,6 @@ export class Zip7Decompressor {
 
         if (!comicInfoEntry) return [];
 
-        // getPageStream checks the entry name and the archive path again
-        // before it spawns a process. A crafted ComicInfo.xml path cannot
-        // reach another location.
         const xml = await new Response(
             this.getPageStream({ filePath, entryName: comicInfoEntry })
         ).text();
@@ -291,18 +284,55 @@ export class Zip7Decompressor {
             ignoreAttributes: false
         }).parse(xml) as IComicInfoXML;
 
-        // fast-xml-parser returns an object for a single <Page>. It returns
-        // an array for several. It returns undefined when <Pages> is absent.
         const rawPages = data?.ComicInfo?.Pages?.Page;
         const pageList = Array.isArray(rawPages) ? rawPages : rawPages ? [rawPages] : [];
 
         return pageList
-            .filter(page => page["@_Bookmark"]?.trim())
-            .map(page => ({
-                page: Number(page["@_Image"]) + 1,
-                label: page["@_Bookmark"]!.trim()
-            }))
-            .filter(bookmark => Number.isInteger(bookmark.page) && bookmark.page >= 1);
+        .filter(page => page["@_Bookmark"]?.trim())
+        .map(page => ({
+            page: Number(page["@_Image"]) + 1,
+            label: page["@_Bookmark"]!.trim()
+        }))
+        .filter(bookmark => Number.isInteger(bookmark.page) && bookmark.page >= 1);
+
+    }
+    
+    private readSidecarComicInfo = async (
+        filePath: string
+    ): Promise<string | null> => {
+
+        const sidecarPath = path.join(path.dirname(filePath), `${path.parse(filePath).name}.xml`);
+        if (!existsSync(sidecarPath)) return null;
+
+        return readFile(sidecarPath, 'utf-8');
+
+    }
+
+    extractComicInfo = async ({
+        filePath
+    }: {
+        filePath: string
+    }): Promise<IComicInfoXML|null> => {
+
+        const entries = this.isRarFile(filePath)
+        ? await this.listEntriesUnrar(filePath)
+        : await this.listEntries7z(filePath);
+
+        const comicInfoEntry = entries.find(
+            entry => path.basename(entry).toLowerCase() === 'comicinfo.xml'
+        );
+
+        const xml = comicInfoEntry
+            ? await new Response(
+                this.getPageStream({ filePath, entryName: comicInfoEntry })
+            ).text()
+            : await this.readSidecarComicInfo(filePath);
+
+        if (!xml) return null;
+
+        return new XMLParser({
+            ignoreAttributes: false
+        }).parse(xml) as IComicInfoXML;
 
     }
 
@@ -458,10 +488,6 @@ export class Zip7Decompressor {
         return MIME_TYPES[path.extname(entryName).toLowerCase()] ?? 'application/octet-stream';
     }
 
-    // Write the named entries to outDir. Keep the in-archive path of each
-    // entry. The zip-slip guard checks every entry name before a process
-    // starts, so a crafted path cannot escape outDir. The caller gives a
-    // fresh outDir for each pack and moves the result into place.
     extractEntries = async ({
         filePath,
         outDir,

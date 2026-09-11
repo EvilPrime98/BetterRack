@@ -15,6 +15,7 @@ const DEFAULT_SETTINGS: TAppSettings = {
     baseUrl: '',
     hostDomain: '',
     downloadDir: '',
+    identifyFromMeta: false,
 };
 
 export class PreferencesModel implements TPreferencesModel {
@@ -130,6 +131,9 @@ export class PreferencesModel implements TPreferencesModel {
             baseUrl: values.baseUrl ?? DEFAULT_SETTINGS.baseUrl,
             hostDomain: values.hostDomain ?? DEFAULT_SETTINGS.hostDomain,
             downloadDir: values.downloadDir ?? DEFAULT_SETTINGS.downloadDir,
+            identifyFromMeta: values.identifyFromMeta === undefined
+                ? DEFAULT_SETTINGS.identifyFromMeta
+                : values.identifyFromMeta === 'true',
         };
     }
 

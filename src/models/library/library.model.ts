@@ -13,18 +13,17 @@ import type {
     TLibraryPref,
     TPreferencesModel,
     TRecentlyAddedResponse,
-    TWikiModel
+    TWikiModel,
+    TZipModel
 } from "#src/types.ts";
 import fs from "node:fs";
 import { logger } from "#utils/logger";
 import { createConcurrencyLimiter } from "#utils/concurrencyLimiter";
 import { COMIC_EXTENSIONS, DEFAULT_LIBRARY_PAGE_SIZE, IDENTIFY_CONCURRENCY, MAX_LIBRARY_PAGE_SIZE, RECENT_WINDOW_HOURS, STAT_CONCURRENCY } from "./constants";
+import { comiInfoToWikiComicDTO } from "#src/dtos/comicInfoToLibraryEntry.ts";
 
 const log = logger.child({ module: 'LibraryModel' });
 
-// A move the caller cannot make. The message is safe to show the user.
-// Causes: the target is the folder itself or one of its descendants, the
-// move does nothing, or the destination already has that name.
 export class MoveError extends Error {}
 
 export class LibraryModel {
@@ -32,6 +31,7 @@ export class LibraryModel {
     private prefsModel: TPreferencesModel;
     private wikiModel: TWikiModel;
     private comicDataModel: TComicDataModel;
+    private zipModel: TZipModel;
     private libPaths: string[];
     private db: TLibraryEntry[] = [];
     private pref: TLibraryPref[] = [];
@@ -45,16 +45,20 @@ export class LibraryModel {
     constructor(
         prefsModel: TPreferencesModel,
         wikiModel: TWikiModel,
-        comicDataModel: TComicDataModel
+        comicDataModel: TComicDataModel,
+        zipModel: TZipModel
     ) {
         this.prefsModel = prefsModel;
         this.wikiModel = wikiModel;
         this.comicDataModel = comicDataModel;
+        this.zipModel = zipModel;
         this.libPaths = this.prefsModel.getAppSettings().outputDirs.map(p => path.resolve(p));
         this.ready = this.scan();
     }
 
-    private uidFromPath = (absPath: string) => {
+    private uidFromPath = (
+        absPath: string
+    ) => {
         const hash = crypto.createHash('sha256').update(absPath).digest('hex');
         return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-${hash.slice(12, 16)}-${hash.slice(16, 20)}-${hash.slice(20, 32)}`;
     };
@@ -93,14 +97,20 @@ export class LibraryModel {
 
     };
 
-    private applyStoredComicData = (entry: TLibraryEntry, stored: TComicData) => {
+    private applyStoredComicData = (
+        entry: TLibraryEntry, 
+        stored: TComicData
+    ) => {
         entry.identified = stored.identified;
         entry.comic = stored.comic;
     };
 
     private scanInBackground = () => {
         const scanPromise = this.scan();
-        scanPromise.catch(e => log.error({ err: e }, 'Background library scan failed'));
+        scanPromise.catch(e => log.error(
+            { err: e }, 
+            'Background library scan failed')
+        );
         this.ready = scanPromise;
     }
 
@@ -188,7 +198,9 @@ export class LibraryModel {
 
     };
 
-    identify = async (uid: string): Promise<TLibraryEntry> => {
+    identify = async (
+        uid: string
+    ): Promise<TLibraryEntry> => {
 
         const entry = this.entryByUid.get(uid);
         if (!entry || entry.did) throw new Error('Comic not found.');
@@ -207,7 +219,19 @@ export class LibraryModel {
         const job = (async () => {
             const release = await this.identifyLimiter.acquire();
             try {
-                const found = await this.wikiModel.getComic(entry.name);
+
+                const identifyFromMeta = this.prefsModel.getAppSettings().identifyFromMeta;
+                const comicInfo = identifyFromMeta
+                    ? await this.zipModel.extractComicInfo({ filePath: entry.path })
+                    : null;
+
+                if (identifyFromMeta && !comicInfo) {
+                    log.debug({ uid }, 'No usable ComicInfo.xml found; falling back to wiki lookup');
+                }
+
+                const found = comicInfo
+                    ? comiInfoToWikiComicDTO(comicInfo)
+                    : await this.wikiModel.getComic(entry.name);
 
                 const freshlyStored = this.comicDataModel.getByUid(uid);
                 if (freshlyStored?.identified !== undefined) {
@@ -341,23 +365,20 @@ export class LibraryModel {
     ): TRecentlyAddedResponse => {
 
         const windowHours = Number.isFinite(options.windowHours) && options.windowHours! > 0
-            ? options.windowHours!
-            : RECENT_WINDOW_HOURS;
+        ? options.windowHours!
+        : RECENT_WINDOW_HOURS;
 
         const nowMs = options.nowMs ?? Date.now();
         const sinceMs = nowMs - windowHours * 60 * 60 * 1000;
 
-        // The upper bound removes files with an mtime in the future.
-        // A future mtime comes from clock skew or an archive copied with a forward timestamp.
-        // Without the bound, these files stay at the top of the list.
         const items = this.resolveInheritance()
-            .filter(entry =>
-                !entry.did &&
-                typeof entry.createdAt === 'number' &&
-                entry.createdAt >= sinceMs &&
-                entry.createdAt <= nowMs
-            )
-            .sort((a, b) => b.createdAt! - a.createdAt!);
+        .filter(entry =>
+            !entry.did &&
+            typeof entry.createdAt === 'number' &&
+            entry.createdAt >= sinceMs &&
+            entry.createdAt <= nowMs
+        )
+        .sort((a, b) => b.createdAt! - a.createdAt!);
 
         return { items, windowHours, generatedAt: nowMs };
 

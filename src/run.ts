@@ -33,21 +33,31 @@ async function startApp() {
     const app = new Hono();
     
     const prefsModel = new PreferencesModel();
+    
     const zipModel = new Zip7Decompressor();
+    
     const wikiModel = new WikiModel();
+    
     const comicDataModel = new ComicDataModel();
+    
     const thumbnailModel = new ThumbnailModel(
         zipModel, 
         logger.child({ module: 'ThumbnailModel' })
     );
-    const libModel = new LibraryModel(prefsModel, wikiModel, comicDataModel);
+    
+    const libModel = new LibraryModel(prefsModel, wikiModel, comicDataModel, zipModel);
+    
     const cacheModel = new CacheModel();
+    
     const gcwModel = new GetComicsApiModel(cacheModel, prefsModel);
+    
     const dwnModel = new DownloadModel(
         logger.child({ module: 'DownloadModel' }),
         new PackExtractor(zipModel)
     );
+    
     const dwnJobModel = new JobModel<TProgressEvent>();
+    
     const fsModel = new FileSystemModel(process.cwd());
 
     app.use(cors());
