@@ -114,3 +114,25 @@ a {
 .notyf__toast.toast-error {
     border-left: 3px solid #ff5c5c;
 }
+
+.view-background {
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    transition: background-image 400ms ease;
+}
+
+.view-background::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(20, 20, 20, 0.55), rgba(20, 20, 20, 0.85));
+}
+
+.view-background > * {
+    position: relative;
+    z-index: 1;
+}

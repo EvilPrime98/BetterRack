@@ -8,3 +8,10 @@ export function thumbnailRouter(thumbnailModel: TThumbnailModel, libModel: TLibr
     app.get('/:uuid', async (c) => await cc.get(c));
     return app;
 }
+
+export function backgroundRouter(thumbnailModel: TThumbnailModel, libModel: TLibraryModel) {
+    const app = new Hono();
+    const cc = new thumbnailController(thumbnailModel, libModel);
+    app.get('/:uuid', async (c) => await cc.getBackground(c));
+    return app;
+}

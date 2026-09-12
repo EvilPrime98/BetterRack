@@ -22,7 +22,7 @@ import { fsRouter } from './routers/fsRouter';
 import { comicsRouter } from './routers/comicsRouter';
 import { downloadsRouter } from './routers/downloadsRouter';
 import { ThumbnailModel } from './models/thumbnail/thumbnail.model';
-import { thumbnailRouter } from './routers/thumbnailRouter';
+import { thumbnailRouter, backgroundRouter } from './routers/thumbnailRouter';
 import { apiKeyAuth } from './middleware/apiKeyAuthMiddleware';
 import { logger } from '#utils/logger';
 import type { TProgressEvent } from './types';
@@ -80,6 +80,8 @@ async function startApp() {
     app.route('/api/directories', fsRouter(fsModel, prefsModel));
 
     app.route('/api/thumbnail', thumbnailRouter(thumbnailModel, libModel));
+
+    app.route('/api/background', backgroundRouter(thumbnailModel, libModel));
 
     app.route('/read', comicReaderRouter({
         libModel: libModel,

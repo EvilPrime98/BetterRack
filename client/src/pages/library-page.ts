@@ -8,6 +8,7 @@ import { Layout } from "@/layout";
 import { COMICS_TYPE_CTX } from "../context/comics-types.context";
 import type { ILibraryResponseItem } from "../library.types";
 import { ultraFilters } from "../hooks/ultraFilters";
+import { applyBackgroundImage } from "../hooks/useBackgroundImage";
 import { SearchPage } from "./search.page";
 import { DOCUMENT_TITLE_CONTEXT } from "../context/document-title.context";
 
@@ -38,6 +39,12 @@ export function LibraryPage({
             styles.detailLayout,
             COMICS_TYPE_CTX.type.get() === 'detail'
         );
+    }
+
+    function onBackgroundChange(
+        $section: HTMLElement
+    ){
+        applyBackgroundImage($section, items(), `library:${uid ?? '__root__'}`);
     }
 
     function onItemsChange(
@@ -129,13 +136,20 @@ export function LibraryPage({
                 })
             ],
 
-            trigger: [{
-                subscriber: [
-                    LIBRARY_CONTEXT.groups.subscribe,
-                    LIBRARY_CONTEXT.searchQuery.subscribe
-                ],
-                triggerFunction: () => applyFilters()
-            }]
+            trigger: [
+                {
+                    subscriber: [
+                        LIBRARY_CONTEXT.groups.subscribe,
+                        LIBRARY_CONTEXT.searchQuery.subscribe
+                    ],
+                    triggerFunction: () => applyFilters()
+                },
+                {
+                    subscriber: subsItems,
+                    triggerFunction: onBackgroundChange,
+                    defer: true
+                }
+            ]
 
         })
 

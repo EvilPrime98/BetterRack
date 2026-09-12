@@ -18,9 +18,11 @@ export class thumbnailController {
         this.libModel = libModel;
     }
 
-    public async get(
-        c: Context
-    ) {
+    private serveVariant = async (
+        c: Context,
+        kind: 'thumbnail' | 'background',
+        resolve: (uid: string, filePath?: string) => Promise<string | null>
+    ) => {
 
         try {
 
@@ -37,29 +39,25 @@ export class thumbnailController {
             const filePath = entry && !Array.isArray(entry) && !entry.did
             ? entry.path
             : undefined;
-            
-            const thumbnailPath = await this.thumbnailModel.getThumbnail(uuid, filePath);
 
-            if (!thumbnailPath) {
+            const resolvedPath = await resolve(uuid, filePath);
+
+            if (!resolvedPath) {
                 return c.json({
                     error: true,
-                    message: 'No thumbnail available for this comic.'
+                    message: `No ${kind} available for this comic.`
                 }, 404);
             }
 
-            const file = Bun.file(thumbnailPath);
+            const file = Bun.file(resolvedPath);
             if (!(await file.exists())) {
                 return c.json({
                     error: true,
-                    message: 'No thumbnail available for this comic.'
+                    message: `No ${kind} available for this comic.`
                 }, 404);
             }
 
-            // A re-identify can regenerate the thumbnail at the same path. So the
-            // ETag (path + size + mtime) pairs with a day-long max-age, not
-            // `immutable`. The client revalidates and gets a 304 while the file
-            // is unchanged.
-            const etag = buildStrongETag(thumbnailPath, file.size, file.lastModified);
+            const etag = buildStrongETag(resolvedPath, file.size, file.lastModified);
             const cacheHeaders = {
                 'Cache-Control': 'private, max-age=86400',
                 'ETag': etag,
@@ -79,15 +77,23 @@ export class thumbnailController {
 
         } catch (e) {
 
-            log.error({ err: e }, 'Failed to generate thumbnail');
+            log.error({ err: e }, `Failed to generate ${kind}`);
 
             return c.json({
                 error: true,
-                message: e instanceof Error ? e.message : 'There was an error generating the thumbnail.'
+                message: e instanceof Error ? e.message : `There was an error generating the ${kind}.`
             }, 500);
 
         }
 
     }
+
+    public get = (
+        c: Context
+    ) => this.serveVariant(c, 'thumbnail', this.thumbnailModel.getThumbnail);
+
+    public getBackground = (
+        c: Context
+    ) => this.serveVariant(c, 'background', this.thumbnailModel.getBackground);
 
 }

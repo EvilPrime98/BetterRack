@@ -7,6 +7,7 @@ import { Layout } from '@/layout';
 import { useComicsTypeStore } from '@/stores/comicsTypes.store';
 import type { ILibraryResponseItem } from '@/library.types';
 import { useFilters } from '@/hooks/useFilters';
+import { useBackgroundImage } from '@/hooks/useBackgroundImage';
 import { useDocumentTitleStore } from '@/stores/documentTitle.store';
 
 const PAGE_SIZE = 60; //max chunk for pages
@@ -33,6 +34,7 @@ export function SearchPage({
     }
 
     const { filters, setFilters, resetFilters, applyFilters } = useFilters({ rawItems: getSearchItems, setItems });
+    const backgroundUrl = useBackgroundImage(items, `search:${search}`);
 
     useEffect(() => {
         if (useLibraryStore.getState().searchQuery !== search) {
@@ -76,7 +78,10 @@ export function SearchPage({
 
     return (
         <Layout>
-            <section className={styles.page}>
+            <section
+                className={[styles.page, backgroundUrl ? 'view-background' : ''].filter(Boolean).join(' ')}
+                style={backgroundUrl ? { backgroundImage: `url("${backgroundUrl}")` } : undefined}
+            >
 
                 <PageHeader
                     items={items}

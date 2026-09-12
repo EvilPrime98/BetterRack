@@ -3,6 +3,7 @@ import styles from './recent-page.module.css';
 import { Layout } from "../layout";
 import { ComicCard } from "@/components/comic-card/comic-card";
 import { getRecentlyAdded } from "../services/library.service";
+import { applyBackgroundImage } from "../hooks/useBackgroundImage";
 import { toast } from "../services/toast.service";
 import { ChevronDownIcon } from "../icons/chevron.icon";
 import { RECENT_WINDOW_OPTIONS, type ILibraryResponseItem } from "../library.types";
@@ -131,6 +132,10 @@ export function RecentPage() {
 
     const itemsMap = new Map<string, UltraLightElement>();
 
+    function onBackgroundChange($section: HTMLElement) {
+        applyBackgroundImage($section, store.items.get(), `recent:${store.windowHours.get()}`);
+    }
+
     function onItemsChange($section: HTMLElement) {
 
         const currItems = store.items.get();
@@ -167,6 +172,15 @@ export function RecentPage() {
                 () => { store.load(); },
                 () => DOCUMENT_TITLE_CONTEXT.setTitle('Recently added')
             ],
+
+            trigger: [{
+                subscriber: [
+                    store.items.subscribe,
+                    store.windowHours.subscribe
+                ],
+                triggerFunction: onBackgroundChange,
+                defer: true
+            }],
 
             children: [
 

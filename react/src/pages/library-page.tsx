@@ -9,6 +9,7 @@ import { Layout } from '@/layout';
 import { useComicsTypeStore } from '@/stores/comicsTypes.store';
 import type { ILibraryResponseItem } from '@/library.types';
 import { useFilters } from '@/hooks/useFilters';
+import { useBackgroundImage } from '@/hooks/useBackgroundImage';
 import { SearchPage } from './search.page';
 import { useDocumentTitleStore } from '@/stores/documentTitle.store';
 
@@ -23,6 +24,7 @@ export function LibraryPage() {
     const setTitle = useDocumentTitleStore((s) => s.setTitle);
     const [items, setItems] = useState<ILibraryResponseItem[]>([]);
     const { filters, setFilters, resetFilters, applyFilters } = useFilters({ rawItems: getLibraryItems, setItems });
+    const backgroundUrl = useBackgroundImage(items, `library:${uid ?? '__root__'}`);
     
     function getLibraryItems(): ILibraryResponseItem[] {
         const items = useLibraryStore.getState().getLibraryItems({ onlyDir: !uid, uid });
@@ -50,7 +52,10 @@ export function LibraryPage() {
 
     return (
         <Layout>
-            <section className={styles.page}>
+            <section
+                className={[styles.page, backgroundUrl ? 'view-background' : ''].filter(Boolean).join(' ')}
+                style={backgroundUrl ? { backgroundImage: `url("${backgroundUrl}")` } : undefined}
+            >
 
                 <PageHeader
                     uid={uid}

@@ -4,6 +4,7 @@ import { ComicCard } from '@/components/comic-card/comic-card';
 import { Layout } from '@/layout';
 import { useComicsTypeStore } from '@/stores/comicsTypes.store';
 import { useRecentlyAdded } from '@/hooks/useRecentlyAdded';
+import { useBackgroundImage } from '@/hooks/useBackgroundImage';
 import { ArrowLeftIcon } from '@/icons/arrow-left.icon';
 import { ChevronDownIcon } from '@/icons/chevron.icon';
 import { RECENT_WINDOW_OPTIONS, type TRecentWindow } from '@/library.types';
@@ -64,10 +65,14 @@ export function RecentPage() {
     const [selectedWindow, setSelectedWindow] = useState<TRecentWindow>(RECENT_WINDOW_OPTIONS[0]);
     const { items, isLoading, error } = useRecentlyAdded(selectedWindow.hours);
     const comicsType = useComicsTypeStore((s) => s.type);
+    const backgroundUrl = useBackgroundImage(items, `recent:${selectedWindow.hours}`);
 
     return (
         <Layout>
-            <section className={styles.page}>
+            <section
+                className={[styles.page, backgroundUrl ? 'view-background' : ''].filter(Boolean).join(' ')}
+                style={backgroundUrl ? { backgroundImage: `url("${backgroundUrl}")` } : undefined}
+            >
 
                 <header className={styles.header}>
 
