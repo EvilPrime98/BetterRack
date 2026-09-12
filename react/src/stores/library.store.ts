@@ -39,6 +39,7 @@ interface ILibraryStore {
     unidentifyFile: (uid: string) => Promise<void>;
     reidentifyAll: () => Promise<void>;
     getLibraryItems: (args: { onlyDir: boolean, uid?: string }) => ILibraryResponseItem[];
+    findUidByPath: (absPath: string) => string | undefined;
 }
 
 export const useLibraryStore = create<ILibraryStore>((set, get) => ({
@@ -163,6 +164,22 @@ export const useLibraryStore = create<ILibraryStore>((set, get) => ({
         if (onlyDir) data = data.filter(i => i.did !== false);
 
         return data;
+
+    },
+
+    findUidByPath: (absPath) => {
+
+        const groups = get().groups;
+
+        const group = groups.find(g => g.path === absPath);
+        if (group) return group.uid;
+
+        for (const g of groups) {
+            const entry = g.entries.find(e => e.did && e.path === absPath);
+            if (entry) return entry.uid;
+        }
+
+        return undefined;
 
     }
 
