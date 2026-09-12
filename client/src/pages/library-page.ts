@@ -1,4 +1,4 @@
-import { UltraComponent, ultraQueryParams, ultraState, type UltraLightElement } from "ultra-light-js";
+import { UltraActivity, UltraComponent, ultraQueryParams, ultraState, type UltraLightElement } from "ultra-light-js";
 import styles from './library-page.module.css';
 import { PageHeader } from "@/components/page-header/page-header";
 import { LIBRARY_CONTEXT } from "../context/library.context";
@@ -100,6 +100,17 @@ export function LibraryPage({
                     filters,
                     resetFilters,
                     showNewFolder: true
+                }),
+
+                UltraActivity({
+                    mode: {
+                        subscriber: [
+                            subsItems,
+                            LIBRARY_CONTEXT.libraryLoaded.subscribe
+                        ],
+                        state: () => LIBRARY_CONTEXT.libraryLoaded.get() && items().length === 0
+                    },
+                    component: `<p class="${styles.empty}">No items to show.</p>`
                 }),
 
                 UltraComponent({

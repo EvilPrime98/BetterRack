@@ -26,3 +26,12 @@
     grid-template-columns: repeat(auto-fill, minmax(min(420px, 100%), 1fr));
     gap: 24px;
 }
+
+.empty {
+    margin: 0;
+    padding: 40px 0;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: #808080;
+    text-align: center;
+}

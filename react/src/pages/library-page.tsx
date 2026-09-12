@@ -61,12 +61,16 @@ export function LibraryPage() {
                     showNewFolder
                 />
 
-                <section className={[styles.comicContainer, comicsType === 'detail' ? styles.detailLayout : ''].filter(Boolean).join(' ')}>
-                    {items.map(item => item.did
-                        ? <FolderCard key={item.uid} title={item.name} uid={item.uid} />
-                        : <ComicCard key={item.uid} item={item} />
-                    )}
-                </section>
+                {items.length === 0 ? (
+                    <p className={styles.empty}>No items to show.</p>
+                ) : (
+                    <section className={[styles.comicContainer, comicsType === 'detail' ? styles.detailLayout : ''].filter(Boolean).join(' ')}>
+                        {items.map(item => item.did
+                            ? <FolderCard key={item.uid} title={item.name} uid={item.uid} />
+                            : <ComicCard key={item.uid} item={item} />
+                        )}
+                    </section>
+                )}
 
             </section>
         </Layout>
