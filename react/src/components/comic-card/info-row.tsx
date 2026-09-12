@@ -1,5 +1,7 @@
 import styles from './comic-card.module.css';
 
+const notDisplayable = ['', 'undefined'];
+
 export function InfoRow({
     label,
     value,
@@ -9,6 +11,10 @@ export function InfoRow({
     value: string;
     onClick?: () => void;
 }) {
+
+    if (notDisplayable.includes(value)) {
+        return null
+    }
 
     const clickable = Boolean(onClick);
 

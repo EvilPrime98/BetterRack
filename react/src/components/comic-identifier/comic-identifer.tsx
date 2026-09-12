@@ -13,10 +13,6 @@ import { useConfirmModalStore } from '@/stores/confirmModal.store';
 
 const DEBOUNCING_DELAY = 500;
 
-/**
- * "Identify this comic" modal. Kept always mounted and toggled via inline `display`
- * so the search text/results aren't reset when the modal closes.
- */
 export function ComicIdentifier() {
 
     const isVisible = useComicIdentStore((s) => s.isVisible);
@@ -75,8 +71,6 @@ export function ComicIdentifier() {
         return () => document.removeEventListener('keydown', onKeydown);
     }, []);
 
-    // Only fires once, at initial mount — not on every modal open (unlike server-modal.tsx's
-    // explicit isVisible-driven re-focus).
     useEffect(() => {
         inputRef.current?.focus();
     }, []);

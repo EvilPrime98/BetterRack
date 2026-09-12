@@ -4,6 +4,11 @@ import type { ILibraryResponseItem } from "../../library.types";
 import type { WikiComic } from "better-wiki";
 import { COMICS_TYPE_CTX } from "../../context/comics-types.context";
 
+const displayable = (toEvaluate: string) => {
+    return !['', 'undefined']
+    .includes(toEvaluate)
+}
+
 export function ComicCardTitle({
     item,
     comic,
@@ -22,9 +27,15 @@ export function ComicCardTitle({
         if (!currComic || !currComic.title){
           $p.textContent = item.name;
         }else{
-            const series = currComic.title.split('Vol')[0];
-            const issue = currComic.issue ? `#${currComic.issue}` : '';
-            const year = currComic.releaseDate?.releaseYear || '';
+            const series = displayable(currComic.title.split('Vol')[0])
+            ? currComic.title.split('Vol')[0]
+            : '';
+            const issue = displayable(currComic.issue)
+            ? `#${currComic.issue}`
+            : '';
+            const year = displayable(currComic.releaseDate?.releaseYear)
+            ? currComic.releaseDate?.releaseYear
+            : '';
             $p.textContent =  currType === 'cover'
             ? `${series} ${issue} (${year})`
             : item.name;
