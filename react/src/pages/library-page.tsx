@@ -11,6 +11,8 @@ import type { ILibraryResponseItem } from '@/library.types';
 import { useFilters } from '@/hooks/useFilters';
 import { SearchPage } from './search.page';
 import { useDocumentTitleStore } from '@/stores/documentTitle.store';
+import { matchesReadFilter, useReadTypesContext } from '@/context/ReadTypesContext';
+import { useComicCacheStore } from '@/stores/comicCache.store';
 
 export function LibraryPage() {
 
@@ -23,13 +25,18 @@ export function LibraryPage() {
     const setTitle = useDocumentTitleStore((s) => s.setTitle);
     const [items, setItems] = useState<ILibraryResponseItem[]>([]);
     const { filters, setFilters, resetFilters, applyFilters } = useFilters({ rawItems: getLibraryItems, setItems });
-    
+    const { type: readFilter } = useReadTypesContext();
+    const comicCache = useComicCacheStore((s) => s.cache);
+
     function getLibraryItems(): ILibraryResponseItem[] {
         const items = useLibraryStore.getState().getLibraryItems({ onlyDir: !uid, uid });
         const query = useLibraryStore.getState().searchQuery.trim().toLowerCase();
         if (!query) return items;
         return items.filter(item => item.name.toLowerCase().includes(query));
     }
+
+    const hasVisibleItems = items.some(item => item.did
+        || matchesReadFilter(readFilter, comicCache[item.uid]?.readPer || 0));
 
     useEffect(() => {
         setTitle('Library');
@@ -61,12 +68,16 @@ export function LibraryPage() {
                     showNewFolder
                 />
 
-                <section className={[styles.comicContainer, comicsType === 'detail' ? styles.detailLayout : ''].filter(Boolean).join(' ')}>
-                    {items.map(item => item.did
-                        ? <FolderCard key={item.uid} title={item.name} uid={item.uid} />
-                        : <ComicCard key={item.uid} item={item} />
-                    )}
-                </section>
+                {!hasVisibleItems ? (
+                    <p className={styles.empty}>No items to show.</p>
+                ) : (
+                    <section className={[styles.comicContainer, comicsType === 'detail' ? styles.detailLayout : ''].filter(Boolean).join(' ')}>
+                        {items.map(item => item.did
+                            ? <FolderCard key={item.uid} title={item.name} uid={item.uid} />
+                            : <ComicCard key={item.uid} item={item} />
+                        )}
+                    </section>
+                )}
 
             </section>
         </Layout>

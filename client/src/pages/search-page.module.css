@@ -37,3 +37,12 @@
     font-size: 13px;
     opacity: 0.7;
 }
+
+.empty {
+    margin: 0;
+    padding: 40px 0;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: #808080;
+    text-align: center;
+}

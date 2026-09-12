@@ -9,7 +9,7 @@ import { useComicsTypeStore } from '@/stores/comicsTypes.store';
 import { ComicCardTitle } from './title';
 import { ComicCardInfo } from './info';
 import { ComicCardCover } from './cover';
-import { useReadTypesContext } from '@/context/ReadTypesContext';
+import { matchesReadFilter as readFilterMatches, useReadTypesContext } from '@/context/ReadTypesContext';
 import { useComicCacheStore } from '@/stores/comicCache.store';
 import { useComicIdentStore } from '@/stores/comicIdent.store';
 import { IdentifyButton } from './identify-button';
@@ -47,12 +47,7 @@ export function ComicCard({
         const matchesWriter = !writerFilter 
         || comic?.credits.writers?.some(w => w === writerFilter) === true;
 
-        const matchesReadFilter = readFilter === 'all'
-        || (readFilter === 'read' && currReadPer === 100)
-        || (readFilter === 'reading' && currReadPer > 0 && currReadPer < 100)
-        || (readFilter === 'unread' && currReadPer === 0);
-
-        return matchesWriter && matchesReadFilter;
+        return matchesWriter && readFilterMatches(readFilter, currReadPer);
 
     })();
 

@@ -1,4 +1,4 @@
-import { UltraComponent, ultraQueryParams, ultraState, type UltraLightElement } from "ultra-light-js";
+import { UltraActivity, UltraComponent, ultraQueryParams, ultraState, type UltraLightElement } from "ultra-light-js";
 import styles from './library-page.module.css';
 import { PageHeader } from "@/components/page-header/page-header";
 import { LIBRARY_CONTEXT } from "../context/library.context";
@@ -10,6 +10,8 @@ import type { ILibraryResponseItem } from "../library.types";
 import { ultraFilters } from "../hooks/ultraFilters";
 import { SearchPage } from "./search.page";
 import { DOCUMENT_TITLE_CONTEXT } from "../context/document-title.context";
+import { matchesReadFilter, READ_TYPES_CTX } from "../context/read-types.context";
+import { COMIC_CACHE_CONTEXT } from "../context/comic-cache.context";
 
 export function LibraryPage({
     uid
@@ -81,6 +83,12 @@ export function LibraryPage({
         return items.filter(item => item.name.toLowerCase().includes(query));
     }
 
+    function hasVisibleItems(){
+        const readFilter = READ_TYPES_CTX.type.get();
+        return items().some(item => item.did
+            || matchesReadFilter(readFilter, COMIC_CACHE_CONTEXT.getCacheById(item.uid)?.readPer || 0));
+    }
+
     return Layout(
 
         UltraComponent({
@@ -100,6 +108,19 @@ export function LibraryPage({
                     filters,
                     resetFilters,
                     showNewFolder: true
+                }),
+
+                UltraActivity({
+                    mode: {
+                        subscriber: [
+                            subsItems,
+                            LIBRARY_CONTEXT.libraryLoaded.subscribe,
+                            READ_TYPES_CTX.type.subscribe,
+                            COMIC_CACHE_CONTEXT.cache.subscribe
+                        ],
+                        state: () => LIBRARY_CONTEXT.libraryLoaded.get() && !hasVisibleItems()
+                    },
+                    component: `<p class="${styles.empty}">No items to show.</p>`
                 }),
 
                 UltraComponent({

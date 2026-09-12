@@ -1,6 +1,13 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import type { TReadTypes } from '../library.types';
 
+export function matchesReadFilter(readFilter: TReadTypes, readPer: number): boolean {
+    if (readFilter === 'all') return true;
+    if (readFilter === 'read') return readPer === 100;
+    if (readFilter === 'reading') return readPer > 0 && readPer < 100;
+    return readPer === 0;
+}
+
 interface IReadTypesContextValue {
     type: TReadTypes;
     next: () => void;
