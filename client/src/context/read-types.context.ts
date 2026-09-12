@@ -1,6 +1,13 @@
 import { ultraCompState, type IUltraCompStateStateful } from "ultra-light-js";
 import type { TReadTypes } from "../library.types";
 
+export function matchesReadFilter(readFilter: TReadTypes, readPer: number): boolean {
+    if (readFilter === 'all') return true;
+    if (readFilter === 'read') return readPer === 100;
+    if (readFilter === 'reading') return readPer > 0 && readPer < 100;
+    return readPer === 0;
+}
+
 export interface IReadTypesCtx {
     type: IUltraCompStateStateful<TReadTypes>;
     next: () => void;

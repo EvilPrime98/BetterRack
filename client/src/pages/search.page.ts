@@ -8,6 +8,8 @@ import { COMICS_TYPE_CTX } from "../context/comics-types.context";
 import type { ILibraryResponseItem } from "../library.types";
 import { ultraFilters } from "../hooks/ultraFilters";
 import { DOCUMENT_TITLE_CONTEXT } from "../context/document-title.context";
+import { matchesReadFilter, READ_TYPES_CTX } from "../context/read-types.context";
+import { COMIC_CACHE_CONTEXT } from "../context/comic-cache.context";
 
 export function SearchPage({
     search
@@ -110,6 +112,11 @@ export function SearchPage({
         .filter(item => item.name.toLowerCase().includes(query));
     }
 
+    function hasVisibleItems(){
+        const readFilter = READ_TYPES_CTX.type.get();
+        return items().some(item => matchesReadFilter(readFilter, COMIC_CACHE_CONTEXT.getCacheById(item.uid)?.readPer || 0));
+    }
+
     subsItems(() => setVisibleCount(PAGE_SIZE));
 
     return Layout(
@@ -136,6 +143,19 @@ export function SearchPage({
                     component: '<p></p>',
                     className: [styles.loadingNote],
                     children: ['Still loading your library — search results may be incomplete.']
+                }),
+
+                UltraActivity({
+                    mode: {
+                        subscriber: [
+                            subsItems,
+                            subsLibLoading,
+                            READ_TYPES_CTX.type.subscribe,
+                            COMIC_CACHE_CONTEXT.cache.subscribe
+                        ],
+                        state: () => !libLoading() && !hasVisibleItems()
+                    },
+                    component: `<p class="${styles.empty}">No items to show.</p>`
                 }),
 
                 UltraComponent({

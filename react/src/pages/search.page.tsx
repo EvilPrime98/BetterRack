@@ -8,6 +8,8 @@ import { useComicsTypeStore } from '@/stores/comicsTypes.store';
 import type { ILibraryResponseItem } from '@/library.types';
 import { useFilters } from '@/hooks/useFilters';
 import { useDocumentTitleStore } from '@/stores/documentTitle.store';
+import { matchesReadFilter, useReadTypesContext } from '@/context/ReadTypesContext';
+import { useComicCacheStore } from '@/stores/comicCache.store';
 
 const PAGE_SIZE = 60; //max chunk for pages
 
@@ -24,6 +26,8 @@ export function SearchPage({
 
     const [items, setItems] = useState<ILibraryResponseItem[]>([]);
     const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+    const { type: readFilter } = useReadTypesContext();
+    const comicCache = useComicCacheStore((s) => s.cache);
 
     function getSearchItems(): ILibraryResponseItem[] {
         const query = useLibraryStore.getState().searchQuery.trim().toLowerCase();
@@ -73,6 +77,7 @@ export function SearchPage({
     }, [items.length]);
 
     const visibleItems = items.slice(0, visibleCount);
+    const hasVisibleItems = items.some(item => matchesReadFilter(readFilter, comicCache[item.uid]?.readPer || 0));
 
     return (
         <Layout>
@@ -85,10 +90,14 @@ export function SearchPage({
                     resetFilters={resetFilters}
                 />
 
-                <section className={[styles.comicContainer, comicsType === 'detail' ? styles.detailLayout : ''].filter(Boolean).join(' ')}>
-                    {visibleItems.map(item => <ComicCard key={item.uid} item={item} />)}
-                    <div className={styles.sentinel} ref={sentinelRef} />
-                </section>
+                {!hasVisibleItems ? (
+                    <p className={styles.empty}>No items to show.</p>
+                ) : (
+                    <section className={[styles.comicContainer, comicsType === 'detail' ? styles.detailLayout : ''].filter(Boolean).join(' ')}>
+                        {visibleItems.map(item => <ComicCard key={item.uid} item={item} />)}
+                        <div className={styles.sentinel} ref={sentinelRef} />
+                    </section>
+                )}
 
             </section>
         </Layout>

@@ -8,7 +8,7 @@ import { COMICS_TYPE_CTX } from "@/context/comics-types.context";
 import { ComicCardTitle } from "./title";
 import { ComicCardInfo } from "./info";
 import { ComicCardCover } from "./cover";
-import { READ_TYPES_CTX } from "@/context/read-types.context";
+import { matchesReadFilter, READ_TYPES_CTX } from "@/context/read-types.context";
 import { COMIC_CACHE_CONTEXT } from "@/context/comic-cache.context";
 import { COMIC_IDENT_CTX } from "@/context/identifer-modal.context";
 import { IdentifyButton } from "./identify-button";
@@ -50,17 +50,7 @@ export function ComicCard({
     }
 
     const isVisible = () => {
-        const currReadFilter = READ_TYPES_CTX.type.get();
-        const readPer = itemCache()?.readPer || 0;
-        if (currReadFilter === 'all') {
-            return true;
-        } else if (currReadFilter === 'read') {
-            return readPer === 100
-        } else if (currReadFilter === 'reading') {
-            return readPer > 0 && readPer < 100
-        } else {
-            return readPer === 0
-        }
+        return matchesReadFilter(READ_TYPES_CTX.type.get(), itemCache()?.readPer || 0);
     }
 
     COMIC_CACHE_CONTEXT.subscribeById(
