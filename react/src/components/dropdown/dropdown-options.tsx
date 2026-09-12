@@ -1,27 +1,22 @@
 import { useEffect, useState } from 'react';
 import styles from './dropdown-options.module.css';
 import { ChevronDownIcon } from '@/icons/chevron.icon';
-import { FILTER_OPTIONS, type ILibraryFilters, type TFilterOptions } from '@/library.types';
-import { useUserPrefStore } from '@/stores/userPref.store';
+import { FILTER_OPTIONS, type ILibraryFilters } from '@/library.types';
+import { useLibraryStore } from '@/stores/library.store';
 
 export function DropdownOptions({
+    uid,
     filters,
     setFilters,
     resetFilters
 }: {
+    uid?: string;
     filters: ILibraryFilters;
     setFilters: (updates: Partial<ILibraryFilters>) => void;
     resetFilters: () => void;
 }) {
 
     const [isOpen, setOpen] = useState(false);
-
-    const [selected, setSelected] = useState<TFilterOptions>(
-        filters.sortByReleaseDate
-            ? FILTER_OPTIONS.byReleaseDate
-            : FILTER_OPTIONS.nofilters
-    );
-
     const closeMenu = () => setOpen(false);
 
     const toggleMenu = (e: React.MouseEvent) => {
@@ -34,32 +29,46 @@ export function DropdownOptions({
         return () => document.removeEventListener('click', closeMenu);
     }, []);
 
-    useEffect(() => {
-        useUserPrefStore.getState().setPref({ filter: selected });
-    }, [selected]);
+    const title = useLibraryStore((s) => s.groups)
+    .map(g => g.entries).flat().find(e => e.uid === uid)?.name || '';
 
     return (
         <div
-            className={[styles.dropdown, isOpen ? styles.open : ''].filter(Boolean).join(' ')}
             onClick={toggleMenu}
+            className={[styles.dropdown, isOpen ? styles.open : '']
+                .filter(Boolean).join(' ')
+            }
         >
 
-            <span className={styles.label}>{selected}</span>
+            <span 
+                title={title}
+                className={styles.label}
+            >
+                {title || 'Root'}
+            </span>
 
             <ChevronDownIcon size={14} />
 
-            {/* UltraActivity: always mounted, visibility toggled via display */}
-            <ul className={styles.menu} style={{ display: isOpen ? undefined : 'none' }}>
+            <ul
+                className={styles.menu}
+                style={{
+                    display: isOpen ? undefined : 'none'
+                }}
+            >
 
                 <li
                     className={styles.option}
                     onClick={(e) => {
                         e.stopPropagation();
                         resetFilters();
-                        setSelected(FILTER_OPTIONS.nofilters);
                         setOpen(false);
                     }}
                 >
+                    {
+                        !filters.sortByReleaseDate
+                            ? <ChevronDownIcon orientation='right' />
+                            : null
+                    }
                     {FILTER_OPTIONS.nofilters}
                 </li>
 
@@ -68,10 +77,14 @@ export function DropdownOptions({
                     onClick={(e) => {
                         e.stopPropagation();
                         setFilters({ sortByReleaseDate: true });
-                        setSelected(FILTER_OPTIONS.byReleaseDate);
                         setOpen(false);
                     }}
                 >
+                    {
+                        filters.sortByReleaseDate
+                            ? <ChevronDownIcon orientation='right' />
+                            : null
+                    }
                     {FILTER_OPTIONS.byReleaseDate}
                 </li>
 

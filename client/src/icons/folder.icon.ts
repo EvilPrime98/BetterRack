@@ -1,6 +1,6 @@
 export function FolderIcon({
     size = 16,
-    color = '#c7c7c7'
+    color = 'currentColor'
 }: {
     size?: number;
     color?: string;

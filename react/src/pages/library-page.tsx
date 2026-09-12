@@ -60,9 +60,9 @@ export function LibraryPage() {
             <section className={styles.page}>
 
                 <PageHeader
+                    filters={filters}
                     uid={uid}
                     items={items}
-                    filters={filters}
                     setFilters={setFilters}
                     resetFilters={resetFilters}
                     showNewFolder

@@ -52,10 +52,8 @@ export function useFilters({
         setItems(rawItemsRef.current());
     }
 
-    // Runs once on mount rather than during render, so it fires after subscribers are set up.
     useEffect(() => {
-        applyFilters(filters);
-        
+        applyFilters(filters);      
     }, []);
 
     return {

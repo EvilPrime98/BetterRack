@@ -1,11 +1,12 @@
-import { UltraComponent } from "ultra-light-js";
+import { UltraComponent, ultraNavigate } from "ultra-light-js";
 import { DropdownOptions } from "@/components/dropdown/dropdown-options";
 import { ItemCounter } from "@/components/item-counter/item-counter";
 import { StateFilter } from "@/components/state-filter/state-filter";
 import { LayoutSelector } from "@/components/layout/layout-selector";
-import { Breadcrumbs } from "@/components/breadcrumbs/breadcrumbs";
+//import { Breadcrumbs } from "@/components/breadcrumbs/breadcrumbs";
 import { BRButton } from "@/components/br-button/br-button";
 import { FolderIcon } from "@/icons/folder.icon";
+import { ArrowLeftIcon } from "@/icons/arrow-left.icon";
 import styles from './page-header.module.css';
 import type { ILibraryResponseItem, ILibraryFilters } from "@/library.types";
 import { NEW_FOLDER_MODAL_CTX } from "@/context/new-folder-modal.context";
@@ -33,7 +34,7 @@ export function PageHeader({
 
         children: [
 
-            ...(uid ? [Breadcrumbs({ uid })] : []),
+            // ...(uid ? [Breadcrumbs({ uid })] : []),
 
             UltraComponent({
                 component: '<div></div>',
@@ -44,7 +45,19 @@ export function PageHeader({
                         component: '<div></div>',
                         className: [styles.left],
                         children: [
-                            DropdownOptions({ filters, resetFilters }),
+                            ...(uid ? [
+                                BRButton({
+                                    text: '',
+                                    variant: 'secondary',
+                                    className: [styles.backButton],
+                                    attributes: { 'aria-label': 'Back to library' },
+                                    eventHandler: {
+                                        click: () => ultraNavigate({ href: '/' })
+                                    },
+                                    children: [ArrowLeftIcon({ size: 16 })]
+                                })
+                            ] : []),
+                            DropdownOptions({ filters, uid, resetFilters }),
                             ItemCounter({ items, subsItems }),
                         ]
                     }),

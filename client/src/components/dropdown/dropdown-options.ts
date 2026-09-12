@@ -1,24 +1,20 @@
 import { UltraComponent, UltraActivity, ultraState } from "ultra-light-js";
 import styles from './dropdown-options.module.css';
 import { ChevronDownIcon } from "../../icons/chevron.icon";
-import { FILTER_OPTIONS, type ILibraryFilters, type TFilterOptions } from "../../library.types";
-import { USER_PREF } from "../../context/user-pref-cache.context";
+import { FILTER_OPTIONS, type ILibraryFilters } from "../../library.types";
+import { LIBRARY_CONTEXT } from "../../context/library.context";
 
 export function DropdownOptions({
+    uid,
     filters,
     resetFilters
 }: {
+    uid?: string;
     filters: ILibraryFilters;
     resetFilters: () => void;
 }) {
 
     const [isOpen, setOpen, subsOpen] = ultraState(false);
-
-    const [selected, setSelected, subsSelected] = ultraState<TFilterOptions>(
-        filters.sortByReleaseDate.get()
-            ? FILTER_OPTIONS.byReleaseDate
-            : FILTER_OPTIONS.nofilters
-    );
 
     const closeMenu = () => setOpen(false);
 
@@ -31,9 +27,20 @@ export function DropdownOptions({
         $root.classList.toggle(styles.open, isOpen());
     }
 
-    subsSelected(() => {
-        USER_PREF.setPref({ filter: selected() })
-    })
+    const getTitle = () => LIBRARY_CONTEXT.groups.get()
+        .map(g => g.entries).flat().find(e => e.uid === uid)?.name || '';
+
+    const onTitleChange = ($span: HTMLElement) => {
+        const title = getTitle();
+        $span.textContent = title || 'Root';
+        $span.setAttribute('title', title);
+    }
+
+    const onIndicatorChange = ($li: HTMLElement, matches: () => boolean) => {
+        const $indicator = $li.querySelector('span');
+        if (!$indicator) return;
+        $indicator.innerHTML = matches() ? ChevronDownIcon({ orientation: 'right' }) : '';
+    }
 
     return UltraComponent({
 
@@ -61,12 +68,11 @@ export function DropdownOptions({
         children: [
 
             UltraComponent({
-                component: `<span class="${styles.label}">${selected()}</span>`,
+                component: `<span class="${styles.label}"></span>`,
+                onMount: [onTitleChange],
                 trigger: [{
-                    subscriber: subsSelected,
-                    triggerFunction: ($span: HTMLElement) => {
-                        $span.textContent = selected();
-                    }
+                    subscriber: LIBRARY_CONTEXT.groups.subscribe,
+                    triggerFunction: onTitleChange
                 }]
             }),
 
@@ -84,24 +90,36 @@ export function DropdownOptions({
                 children: [
 
                     UltraComponent({
-                        component: `<li class="${styles.option}">${FILTER_OPTIONS.nofilters}</li>`,
+                        component: `<li class="${styles.option}"><span></span>${FILTER_OPTIONS.nofilters}</li>`,
+                        onMount: [
+                            ($li: HTMLElement) => onIndicatorChange($li, () => !filters.sortByReleaseDate.get())
+                        ],
+                        trigger: [{
+                            subscriber: filters.sortByReleaseDate.subscribe,
+                            triggerFunction: ($li: HTMLElement) => onIndicatorChange($li, () => !filters.sortByReleaseDate.get())
+                        }],
                         eventHandler: {
                             click: (e: Event) => {
                                 e.stopPropagation();
                                 resetFilters();
-                                setSelected(FILTER_OPTIONS.nofilters);
                                 setOpen(false);
                             }
                         }
                     }),
 
                     UltraComponent({
-                        component: `<li class="${styles.option}">${FILTER_OPTIONS.byReleaseDate}</li>`,
+                        component: `<li class="${styles.option}"><span></span>${FILTER_OPTIONS.byReleaseDate}</li>`,
+                        onMount: [
+                            ($li: HTMLElement) => onIndicatorChange($li, () => filters.sortByReleaseDate.get())
+                        ],
+                        trigger: [{
+                            subscriber: filters.sortByReleaseDate.subscribe,
+                            triggerFunction: ($li: HTMLElement) => onIndicatorChange($li, () => filters.sortByReleaseDate.get())
+                        }],
                         eventHandler: {
                             click: (e: Event) => {
                                 e.stopPropagation();
                                 filters.sortByReleaseDate.set(true);
-                                setSelected(FILTER_OPTIONS.byReleaseDate);
                                 setOpen(false);
                             }
                         }

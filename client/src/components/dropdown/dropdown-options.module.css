@@ -28,6 +28,10 @@
     font-size: 14px;
     letter-spacing: 0.06em;
     text-transform: uppercase;
+    max-width: 300px;
+    white-space: nowrap;
+    overflow-x: hidden;
+    text-overflow: ellipsis;
 }
 
 .menu {
@@ -46,6 +50,9 @@
 }
 
 .option {
+    display: flex;
+    align-items: center;
+    gap: 5px;
     padding: 8px 10px;
     border-radius: 5px;
     font-family: var(--font-sans);

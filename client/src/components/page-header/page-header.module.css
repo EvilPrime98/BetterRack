@@ -41,3 +41,7 @@
     align-items: center;
     gap: 6px;
 }
+
+.backButton {
+    min-width: 20px;
+}
