@@ -449,7 +449,9 @@
     }
 }
 
-.stackLayer{
-    border-radius: 0px;
-    border: 1px solid #fff;
+.stackLayer {
+    position: relative;
+    overflow: visible;
+    isolation: isolate;
+    border-radius: 0;
 }

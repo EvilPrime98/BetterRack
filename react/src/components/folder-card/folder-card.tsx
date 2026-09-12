@@ -53,9 +53,14 @@ export function FolderCard({
 
             <Link to={`/${uid}`} className={styles.cardLink}>
 
-                {(stackCovers.length)
-                    ? <FolderCardStack stackCovers={stackCovers} />
-                    : <FolderCardBasic title={title} />}
+                {   (stackCovers.length)
+                    ? <FolderCardStack 
+                        stackCovers={stackCovers} 
+                    />
+                    : <FolderCardBasic 
+                        title={title} 
+                    />
+                }
 
                 <div className={styles.body}>
                     <span className={styles.kind}>Folder</span>

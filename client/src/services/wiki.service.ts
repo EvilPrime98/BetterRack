@@ -13,16 +13,3 @@ export async function fetchComics(
     return await response.json();
 
 }
-
-export function wikiImageOptimizer(
-    wikiImageSrc: string,
-    size?: number
-): string {
-    if (wikiImageSrc.includes('scale-to-width-down')) {
-        const [basePath, imagePath] = wikiImageSrc.split('/revision/latest/');
-        const cbIdent = imagePath.split('?')[1];
-        if (!size) return `${basePath}/revision/latest?${cbIdent}`;
-        return `${basePath}/revision/latest/scale-to-width-down/${Math.ceil(size)}?${cbIdent}`;
-    }
-    return wikiImageSrc
-}

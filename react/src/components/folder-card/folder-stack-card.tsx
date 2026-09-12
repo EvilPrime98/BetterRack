@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
-import { ImageGen } from "../image-generic/image-generic";
-import styles from '../comic-card/comic-card.module.css';
-import { wikiImageOptimizer } from "@/services/wiki.service";
+import { useRef, useState } from 'react';
+import { ImageGen } from "@/components/image-generic/image-generic";
+import styles from '@/components/comic-card/comic-card.module.css';
 
 export function FolderStackCard({
     cover
@@ -10,37 +9,8 @@ export function FolderStackCard({
     isRead: boolean;
 }) {
 
-    const RESIZE_DEBOUNCE_MS = 200;
     const anchorRef = useRef<HTMLDivElement>(null);
-    const [src, setSrc] = useState(cover);
     const [loaded, setLoaded] = useState(false);
-
-    useEffect(() => {
-
-        const $anchor = anchorRef.current;
-        if (!$anchor) return;
-
-        let resizeTimeout: ReturnType<typeof setTimeout> | null = null;
-
-        const resizeObserver = new ResizeObserver(([entry]) => {
-            const width = entry.contentRect.width;
-            if (!width) return;
-
-            if (resizeTimeout) clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(() => {
-                setSrc(wikiImageOptimizer(cover, width));
-            }, RESIZE_DEBOUNCE_MS);
-        });
-
-        resizeObserver.observe($anchor);
-
-        return () => {
-            resizeObserver.disconnect();
-            if (resizeTimeout) clearTimeout(resizeTimeout);
-        };
-
-    }, [cover]);
-
     const onImageLoad = () => setLoaded(true);
 
     return (
@@ -59,7 +29,7 @@ export function FolderStackCard({
                 <div ref={anchorRef} className={[styles.frame, loaded ? styles.loaded : ''].filter(Boolean).join(' ')}>
 
                     <ImageGen
-                        src={src}
+                        src={cover}
                         onLoad={onImageLoad}
                     />
 
