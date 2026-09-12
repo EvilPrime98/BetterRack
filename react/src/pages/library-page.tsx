@@ -9,7 +9,7 @@ import { Layout } from '@/layout';
 import { useComicsTypeStore } from '@/stores/comicsTypes.store';
 import type { ILibraryResponseItem } from '@/library.types';
 import { useFilters } from '@/hooks/useFilters';
-import { useBackgroundImage } from '@/hooks/useBackgroundImage';
+import { useBackgroundImage, backgroundImageStyle } from '@/hooks/useBackgroundImage';
 import { SearchPage } from './search.page';
 import { useDocumentTitleStore } from '@/stores/documentTitle.store';
 
@@ -54,7 +54,7 @@ export function LibraryPage() {
         <Layout>
             <section
                 className={[styles.page, backgroundUrl ? 'view-background' : ''].filter(Boolean).join(' ')}
-                style={backgroundUrl ? { backgroundImage: `url("${backgroundUrl}")` } : undefined}
+                style={backgroundImageStyle(backgroundUrl)}
             >
 
                 <PageHeader

@@ -123,22 +123,27 @@ a {
 
 .view-background {
     position: relative;
+}
+
+.view-background::before,
+.view-background::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    width: 100dvw;
+    height: 100dvh;
+    z-index: -1;
+    pointer-events: none;
+}
+
+.view-background::before {
+    background-image: var(--bg-image, none);
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
     transition: background-image 400ms ease;
 }
 
-.view-background::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
+.view-background::after {
     background: linear-gradient(180deg, rgba(20, 20, 20, 0.55), rgba(20, 20, 20, 0.85));
-}
-
-.view-background > * {
-    position: relative;
-    z-index: 1;
 }

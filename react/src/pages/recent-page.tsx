@@ -4,7 +4,7 @@ import { ComicCard } from '@/components/comic-card/comic-card';
 import { Layout } from '@/layout';
 import { useComicsTypeStore } from '@/stores/comicsTypes.store';
 import { useRecentlyAdded } from '@/hooks/useRecentlyAdded';
-import { useBackgroundImage } from '@/hooks/useBackgroundImage';
+import { useBackgroundImage, backgroundImageStyle } from '@/hooks/useBackgroundImage';
 import { ArrowLeftIcon } from '@/icons/arrow-left.icon';
 import { ChevronDownIcon } from '@/icons/chevron.icon';
 import { RECENT_WINDOW_OPTIONS, type TRecentWindow } from '@/library.types';
@@ -71,7 +71,7 @@ export function RecentPage() {
         <Layout>
             <section
                 className={[styles.page, backgroundUrl ? 'view-background' : ''].filter(Boolean).join(' ')}
-                style={backgroundUrl ? { backgroundImage: `url("${backgroundUrl}")` } : undefined}
+                style={backgroundImageStyle(backgroundUrl)}
             >
 
                 <header className={styles.header}>

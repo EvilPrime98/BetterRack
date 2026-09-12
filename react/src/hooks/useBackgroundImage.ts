@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { API_URL } from '@/services/library.service';
 import { withAuthQuery } from '@/services/server-config.service';
 import type { ILibraryResponseItem } from '@/library.types';
@@ -57,5 +57,15 @@ export function useBackgroundImage(
     }, [key, itemsRef.current.length]);
 
     return url;
+
+}
+
+export function backgroundImageStyle(
+    url: string | null
+): CSSProperties | undefined {
+
+    if (!url) return undefined;
+
+    return { '--bg-image': `url("${url}")` } as CSSProperties;
 
 }

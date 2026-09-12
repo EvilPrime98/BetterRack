@@ -12,6 +12,7 @@ src/database/*
 !src/database/schema.ts
 tmp-decompressor/
 tmp-thumbnails/
+tmp-backgrounds/
 release/
 logs/
 knip-report*.json

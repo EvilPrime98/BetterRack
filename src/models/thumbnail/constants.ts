@@ -14,8 +14,8 @@ export const THUMBNAIL_QUALITY = 82;
 
 export const BACKGROUND_CACHE_DIR = path.resolve('./tmp-backgrounds');
 
-export const BACKGROUND_WIDTH = 64;
+export const BACKGROUND_WIDTH = 480;
 
-export const BACKGROUND_QUALITY = 40;
+export const BACKGROUND_QUALITY = 55;
 
-export const BACKGROUND_BLUR_SIGMA = 12;
+export const BACKGROUND_BLUR_SIGMA = 6;

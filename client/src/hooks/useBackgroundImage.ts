@@ -3,6 +3,7 @@ import { withAuthQuery } from "../services/server-config.service";
 import type { ILibraryResponseItem } from "../library.types";
 
 const pickedByKey = new Map<string, string>();
+const BG_IMAGE_PROPERTY = '--bg-image';
 
 function pickBackgroundUrl(
     items: ILibraryResponseItem[],
@@ -33,23 +34,23 @@ export function applyBackgroundImage(
 
     if (!url) {
         $el.classList.remove('view-background');
-        $el.style.backgroundImage = '';
+        $el.style.removeProperty(BG_IMAGE_PROPERTY);
         return;
     }
 
-    if ($el.style.backgroundImage === `url("${url}")`) return;
+    if ($el.style.getPropertyValue(BG_IMAGE_PROPERTY) === `url("${url}")`) return;
 
     const preload = new Image();
 
     preload.onload = () => {
-        $el.style.backgroundImage = `url("${url}")`;
+        $el.style.setProperty(BG_IMAGE_PROPERTY, `url("${url}")`);
         $el.classList.add('view-background');
     };
 
     preload.onerror = () => {
         pickedByKey.delete(key);
         $el.classList.remove('view-background');
-        $el.style.backgroundImage = '';
+        $el.style.removeProperty(BG_IMAGE_PROPERTY);
     };
 
     preload.src = url;
