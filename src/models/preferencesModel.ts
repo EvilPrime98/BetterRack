@@ -15,7 +15,7 @@ const DEFAULT_SETTINGS: TAppSettings = {
     baseUrl: '',
     hostDomain: '',
     downloadDir: '',
-    identifyFromMeta: false,
+    identifyFromMeta: true,
 };
 
 export class PreferencesModel implements TPreferencesModel {
