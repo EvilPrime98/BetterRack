@@ -238,3 +238,22 @@
 .doneLabel svg {
     flex-shrink: 0;
 }
+
+.doneLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+}
+
+.doneLinkLabel {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 600;
+    color: #8fdde5;
+    text-decoration: underline;
+}
+
+.doneLink:hover .doneLinkLabel {
+    color: #34c3d1;
+}

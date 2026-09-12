@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type SyntheticEvent } from 'react';
+import { Link } from 'react-router-dom';
 import styles from './store-card.module.css';
 import { ImageGen } from '@/components/image-generic/image-generic';
 import { NO_IMAGE_URL } from '@/data';
@@ -26,10 +27,14 @@ export function StoreCard({
     const lastRenderable = useRef<TCardState>(state);
     const displayState = state.status === 'links-loading' ? lastRenderable.current : state;
 
-    async function completeDownload() {
+    async function completeDownload(outputDir?: string) {
         setState({ status: 'done' });
         toast.success(`${item.title} downloaded`);
         await useLibraryStore.getState().refreshLibrary({ silent: true });
+        if (outputDir) {
+            const folderUid = useLibraryStore.getState().findUidByPath(outputDir);
+            if (folderUid) setState({ status: 'done', folderUid });
+        }
     }
 
     async function startDownload(link: IStoreLink) {
@@ -61,7 +66,7 @@ export function StoreCard({
                     }
                 }
             });
-            await completeDownload();
+            await completeDownload(outputDir);
         } catch (e) {
             const message = e instanceof Error ? e.message : 'Download failed.';
             setState({ status: 'error', message });
@@ -146,11 +151,20 @@ export function StoreCard({
 
         if (curr.status === 'done') {
 
-            return (
+            const doneLabel = (
                 <span className={styles.doneLabel}>
                     <CheckIcon size={14} />
                     Downloaded
                 </span>
+            );
+
+            if (!curr.folderUid) return doneLabel;
+
+            return (
+                <Link to={`/${curr.folderUid}`} className={styles.doneLink}>
+                    {doneLabel}
+                    <span className={styles.doneLinkLabel}>Go to folder</span>
+                </Link>
             );
 
         }

@@ -1,4 +1,4 @@
-import { UltraComponent, ultraState } from "ultra-light-js";
+import { UltraComponent, UltraLink, ultraState } from "ultra-light-js";
 import styles from './store-card.module.css';
 import { ImageGen } from "@/components/image-generic/image-generic";
 import { NO_IMAGE_URL } from "@/data";
@@ -23,10 +23,14 @@ export function StoreCard({
 
     const [coverLoaded, setCoverLoaded, subsCoverLoaded] = ultraState(false);
 
-    async function completeDownload() {
+    async function completeDownload(outputDir?: string) {
         setState({ status: 'done' });
         toast.success(`${item.title} downloaded`);
         await LIBRARY_CONTEXT.refreshLibrary({ silent: true });
+        if (outputDir) {
+            const folderUid = LIBRARY_CONTEXT.findUidByPath(outputDir);
+            if (folderUid) setState({ status: 'done', folderUid });
+        }
     }
 
     async function startDownload(link: IStoreLink) {
@@ -58,7 +62,7 @@ export function StoreCard({
                     }
                 }
             });
-            await completeDownload();
+            await completeDownload(outputDir);
         } catch (e) {
             const message = e instanceof Error ? e.message : 'Download failed.';
             setState({ status: 'error', message });
@@ -198,11 +202,19 @@ export function StoreCard({
 
         } else if (curr.status === 'done') {
 
+            const doneLabel = UltraComponent({
+                component: `<span class="${styles.doneLabel}">${CheckIcon({ size: 14 })}Downloaded</span>`
+            });
+
             $div.replaceChildren(
 
-                UltraComponent({
-                    component: `<span class="${styles.doneLabel}">${CheckIcon({ size: 14 })}Downloaded</span>`
-                })
+                curr.folderUid
+                    ? UltraLink({
+                        href: `/${curr.folderUid}`,
+                        className: [styles.doneLink],
+                        children: [doneLabel, `<span class="${styles.doneLinkLabel}">Go to folder</span>`]
+                    })
+                    : doneLabel
 
             );
 

@@ -66,6 +66,7 @@ export interface ILibraryCtx {
     unidentifyFile: (uid: string) => Promise<void>;
     reidentifyAll: () => Promise<void>;
     getLibraryItems: (args: { onlyDir: boolean, uid?: string }) => ILibraryResponseItem[];
+    findUidByPath: (absPath: string) => string | undefined;
 }
 
 export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
@@ -240,6 +241,25 @@ export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
         if (onlyDir) data = data.filter(i => i.did !== false);
 
         return data;
+
+    },
+
+    findUidByPath: (
+        comp: ILibraryCtx,
+        absPath: string
+    ): string | undefined => {
+
+        const groups = comp.groups.get();
+
+        const group = groups.find(g => g.path === absPath);
+        if (group) return group.uid;
+
+        for (const g of groups) {
+            const entry = g.entries.find(e => e.did && e.path === absPath);
+            if (entry) return entry.uid;
+        }
+
+        return undefined;
 
     }
 
