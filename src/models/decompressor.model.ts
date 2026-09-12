@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, statSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { XMLParser } from 'fast-xml-parser';
@@ -47,10 +47,14 @@ const MIME_TYPES: Record<string, string> = {
     '.bmp': 'image/bmp'
 };
 
+const ARCHIVE_CACHE_MAX_SIZE = 50;
+
 export class Zip7Decompressor {
 
     private resolve7z: () => string;
     private resolveUnrar: () => string;
+    private entryListCache = new Map<string, string[]>();
+    private comicInfoCache = new Map<string, IComicInfoXML | null>();
 
     constructor(overrides?: { //overrides for testing
         resolve7zPath?: () => string,
@@ -59,6 +63,27 @@ export class Zip7Decompressor {
         this.resolve7z = overrides?.resolve7zPath ?? this.resolve7zPath;
         this.resolveUnrar = overrides?.resolveUnrarPath ?? this.resolveUnrarPath;
     }
+
+    private archiveCacheKey = (filePath: string): string => {
+        const stat = statSync(filePath);
+        return `${filePath}:${stat.size}:${stat.mtimeMs}`;
+    };
+
+    private getCached = <T>(cache: Map<string, T>, key: string): T | undefined => {
+        if (!cache.has(key)) return undefined;
+        const value = cache.get(key) as T;
+        cache.delete(key);
+        cache.set(key, value);
+        return value;
+    };
+
+    private setCached = <T>(cache: Map<string, T>, key: string, value: T): void => {
+        if (cache.size >= ARCHIVE_CACHE_MAX_SIZE) {
+            const oldestKey = cache.keys().next().value;
+            if (oldestKey !== undefined) cache.delete(oldestKey);
+        }
+        cache.set(key, value);
+    };
 
     private isSafeEntryName = (entryName: string): boolean => {
         if (!entryName || !entryName.trim()) return false;
@@ -183,6 +208,10 @@ export class Zip7Decompressor {
 
     listEntries7z = async (filePath: string): Promise<string[]> => {
 
+        const cacheKey = this.archiveCacheKey(filePath);
+        const cached = this.getCached(this.entryListCache, cacheKey);
+        if (cached) return cached;
+
         const proc = Bun.spawn([
             this.resolve7zPath(),
             "l",
@@ -202,7 +231,7 @@ export class Zip7Decompressor {
             throw new Error(`Listing archive failed with code ${exitCode}${errorOutput.trim() ? `: ${errorOutput.trim()}` : ''}`);
         }
 
-        return output
+        const entries = output
             .split(/\r?\n\r?\n/)
             .map(block => ({
                 entryPath: block.match(/^Path = (.+)$/m)?.[1],
@@ -210,6 +239,10 @@ export class Zip7Decompressor {
             }))
             .filter((entry): entry is { entryPath: string, isDir: boolean } => !!entry.entryPath && !entry.isDir)
             .map(entry => entry.entryPath);
+
+        this.setCached(this.entryListCache, cacheKey, entries);
+
+        return entries;
 
     }
 
@@ -224,6 +257,10 @@ export class Zip7Decompressor {
     }
 
     listEntriesUnrar = async (filePath: string): Promise<string[]> => {
+
+        const cacheKey = this.archiveCacheKey(filePath);
+        const cached = this.getCached(this.entryListCache, cacheKey);
+        if (cached) return cached;
 
         const proc = Bun.spawn([
             this.resolveUnrarPath(),
@@ -243,10 +280,14 @@ export class Zip7Decompressor {
             throw new Error(`Listing archive failed with code ${exitCode}${errorOutput.trim() ? `: ${errorOutput.trim()}` : ''}`);
         }
 
-        return output
+        const entries = output
             .split(/\r?\n/)
             .map(line => line.trim())
             .filter(Boolean);
+
+        this.setCached(this.entryListCache, cacheKey, entries);
+
+        return entries;
 
     }
 
@@ -266,23 +307,9 @@ export class Zip7Decompressor {
         filePath: string
     }): Promise<{ page: number, label: string }[]> => {
 
-        const entries = this.isRarFile(filePath)
-            ? await this.listEntriesUnrar(filePath)
-            : await this.listEntries7z(filePath);
+        const data = await this.extractComicInfo({ filePath });
 
-        const comicInfoEntry = entries.find(
-            entry => path.basename(entry).toLowerCase() === 'comicinfo.xml'
-        );
-
-        if (!comicInfoEntry) return [];
-
-        const xml = await new Response(
-            this.getPageStream({ filePath, entryName: comicInfoEntry })
-        ).text();
-
-        const data = new XMLParser({
-            ignoreAttributes: false
-        }).parse(xml) as IComicInfoXML;
+        if (!data) return [];
 
         const rawPages = data?.ComicInfo?.Pages?.Page;
         const pageList = Array.isArray(rawPages) ? rawPages : rawPages ? [rawPages] : [];
@@ -314,6 +341,10 @@ export class Zip7Decompressor {
         filePath: string
     }): Promise<IComicInfoXML|null> => {
 
+        const cacheKey = this.archiveCacheKey(filePath);
+        const cached = this.getCached(this.comicInfoCache, cacheKey);
+        if (cached !== undefined) return cached;
+
         const entries = this.isRarFile(filePath)
         ? await this.listEntriesUnrar(filePath)
         : await this.listEntries7z(filePath);
@@ -328,11 +359,13 @@ export class Zip7Decompressor {
             ).text()
             : await this.readSidecarComicInfo(filePath);
 
-        if (!xml) return null;
+        const result = xml
+            ? new XMLParser({ ignoreAttributes: false }).parse(xml) as IComicInfoXML
+            : null;
 
-        return new XMLParser({
-            ignoreAttributes: false
-        }).parse(xml) as IComicInfoXML;
+        this.setCached(this.comicInfoCache, cacheKey, result);
+
+        return result;
 
     }
 
