@@ -94,7 +94,7 @@ export function NewFolderModal() {
                             }),
                             BRButton({
                                 text: 'Create',
-                                variant: 'primary',
+                                variant: 'classic',
                                 eventHandler: { click: submit }
                             })
                         ]

@@ -14,7 +14,7 @@
     white-space: nowrap;
     cursor: pointer;
     user-select: none;
-    text-transform: uppercase;
+    text-transform: capitalize;
     transition: background-color 0.25s ease-in-out, 
     border-color 0.15s ease, 
     color 0.15s ease, 

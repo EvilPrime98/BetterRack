@@ -3,11 +3,6 @@ import styles from './confirm-modal.module.css';
 import { BRButton } from '@/components/br-button/br-button';
 import { useConfirmModalStore } from '@/stores/confirmModal.store';
 
-/**
- * Generic confirm dialog — reads whatever title/message/labels are currently in the store
- * and resolves the pending confirmDialog() promise on button click. Does not open itself
- * (other components call useConfirmModalStore.getState().confirmDialog(...) to do that).
- */
 export function ConfirmModal() {
 
     const isVisible = useConfirmModalStore((s) => s.isVisible);
@@ -45,12 +40,15 @@ export function ConfirmModal() {
 
                 <div className={styles.actions}>
 
-                    <BRButton text={cancelLabel} variant="secondary" onClick={cancel} />
+                    <BRButton 
+                        text={cancelLabel} 
+                        variant="secondary" 
+                        onClick={cancel}
+                    />
 
                     <BRButton
                         text={confirmLabel}
-                        variant="primary"
-                        className={styles.confirmButton}
+                        variant="classic"
                         onClick={confirm}
                     />
 

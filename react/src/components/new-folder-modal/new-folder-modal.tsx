@@ -59,8 +59,16 @@ export function NewFolderModal() {
                 />
 
                 <div className={styles.actions}>
-                    <BRButton text="Cancel" variant="secondary" onClick={cancel} />
-                    <BRButton text="Create" variant="primary" onClick={submit} />
+                    <BRButton 
+                        text="Cancel" 
+                        variant="secondary" 
+                        onClick={cancel} 
+                    />
+                    <BRButton 
+                        text="Create" 
+                        variant="classic" 
+                        onClick={submit} 
+                    />
                 </div>
 
             </div>

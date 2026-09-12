@@ -97,8 +97,7 @@ export function ConfirmModal() {
 
                             BRButton({
                                 text: CONFIRM_MODAL_CTX.confirmLabel.get(),
-                                variant: 'primary',
-                                className: [styles.confirmButton],
+                                variant: 'classic',
                                 eventHandler: { click: confirm },
                                 trigger: [{
                                     subscriber: CONFIRM_MODAL_CTX.confirmLabel.subscribe,
