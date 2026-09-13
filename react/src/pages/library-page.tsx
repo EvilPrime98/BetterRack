@@ -45,6 +45,7 @@ export function LibraryPage() {
     useEffect(() => {
         useLibraryStore.getState().fetchLibrary();
         if (useLibraryStore.getState().groups.length) applyFilters();
+        window.scrollTo(0, 0);
     }, [uid]);
 
     useEffect(() => {
