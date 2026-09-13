@@ -43,7 +43,7 @@ export function PageHeader({
                             className={styles.backButton}
                             text=''
                             variant='secondary'
-                            onClick={() => navigate('/')}
+                            onClick={() => navigate(-1)}
                             aria-label="Back to library"
                         >
                             <ArrowLeftIcon size={16} />
