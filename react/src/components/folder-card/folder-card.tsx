@@ -2,13 +2,13 @@ import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import styles from './folder-card.module.css';
 import { ChevronDownIcon } from "@/icons/chevron.icon";
-import { TrashIcon } from "@/icons/trash.icon";
 import { useComicsTypeStore } from "@/stores/comicsTypes.store";
 import { useLibraryStore } from "@/stores/library.store";
 import { FolderCardStack } from "./folder-card-stack";
-import { useConfirmModalStore } from "@/stores/confirmModal.store";
 import { FolderCardBasic } from "./folder-card-basic";
-import { MoveFileButton } from "@/components/comic-card/move-button";
+import { FolderCardActions } from './folder-card-actions';
+
+const STACK_SIZE = 3;
 
 export function FolderCard({
     title,
@@ -18,7 +18,6 @@ export function FolderCard({
     uid: string
 }) {
 
-    const STACK_SIZE = 3;
     const comicsType = useComicsTypeStore((s) => s.type);
 
     const groups = useLibraryStore((s) => s.groups);
@@ -27,34 +26,23 @@ export function FolderCard({
         () => useLibraryStore.getState().getLibraryItems({ onlyDir: false, uid })
             .filter(item => !item.did)
             .slice(0, STACK_SIZE),
-        
         [groups, uid]
     );
-
-    const onDeleteClick = async (e: React.MouseEvent) => {
-        e.stopPropagation();
-        e.preventDefault();
-        const confirmed = await useConfirmModalStore.getState().confirmDialog({
-            title: 'Delete folder?',
-            message: `This will remove "${title}" and everything inside it. This cannot be undone.`,
-            confirmLabel: 'Delete'
-        });
-        if (!confirmed) return;
-        useLibraryStore.getState().deleteFolder(uid);
-    }
 
     return (
         <article
             className={[
                 styles.folderCard,
-                ...(comicsType === 'detail' ? [styles.detailMode] : [])
+                ...(comicsType === 'detail' ? [styles.detailMode] : []),
+                ...(stackCovers.length ? [styles.hasStack] : [])
             ].join(' ')}
         >
 
             <Link to={`/${uid}`} className={styles.cardLink}>
 
                 {   (stackCovers.length)
-                    ? <FolderCardStack 
+                    ? <FolderCardStack
+                        title={title}
                         stackCovers={stackCovers} 
                     />
                     : <FolderCardBasic 
@@ -73,16 +61,10 @@ export function FolderCard({
 
             </Link>
 
-            <div className={styles.folderActions}>
-                <MoveFileButton uid={uid} name={title} />
-                <span
-                    className={[styles.folderActionButton, styles.folderDeleteButton].join(' ')}
-                    aria-label="Delete this folder"
-                    onClick={onDeleteClick}
-                >
-                    <TrashIcon size={14} />
-                </span>
-            </div>
+            <FolderCardActions
+                title={title}
+                uid={uid}
+            />
 
         </article>
     );

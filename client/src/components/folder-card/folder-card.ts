@@ -1,13 +1,13 @@
 import { UltraComponent, UltraLink } from "ultra-light-js";
 import styles from './folder-card.module.css';
 import { ChevronDownIcon } from "@/icons/chevron.icon";
-import { TrashIcon } from "@/icons/trash.icon";
 import { COMICS_TYPE_CTX } from "@/context/comics-types.context";
 import { LIBRARY_CONTEXT } from "@/context/library.context";
 import { FolderCardStack } from "./folder-card-stack";
-import { CONFIRM_MODAL_CTX } from "@/context/confirm-modal.context";
 import { FolderCardBasic } from "./folder-card-basic";
-import { MoveFileButton } from "@/components/comic-card/move-button";
+import { FolderCardActions } from "./folder-card-actions";
+
+const STACK_SIZE = 3;
 
 export function FolderCard({
     title,
@@ -16,8 +16,6 @@ export function FolderCard({
     title: string,
     uid: string
 }) {
-
-    const STACK_SIZE = 3;
 
     const stackCovers = LIBRARY_CONTEXT.getLibraryItems({
         onlyDir: false, uid
@@ -31,25 +29,14 @@ export function FolderCard({
         );
     }
 
-    const onDeleteClick = async (e: Event) => {
-        e.stopPropagation();
-        e.preventDefault();
-        const confirmed = await CONFIRM_MODAL_CTX.confirmDialog({
-            title: 'Delete folder?',
-            message: `This will remove "${title}" and everything inside it. This cannot be undone.`,
-            confirmLabel: 'Delete'
-        });
-        if (!confirmed) return;
-        LIBRARY_CONTEXT.deleteFolder(uid);
-    }
-
     return UltraComponent({
 
         component: '<article></article>',
 
         className: [
             styles.folderCard,
-            ...(COMICS_TYPE_CTX.type.get() === 'detail' ? [styles.detailMode] : [])
+            ...(COMICS_TYPE_CTX.type.get() === 'detail' ? [styles.detailMode] : []),
+            ...(stackCovers.length ? [styles.hasStack] : [])
         ],
 
         trigger: [{
@@ -68,7 +55,7 @@ export function FolderCard({
                 children: [
 
                     (stackCovers.length)
-                    ? FolderCardStack({ stackCovers })
+                    ? FolderCardStack({ title, stackCovers })
                     : FolderCardBasic({ title }),
 
                     UltraComponent({
@@ -94,22 +81,9 @@ export function FolderCard({
                 ]
             }),
 
-            UltraComponent({
-                component: '<div></div>',
-                className: [styles.folderActions],
-                children: [
-                    MoveFileButton({ uid, name: title }),
-                    UltraComponent({
-                        component: '<span></span>',
-                        className: [styles.folderActionButton, styles.folderDeleteButton],
-                        attributes: {
-                            type: 'button',
-                            'aria-label': 'Delete this folder'
-                        },
-                        eventHandler: { click: onDeleteClick },
-                        children: [TrashIcon({ size: 14 })]
-                    })
-                ]
+            FolderCardActions({
+                title,
+                uid
             })
 
         ]

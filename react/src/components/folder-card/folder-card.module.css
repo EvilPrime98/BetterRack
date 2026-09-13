@@ -7,6 +7,8 @@
     align-items: center;
     justify-content: flex-start;
     width: 100%;
+    max-width: 220px;
+    margin-inline: auto;
     padding: 10px;
     border-radius: 14px;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0));
@@ -84,8 +86,8 @@
 
     .stack {
         position: relative;
-        width: 80%;
-        margin: 0 auto;
+        width: 92%;
+        margin: 0 auto 25px;
         overflow: visible;
         background: none;
         box-shadow: none;
@@ -154,16 +156,18 @@
         padding: 0;
         width: 100%;
         text-wrap: balance;
-        font-size: 13px;
+        font-size: 15px;
         font-weight: 600;
         text-align: center;
         line-height: 1.2;
         color: #fff;
         display: -webkit-box;
         -webkit-line-clamp: 2;
+        line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
         transition: color 180ms ease;
+        text-transform: capitalize;
     }
 
     @media (hover: hover) {
@@ -176,34 +180,38 @@
         display: none;
     }
 
-}
+    &.hasStack .title {
+        opacity: 1;
+    }
 
-.folderActions {
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    z-index: 3;
-    display: flex;
-    flex-direction: row;
-    gap: 4px;
-}
+    .folderActions {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        z-index: 3;
+        display: none;
+        flex-direction: row;
+        gap: 4px;
+    }
 
-.folderActionButton {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    color: #fff;
-    background: rgba(18, 18, 18, 0.75);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 999px;
-    cursor: pointer;
-    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
-}
+    .folderActionButton {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        color: #fff;
+        background: rgba(18, 18, 18, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 999px;
+        cursor: pointer;
+        transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+    }
 
-.folderActionButton svg {
-    pointer-events: none;
+    .folderActionButton svg {
+        pointer-events: none;
+    }
+
 }
 
 @media (hover: hover) {
@@ -234,6 +242,8 @@
 .detailMode {
 
     justify-content: center;
+    max-width: none;
+    margin-inline: 0;
     padding: 14px;
 
     .folderActions {
@@ -262,7 +272,7 @@
         border: 1px solid rgba(255, 255, 255, 0.06);
     }
 
-    .basicFolderCard span{
+    .basicFolderCard span {
         display: none;
     }
 
@@ -295,6 +305,7 @@
         text-align: left;
         font-size: 16px;
         -webkit-line-clamp: 1;
+        line-clamp: 1;
     }
 
     .chevron {
@@ -312,4 +323,9 @@
             color: #34c3d1;
         }
     }
+
+    .folderActions{
+        display: flex;
+    }
+    
 }

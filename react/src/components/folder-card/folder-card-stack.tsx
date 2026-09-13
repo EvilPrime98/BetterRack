@@ -8,6 +8,7 @@ import { withAuthQuery } from "@/services/server-config.service";
 export function FolderCardStack({
     stackCovers
 }: {
+    title: string;
     stackCovers: ILibraryResponseItem[]
 }) {
 
