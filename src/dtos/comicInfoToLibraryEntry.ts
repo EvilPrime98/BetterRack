@@ -28,7 +28,6 @@ export function comiInfoToWikiComicDTO(
         Title,
         Series,
         Number,
-        Volume,
         Summary,
         Notes,
         Review,
@@ -48,7 +47,7 @@ export function comiInfoToWikiComicDTO(
 
     return {
         title: Title ?? Series ?? '',
-        volume: intOrEmpty(Volume),
+        volume: Series ?? '',
         issue: Number ?? '',
         cover: '',
         pageId: 0,

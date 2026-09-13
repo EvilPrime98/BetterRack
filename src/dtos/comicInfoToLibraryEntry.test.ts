@@ -36,6 +36,14 @@ describe('comiInfoToWikiComicDTO', () => {
         expect(result.title).toBe('Custom Title');
     });
 
+    test('maps Series to volume regardless of Title', () => {
+        const withTitle = comiInfoToWikiComicDTO(baseComicInfo({ Title: 'Custom Title' }));
+        expect(withTitle.volume).toBe('Amazing Comic');
+
+        const withoutTitle = comiInfoToWikiComicDTO(baseComicInfo());
+        expect(withoutTitle.volume).toBe('Amazing Comic');
+    });
+
     test('maps credit fields from comma-separated lists', () => {
         const result = comiInfoToWikiComicDTO(baseComicInfo({
             Writer: 'Alice, Bob',
