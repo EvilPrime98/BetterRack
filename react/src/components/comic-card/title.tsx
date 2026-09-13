@@ -34,11 +34,11 @@ export function ComicCardTitle({
         : '';
         
         const year = displayable(comic.releaseDate?.releaseYear) 
-        ? comic.releaseDate?.releaseYear
+        ? `(${comic.releaseDate?.releaseYear})`
         : '';
 
         return type === 'cover'
-        ? `${series} ${issue} (${year})`
+        ? `${series} ${issue} ${year}`
         : item.name;
 
     })();
