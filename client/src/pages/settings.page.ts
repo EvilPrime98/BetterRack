@@ -11,6 +11,7 @@ import { BRButton } from "../components/br-button/br-button";
 import { getStoredServerUrl, hasNativeFolderPicker } from "../services/server-config.service";
 import { LIBRARY_CONTEXT } from "../context/library.context";
 import { SERVER_MODAL_CTX } from "../context/server-modal.context";
+import { CONFIRM_MODAL_CTX } from "../context/confirm-modal.context";
 
 export function SettingsPage() {
 
@@ -113,7 +114,13 @@ export function SettingsPage() {
         if (selected) addFolder(selected);
     }
 
-    function onReidentifyAll() {
+    async function onReidentifyAll() {
+        const confirmed = await CONFIRM_MODAL_CTX.confirmDialog({
+            title: 'Re-identify all comics?',
+            message: 'This will re-run identification for every comic in your library, overwriting any existing matches.',
+            confirmLabel: 'Re-identify'
+        });
+        if (!confirmed) return;
         LIBRARY_CONTEXT.reidentifyAll();
     }
 
@@ -406,6 +413,7 @@ export function SettingsPage() {
                                 BRButton({
                                     text: 'Re-identify all',
                                     variant: 'secondary',
+                                    styles: { width: 'fit-content' },
                                     eventHandler: { click: onReidentifyAll }
                                 }),
 

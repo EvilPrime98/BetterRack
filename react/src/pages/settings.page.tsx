@@ -11,6 +11,7 @@ import { BRButton } from '@/components/br-button/br-button';
 import { getStoredServerUrl, hasNativeFolderPicker } from '@/services/server-config.service';
 import { useLibraryStore } from '@/stores/library.store';
 import { useServerModalStore } from '@/stores/serverModal.store';
+import { useConfirmModalStore } from '@/stores/confirmModal.store';
 
 export function SettingsPage() {
 
@@ -86,7 +87,13 @@ export function SettingsPage() {
         if (selected) addFolder(selected);
     }
 
-    function onReidentifyAll() {
+    async function onReidentifyAll() {
+        const confirmed = await useConfirmModalStore.getState().confirmDialog({
+            title: 'Re-identify all comics?',
+            message: 'This will re-run identification for every comic in your library, overwriting any existing matches.',
+            confirmLabel: 'Re-identify'
+        });
+        if (!confirmed) return;
         useLibraryStore.getState().reidentifyAll();
     }
 
@@ -266,14 +273,17 @@ export function SettingsPage() {
                                     Reads ComicInfo.xml when present, otherwise uses the wiki.
                                 </span>
                             </span>
+                        
+                            <BRButton
+                                style={{
+                                    width: 'fit-content'
+                                }}
+                                variant="secondary"
+                                text="Re-identify all"
+                                onClick={onReidentifyAll}
+                            />
 
                         </div>
-
-                        <BRButton
-                            variant="secondary"
-                            text="Re-identify all"
-                            onClick={onReidentifyAll}
-                        />
 
                     </div>
 
