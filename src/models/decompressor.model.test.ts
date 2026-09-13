@@ -103,3 +103,19 @@ describe('Zip7Decompressor ComicInfo cache', () => {
     });
 
 });
+
+describe('Zip7Decompressor ComicInfo spec compliance', () => {
+
+    test('ignores a ComicInfo.xml nested in a subfolder', async () => {
+        await mkdir(path.join(sourceDir, 'Sub'), { recursive: true });
+        await writeFile(path.join(sourceDir, 'Sub', 'ComicInfo.xml'), '<ComicInfo><Series>Nested</Series></ComicInfo>');
+        await runSevenZip(['a', archivePath, path.join(sourceDir, 'Sub')]);
+
+        const zip = new Zip7Decompressor();
+        const info = await zip.extractComicInfo({ filePath: archivePath });
+
+        // The root fixture's ComicInfo.xml (no Series) must win over the nested one.
+        expect(info?.ComicInfo?.Series).toBeUndefined();
+    });
+
+});

@@ -1,8 +1,8 @@
 import { existsSync, statSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { XMLParser } from 'fast-xml-parser';
-import type { IComicInfoXML } from "#src/types.ts";
+import { ComicInfoModel } from "#src/models/comicInfo.model.ts";
+import type { IComicInfoXML, TComicInfoModel } from "#src/types.ts";
 
 const SEVEN_ZIP_BIN_NAMES = process.platform === "win32"
 ? ["7z"]
@@ -53,15 +53,18 @@ export class Zip7Decompressor {
 
     private resolve7z: () => string;
     private resolveUnrar: () => string;
+    private comicInfoModel: TComicInfoModel;
     private entryListCache = new Map<string, string[]>();
     private comicInfoCache = new Map<string, IComicInfoXML | null>();
 
     constructor(overrides?: { //overrides for testing
         resolve7zPath?: () => string,
-        resolveUnrarPath?: () => string
+        resolveUnrarPath?: () => string,
+        comicInfoModel?: TComicInfoModel
     }) {
         this.resolve7z = overrides?.resolve7zPath ?? this.resolve7zPath;
         this.resolveUnrar = overrides?.resolveUnrarPath ?? this.resolveUnrarPath;
+        this.comicInfoModel = overrides?.comicInfoModel ?? new ComicInfoModel();
     }
 
     private archiveCacheKey = (filePath: string): string => {
@@ -349,9 +352,11 @@ export class Zip7Decompressor {
         ? await this.listEntriesUnrar(filePath)
         : await this.listEntries7z(filePath);
 
-        const comicInfoEntry = entries.find(
-            entry => path.basename(entry).toLowerCase() === 'comicinfo.xml'
-        );
+        const comicInfoEntry = entries.find(entry => {
+            //a nested file in a subfolder is not a valid ComicInfo.xml.
+            const normalized = entry.replace(/\\/g, '/');
+            return !normalized.includes('/') && normalized.toLowerCase() === 'comicinfo.xml';
+        });
 
         const xml = comicInfoEntry
             ? await new Response(
@@ -359,9 +364,7 @@ export class Zip7Decompressor {
             ).text()
             : await this.readSidecarComicInfo(filePath);
 
-        const result = xml
-            ? new XMLParser({ ignoreAttributes: false }).parse(xml) as IComicInfoXML
-            : null;
+        const result = xml ? this.comicInfoModel.parse(xml) : null;
 
         this.setCached(this.comicInfoCache, cacheKey, result);
 

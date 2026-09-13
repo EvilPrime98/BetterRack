@@ -211,6 +211,13 @@ export type TThumbnailModel = {
     getThumbnail: (uid: string, filePath?: string) => Promise<string | null>,
 }
 
+export type TComicInfoModel = {
+    /**
+     * Parses a raw ComicInfo.xml string into a normalized shape.
+     */
+    parse: (xml: string) => IComicInfoXML | null;
+}
+
 export type TZipModel = {
     listPages: ({ filePath }: {
         filePath: string;
@@ -286,50 +293,103 @@ export const VALID_STRATS = {
 
 export type TStrat = keyof typeof VALID_STRATS;
 
+export type TYesNo = 'Unknown' | 'No' | 'Yes';
+
+export type TMangaYesNo = 'Unknown' | 'No' | 'Yes' | 'YesAndRightToLeft';
+
+export type TComicPageType =
+    | 'FrontCover' | 'InnerCover' | 'Roundup' | 'Story' | 'Advertisement'
+    | 'Editorial' | 'Letters' | 'Preview' | 'BackCover' | 'Other' | 'Deleted';
+
+export type TImageRotation = 'None' | 'Rotate90' | 'Rotate180' | 'Rotate270';
+
+export type TComicPagePosition = 'Default' | 'Near' | 'Far';
+
 export interface IComicInfoPage {
     "@_Image": string;
-    "@_Bookmark"?: string;
+    "@_Type"?: TComicPageType;
+    "@_ImageSize"?: string;
     "@_ImageWidth"?: string;
     "@_ImageHeight"?: string;
-    "@_Type"?: string;
+    "@_Bookmark"?: string;
+    "@_Key"?: string;
+    "@_Rotation"?: TImageRotation;
+    "@_PagePosition"?: TComicPagePosition;
 }
 
 export interface IComicInfoXML {
 
-    '?xml': {
+    '?xml'?: {
         '@_version': string;
     };
 
     ComicInfo: {
         Title?: string;
-        Series: string;
-        Number: number;
-        Volume: number;
-        Summary: string;
-        Notes: string;
+        Series?: string;
+        Number?: string;
+        Count?: number;
+        Volume?: number;
+        AlternateSeries?: string;
+        AlternateNumber?: string;
+        /** Multi-value, comma/semicolon-separated. */
+        StoryArc?: string;
+        /** Multi-value, comma/semicolon-separated. */
+        SeriesGroup?: string;
+        AlternateCount?: number;
+        Summary?: string;
+        Notes?: string;
+        Review?: string;
+        Year?: number;
+        Month?: number;
+        Day?: number;
+        /** Multi-value, comma/semicolon-separated. */
         Writer?: string;
+        /** Multi-value, comma/semicolon-separated. */
         Penciller?: string;
+        /** Multi-value, comma/semicolon-separated. */
         Inker?: string;
+        /** Multi-value, comma/semicolon-separated. */
         Colorist?: string;
+        /** Multi-value, comma/semicolon-separated. */
         Letterer?: string;
+        /** Multi-value, comma/semicolon-separated. */
         CoverArtist?: string;
+        /** Multi-value, comma/semicolon-separated. */
         Editor?: string;
-        Year: number;
-        Month: number;
+        /** Multi-value, comma/semicolon-separated. */
+        Translator?: string;
+        Publisher?: string;
+        Imprint?: string;
+        /** Multi-value, comma/semicolon-separated. */
+        Genre?: string;
+        Web?: string;
+        /** Advisory only */
+        PageCount?: number;
+        LanguageISO?: string;
+        /** Free-form string, not an enum. */
+        Format?: string;
+        /** Free-form string, not a constrained enum*/
+        AgeRating?: string;
+        BlackAndWhite?: TYesNo;
+        Manga?: TMangaYesNo;
+        PreferredFrontCover?: number;
+        /** Multi-value, comma/semicolon-separated. */
+        Characters?: string;
+        /** Multi-value, comma/semicolon-separated. */
+        Teams?: string;
+        MainCharacterOrTeam?: string;
+        /** Multi-value, comma/semicolon-separated. */
+        Locations?: string;
+        /** Clamped to [0, 5] on write, read as-is. */
+        CommunityRating?: number;
+        ScanInformation?: string;
+        /** Multi-value, comma/semicolon-separated. */
+        Tags?: string;
         Pages?: {
             Page?: IComicInfoPage | IComicInfoPage[];
         };
-        Publisher: string;
-        Imprint?: string;
-        Web: string;
-        PageCount: number;
-        LanguageISO: string;
-        Characters?: string;
-        Teams?: string;
-        Locations?: string;
-        ScanInformation?: string;
-        '@_xmlns:xsd': string;
-        '@_xmlns:xsi': string;
+        '@_xmlns:xsd'?: string;
+        '@_xmlns:xsi'?: string;
     };
 
 }

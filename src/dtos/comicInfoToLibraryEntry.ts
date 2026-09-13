@@ -13,6 +13,13 @@ const toAppearanceEntries = (
     return splitList(value).map(name => ({ name, pageTitle: name }));
 }
 
+const intOrEmpty = (
+    value?: number
+): string => {
+    // Count/Volume/Year/Month default to -1 when absent
+    return value === undefined || value === -1 ? '' : String(value);
+}
+
 export function comiInfoToWikiComicDTO(
     info: IComicInfoXML
 ): WikiComic {
@@ -24,6 +31,7 @@ export function comiInfoToWikiComicDTO(
         Volume,
         Summary,
         Notes,
+        Review,
         Writer,
         Penciller,
         Inker,
@@ -34,13 +42,14 @@ export function comiInfoToWikiComicDTO(
         Month,
         Characters,
         Teams,
-        Locations
+        Locations,
+        CommunityRating
     } = info.ComicInfo;
 
     return {
-        title: Title ?? Series,
-        volume: String(Volume),
-        issue: String(Number),
+        title: Title ?? Series ?? '',
+        volume: intOrEmpty(Volume),
+        issue: Number ?? '',
         cover: '',
         pageId: 0,
         credits: {
@@ -54,11 +63,11 @@ export function comiInfoToWikiComicDTO(
         },
         releaseDate: {
             releaseDay: '',
-            releaseMonth: String(Month),
-            releaseYear: String(Year)
+            releaseMonth: intOrEmpty(Month),
+            releaseYear: intOrEmpty(Year)
         },
-        synopsis: Summary,
-        rating: '',
+        synopsis: Summary ?? '',
+        rating: CommunityRating ? String(CommunityRating) : '',
         event: '',
         storyTitles: [],
         appearing: {
@@ -74,7 +83,7 @@ export function comiInfoToWikiComicDTO(
             concepts: []
         },
         coverVariants: [],
-        notes: Notes ? [Notes] : [],
+        notes: [Notes, Review].filter((value): value is string => Boolean(value?.trim())),
         trivia: [],
         sourceWiki: ''
     };

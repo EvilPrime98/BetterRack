@@ -8,7 +8,7 @@ const baseComicInfo = (
     '?xml': { '@_version': '1.0' },
     ComicInfo: {
         Series: 'Amazing Comic',
-        Number: 12,
+        Number: '12',
         Volume: 2,
         Summary: 'A summary.',
         Notes: 'Some notes.',
