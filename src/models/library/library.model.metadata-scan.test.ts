@@ -41,8 +41,15 @@ const makeModel = () => {
             }
         },
     };
+    let wikiCallsForDelta = 0;
     const wikiModel = {
-        getComic: async (name: string) => comicByName[name] ?? null,
+        getComic: async (name: string) => {
+            if (name === 'delta.cbz') {
+                wikiCallsForDelta++;
+                throw new Error('Listing archive failed with code 2: ERROR: Cannot open the file as archive');
+            }
+            return comicByName[name] ?? null;
+        },
     };
     const zipModel = {
         extractComicInfo: async () => null,
@@ -53,7 +60,7 @@ const makeModel = () => {
         comicDataModel as unknown as ConstructorParameters<typeof LibraryModel>[2],
         zipModel as unknown as ConstructorParameters<typeof LibraryModel>[3],
     );
-    return { model };
+    return { model, wikiCallsForDelta: () => wikiCallsForDelta };
 };
 
 beforeEach(async () => {
@@ -131,6 +138,22 @@ describe('LibraryModel.scanLibraryMetadata / getByMetadata', () => {
 
         expect(byKey.get('2020')).toEqual(['alpha.cbz']);
         expect(byKey.get('2021')).toEqual(['beta.cbz']);
+    });
+
+    test('treats an extraction/lookup failure as no match instead of leaving it pending', async () => {
+        await writeFile(path.join(root, 'delta.cbz'), 'placeholder');
+
+        const { model, wikiCallsForDelta } = makeModel();
+        await model.ready;
+
+        await model.scanLibraryMetadata();
+
+        const groups = model.getByMetadata(LIBRARY_METADATA_FIELDS.series);
+        const unknown = groups.find(g => g.key === 'Unknown');
+        expect(unknown?.entries.map(e => e.name)).toContain('delta.cbz');
+
+        await model.scanLibraryMetadata();
+        expect(wikiCallsForDelta()).toBe(1);
     });
 
     test('reidentifyAll invalidates the cached groups', async () => {

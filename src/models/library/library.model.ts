@@ -263,6 +263,9 @@ export class LibraryModel {
                 return entry;
             } catch (e) {
                 log.error({ err: e }, 'Failed to identify library entry');
+                this.comicDataModel.upsert(uid, { identified: false });
+                entry.identified = false;
+                this.metadataGroupsCache.clear();
                 return entry;
             } finally {
                 release();
