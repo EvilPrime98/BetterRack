@@ -5,6 +5,8 @@
     align-items: center;
     justify-content: flex-start;
     width: 100%;
+    max-width: 220px;
+    margin-inline: auto;
     padding: 10px;
     content-visibility: auto;
     contain-intrinsic-size: auto 340px;
@@ -267,6 +269,25 @@
         outline-offset: 1px;
     }
 
+    .infoLoader {
+        flex: 1;
+        width: 100%;
+        padding: 0;
+    }
+
+    .infoEmpty {
+        display: flex;
+        flex: 1;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        margin: 0;
+        font-family: var(--font-sans);
+        font-size: 11px;
+        color: #8f8f8f;
+        text-align: center;
+    }
+
     .infoLabel {
         flex-shrink: 0;
         width: 56px;
@@ -374,6 +395,8 @@
     flex-direction: row;
     align-items: center;
     gap: 16px;
+    max-width: none;
+    margin-inline: 0;
     padding: 14px;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.015));
     border-color: rgba(255, 255, 255, 0.07);
@@ -416,6 +439,7 @@
     .info {
         flex: 1;
         max-height: none;
+        min-height: 136px;
         opacity: 1;
         margin-top: 8px;
         padding-top: 8px;

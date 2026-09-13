@@ -29,6 +29,7 @@ export function ComicCard({
     const navigate = useNavigate();
     const [comic, setComic] = useState<WikiComic | null>(item.comic ?? null);
     const [identified, setIdentified] = useState(item.identified !== false);
+    const [isLoadingInfo, setIsLoadingInfo] = useState(item.identified === undefined);
     const articleRef = useRef<HTMLElement>(null);
     const readerHref = `/${item.uid}/reader`;
     const comicsType = useComicsTypeStore((s) => s.type);
@@ -55,12 +56,14 @@ export function ComicCard({
         if (lastIdentified?.uid !== item.uid) return;
         setComic(lastIdentified.comic);
         setIdentified(true);
+        setIsLoadingInfo(false);
     }, [lastIdentified, item.uid]);
 
     useEffect(() => {
         if (lastUnidentified?.uid !== item.uid) return;
         setComic(null);
         setIdentified(false);
+        setIsLoadingInfo(false);
     }, [lastUnidentified, item.uid]);
 
     useEffect(() => {
@@ -69,13 +72,17 @@ export function ComicCard({
 
         if (filters && Object.keys(filters).length > 0) {
             let cancelled = false;
+            setIsLoadingInfo(true);
             identifyLibraryEntry(item.uid)
                 .then((resolved) => {
                     if (cancelled) return;
                     setComic(resolved.comic ?? null);
                     setIdentified(resolved.identified === true);
                 })
-                .catch(() => {});
+                .catch(() => {})
+                .finally(() => {
+                    if (!cancelled) setIsLoadingInfo(false);
+                });
             return () => { cancelled = true; };
         }
 
@@ -85,12 +92,14 @@ export function ComicCard({
         const observer = new IntersectionObserver((entries) => {
             if (!entries.some(e => e.isIntersecting)) return;
             observer.disconnect();
+            setIsLoadingInfo(true);
             identifyLibraryEntry(item.uid)
             .then((resolved) => {
                 setComic(resolved.comic ?? null);
                 setIdentified(resolved.identified === true);
             })
-            .catch(() => {});
+            .catch(() => {})
+            .finally(() => setIsLoadingInfo(false));
         }, { rootMargin: '200px' });
 
         observer.observe(node);
@@ -151,7 +160,7 @@ export function ComicCard({
 
                 </div>
 
-                <ComicCardInfo comic={comic} navigate={navigate}/>
+                <ComicCardInfo comic={comic} navigate={navigate} isLoading={isLoadingInfo} />
 
                 <div className={styles.actionsBlock}>
                     <ComicRating uid={item.uid} />

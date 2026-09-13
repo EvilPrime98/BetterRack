@@ -1,15 +1,34 @@
 import type { WikiComic } from 'better-wiki';
 import styles from './comic-card.module.css';
 import { InfoRow } from './info-row';
+import { Loader } from '@/components/loader/loader';
 //import { CrButton } from '../cr-button/cr-button';
 
 export function ComicCardInfo({
     navigate,
-    comic
+    comic,
+    isLoading
 }: {
     navigate: (val: string) => void;
     comic: WikiComic | null;
+    isLoading?: boolean;
 }) {
+
+    if (isLoading) {
+        return (
+            <div className={styles.info}>
+                <Loader visible size={16} className={styles.infoLoader} />
+            </div>
+        );
+    }
+
+    if (!comic) {
+        return (
+            <div className={styles.info}>
+                <p className={styles.infoEmpty}>No information found.</p>
+            </div>
+        );
+    }
 
     const releaseDate = comic?.releaseDate;
 

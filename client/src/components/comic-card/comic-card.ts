@@ -24,6 +24,7 @@ export function ComicCard({
 
     const [comic, setComic, subsComic] = ultraState<WikiComic | null>(item.comic ?? null);
     const [identified, setIdentified, subsIdentified] = ultraState(item.identified !== false);
+    const [isLoadingInfo, setIsLoadingInfo, subsIsLoadingInfo] = ultraState(item.identified === undefined);
 
     const [itemCache, setItemCache, subsItemCache] = ultraState<IComicLSCache | null>(
         COMIC_CACHE_CONTEXT.getCacheById(item.uid) || null
@@ -62,6 +63,7 @@ export function ComicCard({
         if (entry?.uid !== item.uid) return;
         setComic(entry.comic);
         setIdentified(true);
+        setIsLoadingInfo(false);
     });
 
     const onCardMount = ($article: HTMLElement) => {
@@ -71,12 +73,14 @@ export function ComicCard({
         const observer = new IntersectionObserver((entries) => {
             if (!entries.some(e => e.isIntersecting)) return;
             observer.disconnect();
+            setIsLoadingInfo(true);
             identifyLibraryEntry(item.uid)
                 .then((resolved) => {
                     setComic(resolved.comic ?? null);
                     setIdentified(resolved.identified === true);
                 })
-                .catch(() => {});
+                .catch(() => {})
+                .finally(() => setIsLoadingInfo(false));
         }, { rootMargin: '200px' });
 
         observer.observe($article);
@@ -207,7 +211,9 @@ export function ComicCard({
 
                     ComicCardInfo({
                         comic,
-                        subsComic
+                        subsComic,
+                        isLoading: isLoadingInfo,
+                        subsIsLoading: subsIsLoadingInfo
                     }),
 
                     UltraComponent({
