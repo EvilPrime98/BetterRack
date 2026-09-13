@@ -83,15 +83,16 @@ describe('LibraryModel.identify — identifyFromMeta gating', () => {
         expect(result.comic?.title).toBe('XML Title');
     });
 
-    test('falls back to the wiki when the setting is on but no usable XML is found', async () => {
+    test('reports no match when the setting is on but no usable XML is found, without falling back to the wiki', async () => {
         const { model, calls } = makeModel(true, null);
         await model.ready;
 
         const result = await model.identify(uidFromPath(path.join(root, 'comic.cbz')));
 
         expect(calls().zipCalls).toBe(1);
-        expect(calls().wikiCalls).toBe(1);
-        expect(result.comic?.title).toBe('Wiki Title');
+        expect(calls().wikiCalls).toBe(0);
+        expect(result.identified).toBe(false);
+        expect(result.comic).toBeUndefined();
     });
 
 });

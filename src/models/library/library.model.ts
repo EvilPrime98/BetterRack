@@ -231,17 +231,14 @@ export class LibraryModel {
             try {
 
                 const identifyFromMeta = this.prefsModel.getAppSettings().identifyFromMeta;
-                const comicInfo = identifyFromMeta
-                    ? await this.zipModel.extractComicInfo({ filePath: entry.path })
-                    : null;
 
-                if (identifyFromMeta && !comicInfo) {
-                    log.debug({ uid }, 'No usable ComicInfo.xml found; falling back to wiki lookup');
+                let found: WikiComic | null;
+                if (identifyFromMeta) {
+                    const comicInfo = await this.zipModel.extractComicInfo({ filePath: entry.path });
+                    found = comicInfo ? comiInfoToWikiComicDTO(comicInfo) : null;
+                } else {
+                    found = await this.wikiModel.getComic(entry.name);
                 }
-
-                const found = comicInfo
-                    ? comiInfoToWikiComicDTO(comicInfo)
-                    : await this.wikiModel.getComic(entry.name);
 
                 const freshlyStored = this.comicDataModel.getByUid(uid);
                 if (freshlyStored?.identified !== undefined) {
