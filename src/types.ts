@@ -117,6 +117,24 @@ export type TRecentlyAddedResponse = {
     generatedAt: number;
 }
 
+export const LIBRARY_METADATA_FIELDS = {
+    series: 'series',
+    writer: 'writer',
+    year: 'year',
+} as const;
+
+export type TLibraryMetadataField = typeof LIBRARY_METADATA_FIELDS[keyof typeof LIBRARY_METADATA_FIELDS];
+
+export type TLibraryMetadataGroup = {
+    key: string;
+    entries: TLibraryEntry[];
+}
+
+export type TLibraryMetadataScanProgress = {
+    scanned: number;
+    total: number;
+}
+
 export type TLibraryModel = {
     /** Resolves once the filesystem scan has completed. Wiki identification is on demand and never blocks this. */
     ready: Promise<void>,
@@ -142,6 +160,8 @@ export type TLibraryModel = {
     /** Resolves wiki metadata for a single comic on demand; cached results skip the wiki call. */
     identify: (uid: string) => Promise<TLibraryEntry>,
     reidentifyAll: () => Promise<void>,
+    scanLibraryMetadata: (onProgress?: (progress: TLibraryMetadataScanProgress) => void) => Promise<void>,
+    getByMetadata: (field: TLibraryMetadataField) => TLibraryMetadataGroup[],
     addLibraryPath: (dir: string) => Promise<void>,
     removeLibraryPath: (dir: string) => Promise<void>,
     getLibraryPaths: () => string[],

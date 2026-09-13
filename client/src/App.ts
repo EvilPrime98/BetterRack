@@ -10,6 +10,7 @@ import { USER_PREF } from "./context/user-pref-cache.context";
 import { COMICS_TYPE_CTX } from "./context/comics-types.context";
 import { SETTINGS_CONTEXT } from "./context/settings.context";
 import { LIBRARY_CONTEXT } from "./context/library.context";
+import { LIBRARY_METADATA_CONTEXT } from "./context/library-metadata.context";
 import { AppLoader } from "./components/app-loader/app-loader";
 import { APP_CTX } from "./context/app.context";
 import { ServerModal } from "./components/server-modal/server-modal";
@@ -28,6 +29,7 @@ export function App() {
             ])
         ])
         USER_PREF.init();
+        LIBRARY_METADATA_CONTEXT.init();
         COMICS_TYPE_CTX.init();
         APP_CTX.isLoading.set(false);
     }

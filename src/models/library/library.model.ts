@@ -9,6 +9,9 @@ import type {
     TLibraryEntry,
     TLibraryGroup,
     TLibraryIndexGroup,
+    TLibraryMetadataField,
+    TLibraryMetadataGroup,
+    TLibraryMetadataScanProgress,
     TLibraryPage,
     TLibraryPref,
     TPreferencesModel,
@@ -16,10 +19,11 @@ import type {
     TWikiModel,
     TZipModel
 } from "#src/types.ts";
+import { LIBRARY_METADATA_FIELDS } from "#src/types.ts";
 import fs from "node:fs";
 import { logger } from "#utils/logger";
 import { createConcurrencyLimiter } from "#utils/concurrencyLimiter";
-import { COMIC_EXTENSIONS, DEFAULT_LIBRARY_PAGE_SIZE, IDENTIFY_CONCURRENCY, MAX_LIBRARY_PAGE_SIZE, RECENT_WINDOW_HOURS, STAT_CONCURRENCY } from "./constants";
+import { COMIC_EXTENSIONS, DEFAULT_LIBRARY_PAGE_SIZE, IDENTIFY_CONCURRENCY, LIBRARY_METADATA_UNKNOWN_KEY, MAX_LIBRARY_PAGE_SIZE, RECENT_WINDOW_HOURS, STAT_CONCURRENCY } from "./constants";
 import { comiInfoToWikiComicDTO } from "#src/dtos/comicInfoToLibraryEntry.ts";
 
 const log = logger.child({ module: 'LibraryModel' });
@@ -38,6 +42,7 @@ export class LibraryModel {
     private entryLibraryIndex = new Map<string, number>();
     private entryByUid = new Map<string, TLibraryEntry>();
     private inheritanceCache: TLibraryEntry[] | null = null;
+    private metadataGroupsCache = new Map<TLibraryMetadataField, TLibraryMetadataGroup[]>();
     private identifyInFlight = new Map<string, Promise<TLibraryEntry>>();
     private identifyLimiter = createConcurrencyLimiter(IDENTIFY_CONCURRENCY);
     public ready: Promise<void>;
@@ -118,6 +123,11 @@ export class LibraryModel {
         this.pref = this.prefsModel.getAllLibraryPrefs();
     }
 
+    private invalidateDerivedCaches = () => {
+        this.inheritanceCache = null;
+        this.metadataGroupsCache.clear();
+    }
+
     private resolveInheritance = (): TLibraryEntry[] => {
 
         if (this.inheritanceCache) return this.inheritanceCache;
@@ -192,7 +202,7 @@ export class LibraryModel {
         });
 
         this.entryByUid = new Map(this.db.map(entry => [entry.uid, entry]));
-        this.inheritanceCache = null;
+        this.invalidateDerivedCaches();
 
         this.hydrateComicData();
 
@@ -252,6 +262,7 @@ export class LibraryModel {
                     this.comicDataModel.upsert(uid, { identified: false });
                     entry.identified = false;
                 }
+                this.metadataGroupsCache.clear();
                 return entry;
             } catch (e) {
                 log.error({ err: e }, 'Failed to identify library entry');
@@ -285,7 +296,7 @@ export class LibraryModel {
             dbEntry.prefInheritance = updated.recursive;
             dbEntry.prefCover = updated.prefCover;
         }
-        this.inheritanceCache = null;
+        this.invalidateDerivedCaches();
     }
 
     get = (uid?: string) => {
@@ -499,7 +510,7 @@ export class LibraryModel {
 
         file.identified = false;
         file.comic = undefined;
-        this.inheritanceCache = null;
+        this.invalidateDerivedCaches();
     }
 
     reidentifyAll = async (): Promise<void> => {
@@ -509,7 +520,80 @@ export class LibraryModel {
             entry.identified = undefined;
             entry.comic = undefined;
         }
-        this.inheritanceCache = null;
+        this.invalidateDerivedCaches();
+    }
+
+    scanLibraryMetadata = async (
+        onProgress?: (progress: TLibraryMetadataScanProgress) => void
+    ): Promise<void> => {
+
+        const pending = this.db.filter(entry => !entry.did && entry.identified === undefined);
+        const total = pending.length;
+
+        onProgress?.({ scanned: 0, total });
+        if (total === 0) return;
+
+        let scanned = 0;
+
+        await Promise.all(pending.map(async (entry) => {
+            await this.identify(entry.uid);
+            scanned++;
+            onProgress?.({ scanned, total });
+        }));
+
+    }
+
+    getByMetadata = (
+        field: TLibraryMetadataField
+    ): TLibraryMetadataGroup[] => {
+
+        const cached = this.metadataGroupsCache.get(field);
+        if (cached) return cached;
+
+        const buckets = new Map<string, TLibraryEntry[]>();
+
+        const addToBucket = (key: string, entry: TLibraryEntry) => {
+            const bucket = buckets.get(key);
+            if (bucket) bucket.push(entry);
+            else buckets.set(key, [entry]);
+        };
+
+        for (const entry of this.db) {
+
+            if (entry.did) continue;
+
+            if (!entry.comic) {
+                addToBucket(LIBRARY_METADATA_UNKNOWN_KEY, entry);
+                continue;
+            }
+
+            if (field === LIBRARY_METADATA_FIELDS.series) {
+                addToBucket(entry.comic.volume || LIBRARY_METADATA_UNKNOWN_KEY, entry);
+            } else if (field === LIBRARY_METADATA_FIELDS.year) {
+                addToBucket(entry.comic.releaseDate?.releaseYear || LIBRARY_METADATA_UNKNOWN_KEY, entry);
+            } else {
+                const writers = (entry.comic.credits?.writers ?? []).filter(Boolean);
+                if (writers.length === 0) {
+                    addToBucket(LIBRARY_METADATA_UNKNOWN_KEY, entry);
+                } else {
+                    for (const writer of writers) addToBucket(writer, entry);
+                }
+            }
+
+        }
+
+        const groups = [...buckets.entries()]
+            .map(([key, entries]) => ({ key, entries }))
+            .sort((a, b) => {
+                if (a.key === LIBRARY_METADATA_UNKNOWN_KEY) return 1;
+                if (b.key === LIBRARY_METADATA_UNKNOWN_KEY) return -1;
+                return a.key.localeCompare(b.key, undefined, { numeric: true, sensitivity: 'base' });
+            });
+
+        this.metadataGroupsCache.set(field, groups);
+
+        return groups;
+
     }
 
     commitIdentify = async (fileUid: string, comic: WikiComic) => {
@@ -526,7 +610,7 @@ export class LibraryModel {
 
         file.identified = true;
         file.comic = comic;
-        this.inheritanceCache = null;
+        this.invalidateDerivedCaches();
     }
 
     addLibraryPath = async (dir: string) => {

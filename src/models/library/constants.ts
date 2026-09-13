@@ -12,3 +12,5 @@ export const MAX_LIBRARY_PAGE_SIZE = 500;
 
 /** The default look-back window, in hours, for the "recently added" view. */
 export const RECENT_WINDOW_HOURS = 24;
+
+export const LIBRARY_METADATA_UNKNOWN_KEY = 'Unknown';

@@ -25,7 +25,7 @@ import { ThumbnailModel } from './models/thumbnail/thumbnail.model';
 import { thumbnailRouter } from './routers/thumbnailRouter';
 import { apiKeyAuth } from './middleware/apiKeyAuthMiddleware';
 import { logger } from '#utils/logger';
-import type { TProgressEvent } from './types';
+import type { TLibraryMetadataScanProgress, TProgressEvent } from './types';
 import pkg from '../package.json' with { type: 'json' };
 
 async function startApp() {
@@ -57,7 +57,9 @@ async function startApp() {
     );
     
     const dwnJobModel = new JobModel<TProgressEvent>();
-    
+
+    const libMetadataJobModel = new JobModel<TLibraryMetadataScanProgress>();
+
     const fsModel = new FileSystemModel(process.cwd());
 
     app.use(cors());
@@ -65,7 +67,7 @@ async function startApp() {
     app.use('/api/*', apiKeyAuth());
     app.use('/read/*', apiKeyAuth());
 
-    app.route('/api/library', libraryRouter(libModel));
+    app.route('/api/library', libraryRouter(libModel, libMetadataJobModel));
 
     app.route('/api/wiki', wikiRouter(wikiModel));
 

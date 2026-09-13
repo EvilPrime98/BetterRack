@@ -31,6 +31,32 @@ export interface ILibraryGroup {
     "entries": ILibraryResponseItem[]
 }
 
+export const LIBRARY_METADATA_FIELDS = {
+    series: 'series',
+    writer: 'writer',
+    year: 'year',
+} as const;
+
+export type TLibraryMetadataField = typeof LIBRARY_METADATA_FIELDS[keyof typeof LIBRARY_METADATA_FIELDS];
+
+export const LIBRARY_METADATA_FIELD_LABELS: Record<TLibraryMetadataField, string> = {
+    series: 'Series',
+    writer: 'Writer',
+    year: 'Year',
+};
+
+export type TLibraryGroupMode = 'folder' | TLibraryMetadataField;
+
+export interface ILibraryMetadataGroup {
+    key: string;
+    entries: ILibraryResponseItem[];
+}
+
+export interface ILibraryMetadataScanProgress {
+    scanned: number;
+    total: number;
+}
+
 /** One page of GET /api/library. `limit`/`offset` count entries, not groups; `hasMore` is true while further pages remain. */
 export interface ILibraryPage {
     "groups": ILibraryGroup[],

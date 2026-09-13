@@ -7,6 +7,7 @@ import { useComicsTypeStore } from '@/stores/comicsTypes.store';
 import { useSettingsStore } from '@/stores/settings.store';
 import { useServerModalStore } from '@/stores/serverModal.store';
 import { useUserPrefStore } from '@/stores/userPref.store';
+import { useLibraryMetadataStore } from '@/stores/libraryMetadata.store';
 import { AppLoader } from '@/components/app-loader/app-loader';
 import { ServerModal } from '@/components/server-modal/server-modal';
 import { LibraryPage } from '@/pages/library-page';
@@ -46,6 +47,7 @@ export function App() {
             ]);
 
             useUserPrefStore.getState().init();
+            useLibraryMetadataStore.getState().init();
             useComicsTypeStore.getState().init();
             
             setIsLoading(false);

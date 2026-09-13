@@ -1,6 +1,7 @@
 import type { WikiComic } from "better-wiki";
-import type { IReadResponse, IBookmarksResponse, ILibraryGroup, ILibraryPage, ILibraryRefreshResponse, ILibraryResponseItem, IRecentlyAddedResponse } from "../library.types";
+import type { IReadResponse, IBookmarksResponse, ILibraryGroup, ILibraryMetadataGroup, ILibraryMetadataScanProgress, ILibraryPage, ILibraryRefreshResponse, ILibraryResponseItem, IRecentlyAddedResponse, TLibraryMetadataField } from "../library.types";
 import { API_URL, authHeaders } from "./server-config.service";
+import { POLL_INTERVAL_MS } from "../data";
 
 export { API_URL };
 
@@ -160,6 +161,61 @@ export async function reidentifyAllLibrary(): Promise<{ error: boolean; message:
     const data = await response.json();
     if (!response.ok) throw new Error(data.message);
     return data;
+}
+
+export async function startMetadataScan(): Promise<{ jobId: string; state: string }> {
+    const response = await fetch(`${API_URL}/api/library/metadata/scan`, {
+        method: 'POST',
+        headers: authHeaders()
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message);
+    return data;
+}
+
+export async function pollMetadataScan(
+    jobId: string,
+    onProgress: (progress: ILibraryMetadataScanProgress) => void
+): Promise<void> {
+
+    return new Promise((resolve, reject) => {
+
+        const poll = async () => {
+            try {
+
+                const res = await fetch(`${API_URL}/api/library/metadata/scan/${jobId}`, { headers: authHeaders() });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message);
+
+                if (data.progress) onProgress(data.progress);
+
+                if (data.state === 'done') {
+                    resolve();
+                } else if (data.state === 'error') {
+                    reject(new Error('Library metadata scan failed.'));
+                } else {
+                    setTimeout(poll, POLL_INTERVAL_MS);
+                }
+
+            } catch (e) {
+                reject(e instanceof Error ? e : new Error('Lost connection while scanning the library.'));
+            }
+        };
+
+        poll();
+
+    });
+
+}
+
+export async function getLibraryByMetadata(
+    field: TLibraryMetadataField
+): Promise<ILibraryMetadataGroup[]> {
+    const params = new URLSearchParams({ field });
+    const response = await fetch(`${API_URL}/api/library/metadata?${params}`, { headers: authHeaders() });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message);
+    return data.groups;
 }
 
 export async function moveFile(

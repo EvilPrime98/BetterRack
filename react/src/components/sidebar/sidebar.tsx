@@ -3,8 +3,12 @@ import { Link } from 'react-router-dom';
 import styles from './sidebar.module.css';
 import { useSidebarStore } from '@/stores/sidebar.store';
 import { useLibraryStore } from '@/stores/library.store';
+import { useLibraryMetadataStore } from '@/stores/libraryMetadata.store';
 import { useIsDesktop } from '@/hooks/useIsDesktop';
 import { SideBarGroup } from './sidebar-group';
+import { SideBarMetadataGroup } from './sidebar-metadata-group';
+import { GroupModeSelect } from './group-mode-select';
+import { ScanMetadataButton } from './scan-metadata-button';
 import { RefreshLibraryButton } from './refresh-button';
 import { SidebarCloseButton } from './close-button';
 import { SidebarSearch } from './sidebar-search';
@@ -13,6 +17,7 @@ import { GearIcon } from '@/icons/gear.icon';
 import { ShopIcon } from '@/icons/shop.icon';
 import { DownloadIcon } from '@/icons/download.icon';
 import { BookmarkIcon } from '@/icons/bookmark.icon';
+import { LIBRARY_METADATA_FIELD_LABELS, type TLibraryMetadataField } from '@/library.types';
 
 export function SideBar() {
 
@@ -24,6 +29,9 @@ export function SideBar() {
     const fetchLibrary = useLibraryStore((s) => s.fetchLibrary);
     const [isLoading, setIsLoading] = useState(false);
     const isDesktop = useIsDesktop();
+    const groupMode = useLibraryMetadataStore((s) => s.mode);
+    const metadataGroups = useLibraryMetadataStore((s) => s.groups);
+    const isScanningMetadata = useLibraryMetadataStore((s) => s.isScanning);
 
     const isHidden = isDesktop ? isCollapsed : !isExpanded;
 
@@ -115,8 +123,24 @@ export function SideBar() {
 
                 <RefreshLibraryButton />
 
+                <GroupModeSelect />
+
+                <ScanMetadataButton />
+
                 <nav className={styles.list}>
-                    {!groups.length ? (
+                    {groupMode !== 'folder' ? (
+                        !metadataGroups.length ? (
+                            <p className={styles.emptyState}>
+                                {isScanningMetadata
+                                    ? 'Scanning library…'
+                                    : `Scan the library to browse by ${LIBRARY_METADATA_FIELD_LABELS[groupMode as TLibraryMetadataField]}.`}
+                            </p>
+                        ) : (
+                            metadataGroups.map(group => (
+                                <SideBarMetadataGroup key={group.key} group={group} />
+                            ))
+                        )
+                    ) : !groups.length ? (
                         <p className={styles.emptyState}>
                             {isLoading ? 'Loading library…' : 'No folders found'}
                         </p>

@@ -1,18 +1,24 @@
-import type { TLibraryModel } from "#src/types.ts";
+import { LIBRARY_METADATA_FIELDS, type TLibraryMetadataField, type TLibraryMetadataScanProgress, type TLibraryModel } from "#src/types.ts";
+import type { TJobModel } from "#src/types/jobs.types.ts";
 import type { Context } from "hono";
 import { logger } from "#utils/logger";
 import { MoveError } from "#models/library/library.model";
 
 const log = logger.child({ module: 'libraryController' });
 
+const METADATA_SCAN_RESOURCE_KEY = 'library-metadata-scan';
+
 export class libraryController{
 
     private libModel: TLibraryModel;
+    private metadataJobModel: TJobModel<TLibraryMetadataScanProgress>;
 
     constructor(
-        libModel: TLibraryModel
+        libModel: TLibraryModel,
+        metadataJobModel: TJobModel<TLibraryMetadataScanProgress>
     ) {
         this.libModel = libModel;
+        this.metadataJobModel = metadataJobModel;
     }
 
     public async getPreferences(
@@ -283,6 +289,72 @@ export class libraryController{
             )
 
         }
+    }
+
+    public async startMetadataScan(
+        c: Context
+    ){
+        try{
+
+            const { job, created } = this.metadataJobModel.getOrCreate(
+                METADATA_SCAN_RESOURCE_KEY,
+                'Scanning library metadata'
+            );
+
+            if (created) {
+                this.metadataJobModel.update(job.id, 'running', { scanned: 0, total: 0 });
+                this.libModel.scanLibraryMetadata((progress) => {
+                    this.metadataJobModel.update(job.id, 'running', progress);
+                })
+                    .then(() => this.metadataJobModel.update(job.id, 'done'))
+                    .catch((e) => {
+                        log.error({ err: e }, 'Failed to scan library metadata');
+                        this.metadataJobModel.update(job.id, 'error');
+                    });
+            }
+
+            return c.json({ error: false, jobId: job.id, state: job.state }, 200);
+
+        }catch(e){
+
+            log.error({ err: e }, 'Failed to start library metadata scan');
+
+            return c.json(
+                { error: true, message: 'There was an issue starting the library metadata scan. Please, try again later.'},
+                500
+            )
+
+        }
+    }
+
+    public async getMetadataScanStatus(
+        c: Context
+    ){
+
+        const jobId = c.req.param('jobId');
+        const job = jobId ? this.metadataJobModel.get(jobId) : undefined;
+
+        if (!job) return c.json({ error: true, message: 'Scan job not found.' }, 404);
+
+        return c.json({ error: false, jobId: job.id, state: job.state, progress: job.progress }, 200);
+
+    }
+
+    public async getByMetadata(
+        c: Context
+    ){
+
+        const field = c.req.query('field');
+        const validFields: string[] = Object.values(LIBRARY_METADATA_FIELDS);
+
+        if (!field || !validFields.includes(field)) {
+            return c.json({ error: true, message: 'A valid metadata field (series, writer, year) is required.' }, 400);
+        }
+
+        await this.libModel.ready;
+
+        return c.json({ error: false, groups: this.libModel.getByMetadata(field as TLibraryMetadataField) }, 200);
+
     }
 
     public async reidentifyAll(

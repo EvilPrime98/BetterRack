@@ -3,8 +3,12 @@ import styles from './sidebar.module.css';
 import { SIDEBAR_CONTEXT } from "../../context/sidebar.context";
 import { VIEWPORT_CONTEXT } from "../../context/viewport.context";
 import { LIBRARY_CONTEXT } from "../../context/library.context";
+import { LIBRARY_METADATA_CONTEXT } from "../../context/library-metadata.context";
 import { SideBarGroup } from "./sidebar-group";
-import type { ILibraryGroup } from "../../library.types";
+import { SideBarMetadataGroup } from "./sidebar-metadata-group";
+import { GroupModeSelect } from "./group-mode-select";
+import { ScanMetadataButton } from "./scan-metadata-button";
+import { LIBRARY_METADATA_FIELD_LABELS, type ILibraryGroup, type TLibraryMetadataField } from "../../library.types";
 import { RefreshLibraryButton } from "./refresh-button";
 import { SidebarCloseButton } from "./close-button";
 import { SidebarSearch } from "./sidebar-search";
@@ -63,6 +67,27 @@ export function SideBar() {
     }
 
     function onItemsChange($nav: HTMLElement) {
+
+        const mode = LIBRARY_METADATA_CONTEXT.mode.get();
+
+        if (mode !== 'folder') {
+            const groups = LIBRARY_METADATA_CONTEXT.groups.get();
+            if (!groups.length) {
+                const label = LIBRARY_METADATA_FIELD_LABELS[mode as TLibraryMetadataField];
+                $nav.replaceChildren(
+                    UltraComponent({
+                        component: `<p>${LIBRARY_METADATA_CONTEXT.isScanning.get() ? 'Scanning library…' : `Scan the library to browse by ${label}.`}</p>`,
+                        className: [styles.emptyState]
+                    })
+                );
+            } else {
+                $nav.replaceChildren(
+                    ...groups.map(group => SideBarMetadataGroup({ group }))
+                );
+            }
+            return;
+        }
+
         const currItems = [...items()];
         if (!currItems.length) {
             $nav.replaceChildren(
@@ -204,14 +229,32 @@ export function SideBar() {
 
                     RefreshLibraryButton(),
 
+                    GroupModeSelect(),
+
+                    ScanMetadataButton(),
+
                     UltraComponent({
                         onMount: [onItemsChange],
                         component: '<nav></nav>',
                         className: [styles.list],
-                        trigger: [{
-                            subscriber: subsItems,
-                            triggerFunction: onItemsChange
-                        }]
+                        trigger: [
+                            {
+                                subscriber: subsItems,
+                                triggerFunction: onItemsChange
+                            },
+                            {
+                                subscriber: LIBRARY_METADATA_CONTEXT.mode.subscribe,
+                                triggerFunction: onItemsChange
+                            },
+                            {
+                                subscriber: LIBRARY_METADATA_CONTEXT.groups.subscribe,
+                                triggerFunction: onItemsChange
+                            },
+                            {
+                                subscriber: LIBRARY_METADATA_CONTEXT.isScanning.subscribe,
+                                triggerFunction: onItemsChange
+                            }
+                        ]
                     }),
 
                     Footer()
