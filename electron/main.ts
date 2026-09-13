@@ -199,7 +199,7 @@ async function startDesktopApp() {
     });
 
     win.loadURL(serverUrl);
-    win.setMenu(null)
+    win.setMenu(null);
 
     win.webContents.on("before-input-event", (event, input) => {
 
@@ -212,6 +212,17 @@ async function startDesktopApp() {
       if (isF11 || isMacFullscreen) {
         event.preventDefault();
         win.setFullScreen(!win.isFullScreen());
+        return;
+      }
+
+      const isDevToolsShortcut = input.key === "F12" ||
+        (isMac
+          ? input.meta && input.alt && input.key.toLowerCase() === "i"
+          : input.control && input.shift && input.key.toLowerCase() === "i");
+
+      if (isDevToolsShortcut) {
+        event.preventDefault();
+        win.webContents.toggleDevTools();
       }
 
     });
