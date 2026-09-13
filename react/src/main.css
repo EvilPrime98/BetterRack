@@ -76,6 +76,25 @@
     --mui-palette-success-light: #81c784;
 }
 
+html {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+html::-webkit-scrollbar {
+    width: 10px;
+}
+
+html::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+html::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb);
+    border-radius: 10px;
+    border: 2px solid var(--bg-app);
+}
+
 body {
     margin: 0;
     padding: 0;
@@ -83,17 +102,11 @@ body {
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-    scrollbar-width: thin;
-    scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
 #root {
     min-height: 100dvh;
     width: 100%;
-}
-
-body::-webkit-scrollbar {
-    display: none;
 }
 
 a {

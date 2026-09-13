@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import styles from './library-page.module.css';
 import { PageHeader } from '@/components/page-header/page-header';
@@ -24,6 +24,7 @@ export function LibraryPage() {
     const comicsType = useComicsTypeStore((s) => s.type);
     const setTitle = useDocumentTitleStore((s) => s.setTitle);
     const [items, setItems] = useState<ILibraryResponseItem[]>([]);
+    const comicContainerRef = useRef<HTMLElement>(null);
     const { filters, setFilters, resetFilters, applyFilters } = useFilters({ rawItems: getLibraryItems, setItems });
     const { type: readFilter } = useReadTypesContext();
     const comicCache = useComicCacheStore((s) => s.cache);
@@ -45,7 +46,7 @@ export function LibraryPage() {
     useEffect(() => {
         useLibraryStore.getState().fetchLibrary();
         if (useLibraryStore.getState().groups.length) applyFilters();
-        window.scrollTo(0, 0);
+        comicContainerRef.current?.scrollTo(0, 0);
     }, [uid]);
 
     useEffect(() => {
@@ -72,7 +73,10 @@ export function LibraryPage() {
                 {!hasVisibleItems ? (
                     <p className={styles.empty}>No items to show.</p>
                 ) : (
-                    <section className={[styles.comicContainer, comicsType === 'detail' ? styles.detailLayout : ''].filter(Boolean).join(' ')}>
+                    <section
+                        ref={comicContainerRef}
+                        className={[styles.comicContainer, comicsType === 'detail' ? styles.detailLayout : ''].filter(Boolean).join(' ')}
+                    >
                         {items.map(item => item.did
                             ? <FolderCard key={item.uid} title={item.name} uid={item.uid} />
                             : <ComicCard key={item.uid} item={item} />

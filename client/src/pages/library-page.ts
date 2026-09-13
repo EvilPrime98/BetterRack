@@ -125,10 +125,10 @@ export function LibraryPage({
 
                 UltraComponent({
                    
-                    onMount: [() => {
+                    onMount: [($el: HTMLElement) => {
                         LIBRARY_CONTEXT.fetchLibrary();
                         if (LIBRARY_CONTEXT.groups.get().length) applyFilters();
-                        window.scrollTo(0, 0);
+                        $el.scrollTo(0, 0);
                     }],
 
                     component: '<section></section>',
