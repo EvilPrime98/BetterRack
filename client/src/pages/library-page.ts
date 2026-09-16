@@ -145,6 +145,8 @@ export function LibraryPage({
                         if (LIBRARY_CONTEXT.groups.get().length) applyFilters();
                         $el.scrollTo(0, 0);
                         swapyInstance = createSwapy($el, { animation: 'dynamic' });
+                        swapyInstance.onSwapStart(() => $el.setAttribute('data-dragging', ''));
+                        swapyInstance.onSwapEnd(() => $el.removeAttribute('data-dragging'));
                         return () => {
                             swapyInstance?.destroy();
                             swapyInstance = null;

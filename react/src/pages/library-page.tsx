@@ -57,9 +57,13 @@ export function LibraryPage() {
 
     useEffect(() => {
         if (!hasVisibleItems || !comicContainerRef.current) return;
-        swapyRef.current = createSwapy(comicContainerRef.current, { animation: 'dynamic' });
+        const container = comicContainerRef.current;
+        const swapy = createSwapy(container, { animation: 'dynamic' });
+        swapy.onSwapStart(() => container.setAttribute('data-dragging', ''));
+        swapy.onSwapEnd(() => container.removeAttribute('data-dragging'));
+        swapyRef.current = swapy;
         return () => {
-            swapyRef.current?.destroy();
+            swapy.destroy();
             swapyRef.current = null;
         };
     }, [hasVisibleItems]);

@@ -27,6 +27,11 @@
     gap: 24px;
 }
 
+.comicContainer[data-dragging] * {
+    transition: none !important;
+    animation: none !important;
+}
+
 .empty {
     margin: 0;
     padding: 40px 0;
