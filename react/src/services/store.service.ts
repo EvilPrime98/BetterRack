@@ -110,12 +110,21 @@ export async function getDownloadJobs(): Promise<TJobStatus[]> {
     return data.jobs;
 }
 
+const MAX_POLL_RETRIES = 3;
+
+const POLL_RETRY_BACKOFF_MS = 2000;
+
+const POLL_RETRY_BACKOFF_CAP_MS = 30_000;
+
 export async function pollJobStatus(
     jobId: string,
+    title: string,
     onProgress: (event: TStoreProgressEvent) => void
 ): Promise<void> {
 
     return new Promise((resolve, reject) => {
+
+        let retryAttempt = 0;
 
         const poll = async () => {
             try {
@@ -126,6 +135,8 @@ export async function pollJobStatus(
                     state: string;
                     progress?: TStoreProgressEvent;
                 }>(res);
+
+                retryAttempt = 0;
 
                 if (progress) onProgress(progress);
 
@@ -138,7 +149,17 @@ export async function pollJobStatus(
                 }
 
             } catch {
-                reject(new Error('Lost connection to the server while downloading.'));
+
+                if (retryAttempt >= MAX_POLL_RETRIES) {
+                    reject(new Error('Lost connection to the server while downloading.'));
+                    return;
+                }
+
+                retryAttempt += 1;
+                const backoff = Math.min(2 ** retryAttempt * POLL_RETRY_BACKOFF_MS, POLL_RETRY_BACKOFF_CAP_MS);
+                onProgress({ type: 'retrying', title, reason: 'network', delaySec: Math.round(backoff / 1000) });
+                setTimeout(poll, backoff);
+
             }
         };
 
@@ -171,6 +192,6 @@ export async function downloadComicPolling({
     });
     const { jobId } = await parseJsonResponse<{ error: boolean; jobId: string; state: string }>(response);
 
-    return pollJobStatus(jobId, onProgress);
+    return pollJobStatus(jobId, title, onProgress);
 
 }
