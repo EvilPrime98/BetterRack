@@ -110,6 +110,14 @@ export async function getDownloadJobs(): Promise<TJobStatus[]> {
     return data.jobs;
 }
 
+export async function retryDownloadJob(jobId: string): Promise<{ jobId: string; state: string }> {
+    const response = await fetch(`${API_URL}/api/downloads/${jobId}/retry`, {
+        method: 'POST',
+        headers: authHeaders()
+    });
+    return parseJsonResponse<{ error: boolean; jobId: string; state: string }>(response);
+}
+
 const MAX_POLL_RETRIES = 3;
 
 const POLL_RETRY_BACKOFF_MS = 2000;
