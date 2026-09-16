@@ -116,7 +116,12 @@ export class DownloadController {
 
             }
 
-            const { job, created } = this.jobModel.getOrCreate(id, title);
+            const { job, created } = this.jobModel.getOrCreate(id, title, {
+                comicId: parseInt(id),
+                outputDir,
+                uuid,
+                strat
+            });
 
             if (created) {
                 const outputDirPath = await this.fsModel.getFullPath(outputDir || '/');
@@ -188,7 +193,12 @@ export class DownloadController {
 
             }
 
-            const { job, created } = this.jobModel.getOrCreate(String(id), title);
+            const { job, created } = this.jobModel.getOrCreate(String(id), title, {
+                comicId: id,
+                outputDir,
+                uuid,
+                strat
+            });
 
             if (created) {
                 const outputDirPath = await this.fsModel.getFullPath(outputDir || '/');
@@ -208,6 +218,64 @@ export class DownloadController {
             return c.json({
                 error: true,
                 message: 'Failed to start comic download'
+            }, 500);
+
+        }
+
+    }
+
+    public async retryJob(
+        c: Context
+    ) {
+
+        try {
+
+            const jobId = c.req.param('jobId') ?? '';
+            const job = this.jobModel.get(jobId);
+
+            if (!job) {
+                return c.json({ error: true, message: 'Job not found' }, 404);
+            }
+
+            if (job.state !== 'error') {
+                return c.json({ error: true, message: 'Only failed jobs can be retried' }, 409);
+            }
+
+            const downloadLink = await this.gcwModel.getDownloadLinkFromPost(
+                job.request.comicId,
+                job.request.strat as TStrat,
+                job.request.uuid
+            );
+
+            if (!downloadLink) {
+                return c.json({
+                    error: true,
+                    message: 'This comic cannot be downloaded'
+                }, 400);
+            }
+
+            const retried = this.jobModel.retry(jobId);
+
+            if (!retried) {
+                return c.json({ error: true, message: 'Job is no longer retryable' }, 409);
+            }
+
+            const outputDirPath = await this.fsModel.getFullPath(retried.request.outputDir || '/');
+            this.runDownload(retried.id, { title: retried.label, downloadLink }, outputDirPath);
+
+            return c.json({
+                error: false,
+                jobId: retried.id,
+                state: retried.state
+            }, 200);
+
+        } catch (e) {
+
+            log.error({ err: e }, 'Failed to retry comic download');
+
+            return c.json({
+                error: true,
+                message: 'Failed to retry comic download'
             }, 500);
 
         }

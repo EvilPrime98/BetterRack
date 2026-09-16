@@ -24,3 +24,17 @@ export const comicData = sqliteTable('comic_data', {
     readPer: real('read_per'),
     read: integer('read'),
 });
+
+export const downloadJobs = sqliteTable('download_jobs', {
+    id: text('id').primaryKey(),
+    resourceKey: text('resource_key').notNull(),
+    label: text('label').notNull(),
+    state: text('state').notNull(),
+    progress: text('progress'),
+    comicId: integer('comic_id').notNull(),
+    outputDir: text('output_dir'),
+    uuid: text('uuid'),
+    strat: text('strat'),
+    createdAt: integer('created_at').notNull(),
+    updatedAt: integer('updated_at').notNull(),
+});

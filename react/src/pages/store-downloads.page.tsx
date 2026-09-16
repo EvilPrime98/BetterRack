@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Layout } from '@/layout';
-import { getDownloadJobs, type TJobStatus } from '@/services/store.service';
+import { getDownloadJobs, retryDownloadJob, type TJobStatus } from '@/services/store.service';
 import { useDocumentTitleStore } from '@/stores/documentTitle.store';
 import { POLL_INTERVAL_MS } from '@/data';
 import type { TStoreProgressEvent } from '@/store.types';
@@ -44,7 +44,7 @@ function detailFor(progress?: TStoreProgressEvent): string {
     }
 }
 
-function JobRow({ job }: { job: TJobStatus }) {
+function JobRow({ job, onRetry, retrying }: { job: TJobStatus; onRetry: (jobId: string) => void; retrying: boolean }) {
 
     const percent = percentFor(job.progress);
     const detail = detailFor(job.progress);
@@ -68,6 +68,17 @@ function JobRow({ job }: { job: TJobStatus }) {
 
             {detail && <span className={styles.detail}>{detail}</span>}
 
+            {job.state === 'error' && (
+                <button
+                    type="button"
+                    className={styles.retry}
+                    disabled={retrying}
+                    onClick={() => onRetry(job.jobId)}
+                >
+                    Retry
+                </button>
+            )}
+
         </li>
     );
 
@@ -79,6 +90,7 @@ export function StoreDownloadsPage() {
     const [jobs, setJobs] = useState<TJobStatus[]>([]);
     const [error, setError] = useState('');
     const [loaded, setLoaded] = useState(false);
+    const [retryingIds, setRetryingIds] = useState<Set<string>>(new Set());
 
     useEffect(() => {
         setTitle('Downloads');
@@ -112,6 +124,20 @@ export function StoreDownloadsPage() {
 
     }, []);
 
+    async function handleRetry(jobId: string) {
+        setRetryingIds((prev) => new Set(prev).add(jobId));
+        try {
+            await retryDownloadJob(jobId);
+            setJobs(await getDownloadJobs());
+        } finally {
+            setRetryingIds((prev) => {
+                const next = new Set(prev);
+                next.delete(jobId);
+                return next;
+            });
+        }
+    }
+
     return (
         <Layout>
             <section className={styles.page}>
@@ -127,7 +153,14 @@ export function StoreDownloadsPage() {
                     </p>
                 ) : (
                     <ul className={styles.list}>
-                        {jobs.map(job => <JobRow key={job.jobId} job={job} />)}
+                        {jobs.map(job => (
+                            <JobRow
+                                key={job.jobId}
+                                job={job}
+                                onRetry={handleRetry}
+                                retrying={retryingIds.has(job.jobId)}
+                            />
+                        ))}
                     </ul>
                 )}
 

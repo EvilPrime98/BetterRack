@@ -6,7 +6,7 @@ import {
 } from "ultra-light-js";
 import styles from './store-downloads.page.module.css';
 import { Layout } from "../layout";
-import { getDownloadJobs, type TJobStatus } from "@/services/store.service";
+import { getDownloadJobs, retryDownloadJob, type TJobStatus } from "@/services/store.service";
 import { DOCUMENT_TITLE_CONTEXT } from "../context/document-title.context";
 import { POLL_INTERVAL_MS } from "@/data";
 import type { TStoreProgressEvent } from "../store.types";
@@ -15,7 +15,9 @@ interface IStoreDownloadsState {
     jobs: IUltraCompStateStateful<TJobStatus[]>;
     error: IUltraCompStateStateful<string>;
     loaded: IUltraCompStateStateful<boolean>;
+    retryingIds: IUltraCompStateStateful<Set<string>>;
     load: () => Promise<void>;
+    retry: (jobId: string) => Promise<void>;
 }
 
 const STATE_LABEL: Record<TJobStatus['state'], string> = {
@@ -57,7 +59,7 @@ function detailFor(job: TJobStatus): string {
     }
 }
 
-function JobRow(job: TJobStatus): string {
+function JobRow(job: TJobStatus, retryingIds: Set<string>): string {
     const state = job.state;
     const percent = percentFor(job.progress);
     const detail = detailFor(job);
@@ -69,6 +71,10 @@ function JobRow(job: TJobStatus): string {
            </div>
            <span class="${styles.percent}">${percent}%</span>`;
 
+    const retry = state === 'error'
+        ? `<button type="button" class="${styles.retry}" data-retry-job-id="${job.jobId}"${retryingIds.has(job.jobId) ? ' disabled' : ''}>Retry</button>`
+        : '';
+
     return `<li class="${styles.row}" data-state="${state}">
         <div class="${styles.rowHead}">
             <span class="${styles.label}">${job.label}</span>
@@ -76,6 +82,7 @@ function JobRow(job: TJobStatus): string {
         </div>
         ${bar}
         ${detail ? `<span class="${styles.detail}">${detail}</span>` : ''}
+        ${retry}
     </li>`;
 }
 
@@ -86,6 +93,7 @@ export function StoreDownloadsPage() {
         jobs: [] as TJobStatus[],
         error: '',
         loaded: false,
+        retryingIds: new Set<string>(),
 
         load: async (comp: IStoreDownloadsState) => {
             try {
@@ -97,6 +105,18 @@ export function StoreDownloadsPage() {
             } finally {
                 comp.loaded.set(true);
             }
+        },
+
+        retry: async (comp: IStoreDownloadsState, jobId: string) => {
+            comp.retryingIds.set(new Set(comp.retryingIds.get()).add(jobId));
+            try {
+                await retryDownloadJob(jobId);
+                await comp.load();
+            } finally {
+                const next = new Set(comp.retryingIds.get());
+                next.delete(jobId);
+                comp.retryingIds.set(next);
+            }
         }
 
     });
@@ -104,7 +124,16 @@ export function StoreDownloadsPage() {
     function renderList($list: HTMLElement) {
         const jobs = store.jobs.get();
         if (!jobs.length) return;
-        ultraReplaceChildren($list, ...jobs.map(JobRow));
+        const retryingIds = store.retryingIds.get();
+        ultraReplaceChildren($list, ...jobs.map((job) => JobRow(job, retryingIds)));
+    }
+
+    function onListClick(event: Event) {
+        const $target = event.target as HTMLElement;
+        const $button = $target.closest<HTMLButtonElement>('[data-retry-job-id]');
+        const jobId = $button?.dataset.retryJobId;
+        if (!jobId) return;
+        store.retry(jobId);
     }
 
     function renderEmpty($p: HTMLElement) {
@@ -165,9 +194,10 @@ export function StoreDownloadsPage() {
                 UltraComponent({
                     component: '<ul></ul>',
                     className: [styles.list],
+                    eventHandler: { click: onListClick },
                     onMount: [renderList],
                     trigger: [{
-                        subscriber: store.jobs.subscribe,
+                        subscriber: [store.jobs.subscribe, store.retryingIds.subscribe],
                         triggerFunction: renderList,
                         defer: true
                     }]
