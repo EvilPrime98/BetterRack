@@ -82,7 +82,7 @@ export function StoreCard({
         setState({ status: 'downloading', title: job.label, percent });
 
         try {
-            await pollJobStatus(job.jobId, (event) => {
+            await pollJobStatus(job.jobId, job.label, (event) => {
                 if (event.type === 'progress') {
                     setState({ status: 'downloading', title: job.label, percent: event.percent });
                 } else if (event.type === 'extracting') {
