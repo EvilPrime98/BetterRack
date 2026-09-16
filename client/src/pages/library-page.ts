@@ -1,4 +1,5 @@
 import { UltraActivity, UltraComponent, ultraQueryParams, ultraState, type UltraLightElement } from "ultra-light-js";
+import { createSwapy, type Swapy } from "swapy";
 import styles from './library-page.module.css';
 import { PageHeader } from "@/components/page-header/page-header";
 import { LIBRARY_CONTEXT } from "../context/library.context";
@@ -25,6 +26,7 @@ export function LibraryPage({
     }
     
     const itemsMap = new Map<string, UltraLightElement>();
+    let swapyInstance: Swapy | null = null;
 
     const [items, setItems, subsItems] = ultraState<ILibraryResponseItem[]>([]);
     
@@ -58,21 +60,34 @@ export function LibraryPage({
 
         currComics.map(item => {
             if (itemsMap.has(item.uid)) return;
-            itemsMap.set(item.uid, (item.did)
+            const card = (item.did)
                 ? FolderCard({
                     title: item.name,
                     uid: item.uid
                 })
                 : ComicCard({
                     item: item
-                })
-            )
+                });
+            itemsMap.set(item.uid, UltraComponent({
+                component: '<div></div>',
+                attributes: { 'data-swapy-slot': item.uid },
+                children: [
+                    UltraComponent({
+                        component: '<div></div>',
+                        attributes: { 'data-swapy-item': item.uid },
+                        eventHandler: { dragstart: (e) => e.preventDefault() },
+                        children: [card]
+                    })
+                ]
+            }))
         })
 
         currComics.map(c => {
             const $item = itemsMap.get(c.uid);
             if ($item) $section.appendChild($item);
         })
+
+        swapyInstance?.update();
 
     }
 
@@ -129,6 +144,11 @@ export function LibraryPage({
                         LIBRARY_CONTEXT.fetchLibrary();
                         if (LIBRARY_CONTEXT.groups.get().length) applyFilters();
                         $el.scrollTo(0, 0);
+                        swapyInstance = createSwapy($el, { animation: 'dynamic' });
+                        return () => {
+                            swapyInstance?.destroy();
+                            swapyInstance = null;
+                        };
                     }],
 
                     component: '<section></section>',

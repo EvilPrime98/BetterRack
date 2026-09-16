@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
+import { createSwapy, type Swapy } from 'swapy';
 import styles from './library-page.module.css';
 import { PageHeader } from '@/components/page-header/page-header';
 import { useLibraryStore } from '@/stores/library.store';
@@ -25,6 +26,7 @@ export function LibraryPage() {
     const setTitle = useDocumentTitleStore((s) => s.setTitle);
     const [items, setItems] = useState<ILibraryResponseItem[]>([]);
     const comicContainerRef = useRef<HTMLElement>(null);
+    const swapyRef = useRef<Swapy | null>(null);
     const { filters, setFilters, resetFilters, applyFilters } = useFilters({ rawItems: getLibraryItems, setItems });
     const { type: readFilter } = useReadTypesContext();
     const comicCache = useComicCacheStore((s) => s.cache);
@@ -50,8 +52,21 @@ export function LibraryPage() {
     }, [uid]);
 
     useEffect(() => {
-        applyFilters();  
+        applyFilters();
     }, [groups, searchQuery, uid]);
+
+    useEffect(() => {
+        if (!hasVisibleItems || !comicContainerRef.current) return;
+        swapyRef.current = createSwapy(comicContainerRef.current, { animation: 'dynamic' });
+        return () => {
+            swapyRef.current?.destroy();
+            swapyRef.current = null;
+        };
+    }, [hasVisibleItems]);
+
+    useEffect(() => {
+        swapyRef.current?.update();
+    }, [items]);
 
     if (search) {
         return <SearchPage search={search} />;
@@ -77,10 +92,16 @@ export function LibraryPage() {
                         ref={comicContainerRef}
                         className={[styles.comicContainer, comicsType === 'detail' ? styles.detailLayout : ''].filter(Boolean).join(' ')}
                     >
-                        {items.map(item => item.did
-                            ? <FolderCard key={item.uid} title={item.name} uid={item.uid} />
-                            : <ComicCard key={item.uid} item={item} />
-                        )}
+                        {items.map(item => (
+                            <div key={item.uid} data-swapy-slot={item.uid}>
+                                <div data-swapy-item={item.uid} onDragStart={(e) => e.preventDefault()}>
+                                    {item.did
+                                        ? <FolderCard title={item.name} uid={item.uid} />
+                                        : <ComicCard item={item} />
+                                    }
+                                </div>
+                            </div>
+                        ))}
                     </section>
                 )}
 
