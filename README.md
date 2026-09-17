@@ -7,7 +7,7 @@ Better Rack is a desktop app for organizing and reading a local comic book libra
 ## Features
 
 - Local comic library scanning and management, with CBR/CBZ support via 7z/unrar decompression
-- Built-in reader with zoom controls and per-comic reading progress
+- Built-in reader with zoom controls, per-comic reading progress, and an on-demand rescan to re-extract a comic's pages
 - Store page to search and download comics from a configurable external source
 - Wiki-backed metadata lookup for comic info
 - Configurable settings for source URLs and download/output directories

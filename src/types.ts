@@ -222,6 +222,7 @@ export type TZipModel = {
     listPages: ({ filePath }: {
         filePath: string;
     }) => Promise<string[]>,
+    evictArchiveCache: (filePath: string) => void,
     getPageStream: ({ filePath, entryName }: {
         filePath: string;
         entryName: string;

@@ -1,19 +1,24 @@
 import styles from '../../pages/reader.page.module.css';
 import { ArrowLeftIcon } from '../../icons/arrow-left.icon';
+import { RefreshIcon } from '../../icons/refresh-icon';
 import type { IBookmark } from '../../library.types';
 
 export function ReaderPageHeader({
     currentPage,
     totalPages,
     bookmarks,
+    isRefreshing,
     goToPage,
-    goBack
+    goBack,
+    onRefresh
 }: {
     currentPage: number;
     totalPages: number;
     bookmarks: IBookmark[];
+    isRefreshing: boolean;
     goToPage: (page: number) => void;
     goBack: () => void;
+    onRefresh: () => void;
 }) {
 
     const onBookmarkSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -38,6 +43,14 @@ export function ReaderPageHeader({
                 </select>
             )}
             <span className={styles.counter}>{currentPage} / {totalPages}</span>
+            <button
+                type="button"
+                className={[styles.refresh, isRefreshing ? styles.spinning : ''].filter(Boolean).join(' ')}
+                aria-label="Refresh scan"
+                onClick={onRefresh}
+            >
+                <RefreshIcon size={16} />
+            </button>
         </header>
     );
 

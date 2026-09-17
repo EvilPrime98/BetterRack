@@ -1,5 +1,6 @@
 import { UltraComponent } from "ultra-light-js";
 import { ArrowLeftIcon } from "../../icons/arrow-left.icon";
+import { RefreshIcon } from "../../icons/refresh-icon";
 import type { IBookmark } from "../../library.types";
 import styles from '../../pages/reader.page.module.css'
 
@@ -10,8 +11,11 @@ export function ReaderPageHeader({
     subsPages,
     bookmarks,
     subsBookmarks,
+    isRefreshing,
+    subsIsRefreshing,
     goToPage,
-    goBack
+    goBack,
+    onRefresh
 }:{
     currentPage: () => number;
     subsCurrentPage: (fn: (value: number) => void) => () => void;
@@ -19,9 +23,16 @@ export function ReaderPageHeader({
     subsPages: (fn: (value: string[]) => void) => () => void;
     bookmarks: () => IBookmark[];
     subsBookmarks: (fn: (value: IBookmark[]) => void) => () => void;
+    isRefreshing: () => boolean;
+    subsIsRefreshing: (fn: (value: boolean) => void) => () => void;
     goToPage: (page: number) => void;
     goBack: () => void;
+    onRefresh: () => void;
 }) {
+
+    const onRefreshingChange = ($button: HTMLElement) => {
+        $button.classList.toggle(styles.spinning, isRefreshing());
+    }
 
     const onCounterChange = ($el: HTMLElement) => {
         $el.textContent = `${currentPage()} / ${pages().length}`;
@@ -82,6 +93,17 @@ export function ReaderPageHeader({
                 trigger: [
                     { subscriber: subsCurrentPage, triggerFunction: onCounterChange },
                     { subscriber: subsPages, triggerFunction: onCounterChange }
+                ]
+            }),
+            UltraComponent({
+                component: '<button type="button"></button>',
+                className: [styles.refresh],
+                attributes: { 'aria-label': 'Refresh scan' },
+                eventHandler: { click: onRefresh },
+                onMount: [onRefreshingChange],
+                children: [RefreshIcon({ size: 16 })],
+                trigger: [
+                    { subscriber: subsIsRefreshing, triggerFunction: onRefreshingChange }
                 ]
             }),
         ]
