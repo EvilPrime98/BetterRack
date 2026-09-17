@@ -19,14 +19,20 @@ export function ImageElement({
 }) {
 
     const [isLoaded, setIsLoaded] = useState(false);
+    const [isSpread, setIsSpread] = useState(false);
+
+    const onLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+        setIsLoaded(true);
+        setIsSpread(e.currentTarget.naturalWidth > e.currentTarget.naturalHeight);
+    };
 
     return (
-        <figure className={[styles.pageWrapper, isLoaded ? styles.loaded : ''].filter(Boolean).join(' ')}>
+        <figure className={[styles.pageWrapper, isLoaded ? styles.loaded : '', isSpread ? styles.spread : ''].filter(Boolean).join(' ')}>
             <ImageGen
                 src={withAuthQuery(`${API_URL}/read/${uid}/pages/${ind}`)}
                 alt={`${uid} — page ${index} of ${total}`}
                 loading={(eager || index <= 2) ? 'eager' : 'lazy'}
-                onLoad={() => setIsLoaded(true)}
+                onLoad={onLoad}
             />
         </figure>
     );

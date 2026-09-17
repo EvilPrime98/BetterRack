@@ -19,9 +19,11 @@ export function ImageElement({
 }){
 
     const [isLoaded, setIsLoaded, subsIsLoaded] = ultraState(false);
+    const [isSpread, setIsSpread, subsIsSpread] = ultraState(false);
 
-    const onLoadedChange = ($wrapper: HTMLElement) => {
+    const onWrapperClassChange = ($wrapper: HTMLElement) => {
         $wrapper.classList.toggle(styles.loaded, isLoaded());
+        $wrapper.classList.toggle(styles.spread, isSpread());
     }
 
     return UltraComponent({
@@ -30,10 +32,10 @@ export function ImageElement({
 
         className: [styles.pageWrapper],
 
-        trigger: [{
-            subscriber: subsIsLoaded,
-            triggerFunction: onLoadedChange
-        }],
+        trigger: [
+            { subscriber: subsIsLoaded, triggerFunction: onWrapperClassChange },
+            { subscriber: subsIsSpread, triggerFunction: onWrapperClassChange }
+        ],
 
         children: [
             ImageGen({
@@ -43,7 +45,11 @@ export function ImageElement({
                     loading: (eager || index <= 2) ? 'eager' : 'lazy'
                 },
                 eventHandler: {
-                    load: () => setIsLoaded(true)
+                    load: (evt: Event) => {
+                        const $img = evt.target as HTMLImageElement;
+                        setIsLoaded(true);
+                        setIsSpread($img.naturalWidth > $img.naturalHeight);
+                    }
                 }
             })
         ]
