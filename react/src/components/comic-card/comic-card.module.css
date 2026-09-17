@@ -281,8 +281,6 @@
     }
 
     .metaSourceBadge svg {
-        height: 18px;
-        width: auto;
         flex-shrink: 0;
         display: block;
     }

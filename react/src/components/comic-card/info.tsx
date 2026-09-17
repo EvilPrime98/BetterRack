@@ -57,11 +57,13 @@ export function ComicCardInfo({
         <div className={styles.info}>
 
             {metaSource && (
-                <div 
-                    className={styles.metaSourceBadge} 
+                <div
+                    className={styles.metaSourceBadge}
+                    role="img"
+                    aria-label={metaSourceLabel[metaSource]}
                     title={metaSourceLabel[metaSource]}
                 >
-                    {metaSource === 'wiki' ? <FandomIcon/> : <XmlIcon/>}
+                    {metaSource === 'wiki' ? <FandomIcon size={11} /> : <XmlIcon size={15} color="#334155" />}
                 </div>
             )}
 
