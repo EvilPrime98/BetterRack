@@ -70,6 +70,7 @@ describe('LibraryModel.identify — identifyFromMeta gating', () => {
         expect(calls().zipCalls).toBe(0);
         expect(calls().wikiCalls).toBe(1);
         expect(result.comic?.title).toBe('Wiki Title');
+        expect(result.metaSource).toBe('wiki');
     });
 
     test('prefers ComicInfo.xml over the wiki when the setting is on and XML is found', async () => {
@@ -81,6 +82,7 @@ describe('LibraryModel.identify — identifyFromMeta gating', () => {
         expect(calls().zipCalls).toBe(1);
         expect(calls().wikiCalls).toBe(0);
         expect(result.comic?.title).toBe('XML Title');
+        expect(result.metaSource).toBe('comicinfo');
     });
 
     test('falls back to the wiki when the setting is on but no usable XML is found', async () => {
@@ -92,6 +94,7 @@ describe('LibraryModel.identify — identifyFromMeta gating', () => {
         expect(calls().zipCalls).toBe(1);
         expect(calls().wikiCalls).toBe(1);
         expect(result.comic?.title).toBe('Wiki Title');
+        expect(result.metaSource).toBe('wiki');
     });
 
 });

@@ -78,6 +78,7 @@ export type TLibraryEntry = {
     identified?: boolean;
     /** The identified wiki comic, resolved on demand via LibraryModel.identify() - never populated by scan(). */
     comic?: WikiComic;
+    metaSource?: TMetaSource;
 }
 
 export type TLibraryPref = {
@@ -180,10 +181,13 @@ export type TWikiModel = {
     getComics: (title: string, thumbnailSize?: number) => Promise<WikiComic[]>
 }
 
+export type TMetaSource = 'wiki' | 'comicinfo';
+
 export type TComicData = {
     uid: string;
     prefId?: number;
     sourceWiki?: string;
+    metaSource?: TMetaSource;
     /** Tri-state: undefined = never attempted, true = matched, false = searched and found nothing. */
     identified?: boolean;
     /** Full wiki payload cached once identified, so the front never has to re-fetch it. */

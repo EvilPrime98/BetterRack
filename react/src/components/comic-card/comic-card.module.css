@@ -269,6 +269,24 @@
         outline-offset: 1px;
     }
 
+    .metaSourceBadge {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-bottom: 2px;
+        font-family: var(--font-sans);
+        font-size: 9px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #8f8f8f;
+    }
+
+    .metaSourceBadge svg {
+        flex-shrink: 0;
+        color: #34c3d1;
+    }
+
     .infoLoader {
         flex: 1;
         width: 100%;

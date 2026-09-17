@@ -28,6 +28,7 @@ export function ComicCard({
 
     const navigate = useNavigate();
     const [comic, setComic] = useState<WikiComic | null>(item.comic ?? null);
+    const [metaSource, setMetaSource] = useState(item.metaSource);
     const [identified, setIdentified] = useState(item.identified !== false);
     const [isLoadingInfo, setIsLoadingInfo] = useState(item.identified === undefined);
     const articleRef = useRef<HTMLElement>(null);
@@ -55,6 +56,7 @@ export function ComicCard({
     useEffect(() => {
         if (lastIdentified?.uid !== item.uid) return;
         setComic(lastIdentified.comic);
+        setMetaSource('wiki');
         setIdentified(true);
         setIsLoadingInfo(false);
     }, [lastIdentified, item.uid]);
@@ -62,6 +64,7 @@ export function ComicCard({
     useEffect(() => {
         if (lastUnidentified?.uid !== item.uid) return;
         setComic(null);
+        setMetaSource(undefined);
         setIdentified(false);
         setIsLoadingInfo(false);
     }, [lastUnidentified, item.uid]);
@@ -77,6 +80,7 @@ export function ComicCard({
                 .then((resolved) => {
                     if (cancelled) return;
                     setComic(resolved.comic ?? null);
+                    setMetaSource(resolved.metaSource);
                     setIdentified(resolved.identified === true);
                 })
                 .catch(() => {})
@@ -96,6 +100,7 @@ export function ComicCard({
             identifyLibraryEntry(item.uid)
             .then((resolved) => {
                 setComic(resolved.comic ?? null);
+                setMetaSource(resolved.metaSource);
                 setIdentified(resolved.identified === true);
             })
             .catch(() => {})
@@ -160,7 +165,7 @@ export function ComicCard({
 
                 </div>
 
-                <ComicCardInfo comic={comic} navigate={navigate} isLoading={isLoadingInfo} />
+                <ComicCardInfo comic={comic} metaSource={metaSource} navigate={navigate} isLoading={isLoadingInfo} />
 
                 <div className={styles.actionsBlock}>
                     <ComicRating uid={item.uid} />

@@ -23,6 +23,7 @@ export function ComicCard({
 }) {
 
     const [comic, setComic, subsComic] = ultraState<WikiComic | null>(item.comic ?? null);
+    const [metaSource, setMetaSource, subsMetaSource] = ultraState(item.metaSource);
     const [identified, setIdentified, subsIdentified] = ultraState(item.identified !== false);
     const [isLoadingInfo, setIsLoadingInfo, subsIsLoadingInfo] = ultraState(item.identified === undefined);
 
@@ -62,6 +63,7 @@ export function ComicCard({
     COMIC_IDENT_CTX.lastIdentified.subscribe((entry) => {
         if (entry?.uid !== item.uid) return;
         setComic(entry.comic);
+        setMetaSource('wiki');
         setIdentified(true);
         setIsLoadingInfo(false);
     });
@@ -77,6 +79,7 @@ export function ComicCard({
             identifyLibraryEntry(item.uid)
                 .then((resolved) => {
                     setComic(resolved.comic ?? null);
+                    setMetaSource(resolved.metaSource);
                     setIdentified(resolved.identified === true);
                 })
                 .catch(() => {})
@@ -212,6 +215,8 @@ export function ComicCard({
                     ComicCardInfo({
                         comic,
                         subsComic,
+                        metaSource,
+                        subsMetaSource,
                         isLoading: isLoadingInfo,
                         subsIsLoading: subsIsLoadingInfo
                     }),

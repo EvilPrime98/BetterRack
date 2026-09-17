@@ -118,7 +118,7 @@ export async function createFolder(
 
 export async function identifyLibraryEntry(
     uid: string
-): Promise<Pick<ILibraryResponseItem, 'identified' | 'comic'>> {
+): Promise<Pick<ILibraryResponseItem, 'identified' | 'comic' | 'metaSource'>> {
     const response = await fetch(`${API_URL}/api/library/${uid}/identify`, { headers: authHeaders() });
     const data = await response.json();
     if (!response.ok) throw new Error(data.message);

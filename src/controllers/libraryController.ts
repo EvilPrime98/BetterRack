@@ -241,9 +241,10 @@ export class libraryController{
             
             const entry = await this.libModel.identify(uid);
 
-            return c.json({ 
-                identified: entry.identified, 
-                comic: entry.comic 
+            return c.json({
+                identified: entry.identified,
+                comic: entry.comic,
+                metaSource: entry.metaSource
             }, 200);
 
         }catch(e){
