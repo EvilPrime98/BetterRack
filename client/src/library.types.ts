@@ -1,6 +1,8 @@
 import type { IUltraCompStateStateful } from "ultra-light-js";
 import type { WikiComic } from "better-wiki";
 
+export type TMetaSource = 'wiki' | 'comicinfo';
+
 export interface ILibraryItem {
     id: number;
     thumbnail: string;
@@ -23,6 +25,7 @@ export interface ILibraryResponseItem {
     "identified"?: boolean,
     /** The identified wiki comic, resolved on demand - metadata only, never the cover source. */
     "comic"?: WikiComic,
+    "metaSource"?: TMetaSource,
 }
 
 export interface ILibraryGroup {

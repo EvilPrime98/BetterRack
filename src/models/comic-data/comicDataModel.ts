@@ -19,6 +19,7 @@ export class ComicDataModel implements TComicDataModel {
                 uid TEXT PRIMARY KEY,
                 pref_id INTEGER,
                 source_wiki TEXT,
+                meta_source TEXT,
                 cover TEXT,
                 identified INTEGER,
                 comic TEXT,
@@ -28,7 +29,7 @@ export class ComicDataModel implements TComicDataModel {
                 read INTEGER
             )
         `);
-        for (const column of ['identified INTEGER', 'comic TEXT']) {
+        for (const column of ['identified INTEGER', 'comic TEXT', 'meta_source TEXT']) {
             try {
                 sqlite.run(`ALTER TABLE comic_data ADD COLUMN ${column}`);
             } catch {
@@ -42,6 +43,7 @@ export class ComicDataModel implements TComicDataModel {
         uid: row.uid,
         prefId: row.prefId ?? undefined,
         sourceWiki: row.sourceWiki ?? undefined,
+        metaSource: row.metaSource as TComicData['metaSource'] ?? undefined,
         identified: row.identified === null ? undefined : Boolean(row.identified),
         comic: row.comic ? JSON.parse(row.comic) : undefined,
         cover: row.cover ?? undefined,
@@ -72,6 +74,7 @@ export class ComicDataModel implements TComicDataModel {
                 uid: merged.uid,
                 prefId: merged.prefId ?? null,
                 sourceWiki: merged.sourceWiki ?? null,
+                metaSource: merged.metaSource ?? null,
                 identified: merged.identified === undefined ? null : Number(merged.identified),
                 comic: merged.comic ? JSON.stringify(merged.comic) : null,
                 cover: merged.cover ?? null,
@@ -85,6 +88,7 @@ export class ComicDataModel implements TComicDataModel {
                 set: {
                     prefId: merged.prefId ?? null,
                     sourceWiki: merged.sourceWiki ?? null,
+                    metaSource: merged.metaSource ?? null,
                     identified: merged.identified === undefined ? null : Number(merged.identified),
                     comic: merged.comic ? JSON.stringify(merged.comic) : null,
                     cover: merged.cover ?? null,
@@ -105,6 +109,7 @@ export class ComicDataModel implements TComicDataModel {
                 identified: null,
                 comic: null,
                 sourceWiki: null,
+                metaSource: null,
                 prefId: null,
             })
             .run();

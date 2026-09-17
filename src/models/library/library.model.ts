@@ -90,6 +90,7 @@ export class LibraryModel {
             if (existing?.identified === true) {
                 entry.identified = true;
                 entry.comic = existing.comic;
+                entry.metaSource = existing.metaSource;
             } else if (existing?.identified === false) {
                 entry.identified = false;
             }
@@ -103,6 +104,7 @@ export class LibraryModel {
     ) => {
         entry.identified = stored.identified;
         entry.comic = stored.comic;
+        entry.metaSource = stored.metaSource;
     };
 
     private scanInBackground = () => {
@@ -240,14 +242,17 @@ export class LibraryModel {
                 }
 
                 if (found) {
+                    const metaSource = comicInfo ? 'comicinfo' : 'wiki';
                     this.comicDataModel.upsert(uid, {
                         prefId: found.pageId,
                         sourceWiki: found.sourceWiki,
+                        metaSource,
                         identified: true,
                         comic: found,
                     });
                     entry.identified = true;
                     entry.comic = found;
+                    entry.metaSource = metaSource;
                 } else {
                     this.comicDataModel.upsert(uid, { identified: false });
                     entry.identified = false;
@@ -494,11 +499,13 @@ export class LibraryModel {
             identified: false,
             comic: undefined,
             sourceWiki: undefined,
+            metaSource: undefined,
             prefId: undefined,
         });
 
         file.identified = false;
         file.comic = undefined;
+        file.metaSource = undefined;
         this.inheritanceCache = null;
     }
 
@@ -521,11 +528,13 @@ export class LibraryModel {
             identified: true,
             comic,
             sourceWiki: comic.sourceWiki,
+            metaSource: 'wiki',
             prefId: comic.pageId,
         });
 
         file.identified = true;
         file.comic = comic;
+        file.metaSource = 'wiki';
         this.inheritanceCache = null;
     }
 

@@ -16,6 +16,7 @@ export const comicData = sqliteTable('comic_data', {
     uid: text('uid').primaryKey(),
     prefId: integer('pref_id'),
     sourceWiki: text('source_wiki'),
+    metaSource: text('meta_source'),
     cover: text('cover'),
     identified: integer('identified'),
     comic: text('comic'),

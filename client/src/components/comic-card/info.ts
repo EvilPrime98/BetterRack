@@ -1,20 +1,49 @@
 import { UltraActivity, UltraComponent } from "ultra-light-js";
 import styles from './comic-card.module.css';
 import type { WikiComic } from "better-wiki";
+import type { TMetaSource } from "@/library.types";
 import { InfoRow } from "./info-row";
 import { Loader } from "@/components/loader/loader";
+import { FandomIcon } from "@/icons/fandom.icon";
+import { XmlIcon } from "@/icons/xml.icon";
+
+const metaSourceLabel: Record<TMetaSource, string> = {
+    wiki: 'From wiki',
+    comicinfo: 'From ComicInfo.xml'
+};
+
+const metaSourceIcon: Record<TMetaSource, string> = {
+    wiki: FandomIcon(),
+    comicinfo: XmlIcon()
+};
 
 export function ComicCardInfo({
     comic,
     subsComic,
+    metaSource,
+    subsMetaSource,
     isLoading,
     subsIsLoading
 }: {
     comic: () => WikiComic | null;
     subsComic: (fn: (value: WikiComic | null) => void) => () => void;
+    metaSource: () => TMetaSource | undefined;
+    subsMetaSource: (fn: (value: TMetaSource | undefined) => void) => () => void;
     isLoading: () => boolean;
     subsIsLoading: (fn: (value: boolean) => void) => () => void;
 }) {
+
+    const updateMetaSourceBadge = ($badge: HTMLElement) => {
+        const source = metaSource();
+        if (!source) {
+            $badge.innerHTML = '';
+            $badge.style.display = 'none';
+            return;
+        }
+        $badge.innerHTML = metaSourceIcon[source];
+        $badge.title = metaSourceLabel[source];
+        $badge.style.display = 'flex';
+    }
 
     return UltraComponent({
 
@@ -49,6 +78,15 @@ export function ComicCardInfo({
                 component: '<div></div>',
                 styles: { display: 'contents' },
                 children: [
+
+                    UltraComponent({
+                        component: `<div class="${styles.metaSourceBadge}"></div>`,
+                        onMount: [updateMetaSourceBadge],
+                        trigger: [{
+                            subscriber: subsMetaSource,
+                            triggerFunction: updateMetaSourceBadge
+                        }]
+                    }),
 
                     InfoRow({
                         subsComic,

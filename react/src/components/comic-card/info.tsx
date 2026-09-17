@@ -1,16 +1,26 @@
 import type { WikiComic } from 'better-wiki';
 import styles from './comic-card.module.css';
+import type { TMetaSource } from '@/library.types';
 import { InfoRow } from './info-row';
 import { Loader } from '@/components/loader/loader';
+import { FandomIcon } from '@/icons/fandom.icon';
+import { XmlIcon } from '@/icons/xml.icon';
 //import { CrButton } from '../cr-button/cr-button';
+
+const metaSourceLabel: Record<TMetaSource, string> = {
+    wiki: 'From wiki',
+    comicinfo: 'From ComicInfo.xml'
+};
 
 export function ComicCardInfo({
     navigate,
     comic,
+    metaSource,
     isLoading
 }: {
     navigate: (val: string) => void;
     comic: WikiComic | null;
+    metaSource?: TMetaSource;
     isLoading?: boolean;
 }) {
 
@@ -45,6 +55,17 @@ export function ComicCardInfo({
 
     return (
         <div className={styles.info}>
+
+            {metaSource && (
+                <div
+                    className={styles.metaSourceBadge}
+                    role="img"
+                    aria-label={metaSourceLabel[metaSource]}
+                    title={metaSourceLabel[metaSource]}
+                >
+                    {metaSource === 'wiki' ? <FandomIcon size={11} /> : <XmlIcon size={15} color="#334155" />}
+                </div>
+            )}
 
             <InfoRow label="Comic" value={comic?.title || ''} />
 
