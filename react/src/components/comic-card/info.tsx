@@ -1,11 +1,8 @@
-import type { ReactNode } from 'react';
 import type { WikiComic } from 'better-wiki';
 import styles from './comic-card.module.css';
 import type { TMetaSource } from '@/library.types';
 import { InfoRow } from './info-row';
 import { Loader } from '@/components/loader/loader';
-import { GlobeIcon } from '@/icons/globe.icon';
-import { FileCodeIcon } from '@/icons/file-code.icon';
 //import { CrButton } from '../cr-button/cr-button';
 
 const metaSourceLabel: Record<TMetaSource, string> = {
@@ -13,9 +10,9 @@ const metaSourceLabel: Record<TMetaSource, string> = {
     comicinfo: 'From ComicInfo.xml'
 };
 
-const metaSourceIcon: Record<TMetaSource, ReactNode> = {
-    wiki: <GlobeIcon size={12} />,
-    comicinfo: <FileCodeIcon size={12} />
+const metaSourceSrc: Record<TMetaSource, string> = {
+    wiki: '/fandom.svg',
+    comicinfo: '/xml.svg'
 };
 
 export function ComicCardInfo({
@@ -64,8 +61,7 @@ export function ComicCardInfo({
 
             {metaSource && (
                 <div className={styles.metaSourceBadge} title={metaSourceLabel[metaSource]}>
-                    {metaSourceIcon[metaSource]}
-                    <span>{metaSourceLabel[metaSource]}</span>
+                    <img src={metaSourceSrc[metaSource]} alt={metaSourceLabel[metaSource]} />
                 </div>
             )}
 

@@ -272,19 +272,13 @@
     .metaSourceBadge {
         display: flex;
         align-items: center;
-        gap: 4px;
         margin-bottom: 2px;
-        font-family: var(--font-sans);
-        font-size: 9px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: #8f8f8f;
     }
 
-    .metaSourceBadge svg {
+    .metaSourceBadge img {
+        width: 14px;
+        height: 14px;
         flex-shrink: 0;
-        color: #34c3d1;
     }
 
     .infoLoader {

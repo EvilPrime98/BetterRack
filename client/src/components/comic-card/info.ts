@@ -4,17 +4,15 @@ import type { WikiComic } from "better-wiki";
 import type { TMetaSource } from "@/library.types";
 import { InfoRow } from "./info-row";
 import { Loader } from "@/components/loader/loader";
-import { GlobeIcon } from "@/icons/globe.icon";
-import { FileCodeIcon } from "@/icons/file-code.icon";
 
 const metaSourceLabel: Record<TMetaSource, string> = {
     wiki: 'From wiki',
     comicinfo: 'From ComicInfo.xml'
 };
 
-const metaSourceIcon: Record<TMetaSource, string> = {
-    wiki: GlobeIcon({ size: 12 }),
-    comicinfo: FileCodeIcon({ size: 12 })
+const metaSourceSrc: Record<TMetaSource, string> = {
+    wiki: '/fandom.svg',
+    comicinfo: '/xml.svg'
 };
 
 export function ComicCardInfo({
@@ -40,7 +38,7 @@ export function ComicCardInfo({
             $badge.style.display = 'none';
             return;
         }
-        $badge.innerHTML = `${metaSourceIcon[source]}<span>${metaSourceLabel[source]}</span>`;
+        $badge.innerHTML = `<img src="${metaSourceSrc[source]}" alt="${metaSourceLabel[source]}" />`;
         $badge.title = metaSourceLabel[source];
         $badge.style.display = 'flex';
     }
