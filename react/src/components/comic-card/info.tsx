@@ -3,16 +3,13 @@ import styles from './comic-card.module.css';
 import type { TMetaSource } from '@/library.types';
 import { InfoRow } from './info-row';
 import { Loader } from '@/components/loader/loader';
+import { FandomIcon } from '@/icons/fandom.icon';
+import { XmlIcon } from '@/icons/xml.icon';
 //import { CrButton } from '../cr-button/cr-button';
 
 const metaSourceLabel: Record<TMetaSource, string> = {
     wiki: 'From wiki',
     comicinfo: 'From ComicInfo.xml'
-};
-
-const metaSourceSrc: Record<TMetaSource, string> = {
-    wiki: '/fandom.svg',
-    comicinfo: '/xml.svg'
 };
 
 export function ComicCardInfo({
@@ -60,8 +57,11 @@ export function ComicCardInfo({
         <div className={styles.info}>
 
             {metaSource && (
-                <div className={styles.metaSourceBadge} title={metaSourceLabel[metaSource]}>
-                    <img src={metaSourceSrc[metaSource]} alt={metaSourceLabel[metaSource]} />
+                <div 
+                    className={styles.metaSourceBadge} 
+                    title={metaSourceLabel[metaSource]}
+                >
+                    {metaSource === 'wiki' ? <FandomIcon/> : <XmlIcon/>}
                 </div>
             )}
 

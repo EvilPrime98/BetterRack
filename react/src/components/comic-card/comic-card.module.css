@@ -275,9 +275,9 @@
         margin-bottom: 2px;
     }
 
-    .metaSourceBadge img {
-        width: 14px;
+    .metaSourceBadge svg {
         height: 14px;
+        width: auto;
         flex-shrink: 0;
     }
 
