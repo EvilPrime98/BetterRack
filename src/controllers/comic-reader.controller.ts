@@ -143,6 +143,46 @@ export class comicReaderController {
 
     }
 
+    public async refresh(
+        c: Context
+    ) {
+
+        try {
+
+            c.header('Cache-Control', 'no-store');
+
+            const uuid = c.req.param('uuid');
+            const entry = this.libModel.get(uuid) as TLibraryEntry;
+
+            if (!entry || !entry.path) {
+                throw new Error('File not found in library');
+            }
+
+            this.zipModel.evictArchiveCache(entry.path);
+
+            const { pages } = await this.getPages(uuid);
+
+            return c.json({
+                error: false,
+                message: 'Comic re-scanned successfully',
+                totalPages: pages.length,
+                pages
+            }, 200)
+
+        }catch(e){
+
+            log.error({ err: e }, 'Failed to refresh comic pages');
+
+            return c.json({
+                error: true,
+                message: e instanceof Error ? e.message : 'There was an error reading the comic.',
+                pages: []
+            }, 500);
+
+        }
+
+    }
+
     public async getBookmarks(
         c: Context
     ) {

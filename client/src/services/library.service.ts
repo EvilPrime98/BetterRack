@@ -66,6 +66,17 @@ export async function readerBookmarks({
     return data.bookmarks
 }
 
+export async function readerRefresh({
+    uid
+}:{
+    uid: string
+}){
+    const response = await fetch(`${API_URL}/read/${uid}/refresh`, { cache: 'no-store', headers: authHeaders() });
+    const data: IReadResponse = await response.json();
+    if (!response.ok) throw new Error(data.message)
+    return data.pages
+}
+
 export async function deleteFile(
     fileUid: string
 ): Promise<ILibraryRefreshResponse> {

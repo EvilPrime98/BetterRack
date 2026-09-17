@@ -100,6 +100,12 @@ export class Zip7Decompressor {
         cache.set(key, value);
     };
 
+    evictArchiveCache = (filePath: string): void => {
+        const cacheKey = this.archiveCacheKey(filePath);
+        this.entryListCache.delete(cacheKey);
+        this.comicInfoCache.delete(cacheKey);
+    };
+
     private isSafeEntryName = (entryName: string): boolean => {
         if (!entryName || !entryName.trim()) return false;
         if (path.isAbsolute(entryName)) return false;

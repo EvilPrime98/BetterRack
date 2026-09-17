@@ -1,5 +1,5 @@
 import { UltraActivity, UltraComponent, ultraNavigate, ultraState } from "ultra-light-js"
-import { API_URL, reader, readerBookmarks } from "../services/library.service"
+import { API_URL, reader, readerBookmarks, readerRefresh } from "../services/library.service"
 import { withAuthQuery } from "../services/server-config.service"
 import type { IBookmark } from "../library.types"
 import styles from './reader.page.module.css'
@@ -33,6 +33,7 @@ export function ReaderPage({
     const [currentPage, setCurrentPage, subsCurrentPage] = ultraState(comicCache?.currentPage || 1);
     const [zoom, setZoom, subsZoom] = ultraState(1);
     const [bookmarks, setBookmarks, subsBookmarks] = ultraState<IBookmark[]>([]);
+    const [isRefreshing, setIsRefreshing, subsIsRefreshing] = ultraState(false);
     let observer: IntersectionObserver | null = null;
     let viewer: HTMLElement | null = null;
 
@@ -124,6 +125,26 @@ export function ReaderPage({
             setHasError(true);
         } finally {
             setIsLoading(false);
+        }
+    }
+
+    const refreshComic = async () => {
+        if (isRefreshing()) return;
+        setIsRefreshing(true);
+        setHasError(false);
+        requested.clear();
+        try {
+            const data = await readerRefresh({ uid });
+            setPages(data);
+            try {
+                setBookmarks(await readerBookmarks({ uid }));
+            } catch {
+                setBookmarks([]);
+            }
+        } catch {
+            setHasError(true);
+        } finally {
+            setIsRefreshing(false);
         }
     }
 
@@ -321,8 +342,10 @@ export function ReaderPage({
                 currentPage, subsCurrentPage,
                 pages, subsPages,
                 bookmarks, subsBookmarks,
+                isRefreshing, subsIsRefreshing,
                 goToPage,
-                goBack
+                goBack,
+                onRefresh: refreshComic
             }),
 
             ReaderPageProgressBar({

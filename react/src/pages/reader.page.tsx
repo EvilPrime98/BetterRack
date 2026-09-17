@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { API_URL, reader, readerBookmarks } from '@/services/library.service';
+import { API_URL, reader, readerBookmarks, readerRefresh } from '@/services/library.service';
 import { withAuthQuery } from '@/services/server-config.service';
 import type { IBookmark } from '@/library.types';
 import styles from './reader.page.module.css';
@@ -56,6 +56,7 @@ export function ReaderPage() {
     const [zoom, setZoom] = useState(1);
     const [next, setNext] = useState(false);
     const [bookmarks, setBookmarks] = useState<IBookmark[]>([]);
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     //refs
     const observerRef = useRef<IntersectionObserver | null>(null);
@@ -101,6 +102,25 @@ export function ReaderPage() {
             setIsLoading(false);
         }
     }, [uid]);
+
+    const refreshComic = useCallback(async () => {
+        if (!uid || isRefreshing) return;
+        setIsRefreshing(true);
+        setHasError(false);
+        try {
+            const data = await readerRefresh({ uid });
+            setPages(data);
+            try {
+                setBookmarks(await readerBookmarks({ uid }));
+            } catch {
+                setBookmarks([]);
+            }
+        } catch {
+            setHasError(true);
+        } finally {
+            setIsRefreshing(false);
+        }
+    }, [uid, isRefreshing]);
 
     const zoomIn = useCallback(() => {
         setZoom((z) => clampZoom(z + ZOOM_STEP))
@@ -300,7 +320,7 @@ export function ReaderPage() {
     return (
         <section className={styles.page} onWheel={onWheel} ref={pageRef}>
 
-            <ReaderPageHeader currentPage={currentPage} totalPages={pages.length} bookmarks={bookmarks} goToPage={goToPage} goBack={goBack} />
+            <ReaderPageHeader currentPage={currentPage} totalPages={pages.length} bookmarks={bookmarks} isRefreshing={isRefreshing} goToPage={goToPage} goBack={goBack} onRefresh={refreshComic} />
 
             <ReaderPageProgressBar currentPage={currentPage} totalPages={pages.length} />
 

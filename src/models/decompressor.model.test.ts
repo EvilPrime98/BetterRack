@@ -100,6 +100,19 @@ describe('Zip7Decompressor entry-list cache', () => {
         expect(spawnCount).toBeGreaterThan(spawnsAfterFirst);
     });
 
+    test('evictArchiveCache forces the next listPages call to re-spawn even on an unchanged file', async () => {
+        const zip = new Zip7Decompressor();
+
+        await zip.listPages({ filePath: archivePath });
+        const spawnsAfterFirst = spawnCount;
+
+        zip.evictArchiveCache(archivePath);
+        const after = await zip.listPages({ filePath: archivePath });
+
+        expect(after).toHaveLength(23);
+        expect(spawnCount).toBeGreaterThan(spawnsAfterFirst);
+    });
+
     test('removes stale cache entries when an archive changes', async () => {
         const zip = new Zip7Decompressor();
 
