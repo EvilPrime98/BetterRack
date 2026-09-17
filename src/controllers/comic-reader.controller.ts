@@ -50,10 +50,7 @@ export class comicReaderController {
 
         try {
 
-            // The page list must reflect the archive's current contents on every
-            // reader mount. Without this, the browser/Electron replays a stale
-            // cached listing on in-app navigation and the reader shows fewer
-            // pages than the comic has until a manual reload.
+            // The page list must reflect the archive's current contents on every reader mount
             c.header('Cache-Control', 'no-store');
 
             const uuid = c.req.param('uuid');
