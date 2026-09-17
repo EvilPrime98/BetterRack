@@ -6,8 +6,7 @@ import styles from '../../pages/reader.page.module.css'
 
 const LAYOUT_LABELS: Record<TReaderLayoutMode, string> = {
     'single-vertical': 'Single page',
-    'double-vertical': 'Double page',
-    'horizontal': 'Horizontal'
+    'double-vertical': 'Double page'
 };
 
 export function ReaderPageHeader({

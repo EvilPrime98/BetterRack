@@ -5,8 +5,7 @@ import type { IBookmark, TReaderLayoutMode } from '../../library.types';
 
 const LAYOUT_LABELS: Record<TReaderLayoutMode, string> = {
     'single-vertical': 'Single page',
-    'double-vertical': 'Double page',
-    'horizontal': 'Horizontal'
+    'double-vertical': 'Double page'
 };
 
 export function ReaderPageHeader({

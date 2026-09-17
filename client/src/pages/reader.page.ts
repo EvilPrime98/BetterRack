@@ -14,8 +14,7 @@ const PRELOAD_WINDOW = 2;
 
 const LAYOUT_MODE_ORDER: TReaderLayoutMode[] = [
     READER_LAYOUT_MODES.singleVertical,
-    READER_LAYOUT_MODES.doubleVertical,
-    READER_LAYOUT_MODES.horizontal
+    READER_LAYOUT_MODES.doubleVertical
 ];
 
 // Rolling prefetch band around the active page. It is forward-biased so a
@@ -86,11 +85,7 @@ export function ReaderPage({
 
     const goToPage = (page: number) => {
         const $page = viewer?.children[page - 1] as HTMLElement | undefined;
-        $page?.scrollIntoView(
-            layoutMode() === READER_LAYOUT_MODES.horizontal
-                ? { inline: 'start', block: 'nearest' }
-                : { block: 'start' }
-        );
+        $page?.scrollIntoView({ block: 'start' });
         prefetchAround(page);
     }
 
@@ -221,16 +216,10 @@ export function ReaderPage({
 
     const onWheel = (evt: Event) => {
         const e = evt as WheelEvent;
-        if (e.ctrlKey) {
-            e.preventDefault();
-            if (e.deltaY < 0) zoomIn();
-            else if (e.deltaY > 0) zoomOut();
-            return;
-        }
-        if (layoutMode() === READER_LAYOUT_MODES.horizontal && viewer && e.deltaY !== 0) {
-            e.preventDefault();
-            viewer.scrollLeft += e.deltaY;
-        }
+        if (!e.ctrlKey) return;
+        e.preventDefault();
+        if (e.deltaY < 0) zoomIn();
+        else if (e.deltaY > 0) zoomOut();
     }
 
     const onKeydown = (e: KeyboardEvent) => {
@@ -264,11 +253,7 @@ export function ReaderPage({
         elements.forEach((el, i) => pageOf.set(el, i + 1));
 
         const $target = range ? elements[range.targetInd] : undefined;
-        $target?.scrollIntoView(
-            layoutMode() === READER_LAYOUT_MODES.horizontal
-                ? { inline: 'start', block: 'nearest' }
-                : { block: 'start' }
-        );
+        $target?.scrollIntoView({ block: 'start' });
 
         if (!numPages) return;
 
@@ -282,10 +267,7 @@ export function ReaderPage({
                 setCurrentPage(page);
                 prefetchAround(page);
             }
-        }, {
-            root: layoutMode() === READER_LAYOUT_MODES.horizontal ? $section : null,
-            threshold: [0.25, 0.5, 0.75]
-        });
+        }, { threshold: [0.25, 0.5, 0.75] });
 
         elements.forEach($page => observer!.observe($page));
 
@@ -316,12 +298,7 @@ export function ReaderPage({
 
     const onViewerLayoutClassChange = ($section: HTMLElement) => {
         $section.classList.toggle(styles.viewerDouble, layoutMode() === READER_LAYOUT_MODES.doubleVertical);
-        $section.classList.toggle(styles.viewerHorizontal, layoutMode() === READER_LAYOUT_MODES.horizontal);
         if ($section.children.length) attachPageObserver($section);
-    }
-
-    const onPageLayoutClassChange = ($section: HTMLElement) => {
-        $section.classList.toggle(styles.pageHorizontal, layoutMode() === READER_LAYOUT_MODES.horizontal);
     }
 
     const onProgressChange = () => {
@@ -339,7 +316,6 @@ export function ReaderPage({
         onMount: [
             loadPages,
             () => DOCUMENT_TITLE_CONTEXT.setTitle('Reader'),
-            onPageLayoutClassChange,
             () => {
                 window.addEventListener('keydown', onKeydown);
                 return () => {
@@ -437,10 +413,6 @@ export function ReaderPage({
                 subscriber: [subsPages, subsCurrentPage],
                 triggerFunction: onProgressChange,
                 defer: true
-            },
-            {
-                subscriber: subsLayoutMode,
-                triggerFunction: onPageLayoutClassChange
             }
         ]
 

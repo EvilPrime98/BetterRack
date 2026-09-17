@@ -20,8 +20,7 @@ const ZOOM_STEP = 0.1;
 
 const LAYOUT_MODE_ORDER: TReaderLayoutMode[] = [
     READER_LAYOUT_MODES.singleVertical,
-    READER_LAYOUT_MODES.doubleVertical,
-    READER_LAYOUT_MODES.horizontal
+    READER_LAYOUT_MODES.doubleVertical
 ];
 
 const clampZoom = (value: number) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, +value.toFixed(2)));
@@ -78,12 +77,8 @@ export function ReaderPage() {
 
     const goToPage = useCallback((page: number) => {
         const $page = viewerRef.current?.children[page - 1] as HTMLElement | undefined;
-        $page?.scrollIntoView(
-            layoutMode === READER_LAYOUT_MODES.horizontal
-                ? { inline: 'start', block: 'nearest' }
-                : { block: 'start' }
-        );
-    }, [layoutMode]);
+        $page?.scrollIntoView({ block: 'start' });
+    }, []);
 
     const goBack = useCallback(() => {
         if (window.history.length > 1) window.history.back();
@@ -137,17 +132,11 @@ export function ReaderPage() {
     }, []);
 
     const onWheel = useCallback((e: React.WheelEvent) => {
-        if (e.ctrlKey) {
-            e.preventDefault();
-            if (e.deltaY < 0) zoomIn();
-            else if (e.deltaY > 0) zoomOut();
-            return;
-        }
-        if (layoutMode === READER_LAYOUT_MODES.horizontal && viewerRef.current && e.deltaY !== 0) {
-            e.preventDefault();
-            viewerRef.current.scrollLeft += e.deltaY;
-        }
-    }, [layoutMode, zoomIn, zoomOut]);
+        if (!e.ctrlKey) return;
+        e.preventDefault();
+        if (e.deltaY < 0) zoomIn();
+        else if (e.deltaY > 0) zoomOut();
+    }, [zoomIn, zoomOut]);
 
     useEffect(() => {
         setTitle('Reader');
@@ -285,11 +274,7 @@ export function ReaderPage() {
         elements.forEach((el, i) => pageOf.set(el, i + 2));
 
         const targetEl = range ? elements[range.targetInd - 1] : undefined;
-        targetEl?.scrollIntoView(
-            layoutMode === READER_LAYOUT_MODES.horizontal
-                ? { inline: 'start', block: 'nearest' }
-                : { block: 'start' }
-        );
+        targetEl?.scrollIntoView({ block: 'start' });
 
         const observer = new IntersectionObserver((entries) => {
             const mostVisible = entries
@@ -298,17 +283,14 @@ export function ReaderPage() {
             if (!mostVisible) return;
             const page = pageOf.get(mostVisible.target as HTMLElement);
             if (page) setCurrentPage(page);
-        }, {
-            root: layoutMode === READER_LAYOUT_MODES.horizontal ? $section : null,
-            threshold: [0.25, 0.5, 0.75]
-        });
+        }, { threshold: [0.25, 0.5, 0.75] });
 
         elements.forEach($page => observer.observe($page));
         observerRef.current = observer;
 
         return () => observer.disconnect();
 
-    }, [pages, uid, layoutMode]);
+    }, [pages, uid]);
 
     useEffect(() => {
         if (!uid || pages.length === 0) return;
@@ -330,18 +312,12 @@ export function ReaderPage() {
     const numPages = pages.length;
     const range = getWindowRange(numPages, currentPageRef.current);
 
-    const viewerClassName = [
-        styles.viewer,
-        layoutMode === READER_LAYOUT_MODES.doubleVertical ? styles.viewerDouble : '',
-        layoutMode === READER_LAYOUT_MODES.horizontal ? styles.viewerHorizontal : ''
-    ].filter(Boolean).join(' ');
+    const viewerClassName = layoutMode === READER_LAYOUT_MODES.doubleVertical
+        ? `${styles.viewer} ${styles.viewerDouble}`
+        : styles.viewer;
 
     return (
-        <section
-            className={`${styles.page} ${layoutMode === READER_LAYOUT_MODES.horizontal ? styles.pageHorizontal : ''}`}
-            onWheel={onWheel}
-            ref={pageRef}
-        >
+        <section className={styles.page} onWheel={onWheel} ref={pageRef}>
 
             <ReaderPageHeader
                 currentPage={currentPage}

@@ -12,12 +12,6 @@
     display: none;
 }
 
-.pageHorizontal {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
 .toolbar {
     display: flex;
     flex-direction: row;
@@ -181,38 +175,6 @@
 .viewerDouble .pageWrapper:first-child {
     width: 100%;
     max-width: calc(900px * var(--reader-zoom, 1));
-}
-
-.viewerHorizontal {
-    flex: 1 1 auto;
-    flex-direction: row;
-    align-items: stretch;
-    gap: 0;
-    padding: 0;
-    min-height: 0;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scroll-snap-type: x mandatory;
-    touch-action: pan-x;
-}
-
-.viewerHorizontal .pageWrapper {
-    flex: 0 0 100%;
-    width: 100%;
-    max-width: none;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    scroll-snap-align: start;
-    scroll-margin-top: 0;
-}
-
-.viewerHorizontal .pageWrapper img {
-    width: auto;
-    height: auto;
-    max-width: calc(100% * var(--reader-zoom, 1));
-    max-height: 100%;
 }
 
 .pageWrapper {
