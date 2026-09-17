@@ -22,6 +22,8 @@ Better Rack is a desktop app for organizing and reading a local comic book libra
 
 <img width="1915" height="915" alt="image" src="https://github.com/user-attachments/assets/3b70fb94-75e8-449f-87dd-65783e31886d" />
 
+<img width="1382" height="945" alt="image" src="https://github.com/user-attachments/assets/853a68e0-4d15-45d0-8659-a8a2fac442f8" />
+
 ## Installation
 
 Requires [Bun](https://bun.sh) (server/runtime) and [pnpm](https://pnpm.io) (client build).
