@@ -1,15 +1,22 @@
 import { UltraActivity, UltraComponent, ultraNavigate, ultraState } from "ultra-light-js"
 import { API_URL, reader, readerBookmarks } from "../services/library.service"
 import { withAuthQuery } from "../services/server-config.service"
-import type { IBookmark } from "../library.types"
+import { READER_LAYOUT_MODES, type IBookmark, type TReaderLayoutMode } from "../library.types"
 import styles from './reader.page.module.css'
 import { ImageElement } from "../components/reader-page-image/reader-page-image";
 import { ReaderPageHeader } from "../components/reader-page-header/reader-page-header";
 import { ReaderPageProgressBar } from "../components/reader-page-progress-bar/reader-page-progress-bar";
 import { COMIC_CACHE_CONTEXT } from "../context/comic-cache.context";
 import { DOCUMENT_TITLE_CONTEXT } from "../context/document-title.context";
+import { USER_PREF } from "../context/user-pref-cache.context";
 
 const PRELOAD_WINDOW = 2;
+
+const LAYOUT_MODE_ORDER: TReaderLayoutMode[] = [
+    READER_LAYOUT_MODES.singleVertical,
+    READER_LAYOUT_MODES.doubleVertical,
+    READER_LAYOUT_MODES.horizontal
+];
 
 // Rolling prefetch band around the active page. It is forward-biased so a
 // continuous read keeps landing on pages that are already in the browser cache.
@@ -33,6 +40,9 @@ export function ReaderPage({
     const [currentPage, setCurrentPage, subsCurrentPage] = ultraState(comicCache?.currentPage || 1);
     const [zoom, setZoom, subsZoom] = ultraState(1);
     const [bookmarks, setBookmarks, subsBookmarks] = ultraState<IBookmark[]>([]);
+    const [layoutMode, setLayoutMode, subsLayoutMode] = ultraState<TReaderLayoutMode>(
+        USER_PREF.getPref('readerLayout') || READER_LAYOUT_MODES.singleVertical
+    );
     let observer: IntersectionObserver | null = null;
     let viewer: HTMLElement | null = null;
 
@@ -76,13 +86,23 @@ export function ReaderPage({
 
     const goToPage = (page: number) => {
         const $page = viewer?.children[page - 1] as HTMLElement | undefined;
-        $page?.scrollIntoView({ block: 'start' });
+        $page?.scrollIntoView(
+            layoutMode() === READER_LAYOUT_MODES.horizontal
+                ? { inline: 'start', block: 'nearest' }
+                : { block: 'start' }
+        );
         prefetchAround(page);
     }
 
     const goBack = () => {
         if (window.history.length > 1) window.history.back();
         else ultraNavigate({ href: '/' });
+    }
+
+    const cycleLayoutMode = () => {
+        const next = LAYOUT_MODE_ORDER[(LAYOUT_MODE_ORDER.indexOf(layoutMode()) + 1) % LAYOUT_MODE_ORDER.length];
+        setLayoutMode(next);
+        USER_PREF.setPref({ readerLayout: next });
     }
 
     const getWindowRange = (numPages: number, savedPage: number) => {
@@ -201,11 +221,16 @@ export function ReaderPage({
 
     const onWheel = (evt: Event) => {
         const e = evt as WheelEvent;
-        if (!e.ctrlKey) return;
-        // hijack the browser/Electron ctrl+wheel pinch-zoom and drive our own page zoom instead
-        e.preventDefault();
-        if (e.deltaY < 0) zoomIn();
-        else if (e.deltaY > 0) zoomOut();
+        if (e.ctrlKey) {
+            e.preventDefault();
+            if (e.deltaY < 0) zoomIn();
+            else if (e.deltaY > 0) zoomOut();
+            return;
+        }
+        if (layoutMode() === READER_LAYOUT_MODES.horizontal && viewer && e.deltaY !== 0) {
+            e.preventDefault();
+            viewer.scrollLeft += e.deltaY;
+        }
     }
 
     const onKeydown = (e: KeyboardEvent) => {
@@ -227,31 +252,23 @@ export function ReaderPage({
         }
     }
 
-    const onPagesChange = ($section: HTMLElement) => {
+    const attachPageObserver = ($section: HTMLElement) => {
 
         observer?.disconnect();
-        viewer = $section;
 
         const numPages = pages().length;
         const savedPage = comicCache?.currentPage || 1;
         const range = getWindowRange(numPages, savedPage);
+        const elements = Array.from($section.children) as HTMLElement[];
         const pageOf = new Map<HTMLElement, number>();
-        const elements = [];
-        let $target: HTMLElement | null = null;
+        elements.forEach((el, i) => pageOf.set(el, i + 1));
 
-        for (let i = 0; i < numPages; ++i) {
-            const $page = ImageElement({
-                uid, ind: i + 1, index: i + 1, total: numPages,
-                eager: !!range && i >= range.start && i <= range.end
-            });
-            pageOf.set($page, i + 1);
-            if (range && i === range.targetInd) $target = $page;
-            elements.push($page);
-        }
-
-        $section.replaceChildren(...elements);
-
-        $target?.scrollIntoView({ block: 'start' });
+        const $target = range ? elements[range.targetInd] : undefined;
+        $target?.scrollIntoView(
+            layoutMode() === READER_LAYOUT_MODES.horizontal
+                ? { inline: 'start', block: 'nearest' }
+                : { block: 'start' }
+        );
 
         if (!numPages) return;
 
@@ -265,10 +282,46 @@ export function ReaderPage({
                 setCurrentPage(page);
                 prefetchAround(page);
             }
-        }, { threshold: [0.25, 0.5, 0.75] });
+        }, {
+            root: layoutMode() === READER_LAYOUT_MODES.horizontal ? $section : null,
+            threshold: [0.25, 0.5, 0.75]
+        });
 
         elements.forEach($page => observer!.observe($page));
 
+    }
+
+    const onPagesChange = ($section: HTMLElement) => {
+
+        viewer = $section;
+
+        const numPages = pages().length;
+        const savedPage = comicCache?.currentPage || 1;
+        const range = getWindowRange(numPages, savedPage);
+        const elements = [];
+
+        for (let i = 0; i < numPages; ++i) {
+            const $page = ImageElement({
+                uid, ind: i + 1, index: i + 1, total: numPages,
+                eager: !!range && i >= range.start && i <= range.end
+            });
+            elements.push($page);
+        }
+
+        $section.replaceChildren(...elements);
+
+        attachPageObserver($section);
+
+    }
+
+    const onViewerLayoutClassChange = ($section: HTMLElement) => {
+        $section.classList.toggle(styles.viewerDouble, layoutMode() === READER_LAYOUT_MODES.doubleVertical);
+        $section.classList.toggle(styles.viewerHorizontal, layoutMode() === READER_LAYOUT_MODES.horizontal);
+        if ($section.children.length) attachPageObserver($section);
+    }
+
+    const onPageLayoutClassChange = ($section: HTMLElement) => {
+        $section.classList.toggle(styles.pageHorizontal, layoutMode() === READER_LAYOUT_MODES.horizontal);
     }
 
     const onProgressChange = () => {
@@ -286,6 +339,7 @@ export function ReaderPage({
         onMount: [
             loadPages,
             () => DOCUMENT_TITLE_CONTEXT.setTitle('Reader'),
+            onPageLayoutClassChange,
             () => {
                 window.addEventListener('keydown', onKeydown);
                 return () => {
@@ -321,8 +375,10 @@ export function ReaderPage({
                 currentPage, subsCurrentPage,
                 pages, subsPages,
                 bookmarks, subsBookmarks,
+                layoutMode, subsLayoutMode,
                 goToPage,
-                goBack
+                goBack,
+                cycleLayoutMode
             }),
 
             ReaderPageProgressBar({
@@ -357,7 +413,7 @@ export function ReaderPage({
             UltraComponent({
                 component: '<section></section>',
                 className: [styles.viewer],
-                onMount: [onZoomChange],
+                onMount: [onZoomChange, onViewerLayoutClassChange],
                 trigger: [
                     {
                         subscriber: subsPages,
@@ -366,6 +422,10 @@ export function ReaderPage({
                     {
                         subscriber: subsZoom,
                         triggerFunction: onZoomChange
+                    },
+                    {
+                        subscriber: subsLayoutMode,
+                        triggerFunction: onViewerLayoutClassChange
                     }
                 ]
             })
@@ -377,6 +437,10 @@ export function ReaderPage({
                 subscriber: [subsPages, subsCurrentPage],
                 triggerFunction: onProgressChange,
                 defer: true
+            },
+            {
+                subscriber: subsLayoutMode,
+                triggerFunction: onPageLayoutClassChange
             }
         ]
 

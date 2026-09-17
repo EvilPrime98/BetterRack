@@ -1,9 +1,10 @@
 import { ultraCompState, type IUltraCompStateStateful } from "ultra-light-js";
-import type { TComicsTypes, TFilterOptions } from "../library.types";
+import type { TComicsTypes, TFilterOptions, TReaderLayoutMode } from "../library.types";
 
 export interface IUserPref {
     filter: TFilterOptions,
-    comicType: TComicsTypes; 
+    comicType: TComicsTypes;
+    readerLayout: TReaderLayoutMode;
 }
 
 export interface IUserPrefCtx {

@@ -1,9 +1,10 @@
 import { create } from 'zustand';
-import type { TComicsTypes, TFilterOptions } from '../library.types';
+import type { TComicsTypes, TFilterOptions, TReaderLayoutMode } from '../library.types';
 
 export interface IUserPref {
     filter: TFilterOptions;
     comicType: TComicsTypes;
+    readerLayout: TReaderLayoutMode;
 }
 
 interface IUserPrefStore {

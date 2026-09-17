@@ -1,7 +1,14 @@
 import { UltraComponent } from "ultra-light-js";
 import { ArrowLeftIcon } from "../../icons/arrow-left.icon";
-import type { IBookmark } from "../../library.types";
+import { ReaderLayoutIcon } from "../../icons/reader-layout.icon";
+import type { IBookmark, TReaderLayoutMode } from "../../library.types";
 import styles from '../../pages/reader.page.module.css'
+
+const LAYOUT_LABELS: Record<TReaderLayoutMode, string> = {
+    'single-vertical': 'Single page',
+    'double-vertical': 'Double page',
+    'horizontal': 'Horizontal'
+};
 
 export function ReaderPageHeader({
     currentPage,
@@ -10,8 +17,11 @@ export function ReaderPageHeader({
     subsPages,
     bookmarks,
     subsBookmarks,
+    layoutMode,
+    subsLayoutMode,
     goToPage,
-    goBack
+    goBack,
+    cycleLayoutMode
 }:{
     currentPage: () => number;
     subsCurrentPage: (fn: (value: number) => void) => () => void;
@@ -19,8 +29,11 @@ export function ReaderPageHeader({
     subsPages: (fn: (value: string[]) => void) => () => void;
     bookmarks: () => IBookmark[];
     subsBookmarks: (fn: (value: IBookmark[]) => void) => () => void;
+    layoutMode: () => TReaderLayoutMode;
+    subsLayoutMode: (fn: (value: TReaderLayoutMode) => void) => () => void;
     goToPage: (page: number) => void;
     goBack: () => void;
+    cycleLayoutMode: () => void;
 }) {
 
     const onCounterChange = ($el: HTMLElement) => {
@@ -57,6 +70,13 @@ export function ReaderPageHeader({
         $select.value = '';
     }
 
+    const onLayoutModeChange = ($button: HTMLElement) => {
+        const mode = layoutMode();
+        $button.innerHTML = ReaderLayoutIcon({ mode, size: 16 });
+        $button.setAttribute('aria-label', `Page layout: ${LAYOUT_LABELS[mode]}`);
+        $button.setAttribute('title', LAYOUT_LABELS[mode]);
+    }
+
     return UltraComponent({
         component: '<header></header>',
         className: [styles.toolbar],
@@ -74,6 +94,15 @@ export function ReaderPageHeader({
                 onMount: [renderBookmarks],
                 trigger: [
                     { subscriber: subsBookmarks, triggerFunction: renderBookmarks }
+                ]
+            }),
+            UltraComponent({
+                component: '<button type="button"></button>',
+                className: [styles.layoutToggle],
+                eventHandler: { click: cycleLayoutMode },
+                onMount: [onLayoutModeChange],
+                trigger: [
+                    { subscriber: subsLayoutMode, triggerFunction: onLayoutModeChange }
                 ]
             }),
             UltraComponent({

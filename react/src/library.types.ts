@@ -132,3 +132,11 @@ export const FILTER_OPTIONS = {
 } as const;
 
 export type TFilterOptions = typeof FILTER_OPTIONS[keyof typeof FILTER_OPTIONS];
+
+export const READER_LAYOUT_MODES = {
+    singleVertical: 'single-vertical',
+    doubleVertical: 'double-vertical',
+    horizontal: 'horizontal'
+} as const;
+
+export type TReaderLayoutMode = typeof READER_LAYOUT_MODES[keyof typeof READER_LAYOUT_MODES];

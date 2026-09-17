@@ -2,13 +2,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { API_URL, reader, readerBookmarks } from '@/services/library.service';
 import { withAuthQuery } from '@/services/server-config.service';
-import type { IBookmark } from '@/library.types';
+import { READER_LAYOUT_MODES, type IBookmark, type TReaderLayoutMode } from '@/library.types';
 import styles from './reader.page.module.css';
 import { ImageElement } from '@/components/reader-page-image/reader-page-image';
 import { ReaderPageHeader } from '@/components/reader-page-header/reader-page-header';
 import { ReaderPageProgressBar } from '@/components/reader-page-progress-bar/reader-page-progress-bar';
 import { useComicCacheStore } from '@/stores/comicCache.store';
 import { useDocumentTitleStore } from '@/stores/documentTitle.store';
+import { useUserPrefStore } from '@/stores/userPref.store';
 import { ReaderNext } from '@/components/reader-next/reader-next';
 
 const PRELOAD_WINDOW = 2;
@@ -16,6 +17,12 @@ const PRELOAD_WINDOW = 2;
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 3;
 const ZOOM_STEP = 0.1;
+
+const LAYOUT_MODE_ORDER: TReaderLayoutMode[] = [
+    READER_LAYOUT_MODES.singleVertical,
+    READER_LAYOUT_MODES.doubleVertical,
+    READER_LAYOUT_MODES.horizontal
+];
 
 const clampZoom = (value: number) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, +value.toFixed(2)));
 
@@ -56,6 +63,9 @@ export function ReaderPage() {
     const [zoom, setZoom] = useState(1);
     const [next, setNext] = useState(false);
     const [bookmarks, setBookmarks] = useState<IBookmark[]>([]);
+    const [layoutMode, setLayoutMode] = useState<TReaderLayoutMode>(
+        () => useUserPrefStore.getState().getPref('readerLayout') || READER_LAYOUT_MODES.singleVertical
+    );
 
     //refs
     const observerRef = useRef<IntersectionObserver | null>(null);
@@ -68,13 +78,25 @@ export function ReaderPage() {
 
     const goToPage = useCallback((page: number) => {
         const $page = viewerRef.current?.children[page - 1] as HTMLElement | undefined;
-        $page?.scrollIntoView({ block: 'start' });
-    }, []);
+        $page?.scrollIntoView(
+            layoutMode === READER_LAYOUT_MODES.horizontal
+                ? { inline: 'start', block: 'nearest' }
+                : { block: 'start' }
+        );
+    }, [layoutMode]);
 
     const goBack = useCallback(() => {
         if (window.history.length > 1) window.history.back();
         else navigate('/');
     }, [navigate]);
+
+    const cycleLayoutMode = useCallback(() => {
+        setLayoutMode((current) => {
+            const next = LAYOUT_MODE_ORDER[(LAYOUT_MODE_ORDER.indexOf(current) + 1) % LAYOUT_MODE_ORDER.length];
+            useUserPrefStore.getState().setPref({ readerLayout: next });
+            return next;
+        });
+    }, []);
 
     const loadPages = useCallback(async () => {
         if (!uid) return;
@@ -115,13 +137,17 @@ export function ReaderPage() {
     }, []);
 
     const onWheel = useCallback((e: React.WheelEvent) => {
-        if (!e.ctrlKey) return;
-        // hijack the browser/Electron ctrl+wheel 
-        // pinch-zoom and drive our own page zoom instead
-        e.preventDefault();
-        if (e.deltaY < 0) zoomIn();
-        else if (e.deltaY > 0) zoomOut();
-    }, [zoomIn, zoomOut]);
+        if (e.ctrlKey) {
+            e.preventDefault();
+            if (e.deltaY < 0) zoomIn();
+            else if (e.deltaY > 0) zoomOut();
+            return;
+        }
+        if (layoutMode === READER_LAYOUT_MODES.horizontal && viewerRef.current && e.deltaY !== 0) {
+            e.preventDefault();
+            viewerRef.current.scrollLeft += e.deltaY;
+        }
+    }, [layoutMode, zoomIn, zoomOut]);
 
     useEffect(() => {
         setTitle('Reader');
@@ -259,7 +285,11 @@ export function ReaderPage() {
         elements.forEach((el, i) => pageOf.set(el, i + 2));
 
         const targetEl = range ? elements[range.targetInd - 1] : undefined;
-        targetEl?.scrollIntoView({ block: 'start' });
+        targetEl?.scrollIntoView(
+            layoutMode === READER_LAYOUT_MODES.horizontal
+                ? { inline: 'start', block: 'nearest' }
+                : { block: 'start' }
+        );
 
         const observer = new IntersectionObserver((entries) => {
             const mostVisible = entries
@@ -268,14 +298,17 @@ export function ReaderPage() {
             if (!mostVisible) return;
             const page = pageOf.get(mostVisible.target as HTMLElement);
             if (page) setCurrentPage(page);
-        }, { threshold: [0.25, 0.5, 0.75] });
+        }, {
+            root: layoutMode === READER_LAYOUT_MODES.horizontal ? $section : null,
+            threshold: [0.25, 0.5, 0.75]
+        });
 
         elements.forEach($page => observer.observe($page));
         observerRef.current = observer;
 
         return () => observer.disconnect();
-        
-    }, [pages, uid]);
+
+    }, [pages, uid, layoutMode]);
 
     useEffect(() => {
         if (!uid || pages.length === 0) return;
@@ -297,10 +330,28 @@ export function ReaderPage() {
     const numPages = pages.length;
     const range = getWindowRange(numPages, currentPageRef.current);
 
-    return (
-        <section className={styles.page} onWheel={onWheel} ref={pageRef}>
+    const viewerClassName = [
+        styles.viewer,
+        layoutMode === READER_LAYOUT_MODES.doubleVertical ? styles.viewerDouble : '',
+        layoutMode === READER_LAYOUT_MODES.horizontal ? styles.viewerHorizontal : ''
+    ].filter(Boolean).join(' ');
 
-            <ReaderPageHeader currentPage={currentPage} totalPages={pages.length} bookmarks={bookmarks} goToPage={goToPage} goBack={goBack} />
+    return (
+        <section
+            className={`${styles.page} ${layoutMode === READER_LAYOUT_MODES.horizontal ? styles.pageHorizontal : ''}`}
+            onWheel={onWheel}
+            ref={pageRef}
+        >
+
+            <ReaderPageHeader
+                currentPage={currentPage}
+                totalPages={pages.length}
+                bookmarks={bookmarks}
+                layoutMode={layoutMode}
+                goToPage={goToPage}
+                goBack={goBack}
+                cycleLayoutMode={cycleLayoutMode}
+            />
 
             <ReaderPageProgressBar currentPage={currentPage} totalPages={pages.length} />
 
@@ -314,7 +365,7 @@ export function ReaderPage() {
                 <button type="button" className={styles.retry} onClick={loadPages}>Retry</button>
             </div>
 
-            <section className={styles.viewer} ref={viewerRef}>
+            <section className={viewerClassName} ref={viewerRef}>
                 {Array.from({ length: Math.max(0, numPages - 1) }, (_, i) => i + 1).map(i => (
                     <ImageElement
                         key={i}
