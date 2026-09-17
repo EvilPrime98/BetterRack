@@ -434,7 +434,7 @@
     .info {
         flex: 1;
         max-height: none;
-        min-height: 136px;
+        min-height: calc(136px + 15px);
         opacity: 1;
         margin-top: 8px;
         padding-top: 8px;
