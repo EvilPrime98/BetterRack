@@ -6,6 +6,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
+    align-self: start;
     width: 100%;
     max-width: 220px;
     margin-inline: auto;
@@ -13,13 +14,8 @@
     border-radius: 14px;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0));
     border: 1px solid rgba(255, 255, 255, 0);
-    transition: box-shadow 220ms ease;
-
-    /* @media (hover: hover) {
-        &:hover {
-            box-shadow: 0 8px 18px -14px rgba(0, 0, 0, 0.6);
-        }
-    } */
+    transition: box-shadow 220ms ease,
+    scale .25s ease-in-out;
 
     .cardLink {
         display: flex;
@@ -53,6 +49,11 @@
         svg {
             transition: transform 220ms ease;
         }
+
+        span {
+            text-transform: capitalize;
+        }
+
     }
 
     .basicFolderCard {
@@ -180,10 +181,6 @@
         display: none;
     }
 
-    &.hasStack .title {
-        opacity: 1;
-    }
-
     .folderActions {
         position: absolute;
         top: 6px;
@@ -210,6 +207,10 @@
 
     .folderActionButton svg {
         pointer-events: none;
+    }
+
+    &:active{
+        scale: .9;
     }
 
 }

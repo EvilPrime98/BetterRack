@@ -4,7 +4,7 @@ import styles from './folder-card.module.css';
 import { ChevronDownIcon } from "@/icons/chevron.icon";
 import { useComicsTypeStore } from "@/stores/comicsTypes.store";
 import { useLibraryStore } from "@/stores/library.store";
-import { FolderCardStack } from "./folder-card-stack";
+//import { FolderCardStack } from "./folder-card-stack";
 import { FolderCardBasic } from "./folder-card-basic";
 import { FolderCardActions } from './folder-card-actions';
 
@@ -40,7 +40,7 @@ export function FolderCard({
 
             <Link to={`/${uid}`} className={styles.cardLink}>
 
-                {   (stackCovers.length)
+                {/* {   (stackCovers.length)
                     ? <FolderCardStack
                         title={title}
                         stackCovers={stackCovers} 
@@ -48,7 +48,11 @@ export function FolderCard({
                     : <FolderCardBasic 
                         title={title} 
                     />
-                }
+                } */}
+
+                <FolderCardBasic
+                    title={title}
+                />
 
                 <div className={styles.body}>
                     <span className={styles.kind}>Folder</span>

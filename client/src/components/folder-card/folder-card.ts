@@ -3,7 +3,7 @@ import styles from './folder-card.module.css';
 import { ChevronDownIcon } from "@/icons/chevron.icon";
 import { COMICS_TYPE_CTX } from "@/context/comics-types.context";
 import { LIBRARY_CONTEXT } from "@/context/library.context";
-import { FolderCardStack } from "./folder-card-stack";
+//import { FolderCardStack } from "./folder-card-stack";
 import { FolderCardBasic } from "./folder-card-basic";
 import { FolderCardActions } from "./folder-card-actions";
 
@@ -54,9 +54,11 @@ export function FolderCard({
 
                 children: [
 
-                    (stackCovers.length)
+                    /* (stackCovers.length)
                     ? FolderCardStack({ title, stackCovers })
-                    : FolderCardBasic({ title }),
+                    : FolderCardBasic({ title }), */
+
+                    FolderCardBasic({ title }),
 
                     UltraComponent({
                         component: '<div></div>',
