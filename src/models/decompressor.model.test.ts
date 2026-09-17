@@ -22,6 +22,7 @@ const runSevenZip = async (args: string[]): Promise<void> => {
 let workDir: string;
 let sourceDir: string;
 let archivePath: string;
+let pagePaths: string[];
 
 beforeEach(async () => {
     workDir = await mkdtemp(path.join(tmpdir(), 'decompressor-test-'));
@@ -29,8 +30,14 @@ beforeEach(async () => {
     archivePath = path.join(workDir, 'comic.cbz');
 
     await mkdir(sourceDir, { recursive: true });
-    await writeFile(path.join(sourceDir, '001.jpg'), 'page-one');
-    await writeFile(path.join(sourceDir, '002.jpg'), 'page-two');
+    pagePaths = await Promise.all(
+        Array.from({ length: 23 }, async (_, index) => {
+            const pageNumber = String(index + 1).padStart(3, '0');
+            const pagePath = path.join(sourceDir, `${pageNumber}.jpg`);
+            await writeFile(pagePath, `page-${pageNumber}`);
+            return pagePath;
+        })
+    );
     await writeFile(
         path.join(sourceDir, 'ComicInfo.xml'),
         '<ComicInfo><Pages><Page Image="0" Bookmark="Cover" /></Pages></ComicInfo>'
@@ -39,8 +46,7 @@ beforeEach(async () => {
     await runSevenZip([
         'a',
         archivePath,
-        path.join(sourceDir, '001.jpg'),
-        path.join(sourceDir, '002.jpg'),
+        ...pagePaths,
         path.join(sourceDir, 'ComicInfo.xml')
     ]);
 
@@ -57,6 +63,15 @@ afterEach(async () => {
 });
 
 describe('Zip7Decompressor entry-list cache', () => {
+
+    test('lists every page in a 23-page archive', async () => {
+        const zip = new Zip7Decompressor();
+
+        const pages = await zip.listPages({ filePath: archivePath });
+
+        expect(pages).toHaveLength(23);
+        expect(pages.at(-1)).toBe('023.jpg');
+    });
 
     test('listPages spawns the listing process once across repeated calls on an unchanged file', async () => {
         const zip = new Zip7Decompressor();
@@ -76,13 +91,26 @@ describe('Zip7Decompressor entry-list cache', () => {
         const before = await zip.listPages({ filePath: archivePath });
         const spawnsAfterFirst = spawnCount;
 
-        await writeFile(path.join(sourceDir, '003.jpg'), 'page-three');
-        await runSevenZip(['a', archivePath, path.join(sourceDir, '003.jpg')]);
+        await writeFile(path.join(sourceDir, '024.jpg'), 'page-024');
+        await runSevenZip(['a', archivePath, path.join(sourceDir, '024.jpg')]);
 
         const after = await zip.listPages({ filePath: archivePath });
 
         expect(after.length).toBe(before.length + 1);
         expect(spawnCount).toBeGreaterThan(spawnsAfterFirst);
+    });
+
+    test('removes stale cache entries when an archive changes', async () => {
+        const zip = new Zip7Decompressor();
+
+        await zip.extractComicInfo({ filePath: archivePath });
+        await writeFile(path.join(sourceDir, '024.jpg'), 'page-024');
+        await runSevenZip(['a', archivePath, path.join(sourceDir, '024.jpg')]);
+
+        await zip.listPages({ filePath: archivePath });
+
+        expect((zip as any).entryListCache.size).toBe(1);
+        expect((zip as any).comicInfoCache.size).toBe(0);
     });
 
 });

@@ -56,6 +56,7 @@ export class Zip7Decompressor {
     private comicInfoModel: TComicInfoModel;
     private entryListCache = new Map<string, string[]>();
     private comicInfoCache = new Map<string, IComicInfoXML | null>();
+    private lastCacheKeyByPath = new Map<string, string>();
 
     constructor(overrides?: { //overrides for testing
         resolve7zPath?: () => string,
@@ -68,8 +69,19 @@ export class Zip7Decompressor {
     }
 
     private archiveCacheKey = (filePath: string): string => {
+
         const stat = statSync(filePath);
-        return `${filePath}:${stat.size}:${stat.mtimeMs}`;
+        const cacheKey = `${filePath}:${stat.size}:${stat.mtimeMs}`;
+
+        const previousCacheKey = this.lastCacheKeyByPath.get(filePath);
+        if (previousCacheKey !== undefined && previousCacheKey !== cacheKey) {
+            this.entryListCache.delete(previousCacheKey);
+            this.comicInfoCache.delete(previousCacheKey);
+        }
+        this.lastCacheKeyByPath.set(filePath, cacheKey);
+
+        return cacheKey;
+        
     };
 
     private getCached = <T>(cache: Map<string, T>, key: string): T | undefined => {
