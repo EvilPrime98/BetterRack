@@ -26,10 +26,10 @@ textarea,
     --sidebar-width: 280px;
     --accent: #34c3d1;
     --accent-soft: rgba(52, 195, 209, 0.35);
-    --bg-app: #2b2a2a;
+    --bg-app: oklab(0.298136 0.00109468 -0.00903396);
     --bg-canvas: #141414;
-    --bg-chrome: #0a0a0a;
-    --bg-panel: #202020;
+    --bg-chrome: oklab(0.32 0.00109468 -0.00903396);
+    --bg-panel: oklab(0.27 0.00109468 -0.00903396);
     --bg-modal: #1c1c1c;
     --border-subtle: rgba(255, 255, 255, 0.08);
     --scrollbar-thumb: #4a4a4a;
