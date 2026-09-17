@@ -162,18 +162,19 @@
 }
 
 .viewerDouble {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+    justify-items: center;
 }
 
 .viewerDouble .pageWrapper {
-    width: calc(50% - 3px);
+    width: 100%;
     max-width: calc(450px * var(--reader-zoom, 1));
 }
 
 .viewerDouble .pageWrapper:first-child {
-    width: 100%;
+    grid-column: span 2;
     max-width: calc(900px * var(--reader-zoom, 1));
 }
 
