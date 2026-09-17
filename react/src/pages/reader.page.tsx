@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { API_URL, reader, readerBookmarks, readerRefresh } from '@/services/library.service';
-import { withAuthQuery } from '@/services/server-config.service';
+import { isDesktopApp, withAuthQuery } from '@/services/server-config.service';
 import type { IBookmark } from '@/library.types';
 import styles from './reader.page.module.css';
 import { ImageElement } from '@/components/reader-page-image/reader-page-image';
@@ -132,6 +132,15 @@ export function ReaderPage() {
     
     const zoomReset = useCallback(() => {
         setZoom(1)
+    }, []);
+
+    const toggleFullscreen = useCallback(() => {
+        if (isDesktopApp()) {
+            window.desktop?.toggleFullscreen();
+            return;
+        }
+        if (document.fullscreenElement) document.exitFullscreen();
+        else document.documentElement.requestFullscreen();
     }, []);
 
     const onWheel = useCallback((e: React.WheelEvent) => {
@@ -334,7 +343,7 @@ export function ReaderPage() {
                 <button type="button" className={styles.retry} onClick={loadPages}>Retry</button>
             </div>
 
-            <section className={styles.viewer} ref={viewerRef}>
+            <section className={styles.viewer} ref={viewerRef} onDoubleClick={toggleFullscreen}>
                 {Array.from({ length: Math.max(0, numPages - 1) }, (_, i) => i + 1).map(i => (
                     <ImageElement
                         key={i}

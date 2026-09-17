@@ -14,6 +14,7 @@ declare global {
         };
         desktop?: {
             pickLibraryFolder(): Promise<string | null>;
+            toggleFullscreen(): Promise<void>;
         };
     }
 }

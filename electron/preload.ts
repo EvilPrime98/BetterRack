@@ -8,6 +8,13 @@ contextBridge.exposeInMainWorld("versions", {
 });
 
 contextBridge.exposeInMainWorld("desktop", {
-  pickLibraryFolder: (): Promise<string | null> =>
-    ipcRenderer.invoke("dialog:pick-folder"),
+
+  pickLibraryFolder: (): Promise<string | null> => {
+    return ipcRenderer.invoke("dialog:pick-folder")
+  },
+
+  toggleFullscreen: (): Promise<void> => {
+    return ipcRenderer.invoke("window:toggle-fullscreen")
+  }
+
 });

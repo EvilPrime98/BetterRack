@@ -154,6 +154,15 @@ export function ReaderPage({
     const zoomOut = () => setZoom(clampZoom(zoom() - ZOOM_STEP));
     const zoomReset = () => setZoom(1);
 
+    const toggleFullscreen = () => {
+        if (window.desktop?.toggleFullscreen) {
+            window.desktop.toggleFullscreen();
+            return;
+        }
+        if (document.fullscreenElement) document.exitFullscreen();
+        else document.documentElement.requestFullscreen();
+    }
+
     const pointerGap = () => {
         const points = [...activePointers.values()];
         if (points.length < 2) return 0;
@@ -381,6 +390,9 @@ export function ReaderPage({
                 component: '<section></section>',
                 className: [styles.viewer],
                 onMount: [onZoomChange],
+                eventHandler: {
+                    dblclick: toggleFullscreen
+                },
                 trigger: [
                     {
                         subscriber: subsPages,
