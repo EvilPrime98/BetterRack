@@ -109,8 +109,9 @@ describe('Zip7Decompressor entry-list cache', () => {
 
         await zip.listPages({ filePath: archivePath });
 
-        expect((zip as any).entryListCache.size).toBe(1);
-        expect((zip as any).comicInfoCache.size).toBe(0);
+        const internals = zip as unknown as { entryListCache: Map<string, unknown>; comicInfoCache: Map<string, unknown> };
+        expect(internals.entryListCache.size).toBe(1);
+        expect(internals.comicInfoCache.size).toBe(0);
     });
 
 });
