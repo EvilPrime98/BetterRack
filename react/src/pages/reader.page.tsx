@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { isDesktopApp } from '@/services/server-config.service';
 import styles from './reader.page.module.css';
@@ -30,6 +30,12 @@ export function ReaderPage() {
     const { onWheel } = useReaderZoom(pageRef, viewerRef);
     useReaderProgress(uid, pages, currentPage);
 
+    const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+
+    const toggleHeader = useCallback(() => {
+        setIsHeaderVisible(visible => !visible);
+    }, []);
+
     const toggleFullscreen = useCallback(() => {
         if (isDesktopApp()) {
             window.desktop?.toggleFullscreen();
@@ -52,8 +58,10 @@ export function ReaderPage() {
     return (
         <section className={styles.page} onWheel={onWheel} ref={pageRef}>
 
-            <ReaderPageHeader currentPage={currentPage} totalPages={pages.length} bookmarks={bookmarks} isRefreshing={isRefreshing} goToPage={goToPage} goBack={goBack} onRefresh={refreshComic} />
-            <ReaderPageProgressBar currentPage={currentPage} totalPages={pages.length} />
+            <div className={`${styles.headerOverlay} ${isHeaderVisible ? '' : styles.hidden}`}>
+                <ReaderPageHeader currentPage={currentPage} totalPages={pages.length} bookmarks={bookmarks} isRefreshing={isRefreshing} goToPage={goToPage} goBack={goBack} onRefresh={refreshComic} />
+                <ReaderPageProgressBar currentPage={currentPage} totalPages={pages.length} />
+            </div>
 
             <div className={styles.state} style={{ display: isLoading ? undefined : 'none' }}>
                 <div className={styles.spinner}></div>
@@ -65,7 +73,7 @@ export function ReaderPage() {
                 <button type="button" className={styles.retry} onClick={loadPages}>Retry</button>
             </div>
 
-            <section className={styles.viewer} ref={viewerRef} onDoubleClick={toggleFullscreen}>
+            <section className={styles.viewer} ref={viewerRef} onClick={toggleHeader} onDoubleClick={toggleFullscreen}>
                 {Array.from({ length: Math.max(0, numPages - 1) }, (_, i) => i + 1).map(i => (
                     <ImageElement
                         key={i}

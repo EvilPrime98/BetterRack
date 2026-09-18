@@ -6,10 +6,27 @@
     scrollbar-width: none;
     -ms-overflow-style: none;
     touch-action: pan-y;
+    /* reserves space for the fixed .headerOverlay */
+    padding-top: calc(var(--header-height) + 2px);
 }
 
 .page::-webkit-scrollbar {
     display: none;
+}
+
+.headerOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 3;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.headerOverlay.hidden {
+    opacity: 0;
+    transform: translateY(-8px);
+    pointer-events: none;
 }
 
 .toolbar {
@@ -22,10 +39,8 @@
     background-color: rgba(10, 10, 10, 0.94);
     padding: 10px 16px;
     border-bottom: 2px solid var(--accent);
-    position: sticky;
-    top: 0;
-    z-index: 3;
     -webkit-app-region: drag;
+    position: relative;
 }
 
 /* room for the 3 × 46px custom window controls pinned to the right edge */
@@ -163,12 +178,9 @@
 }
 
 .progressTrack {
-    position: sticky;
-    top: var(--header-height);
     height: 2px;
     width: 100%;
     background-color: rgba(255, 255, 255, 0.08);
-    z-index: 3;
 }
 
 .progressFill {

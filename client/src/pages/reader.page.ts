@@ -34,6 +34,7 @@ export function ReaderPage({
     const [zoom, setZoom, subsZoom] = ultraState(1);
     const [bookmarks, setBookmarks, subsBookmarks] = ultraState<IBookmark[]>([]);
     const [isRefreshing, setIsRefreshing, subsIsRefreshing] = ultraState(false);
+    const [isHeaderVisible, setIsHeaderVisible, subsIsHeaderVisible] = ultraState(true);
     let observer: IntersectionObserver | null = null;
     let viewer: HTMLElement | null = null;
 
@@ -153,6 +154,12 @@ export function ReaderPage({
     const zoomIn = () => setZoom(clampZoom(zoom() + ZOOM_STEP));
     const zoomOut = () => setZoom(clampZoom(zoom() - ZOOM_STEP));
     const zoomReset = () => setZoom(1);
+
+    const toggleHeader = () => setIsHeaderVisible(!isHeaderVisible());
+
+    const onHeaderVisibilityChange = ($header: HTMLElement) => {
+        $header.classList.toggle(styles.hidden, !isHeaderVisible());
+    }
 
     const toggleFullscreen = () => {
         if (window.desktop?.toggleFullscreen) {
@@ -347,19 +354,33 @@ export function ReaderPage({
 
         children: [
 
-            ReaderPageHeader({
-                currentPage, subsCurrentPage,
-                pages, subsPages,
-                bookmarks, subsBookmarks,
-                isRefreshing, subsIsRefreshing,
-                goToPage,
-                goBack,
-                onRefresh: refreshComic
-            }),
+            UltraComponent({
+                component: '<div></div>',
+                className: [styles.headerOverlay],
+                trigger: [
+                    {
+                        subscriber: subsIsHeaderVisible,
+                        triggerFunction: onHeaderVisibilityChange
+                    }
+                ],
+                children: [
 
-            ReaderPageProgressBar({
-                currentPage, subsCurrentPage,
-                pages, subsPages
+                    ReaderPageHeader({
+                        currentPage, subsCurrentPage,
+                        pages, subsPages,
+                        bookmarks, subsBookmarks,
+                        isRefreshing, subsIsRefreshing,
+                        goToPage,
+                        goBack,
+                        onRefresh: refreshComic
+                    }),
+
+                    ReaderPageProgressBar({
+                        currentPage, subsCurrentPage,
+                        pages, subsPages
+                    })
+
+                ]
             }),
 
             UltraActivity({
@@ -391,6 +412,7 @@ export function ReaderPage({
                 className: [styles.viewer],
                 onMount: [onZoomChange],
                 eventHandler: {
+                    click: toggleHeader,
                     dblclick: toggleFullscreen
                 },
                 trigger: [
