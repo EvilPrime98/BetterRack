@@ -1,5 +1,6 @@
 import { app, BrowserWindow, dialog } from "electron";
 import { spawn, type ChildProcess } from "node:child_process";
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import http from "node:http";
@@ -9,6 +10,7 @@ import { handleWindowOpen } from "./events/window-open.event";
 import { registerPickFolderHandler } from "./ipc/pick-folder.ipc";
 import { registerToggleFullscreenHandler } from "./ipc/toggle-fullscreen.ipc";
 import { APP_NAME } from "./app.config";
+import { createStartupLogger } from "./logger";
 
 function waitForServerPort(
   serverProcess: ChildProcess,
@@ -208,14 +210,30 @@ async function startDesktopApp() {
   registerPickFolderHandler();
   registerToggleFullscreenHandler();
 
+  const { log, filePath: logFilePath } = createStartupLogger(app.getPath("userData"));
+
   app.whenReady().then(async () => {
 
+    let stderrTail = "";
+
     try {
+
+      log(`Launching server (packaged=${app.isPackaged}, port=${PORT})`);
 
       if (app.isPackaged) {
 
         const resourcesPath = process.resourcesPath;
         const exePath = path.join(resourcesPath, "server", "run.exe");
+        const clientDistDir = path.join(resourcesPath, "client");
+        const nodePath = path.join(resourcesPath, "server", "vendor", "node_modules");
+
+        log(`Server executable: ${exePath}`);
+        log(`Client dist dir: ${clientDistDir}`);
+        log(`Working directory: ${app.getPath("userData")}`);
+
+        if (!fs.existsSync(exePath)) {
+          throw new Error(`Server executable not found at ${exePath}`);
+        }
 
         serverProcess = spawn(exePath, [], {
 
@@ -224,8 +242,8 @@ async function startDesktopApp() {
           env: {
             ...process.env,
             PORT,
-            CLIENT_DIST_DIR: path.join(resourcesPath, "client"),
-            NODE_PATH: path.join(resourcesPath, "server", "vendor", "node_modules"),
+            CLIENT_DIST_DIR: clientDistDir,
+            NODE_PATH: nodePath,
           },
 
         });
@@ -234,6 +252,8 @@ async function startDesktopApp() {
 
         const projectRoot = path.join(__dirname, "..");
 
+        log(`Dev command: bun run ./src/run.ts (cwd=${projectRoot})`);
+
         serverProcess = spawn("bun", ["run", "./src/run.ts"], {
           cwd: projectRoot,
           env: { ...process.env, PORT },
@@ -241,26 +261,41 @@ async function startDesktopApp() {
 
       }
 
+      log(`Server process spawned (pid=${serverProcess.pid})`);
+
       serverProcess.stdout?.on("data", (data) =>
-        console.log(`[server] ${data}`)
+        log(`[server:out] ${data.toString().trimEnd()}`)
       );
 
-      serverProcess.stderr?.on("data", (data) =>
-        console.error(`[server] ${data}`)
-      );
+      serverProcess.stderr?.on("data", (data) => {
+        const text = data.toString();
+        stderrTail = (stderrTail + text).slice(-4000);
+        log(`[server:err] ${text.trimEnd()}`);
+      });
 
       const port = await waitForServerPort(serverProcess);
+      log(`Server announced port ${port}`);
       serverUrl = `http://localhost:${port}/`;
       await waitForServer(`${serverUrl}healthz`, serverProcess);
+      log("Server responded to health check");
 
     } catch (e) {
 
+      const reason = e instanceof Error ? e.message : String(e);
+
+      const cause = /EADDRINUSE|address already in use/i.test(stderrTail)
+        ? `Port ${PORT} is already in use by another process. Close any other running instance of ${APP_NAME} and try again.`
+        : reason;
+
+      log(`Startup failed: ${reason}`);
+
+      const details = stderrTail.trim();
+
       dialog.showErrorBox(
         APP_NAME,
-        `Failed to start the server: ${e instanceof Error
-          ? e.message
-          : String(e)
-        }`
+        `Failed to start the server: ${cause}`
+        + (details ? `\n\nServer output:\n${details}` : "")
+        + `\n\nFull logs: ${logFilePath}`
       );
 
       app.quit();
