@@ -5,6 +5,7 @@ import { SettingsPage } from "./pages/settings.page";
 import { StorePage } from "./pages/store.page";
 import { StoreDownloadsPage } from "./pages/store-downloads.page";
 import { RecentPage } from "./pages/recent-page";
+import { ReadingPage } from "./pages/reading-page";
 import { COMIC_CACHE_CONTEXT } from "./context/comic-cache.context";
 import { USER_PREF } from "./context/user-pref-cache.context";
 import { COMICS_TYPE_CTX } from "./context/comics-types.context";
@@ -41,6 +42,7 @@ export function App() {
                 { path: '/store/downloads', component: () => StoreDownloadsPage() },
                 { path: '/store', component: () => StorePage() },
                 { path: '/new', component: () => RecentPage() },
+                { path: '/reading', component: () => ReadingPage() },
                 { path: '/:uid', component: ({ uid } = {}) => LibraryPage({ uid }) },
                 { path: '/*', component: () => LibraryPage({}) }
             )

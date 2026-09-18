@@ -26,10 +26,11 @@ export class ComicDataModel implements TComicDataModel {
                 rating INTEGER,
                 current_page INTEGER,
                 read_per REAL,
-                read INTEGER
+                read INTEGER,
+                last_read_at INTEGER
             )
         `);
-        for (const column of ['identified INTEGER', 'comic TEXT', 'meta_source TEXT']) {
+        for (const column of ['identified INTEGER', 'comic TEXT', 'meta_source TEXT', 'last_read_at INTEGER']) {
             try {
                 sqlite.run(`ALTER TABLE comic_data ADD COLUMN ${column}`);
             } catch {
@@ -51,6 +52,7 @@ export class ComicDataModel implements TComicDataModel {
         currentPage: row.currentPage ?? undefined,
         readPer: row.readPer ?? undefined,
         read: row.read === null ? undefined : Boolean(row.read),
+        lastReadAt: row.lastReadAt ?? undefined,
     });
 
     getAll = (): Record<string, TComicData> => {
@@ -69,6 +71,10 @@ export class ComicDataModel implements TComicDataModel {
         const existing = this.getByUid(uid);
         const merged: TComicData = { uid, ...existing, ...partial };
 
+        const progressChanged = merged.currentPage !== existing?.currentPage
+            || merged.readPer !== existing?.readPer;
+        merged.lastReadAt = progressChanged ? Date.now() : existing?.lastReadAt;
+
         this.db.insert(comicData)
             .values({
                 uid: merged.uid,
@@ -82,6 +88,7 @@ export class ComicDataModel implements TComicDataModel {
                 currentPage: merged.currentPage ?? null,
                 readPer: merged.readPer ?? null,
                 read: merged.read === undefined ? null : Number(merged.read),
+                lastReadAt: merged.lastReadAt ?? null,
             })
             .onConflictDoUpdate({
                 target: comicData.uid,
@@ -96,6 +103,7 @@ export class ComicDataModel implements TComicDataModel {
                     currentPage: merged.currentPage ?? null,
                     readPer: merged.readPer ?? null,
                     read: merged.read === undefined ? null : Number(merged.read),
+                    lastReadAt: merged.lastReadAt ?? null,
                 },
             })
             .run();

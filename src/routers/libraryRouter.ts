@@ -10,6 +10,7 @@ export function libraryRouter(
     app.get('/', (c) => cc.get(c));
     app.get('/index', (c) => cc.getIndex(c));
     app.get('/recent', (c) => cc.getRecent(c));
+    app.get('/reading', (c) => cc.getReading(c));
     app.get('/preferences/:uid', (c) => cc.getPreferences(c));
     app.on(['PATCH', 'PUT', 'POST'], '/preferences/:uid', (c) => cc.updatePreferences(c));
     app.get('/refresh', (c) => cc.refresh(c));

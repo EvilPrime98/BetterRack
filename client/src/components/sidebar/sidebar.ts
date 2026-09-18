@@ -13,6 +13,7 @@ import { GearIcon } from "../../icons/gear.icon";
 import { ShopIcon } from "../../icons/shop.icon";
 import { DownloadIcon } from "../../icons/download.icon";
 import { BookmarkIcon } from "../../icons/bookmark.icon";
+import { BookOpenIcon } from "../../icons/book-open.icon";
 
 export function SideBar() {
 
@@ -195,6 +196,15 @@ export function SideBar() {
                                 children: [
                                     BookmarkIcon({ size: 16 }),
                                     `<span>Recently added</span>`
+                                ]
+                            }),
+                            UltraLink({
+                                href: '/reading',
+                                className: [styles.item],
+                                eventHandler: { click: closeSidebar },
+                                children: [
+                                    BookOpenIcon({ size: 16 }),
+                                    `<span>Keep reading</span>`
                                 ]
                             })
                         ]

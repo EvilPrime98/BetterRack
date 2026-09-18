@@ -44,6 +44,11 @@ export interface IRecentlyAddedResponse {
     "generatedAt": number
 }
 
+export interface IReadingResponse {
+    "items": ILibraryResponseItem[],
+    "generatedAt": number
+}
+
 /** The look-back windows for the "recently added" view. The view sends `hours`
  *  as ?windowHours= to GET /api/library/recent. The server changes a missing or
  *  invalid value to 24. */
