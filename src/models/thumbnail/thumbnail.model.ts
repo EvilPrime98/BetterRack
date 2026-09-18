@@ -1,10 +1,20 @@
 import { existsSync } from "node:fs";
 import { mkdir, readdir, rm } from "node:fs/promises";
 import path from "node:path";
-import sharp from "sharp";
 import { createConcurrencyLimiter } from "#utils/concurrencyLimiter";
 import { EXTRACT_CONCURRENCY, RAW_EXTRACT_DIR, THUMBNAIL_CACHE_DIR, THUMBNAIL_QUALITY, THUMBNAIL_WIDTH } from "./constants";
 import type { TLogger, TCompressorModel } from "./types";
+
+const FALLBACK_FFMPEG_PATHS = process.platform === "win32"
+? [
+    "C:\\ffmpeg\\bin\\ffmpeg.exe",
+    "C:\\Program Files\\ffmpeg\\bin\\ffmpeg.exe"
+]
+: [
+    "/usr/bin/ffmpeg",
+    "/usr/local/bin/ffmpeg",
+    "/opt/homebrew/bin/ffmpeg"
+];
 
 export class ThumbnailModel {
 
@@ -70,6 +80,12 @@ export class ThumbnailModel {
 
     }
 
+    private resolveFfmpegPath = (): string => {
+        const bin = Bun.which("ffmpeg") ?? FALLBACK_FFMPEG_PATHS.find(existsSync);
+        if (!bin) throw new Error("ffmpeg executable not found. Install ffmpeg (https://ffmpeg.org/download.html) or add it to PATH.");
+        return bin;
+    };
+
     private optimize = async (
         uid: string,
         rawDir: string
@@ -87,10 +103,26 @@ export class ThumbnailModel {
         await mkdir(outDir, { recursive: true });
         const outPath = path.join(outDir, `${uid}.webp`);
 
-        await sharp(rawPath)
-            .resize(THUMBNAIL_WIDTH, undefined, { fit: 'inside', withoutEnlargement: true })
-            .webp({ quality: THUMBNAIL_QUALITY })
-            .toFile(outPath);
+        const proc = Bun.spawn([
+            this.resolveFfmpegPath(),
+            "-y",
+            "-i", rawPath,
+            "-vf", `scale='min(iw,${THUMBNAIL_WIDTH})':-1`,
+            "-c:v", "libwebp",
+            "-quality", String(THUMBNAIL_QUALITY),
+            "-frames:v", "1",
+            outPath
+        ], {
+            stdout: "ignore",
+            stderr: "pipe"
+        });
+
+        const errorOutput = await new Response(proc.stderr).text();
+        const exitCode = await proc.exited;
+
+        if (exitCode !== 0) {
+            throw new Error(`Thumbnail encoding failed with code ${exitCode}${errorOutput.trim() ? `: ${errorOutput.trim()}` : ''}`);
+        }
 
         this.resolved.set(uid, outPath);
 
