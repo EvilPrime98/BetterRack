@@ -2,6 +2,7 @@ import styles from '../../pages/reader.page.module.css';
 import { ArrowLeftIcon } from '../../icons/arrow-left.icon';
 import { RefreshIcon } from '../../icons/refresh-icon';
 import type { IBookmark } from '../../library.types';
+import { WindowControls } from '../window-controls/window-controls';
 
 export function ReaderPageHeader({
     currentPage,
@@ -51,6 +52,9 @@ export function ReaderPageHeader({
             >
                 <RefreshIcon size={16} />
             </button>
+            <div className={styles.windowControls}>
+                <WindowControls />
+            </div>
         </header>
     );
 

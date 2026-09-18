@@ -25,6 +25,12 @@
     padding: 8px 20px;
 }
 
+.windowControls {
+    grid-column: 3;
+    justify-self: end;
+    align-self: stretch;
+}
+
 .burger {
     grid-column: 1;
     justify-self: start;

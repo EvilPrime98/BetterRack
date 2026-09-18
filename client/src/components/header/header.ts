@@ -5,6 +5,7 @@ import { VIEWPORT_CONTEXT } from "@/context/viewport.context";
 import { BurgerIcon } from "@/icons/burger-icon";
 import { BetterRackIcon } from "@/icons/better-rack.icon";
 import { LIBRARY_CONTEXT } from "@/context/library.context";
+import { WindowControls } from "@/components/window-controls/window-controls";
 
 export function Header() {
 
@@ -98,6 +99,12 @@ export function Header() {
 
                 ]
 
+            }),
+
+            UltraComponent({
+                component: '<div></div>',
+                className: [styles.windowControls],
+                children: [WindowControls()]
             }),
 
             // UltraComponent({

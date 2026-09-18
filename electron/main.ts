@@ -4,11 +4,13 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import http from "node:http";
-import { createBrowserWindowConfig, titleBarOverlay } from "./window.config";
+import { createBrowserWindowConfig } from "./window.config";
 import { createBeforeInputHandler } from "./events/before-input.event";
 import { handleWindowOpen } from "./events/window-open.event";
 import { registerPickFolderHandler } from "./ipc/pick-folder.ipc";
 import { registerToggleFullscreenHandler } from "./ipc/toggle-fullscreen.ipc";
+import { registerWindowControlsHandlers } from "./ipc/window-controls.ipc";
+import { bindMaximizeChangeEvents } from "./events/maximize-change.event";
 import { APP_NAME } from "./app.config";
 import { createStartupLogger } from "./logger";
 
@@ -195,9 +197,7 @@ async function startDesktopApp() {
 
     win.webContents.on("before-input-event", createBeforeInputHandler({ win, isMac }));
 
-    if (!isMac) {
-      win.on("leave-full-screen", () => win.setTitleBarOverlay(titleBarOverlay));
-    }
+    bindMaximizeChangeEvents(win);
 
     win.webContents.setWindowOpenHandler(handleWindowOpen);
 
@@ -209,6 +209,7 @@ async function startDesktopApp() {
 
   registerPickFolderHandler();
   registerToggleFullscreenHandler();
+  registerWindowControlsHandlers();
 
   const { log, filePath: logFilePath } = createStartupLogger(app.getPath("userData"));
 

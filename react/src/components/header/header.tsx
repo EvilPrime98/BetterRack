@@ -5,6 +5,7 @@ import { useIsDesktop } from '@/hooks/useIsDesktop';
 import { BurgerIcon } from '@/icons/burger-icon';
 import { BetterRackIcon } from '@/icons/better-rack.icon';
 import { useLibraryStore } from '@/stores/library.store';
+import { WindowControls } from '@/components/window-controls/window-controls';
 
 export function Header() {
 
@@ -85,6 +86,10 @@ export function Header() {
                     </div>
 
                 </div>
+            </div>
+
+            <div className={styles.windowControls}>
+                <WindowControls />
             </div>
 
         </header>

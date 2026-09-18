@@ -28,9 +28,17 @@
     -webkit-app-region: drag;
 }
 
+/* room for the 3 × 46px custom window controls pinned to the right edge */
 :root[data-platform="win32"] .toolbar,
 :root[data-platform="linux"] .toolbar {
-    padding-right: 140px;
+    padding-right: 154px;
+}
+
+.windowControls {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
 }
 
 :root[data-platform="darwin"] .toolbar {

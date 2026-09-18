@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from "electron";
+import { contextBridge, ipcRenderer, type IpcRendererEvent } from "electron";
 
 contextBridge.exposeInMainWorld("versions", {
   chrome: process.versions.chrome,
@@ -15,6 +15,28 @@ contextBridge.exposeInMainWorld("desktop", {
 
   toggleFullscreen: (): Promise<void> => {
     return ipcRenderer.invoke("window:toggle-fullscreen")
+  },
+
+  minimizeWindow: (): Promise<void> => {
+    return ipcRenderer.invoke("window:minimize")
+  },
+
+  toggleMaximizeWindow: (): Promise<void> => {
+    return ipcRenderer.invoke("window:toggle-maximize")
+  },
+
+  closeWindow: (): Promise<void> => {
+    return ipcRenderer.invoke("window:close")
+  },
+
+  isWindowMaximized: (): Promise<boolean> => {
+    return ipcRenderer.invoke("window:is-maximized")
+  },
+
+  onMaximizedChange: (callback: (isMaximized: boolean) => void): (() => void) => {
+    const listener = (_event: IpcRendererEvent, isMaximized: boolean) => callback(isMaximized);
+    ipcRenderer.on("window:maximized-changed", listener);
+    return () => ipcRenderer.removeListener("window:maximized-changed", listener);
   }
 
 });

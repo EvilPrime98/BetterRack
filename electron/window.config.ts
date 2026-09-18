@@ -1,11 +1,5 @@
 const WINDOW_TITLE_BG = "#313238"; // <client>/main.css -> --bg-chrome
 
-export const titleBarOverlay = {
-    color: WINDOW_TITLE_BG,
-    symbolColor: "#ffffff",
-    height: 54,
-};
-
 export const createBrowserWindowConfig = ({
     app,
     appName,
@@ -36,9 +30,9 @@ export const createBrowserWindowConfig = ({
 
     backgroundColor: WINDOW_TITLE_BG,
 
-    titleBarStyle: isMac ? "hiddenInset" : "hidden",
-
-    ...(isMac ? {} : { titleBarOverlay }),
+    // win32/linux: frameless, the renderer draws its own window controls.
+    // macOS keeps the native traffic lights.
+    ...(isMac ? { titleBarStyle: "hiddenInset" as const } : { frame: false }),
 
     webPreferences: {
         preload: preloadPath

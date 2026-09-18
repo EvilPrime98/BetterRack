@@ -15,6 +15,11 @@ declare global {
         desktop?: {
             pickLibraryFolder(): Promise<string | null>;
             toggleFullscreen(): Promise<void>;
+            minimizeWindow(): Promise<void>;
+            toggleMaximizeWindow(): Promise<void>;
+            closeWindow(): Promise<void>;
+            isWindowMaximized(): Promise<boolean>;
+            onMaximizedChange(callback: (isMaximized: boolean) => void): () => void;
         };
     }
 }
