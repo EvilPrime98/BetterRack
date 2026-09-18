@@ -13,6 +13,7 @@ import { GearIcon } from '@/icons/gear.icon';
 import { ShopIcon } from '@/icons/shop.icon';
 import { DownloadIcon } from '@/icons/download.icon';
 import { BookmarkIcon } from '@/icons/bookmark.icon';
+import { BookOpenIcon } from '@/icons/book-open.icon';
 
 export function SideBar() {
 
@@ -108,6 +109,10 @@ export function SideBar() {
                     <Link to="/new" className={styles.item} onClick={closeSidebar}>
                         <BookmarkIcon size={16} />
                         <span>Recently added</span>
+                    </Link>
+                    <Link to="/reading" className={styles.item} onClick={closeSidebar}>
+                        <BookOpenIcon size={16} />
+                        <span>Keep reading</span>
                     </Link>
                 </div>
 

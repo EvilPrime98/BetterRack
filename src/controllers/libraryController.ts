@@ -84,6 +84,13 @@ export class libraryController{
         return c.json(recent, 200);
     }
 
+    public async getReading(
+        c: Context
+    ) {
+        await this.libModel.ready;
+        return c.json(this.libModel.getReading(), 200);
+    }
+
     public async refresh(
         c: Context
     ){

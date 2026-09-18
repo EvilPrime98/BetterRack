@@ -118,6 +118,11 @@ export type TRecentlyAddedResponse = {
     generatedAt: number;
 }
 
+export type TReadingResponse = {
+    items: TLibraryEntry[];
+    generatedAt: number;
+}
+
 export type TLibraryModel = {
     /** Resolves once the filesystem scan has completed. Wiki identification is on demand and never blocks this. */
     ready: Promise<void>,
@@ -130,6 +135,7 @@ export type TLibraryModel = {
     getLibraryPage: (options?: { limit?: number; offset?: number }) => TLibraryPage,
     /** A flat list of file entries, newest first, whose `createdAt` is inside the look-back window. `windowHours` defaults to 24. */
     getRecentlyAdded: (options?: { windowHours?: number; nowMs?: number }) => TRecentlyAddedResponse,
+    getReading: () => TReadingResponse,
     getPreferences: (uid: string) => TLibraryPref | undefined,
     updatePreferences: (uid: string, updates: Partial<Omit<TLibraryPref, 'uid'>>) => Promise<void>,
     refresh: () => Promise<void>,
@@ -197,6 +203,7 @@ export type TComicData = {
     currentPage?: number;
     readPer?: number;
     read?: boolean;
+    lastReadAt?: number;
 }
 
 export type TComicDataModel = {

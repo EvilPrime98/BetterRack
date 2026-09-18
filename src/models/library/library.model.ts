@@ -12,6 +12,7 @@ import type {
     TLibraryPage,
     TLibraryPref,
     TPreferencesModel,
+    TReadingResponse,
     TRecentlyAddedResponse,
     TWikiModel,
     TZipModel
@@ -386,6 +387,26 @@ export class LibraryModel {
         .sort((a, b) => b.createdAt! - a.createdAt!);
 
         return { items, windowHours, generatedAt: nowMs };
+
+    }
+
+    private isInProgress = (
+        data: TComicData | undefined
+    ) => {
+        const readPer = data?.readPer ?? 0;
+        return data?.read !== true && readPer > 0 && readPer < 100;
+    }
+
+    getReading = (): TReadingResponse => {
+
+        const stored = this.comicDataModel.getAll();
+        const lastReadAt = (entry: TLibraryEntry) => stored[entry.uid]?.lastReadAt ?? 0;
+
+        const items = this.resolveInheritance()
+        .filter(entry => !entry.did && this.isInProgress(stored[entry.uid]))
+        .sort((a, b) => lastReadAt(b) - lastReadAt(a) || a.name.localeCompare(b.name));
+
+        return { items, generatedAt: Date.now() };
 
     }
 

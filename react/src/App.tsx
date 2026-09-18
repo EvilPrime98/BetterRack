@@ -16,6 +16,7 @@ import { StorePage } from '@/pages/store.page';
 import { StoreDownloadsPage } from '@/pages/store-downloads.page';
 import { FilterPage } from '@/pages/filtered-page';
 import { RecentPage } from '@/pages/recent-page';
+import { ReadingPage } from '@/pages/reading-page';
 import { DetailsPage } from './pages/details-page';
 
 // Keying by uid forces ReaderPage to fully unmount/remount when navigating
@@ -66,6 +67,7 @@ export function App() {
                     <Route path="/store" element={<StorePage />} />
                     <Route path="/filters" element={<FilterPage />} />
                     <Route path="/new" element={<RecentPage />} />
+                    <Route path="/reading" element={<ReadingPage />} />
                     <Route path="/:uid" element={<LibraryPage />} />
                     <Route path="*" element={<LibraryPage />} />
                 </Routes>

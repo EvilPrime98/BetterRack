@@ -24,6 +24,7 @@ export const comicData = sqliteTable('comic_data', {
     currentPage: integer('current_page'),
     readPer: real('read_per'),
     read: integer('read'),
+    lastReadAt: integer('last_read_at'),
 });
 
 export const downloadJobs = sqliteTable('download_jobs', {
