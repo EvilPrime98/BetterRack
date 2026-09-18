@@ -1,7 +1,6 @@
 import { API_URL } from "./library.service";
 import { authHeaders, withAuthQuery } from "./server-config.service";
 import type { IStoreLink, IStorePost, TStoreProgressEvent, TStoreStrat } from "../store.types";
-import { POLL_INTERVAL_MS } from "@/data";
 
 async function parseJsonResponse<T>(response: Response): Promise<T> {
     const data = await response.json();
@@ -98,12 +97,6 @@ export type TJobStatus = {
     progress?: TStoreProgressEvent;
 };
 
-export async function getResourceJob(id: number): Promise<TJobStatus | null> {
-    const response = await fetch(`${API_URL}/api/downloads/resource/${id}`, { headers: authHeaders() });
-    const data = await parseJsonResponse<{ error: boolean; job: TJobStatus | null }>(response);
-    return data.job;
-}
-
 export async function getDownloadJobs(): Promise<TJobStatus[]> {
     const response = await fetch(`${API_URL}/api/downloads/jobs`, { headers: authHeaders() });
     const data = await parseJsonResponse<{ error: boolean; jobs: TJobStatus[] }>(response);
@@ -118,88 +111,26 @@ export async function retryDownloadJob(jobId: string): Promise<{ jobId: string; 
     return parseJsonResponse<{ error: boolean; jobId: string; state: string }>(response);
 }
 
-const MAX_POLL_RETRIES = 3;
-
-const POLL_RETRY_BACKOFF_MS = 2000;
-
-const POLL_RETRY_BACKOFF_CAP_MS = 30_000;
-
-export async function pollJobStatus(
-    jobId: string,
-    title: string,
-    onProgress: (event: TStoreProgressEvent) => void
-): Promise<void> {
-
-    return new Promise((resolve, reject) => {
-
-        let retryAttempt = 0;
-
-        const poll = async () => {
-            try {
-
-                const res = await fetch(`${API_URL}/api/downloads/${jobId}`, { headers: authHeaders() });
-                const { state, progress } = await parseJsonResponse<{
-                    error: boolean;
-                    state: string;
-                    progress?: TStoreProgressEvent;
-                }>(res);
-
-                retryAttempt = 0;
-
-                if (progress) onProgress(progress);
-
-                if (state === 'done') {
-                    resolve();
-                } else if (state === 'error') {
-                    reject(new Error(progress?.type === 'error' ? progress.message : 'Download failed.'));
-                } else {
-                    setTimeout(poll, POLL_INTERVAL_MS);
-                }
-
-            } catch {
-
-                if (retryAttempt >= MAX_POLL_RETRIES) {
-                    reject(new Error('Lost connection to the server while downloading.'));
-                    return;
-                }
-
-                retryAttempt += 1;
-                const backoff = Math.min(2 ** retryAttempt * POLL_RETRY_BACKOFF_MS, POLL_RETRY_BACKOFF_CAP_MS);
-                onProgress({ type: 'retrying', title, reason: 'network', delaySec: Math.round(backoff / 1000) });
-                setTimeout(poll, backoff);
-
-            }
-        };
-
-        poll();
-
-    });
-
-}
-
-export async function downloadComicPolling({
+export async function startDownloadJob({
     id,
     title,
     uuid,
     outputDir,
-    strat,
-    onProgress
+    strat
 }: {
     id: number;
     title: string;
     uuid: string;
     outputDir: string;
     strat?: TStoreStrat;
-    onProgress: (event: TStoreProgressEvent) => void;
-}): Promise<void> {
+}): Promise<{ jobId: string; state: string }> {
 
     const response = await fetch(`${API_URL}/api/downloads`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ id, title, uuid, outputDir, strat })
     });
-    const { jobId } = await parseJsonResponse<{ error: boolean; jobId: string; state: string }>(response);
 
-    return pollJobStatus(jobId, title, onProgress);
+    return parseJsonResponse<{ error: boolean; jobId: string; state: string }>(response);
 
 }

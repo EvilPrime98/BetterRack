@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Layout } from '@/layout';
 import { getDownloadJobs, retryDownloadJob, type TJobStatus } from '@/services/store.service';
 import { useDocumentTitleStore } from '@/stores/documentTitle.store';
+import { useLibraryStore } from '@/stores/library.store';
+import { toast } from '@/services/toast.service';
 import { POLL_INTERVAL_MS } from '@/data';
 import type { TStoreProgressEvent } from '@/store.types';
 import styles from './store-downloads.page.module.css';
@@ -42,6 +44,25 @@ function detailFor(progress?: TStoreProgressEvent): string {
         case 'error':
             return progress.message;
     }
+}
+
+type TJobStates = Map<string, TJobStatus['state']>;
+
+function stateByJobId(jobs: TJobStatus[]): TJobStates {
+    return new Map(jobs.map((job) => [job.jobId, job.state]));
+}
+
+function findNewlyDone(previous: TJobStates, jobs: TJobStatus[]): TJobStatus[] {
+    return jobs.filter((job) => {
+        const before = previous.get(job.jobId);
+        return job.state === 'done' && before !== undefined && before !== 'done';
+    });
+}
+
+async function notifyFinished(finished: TJobStatus[]) {
+    if (finished.length === 0) return;
+    finished.forEach((job) => toast.success(`${job.label} downloaded`));
+    await useLibraryStore.getState().refreshLibrary({ silent: true });
 }
 
 function JobRow({ job, onRetry, retrying }: { job: TJobStatus; onRetry: (jobId: string) => void; retrying: boolean }) {
@@ -99,13 +120,17 @@ export function StoreDownloadsPage() {
     useEffect(() => {
 
         let active = true;
+        let previousStates: TJobStates = new Map();
 
         async function load() {
             try {
                 const next = await getDownloadJobs();
                 if (!active) return;
+                const finished = findNewlyDone(previousStates, next);
+                previousStates = stateByJobId(next);
                 setJobs(next);
                 setError('');
+                notifyFinished(finished);
             } catch (e) {
                 if (!active) return;
                 setError(e instanceof Error ? e.message : 'Failed to load download jobs.');

@@ -8,6 +8,8 @@ import styles from './store-downloads.page.module.css';
 import { Layout } from "../layout";
 import { getDownloadJobs, retryDownloadJob, type TJobStatus } from "@/services/store.service";
 import { DOCUMENT_TITLE_CONTEXT } from "../context/document-title.context";
+import { LIBRARY_CONTEXT } from "../context/library.context";
+import { toast } from "@/services/toast.service";
 import { POLL_INTERVAL_MS } from "@/data";
 import type { TStoreProgressEvent } from "../store.types";
 
@@ -59,6 +61,25 @@ function detailFor(job: TJobStatus): string {
     }
 }
 
+type TJobStates = Map<string, TJobStatus['state']>;
+
+function stateByJobId(jobs: TJobStatus[]): TJobStates {
+    return new Map(jobs.map((job) => [job.jobId, job.state]));
+}
+
+function findNewlyDone(previous: TJobStates, jobs: TJobStatus[]): TJobStatus[] {
+    return jobs.filter((job) => {
+        const before = previous.get(job.jobId);
+        return job.state === 'done' && before !== undefined && before !== 'done';
+    });
+}
+
+async function notifyFinished(finished: TJobStatus[]) {
+    if (finished.length === 0) return;
+    finished.forEach((job) => toast.success(`${job.label} downloaded`));
+    await LIBRARY_CONTEXT.refreshLibrary({ silent: true });
+}
+
 function JobRow(job: TJobStatus, retryingIds: Set<string>): string {
     const state = job.state;
     const percent = percentFor(job.progress);
@@ -88,6 +109,8 @@ function JobRow(job: TJobStatus, retryingIds: Set<string>): string {
 
 export function StoreDownloadsPage() {
 
+    let previousStates: TJobStates = new Map();
+
     const store: IStoreDownloadsState = ultraCompState({
 
         jobs: [] as TJobStatus[],
@@ -98,8 +121,11 @@ export function StoreDownloadsPage() {
         load: async (comp: IStoreDownloadsState) => {
             try {
                 const jobs = await getDownloadJobs();
+                const finished = findNewlyDone(previousStates, jobs);
+                previousStates = stateByJobId(jobs);
                 comp.jobs.set(jobs);
                 comp.error.set('');
+                notifyFinished(finished);
             } catch (e) {
                 comp.error.set(e instanceof Error ? e.message : 'Failed to load download jobs.');
             } finally {
