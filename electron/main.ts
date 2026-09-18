@@ -1,8 +1,14 @@
-import { app, BrowserWindow, dialog, ipcMain, shell } from "electron";
+import { app, BrowserWindow, dialog } from "electron";
 import { spawn, type ChildProcess } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import http from "node:http";
+import { createBrowserWindowConfig, titleBarOverlay } from "./window.config";
+import { createBeforeInputHandler } from "./events/before-input.event";
+import { handleWindowOpen } from "./events/window-open.event";
+import { registerPickFolderHandler } from "./ipc/pick-folder.ipc";
+import { registerToggleFullscreenHandler } from "./ipc/toggle-fullscreen.ipc";
+import { APP_NAME } from "./app.config";
 
 function waitForServerPort(
   serverProcess: ChildProcess,
@@ -152,8 +158,6 @@ function waitForServer(
 
 }
 
-const APP_NAME = "Better Rack";
-
 async function startDesktopApp() {
 
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -176,65 +180,24 @@ async function startDesktopApp() {
 
     const isMac = process.platform === "darwin";
 
-    const titleBarOverlay = {
-      color: "#0a0a0a",
-      symbolColor: "#ffffff",
-      height: 54,
-    };
-
-    const win = new BrowserWindow({
-      width: 1240,
-      height: 950,
-      minWidth: 900,
-      minHeight: 600,
-      title: APP_NAME,
-      ...(app.isPackaged ? {} : { icon: iconPath }),
-      show: false,
-      backgroundColor: "#0a0a0a",
-      titleBarStyle: isMac ? "hiddenInset" : "hidden",
-      ...(isMac ? {} : { titleBarOverlay }),
-      webPreferences: {
-        preload: path.join(__dirname, "preload.cjs"),
-      },
-    });
+    const win = new BrowserWindow(createBrowserWindowConfig({
+      app: app,
+      appName: APP_NAME,
+      iconPath: iconPath,
+      isMac: isMac,
+      preloadPath: path.join(__dirname, "preload.cjs")
+    }))
 
     win.loadURL(serverUrl);
     win.setMenu(null);
 
-    win.webContents.on("before-input-event", (event, input) => {
-
-      if (input.type !== "keyDown") return;
-
-      const isF11 = input.key === "F11";
-      const isMacFullscreen =
-        isMac && input.meta && input.control && input.key.toLowerCase() === "f";
-
-      if (isF11 || isMacFullscreen) {
-        event.preventDefault();
-        win.setFullScreen(!win.isFullScreen());
-        return;
-      }
-
-      const isDevToolsShortcut = input.key === "F12" ||
-        (isMac
-          ? input.meta && input.alt && input.key.toLowerCase() === "i"
-          : input.control && input.shift && input.key.toLowerCase() === "i");
-
-      if (isDevToolsShortcut) {
-        event.preventDefault();
-        win.webContents.toggleDevTools();
-      }
-
-    });
+    win.webContents.on("before-input-event", createBeforeInputHandler({ win, isMac }));
 
     if (!isMac) {
       win.on("leave-full-screen", () => win.setTitleBarOverlay(titleBarOverlay));
     }
 
-    win.webContents.setWindowOpenHandler(({ url }) => {
-      shell.openExternal(url);
-      return { action: "deny" };
-    });
+    win.webContents.setWindowOpenHandler(handleWindowOpen);
 
     win.once("ready-to-show", () => {
       win.show();
@@ -242,29 +205,8 @@ async function startDesktopApp() {
 
   }
 
-  ipcMain.handle("dialog:pick-folder", async (event) => {
-
-    const win = BrowserWindow.fromWebContents(event.sender);
-
-    const options: Electron.OpenDialogOptions = {
-      title: "Select library folder",
-      properties: ["openDirectory"],
-    };
-
-    const { canceled, filePaths } = win
-      ? await dialog.showOpenDialog(win, options)
-      : await dialog.showOpenDialog(options);
-
-    return canceled || filePaths.length === 0 ? null : filePaths[0];
-
-  });
-
-  ipcMain.handle("window:toggle-fullscreen", (event) => {
-
-    const win = BrowserWindow.fromWebContents(event.sender);
-    win?.setFullScreen(!win.isFullScreen());
-
-  });
+  registerPickFolderHandler();
+  registerToggleFullscreenHandler();
 
   app.whenReady().then(async () => {
 
