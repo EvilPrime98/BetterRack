@@ -24,8 +24,6 @@ export type TStoreProgressEvent =
 export type TCardState =
 | { status: 'idle' }
 | { status: 'links-loading' }
-| { status: 'downloading'; title: string; percent: number }
-| { status: 'done'; folderUid?: string }
 | { status: 'error'; message: string };
 
 export const STRAT = 'all';
