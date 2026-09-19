@@ -53,6 +53,12 @@ export function setRemoteServer(rawUrl: string, apiKey: string): void {
     else localStorage.removeItem(API_KEY_STORAGE_KEY);
 }
 
+export function clearRemoteServer(): void {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(REMOTE_MODE_KEY);
+    localStorage.removeItem(API_KEY_STORAGE_KEY);
+}
+
 function resolveInitialApiUrl(): string {
     if (isAndroidPlatform() || isRemoteModeEnabled()) return getStoredServerUrl();
     return import.meta.env.VITE_API_URL ?? '';

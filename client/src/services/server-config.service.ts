@@ -16,6 +16,10 @@ export function hasNativeFolderPicker(): boolean {
     return typeof window.desktop?.pickLibraryFolder === 'function' && !isRemoteModeEnabled();
 }
 
+export function isDesktopApp(): boolean {
+    return typeof window.desktop?.pickLibraryFolder === 'function';
+}
+
 export function getStoredServerUrl(): string {
     return localStorage.getItem(STORAGE_KEY) ?? '';
 }
@@ -46,6 +50,12 @@ export function setRemoteServer(rawUrl: string, apiKey: string): void {
     localStorage.setItem(REMOTE_MODE_KEY, '1');
     if (apiKey) localStorage.setItem(API_KEY_STORAGE_KEY, apiKey);
     else localStorage.removeItem(API_KEY_STORAGE_KEY);
+}
+
+export function clearRemoteServer(): void {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(REMOTE_MODE_KEY);
+    localStorage.removeItem(API_KEY_STORAGE_KEY);
 }
 
 function resolveInitialApiUrl(): string {

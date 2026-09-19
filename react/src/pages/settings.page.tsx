@@ -8,7 +8,7 @@ import { LibraryFolderRow } from '@/components/library-folder-row/library-folder
 import { toast } from '@/services/toast.service';
 import { useDocumentTitleStore } from '@/stores/documentTitle.store';
 import { BRButton } from '@/components/br-button/br-button';
-import { getStoredServerUrl, hasNativeFolderPicker } from '@/services/server-config.service';
+import { clearRemoteServer, getStoredServerUrl, hasNativeFolderPicker, isDesktopApp, isRemoteModeEnabled } from '@/services/server-config.service';
 import { useLibraryStore } from '@/stores/library.store';
 import { useServerModalStore } from '@/stores/serverModal.store';
 import { useConfirmModalStore } from '@/stores/confirmModal.store';
@@ -93,6 +93,17 @@ export function SettingsPage() {
         useLibraryStore.getState().reidentifyAll();
     }
 
+    async function onUnlinkServer() {
+        const confirmed = await useConfirmModalStore.getState().confirmDialog({
+            title: 'Unlink from remote server?',
+            message: 'The app will disconnect from the remote server and go back to your local library.',
+            confirmLabel: 'Unlink'
+        });
+        if (!confirmed) return;
+        clearRemoteServer();
+        window.location.reload();
+    }
+
     async function onSave() {
 
         const partial: Partial<Omit<IAppSettings, 'outputDirs'>> = { ...draft };
@@ -130,6 +141,14 @@ export function SettingsPage() {
                         text="Change server"
                         onClick={() => useServerModalStore.getState().openServerModal()}
                     />
+
+                    {isDesktopApp() && isRemoteModeEnabled() && (
+                        <BRButton
+                            text="Unlink server"
+                            variant="secondary"
+                            onClick={onUnlinkServer}
+                        />
+                    )}
 
                 </section>
         
