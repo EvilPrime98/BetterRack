@@ -1,5 +1,6 @@
 import type { IReadResponse, IBookmarksResponse, ILibraryIndexGroup, ILibraryPage, ILibraryRefreshResponse, ILibraryResponseItem, IReadingResponse, IRecentlyAddedResponse } from "../library.types";
 import { API_URL, authHeaders } from "./server-config.service";
+import { invalidateDirectories } from "./fs.service";
 
 export { API_URL };
 
@@ -107,6 +108,7 @@ export async function deleteFolder(
     });
     const data: ILibraryRefreshResponse = await response.json();
     if (!response.ok) throw new Error(data.message);
+    invalidateDirectories();
     return data;
 }
 
@@ -121,6 +123,7 @@ export async function createFolder(
     });
     const data: ILibraryRefreshResponse = await response.json();
     if (!response.ok) throw new Error(data.message);
+    invalidateDirectories();
     return data;
 }
 
@@ -167,5 +170,6 @@ export async function moveFile(
     });
     const data: ILibraryRefreshResponse = await response.json();
     if (!response.ok) throw new Error(data.message);
+    invalidateDirectories();
     return data;
 }
