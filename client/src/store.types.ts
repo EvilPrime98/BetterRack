@@ -1,3 +1,5 @@
+import type { TJobStatus } from "./services/store.service";
+
 export interface IStorePost {
     id?: number;
     thumbnailUrl?: string;
@@ -27,3 +29,5 @@ export type TCardState =
 | { status: 'error'; message: string };
 
 export const STRAT = 'all';
+
+export type TJobStates = Map<string, TJobStatus['state']>;

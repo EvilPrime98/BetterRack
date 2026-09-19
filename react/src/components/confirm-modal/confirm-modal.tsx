@@ -10,6 +10,8 @@ export function ConfirmModal() {
     const message = useConfirmModalStore((s) => s.message);
     const confirmLabel = useConfirmModalStore((s) => s.confirmLabel);
     const cancelLabel = useConfirmModalStore((s) => s.cancelLabel);
+    const hasDontAskAgain = useConfirmModalStore((s) => s.hasDontAskAgain);
+    const dontAskAgain = useConfirmModalStore((s) => s.dontAskAgain);
 
     const cancel = () => useConfirmModalStore.getState().resolveConfirmDialog(false);
     const confirm = () => useConfirmModalStore.getState().resolveConfirmDialog(true);
@@ -37,6 +39,17 @@ export function ConfirmModal() {
                 <p className={styles.title}>{title}</p>
 
                 <p className={styles.message}>{message}</p>
+
+                {hasDontAskAgain && (
+                    <label className={styles.dontAskAgain}>
+                        <input
+                            type="checkbox"
+                            checked={dontAskAgain}
+                            onChange={(e) => useConfirmModalStore.getState().setDontAskAgain(e.currentTarget.checked)}
+                        />
+                        Don't ask again
+                    </label>
+                )}
 
                 <div className={styles.actions}>
 

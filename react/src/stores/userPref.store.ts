@@ -4,6 +4,8 @@ import type { TComicsTypes, TFilterOptions } from '../library.types';
 export interface IUserPref {
     filter: TFilterOptions;
     comicType: TComicsTypes;
+    /** Whether or not to show a confirmation modal when stopping a download job. */
+    askStopDownloads: boolean;
 }
 
 interface IUserPrefStore {
@@ -15,11 +17,17 @@ interface IUserPrefStore {
     setPref: (pref: Partial<IUserPref>) => void;
 }
 
+const DEFAULT_PREF: IUserPref = {
+    filter: 'Alphabetically',
+    comicType: 'detail',
+    askStopDownloads: true
+}
+
 export const useUserPrefStore = create<IUserPrefStore>((set, get) => ({
 
     keyName: 'better-rack-user-pref',
 
-    pref: {} as IUserPref,
+    pref: DEFAULT_PREF,
 
     compile: () => {
         window.localStorage.setItem(
@@ -33,7 +41,7 @@ export const useUserPrefStore = create<IUserPrefStore>((set, get) => ({
         if (!lsCache) {
             get().compile();
         } else {
-            set({ pref: JSON.parse(lsCache) });
+            set({ pref: { ...DEFAULT_PREF, ...JSON.parse(lsCache) } });
         }
     },
 
