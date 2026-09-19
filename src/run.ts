@@ -25,6 +25,7 @@ import { ThumbnailModel } from './models/thumbnail/thumbnail.model';
 import { thumbnailRouter } from './routers/thumbnailRouter';
 import { apiKeyAuth } from './middleware/apiKeyAuthMiddleware';
 import { logger } from '#utils/logger';
+import { API_VERSION } from '#utils/api-version';
 import type { TProgressEvent } from './types';
 import pkg from '../package.json' with { type: 'json' };
 
@@ -65,21 +66,27 @@ async function startApp() {
     app.use('/api/*', apiKeyAuth());
     app.use('/read/*', apiKeyAuth());
 
-    app.route('/api/library', libraryRouter(libModel));
+    const api = new Hono();
 
-    app.route('/api/wiki', wikiRouter(wikiModel));
+    api.route('/library', libraryRouter(libModel));
 
-    app.route('/api/comic-data', comicDataRouter(comicDataModel));
+    api.route('/wiki', wikiRouter(wikiModel));
 
-    app.route('/api/settings', settingsRouter(prefsModel, libModel));
+    api.route('/comic-data', comicDataRouter(comicDataModel));
 
-    app.route('/api/comics', comicsRouter(gcwModel));
+    api.route('/settings', settingsRouter(prefsModel, libModel));
 
-    app.route('/api/downloads', downloadsRouter(dwnModel, gcwModel, fsModel, libModel, dwnJobModel));
+    api.route('/comics', comicsRouter(gcwModel));
 
-    app.route('/api/directories', fsRouter(fsModel, prefsModel));
+    api.route('/downloads', downloadsRouter(dwnModel, gcwModel, fsModel, libModel, dwnJobModel));
 
-    app.route('/api/thumbnail', thumbnailRouter(thumbnailModel, libModel));
+    api.route('/directories', fsRouter(fsModel, prefsModel));
+
+    api.route('/thumbnail', thumbnailRouter(thumbnailModel, libModel));
+
+    app.route(`/api/${API_VERSION}`, api);
+
+    app.route('/api', api);
 
     app.route('/read', comicReaderRouter({
         libModel: libModel,

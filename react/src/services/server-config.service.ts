@@ -60,6 +60,8 @@ function resolveInitialApiUrl(): string {
 
 export let API_URL = resolveInitialApiUrl();
 
+export const API_PREFIX = '/api/v1';
+
 const API_KEY_HEADER = 'x-br-api-key';
 const API_KEY_QUERY_PARAM = 'key';
 

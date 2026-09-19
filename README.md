@@ -38,6 +38,8 @@ Optional environment variables (place in a `.env` file at the project root): `PO
 
 Set `BR_API_KEY` to require that key on every `/api/*` and `/read/*` request — needed when exposing the server beyond a trusted LAN, such as for a desktop client's remote-mode connection. Leave it unset to keep the default open, LAN-trust behavior.
 
+The HTTP API is versioned under `/api/v1`. The unversioned `/api/*` paths remain as a deprecated alias for older clients.
+
 ## Usage
 
 Run the server and client in development:

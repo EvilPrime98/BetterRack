@@ -3,7 +3,7 @@ import { FolderStackCard } from "./folder-stack-card";
 import type { ILibraryResponseItem } from "@/library.types";
 import { useComicCacheStore } from "@/stores/comicCache.store";
 import { API_URL } from "@/services/library.service";
-import { withAuthQuery } from "@/services/server-config.service";
+import { API_PREFIX, withAuthQuery } from "@/services/server-config.service";
 
 export function FolderCardStack({
     stackCovers
@@ -21,7 +21,7 @@ export function FolderCardStack({
                 return (
                     <FolderStackCard
                         key={item.uid}
-                        cover={withAuthQuery(`${API_URL}/api/thumbnail/${item.uid}`)}
+                        cover={withAuthQuery(`${API_URL}${API_PREFIX}/thumbnail/${item.uid}`)}
                         isRead={comicCache?.read || false}
                     />
                 );

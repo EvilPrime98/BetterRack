@@ -4,7 +4,7 @@ import { FolderStackCard } from "./folder-stack-card";
 import type { ILibraryResponseItem } from "@/library.types";
 import { COMIC_CACHE_CONTEXT } from "@/context/comic-cache.context";
 import { API_URL } from "@/services/library.service";
-import { withAuthQuery } from "@/services/server-config.service";
+import { API_PREFIX, withAuthQuery } from "@/services/server-config.service";
 
 export function FolderCardStack({
     stackCovers
@@ -19,7 +19,7 @@ export function FolderCardStack({
         children: stackCovers.map(item => {
             const comicCache = COMIC_CACHE_CONTEXT.getCacheById(item.uid);
             return FolderStackCard({
-                cover: withAuthQuery(`${API_URL}/api/thumbnail/${item.uid}`),
+                cover: withAuthQuery(`${API_URL}${API_PREFIX}/thumbnail/${item.uid}`),
                 isRead: comicCache?.read || false
             })
         })

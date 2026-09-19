@@ -1,6 +1,6 @@
 import type { WikiComic } from "better-wiki";
 import type { IReadResponse, IBookmarksResponse, ILibraryGroup, ILibraryPage, ILibraryRefreshResponse, ILibraryResponseItem, IReadingResponse, IRecentlyAddedResponse } from "../library.types";
-import { API_URL, authHeaders } from "./server-config.service";
+import { API_PREFIX, API_URL, authHeaders } from "./server-config.service";
 import { invalidateDirectories } from "./fs.service";
 
 export { API_URL };
@@ -13,7 +13,7 @@ export async function getLibrary(): Promise<ILibraryGroup[]> {
     let offset = 0;
 
     for (;;) {
-        const response = await fetch(`${API_URL}/api/library?offset=${offset}`, { headers: authHeaders() });
+        const response = await fetch(`${API_URL}${API_PREFIX}/library?offset=${offset}`, { headers: authHeaders() });
         const page = await response.json();
         if (!response.ok) throw new Error((page as { message?: string })?.message || 'Failed to load library.');
 
@@ -42,21 +42,21 @@ export async function getRecentlyAdded(windowHours?: number): Promise<IRecentlyA
     const query = typeof windowHours === 'number' && windowHours > 0
         ? `?${new URLSearchParams({ windowHours: String(windowHours) })}`
         : '';
-    const response = await fetch(`${API_URL}/api/library/recent${query}`, { headers: authHeaders() });
+    const response = await fetch(`${API_URL}${API_PREFIX}/library/recent${query}`, { headers: authHeaders() });
     const data = await response.json();
     if (!response.ok) throw new Error((data as { message?: string })?.message || 'Failed to load recently added comics.');
     return data as IRecentlyAddedResponse;
 }
 
 export async function getReading(): Promise<IReadingResponse> {
-    const response = await fetch(`${API_URL}/api/library/reading`, { headers: authHeaders() });
+    const response = await fetch(`${API_URL}${API_PREFIX}/library/reading`, { headers: authHeaders() });
     const data = await response.json();
     if (!response.ok) throw new Error((data as { message?: string })?.message || 'Failed to load comics in progress.');
     return data as IReadingResponse;
 }
 
 export async function refreshLibrary(): Promise<ILibraryRefreshResponse> {
-    const response = await fetch(`${API_URL}/api/library/refresh`, { headers: authHeaders() });
+    const response = await fetch(`${API_URL}${API_PREFIX}/library/refresh`, { headers: authHeaders() });
     const data: ILibraryRefreshResponse = await response.json();
     if (!response.ok) throw new Error(data.message);
     return data;
@@ -98,7 +98,7 @@ export async function readerRefresh({
 export async function deleteFile(
     fileUid: string
 ): Promise<ILibraryRefreshResponse> {
-    const response = await fetch(`${API_URL}/api/library/file`, {
+    const response = await fetch(`${API_URL}${API_PREFIX}/library/file`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ fileUid })
@@ -111,7 +111,7 @@ export async function deleteFile(
 export async function deleteFolder(
     folderUid: string
 ): Promise<ILibraryRefreshResponse> {
-    const response = await fetch(`${API_URL}/api/library/folder`, {
+    const response = await fetch(`${API_URL}${API_PREFIX}/library/folder`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ folderUid })
@@ -126,7 +126,7 @@ export async function createFolder(
     folderName: string,
     parentFolderUid?: string
 ): Promise<ILibraryRefreshResponse> {
-    const response = await fetch(`${API_URL}/api/library/folder`, {
+    const response = await fetch(`${API_URL}${API_PREFIX}/library/folder`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ folderName, parentFolderUid })
@@ -140,7 +140,7 @@ export async function createFolder(
 export async function identifyLibraryEntry(
     uid: string
 ): Promise<Pick<ILibraryResponseItem, 'identified' | 'comic' | 'metaSource'>> {
-    const response = await fetch(`${API_URL}/api/library/${uid}/identify`, { headers: authHeaders() });
+    const response = await fetch(`${API_URL}${API_PREFIX}/library/${uid}/identify`, { headers: authHeaders() });
     const data = await response.json();
     if (!response.ok) throw new Error(data.message);
     return data;
@@ -149,7 +149,7 @@ export async function identifyLibraryEntry(
 export async function unidentifyFile(
     fileUid: string
 ): Promise<ILibraryRefreshResponse> {
-    const response = await fetch(`${API_URL}/api/library/file/unidentify`, {
+    const response = await fetch(`${API_URL}${API_PREFIX}/library/file/unidentify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ fileUid })
@@ -163,7 +163,7 @@ export async function commitIdentifyFile(
     fileUid: string,
     comic: WikiComic
 ): Promise<ILibraryRefreshResponse> {
-    const response = await fetch(`${API_URL}/api/library/file/identify`, {
+    const response = await fetch(`${API_URL}${API_PREFIX}/library/file/identify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ fileUid, comic })
@@ -174,7 +174,7 @@ export async function commitIdentifyFile(
 }
 
 export async function reidentifyAllLibrary(): Promise<{ error: boolean; message: string }> {
-    const response = await fetch(`${API_URL}/api/library/identify/reset-all`, {
+    const response = await fetch(`${API_URL}${API_PREFIX}/library/identify/reset-all`, {
         method: 'POST',
         headers: authHeaders()
     });
@@ -187,7 +187,7 @@ export async function moveFile(
     fileUid: string,
     targetFolderUid?: string
 ): Promise<ILibraryRefreshResponse> {
-    const response = await fetch(`${API_URL}/api/library/file/move`, {
+    const response = await fetch(`${API_URL}${API_PREFIX}/library/file/move`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ fileUid, targetFolderUid })
