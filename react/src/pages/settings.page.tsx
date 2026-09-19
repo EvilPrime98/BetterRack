@@ -8,7 +8,7 @@ import { LibraryFolderRow } from '@/components/library-folder-row/library-folder
 import { toast } from '@/services/toast.service';
 import { useDocumentTitleStore } from '@/stores/documentTitle.store';
 import { BRButton } from '@/components/br-button/br-button';
-import { clearRemoteServer, getStoredServerUrl, hasNativeFolderPicker, isDesktopApp, isRemoteModeEnabled } from '@/services/server-config.service';
+import { clearRemoteServer, getStoredServerUrl, hasNativeFolderPicker, isRemoteModeEnabled } from '@/services/server-config.service';
 import { useLibraryStore } from '@/stores/library.store';
 import { useServerModalStore } from '@/stores/serverModal.store';
 import { useConfirmModalStore } from '@/stores/confirmModal.store';
@@ -142,7 +142,7 @@ export function SettingsPage() {
                         onClick={() => useServerModalStore.getState().openServerModal()}
                     />
 
-                    {isDesktopApp() && isRemoteModeEnabled() && (
+                    {isRemoteModeEnabled() && (
                         <BRButton
                             text="Unlink server"
                             variant="secondary"
