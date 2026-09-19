@@ -25,5 +25,6 @@ export type TJobModel<TProgress = unknown> = {
     list: () => TJob<TProgress>[],
     update: (jobId: string, state: TJobState, progress?: TProgress) => void,
     retry: (jobId: string) => TJob<TProgress> | undefined,
+    remove: (jobId: string) => boolean,
     subscribe: (jobId: string, listener: (job: TJob<TProgress>) => void) => () => void,
 }

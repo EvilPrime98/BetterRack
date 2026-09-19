@@ -3,7 +3,7 @@ import path from "node:path";
 import { mkdirSync } from "node:fs";
 import { Database } from "bun:sqlite";
 import { drizzle, type BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
-import { and, desc, inArray, lt } from "drizzle-orm";
+import { and, desc, eq, inArray, lt } from "drizzle-orm";
 import { downloadJobs } from "#src/database/schema.ts";
 import type { JobListener, TJob, TJobModel, TJobRequest, TJobState } from "./types";
 
@@ -227,6 +227,25 @@ export class JobModel<TProgress = unknown> implements TJobModel<TProgress> {
         this.notify(job);
 
         return job;
+    }
+
+    public remove(
+        jobId: string
+    ): boolean {
+        const job = this.jobs.get(jobId);
+        if (!job) return false;
+
+        job.state = 'error';
+        job.progress = { type: 'error', message: 'Download cancelled' } as TProgress;
+        job.updatedAt = Date.now();
+        this.notify(job);
+
+        this.jobs.delete(jobId);
+        if (this.jobIdByResource.get(job.resourceKey) === jobId) this.jobIdByResource.delete(job.resourceKey);
+        this.listeners.delete(jobId);
+        this.db.delete(downloadJobs).where(eq(downloadJobs.id, jobId)).run();
+
+        return true;
     }
 
     public subscribe(

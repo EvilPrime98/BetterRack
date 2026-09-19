@@ -84,6 +84,7 @@ export class RotatingFetchModel {
         let lastError: unknown;
 
         for (let attempt = 0; attempt <= retries; attempt++) {
+            init.signal?.throwIfAborted();
             if (attempt > 0) {
                 const wait = Math.min(2 ** attempt * backoffMs, 30_000) + Math.random() * 1000;
                 await new Promise(res => setTimeout(res, wait));
@@ -106,6 +107,7 @@ export class RotatingFetchModel {
 
                 return res;
             } catch (err) {
+                if (init.signal?.aborted) throw err;
                 lastError = err;
                 this.log?.error(
                     `RotatingFetch: ${url} threw ${err instanceof Error ? err.message : 'unknown error'}, retrying with a fresh identity (attempt ${attempt + 1}/${retries + 1})`,

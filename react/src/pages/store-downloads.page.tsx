@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Layout } from '@/layout';
-import { getDownloadJobs, retryDownloadJob, type TJobStatus } from '@/services/store.service';
+import { cancelDownloadJob, getDownloadJobs, retryDownloadJob, type TJobStatus } from '@/services/store.service';
 import { useDocumentTitleStore } from '@/stores/documentTitle.store';
 import { useLibraryStore } from '@/stores/library.store';
+import { useConfirmModalStore } from '@/stores/confirmModal.store';
 import { toast } from '@/services/toast.service';
 import { POLL_INTERVAL_MS } from '@/data';
 import type { TStoreProgressEvent } from '@/store.types';
@@ -46,6 +47,11 @@ function detailFor(progress?: TStoreProgressEvent): string {
     }
 }
 
+function canStop(job: TJobStatus): boolean {
+    const isActive = job.state === 'queued' || job.state === 'running';
+    return isActive && job.progress?.type !== 'extracting';
+}
+
 type TJobStates = Map<string, TJobStatus['state']>;
 
 function stateByJobId(jobs: TJobStatus[]): TJobStates {
@@ -65,7 +71,13 @@ async function notifyFinished(finished: TJobStatus[]) {
     await useLibraryStore.getState().refreshLibrary({ silent: true });
 }
 
-function JobRow({ job, onRetry, retrying }: { job: TJobStatus; onRetry: (jobId: string) => void; retrying: boolean }) {
+function JobRow({ job, onRetry, retrying, onStop, stopping }: {
+    job: TJobStatus;
+    onRetry: (jobId: string) => void;
+    retrying: boolean;
+    onStop: (job: TJobStatus) => void;
+    stopping: boolean;
+}) {
 
     const percent = percentFor(job.progress);
     const detail = detailFor(job.progress);
@@ -100,6 +112,17 @@ function JobRow({ job, onRetry, retrying }: { job: TJobStatus; onRetry: (jobId: 
                 </button>
             )}
 
+            {canStop(job) && (
+                <button
+                    type="button"
+                    className={styles.stop}
+                    disabled={stopping}
+                    onClick={() => onStop(job)}
+                >
+                    Stop
+                </button>
+            )}
+
         </li>
     );
 
@@ -112,6 +135,7 @@ export function StoreDownloadsPage() {
     const [error, setError] = useState('');
     const [loaded, setLoaded] = useState(false);
     const [retryingIds, setRetryingIds] = useState<Set<string>>(new Set());
+    const [stoppingIds, setStoppingIds] = useState<Set<string>>(new Set());
 
     useEffect(() => {
         setTitle('Downloads');
@@ -163,6 +187,28 @@ export function StoreDownloadsPage() {
         }
     }
 
+    async function handleStop(job: TJobStatus) {
+        const confirmed = await useConfirmModalStore.getState().confirmDialog({
+            title: 'Stop this download?',
+            message: `"${job.label}" will be stopped and removed from the list.`,
+            confirmLabel: 'Stop download'
+        });
+        if (!confirmed) return;
+        setStoppingIds((prev) => new Set(prev).add(job.jobId));
+        try {
+            await cancelDownloadJob(job.jobId);
+            setJobs(await getDownloadJobs());
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : 'Failed to stop the download.');
+        } finally {
+            setStoppingIds((prev) => {
+                const next = new Set(prev);
+                next.delete(job.jobId);
+                return next;
+            });
+        }
+    }
+
     return (
         <Layout>
             <section className={styles.page}>
@@ -184,6 +230,8 @@ export function StoreDownloadsPage() {
                                 job={job}
                                 onRetry={handleRetry}
                                 retrying={retryingIds.has(job.jobId)}
+                                onStop={handleStop}
+                                stopping={stoppingIds.has(job.jobId)}
                             />
                         ))}
                     </ul>

@@ -23,6 +23,7 @@ export class DownloadController {
     private fsModel: fsModel;
     private libModel: TLibraryModel;
     private jobModel: TJobModel<TProgressEvent>;
+    private activeDownloads = new Map<string, AbortController>();
 
     constructor(
         dwnModel: TDownloadModel,
@@ -45,10 +46,15 @@ export class DownloadController {
     ) {
         this.jobModel.update(jobId, 'running');
 
+        const abortController = new AbortController();
+        this.activeDownloads.set(jobId, abortController);
+
         this.dwnModel.downloadComic({
             link,
             outputDir,
+            signal: abortController.signal,
             onProgress: async (event) => {
+                if (abortController.signal.aborted) return;
                 if (event.type === 'done') {
                     try {
                         await this.libModel.scan();
@@ -64,6 +70,8 @@ export class DownloadController {
                 type: 'error',
                 message: e instanceof Error ? e.message : 'Failed to download'
             });
+        }).finally(() => {
+            this.activeDownloads.delete(jobId);
         });
     }
 
@@ -279,6 +287,32 @@ export class DownloadController {
             }, 500);
 
         }
+
+    }
+
+    public async cancelJob(
+        c: Context
+    ) {
+
+        const jobId = c.req.param('jobId') ?? '';
+        const job = this.jobModel.get(jobId);
+
+        if (!job) {
+            return c.json({ error: true, message: 'Job not found' }, 404);
+        }
+
+        if (job.state !== 'queued' && job.state !== 'running') {
+            return c.json({ error: true, message: 'Only active downloads can be stopped' }, 409);
+        }
+
+        if (job.progress?.type === 'extracting') {
+            return c.json({ error: true, message: 'The download is being extracted and cannot be stopped' }, 409);
+        }
+
+        this.activeDownloads.get(jobId)?.abort();
+        this.jobModel.remove(jobId);
+
+        return c.json({ error: false, jobId });
 
     }
 

@@ -19,6 +19,7 @@ export function downloadsRouter(
     app.post('/:jobId/retry', (c) => cc.retryJob(c));
     app.get('/resource/:id', (c) => cc.getJobByResource(c));
     app.get('/:jobId', (c) => cc.getJobStatus(c));
+    app.delete('/:jobId', (c) => cc.cancelJob(c));
     app.get('/:jobId/stream', (c) => cc.streamJob(c));
     return app;
 }

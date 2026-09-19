@@ -16,6 +16,27 @@ const RETRY_BACKOFF_CAP_MS = 30_000;
 
 class FatalDownloadError extends Error {}
 
+function abortableSleep(
+    ms: number,
+    signal?: AbortSignal
+): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+        if (signal?.aborted) {
+            reject(signal.reason);
+            return;
+        }
+        const onAbort = () => {
+            clearTimeout(timer);
+            reject(signal!.reason);
+        };
+        const timer = setTimeout(() => {
+            signal?.removeEventListener('abort', onAbort);
+            resolve();
+        }, ms);
+        signal?.addEventListener('abort', onAbort, { once: true });
+    });
+}
+
 const CUSTOM_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
 const CLOUDFLARE_CHALLENGE_MARKERS = [
@@ -62,12 +83,14 @@ export class DownloadModel {
     }
 
     private fetchSource = (
-        url: string
+        url: string,
+        signal?: AbortSignal
     ): Promise<Response> => {
         if (this.isPixelDrainUrl(url)) {
             return this.rotatingFetch.fetch(url, {
                 method: 'GET',
                 headers: { 'content-type': 'application/octet-stream' },
+                signal,
             });
         }
         return fetch(url, {
@@ -76,6 +99,7 @@ export class DownloadModel {
                 'User-Agent': CUSTOM_USER_AGENT,
                 'content-type': 'application/octet-stream',
             },
+            signal,
         });
     }
 
@@ -148,7 +172,8 @@ export class DownloadModel {
         noRetry = false,
         outputDir,
         onProgress,
-        quiet = false
+        quiet = false,
+        signal
     }: {
         link: TDownloadLink,
         rowIndex?: number,
@@ -156,7 +181,8 @@ export class DownloadModel {
         noRetry?: boolean,
         outputDir: string,
         onProgress?: (event: TProgressEvent) => void,
-        quiet?: boolean
+        quiet?: boolean,
+        signal?: AbortSignal
     }): Promise<string | undefined> => {
 
         if (!link.downloadLink) return;
@@ -188,18 +214,18 @@ export class DownloadModel {
                         reason: 'network',
                         delaySec: Math.round(backoff / 1000)
                     });
-                    await new Promise(r => setTimeout(r, backoff));
+                    await abortableSleep(backoff, signal);
                 }
 
                 try {
                     // streamToDisk removes its own partial file on failure.
-                    dest = await this.streamToDisk({ link, noRetry, outputDir, onProgress, quiet });
+                    dest = await this.streamToDisk({ link, noRetry, outputDir, onProgress, quiet, signal });
                     lastErr = undefined;
                     break;
                 } catch (err) {
                     // A Cloudflare challenge or a no-retry request does not
                     // resolve when you try again.
-                    if (err instanceof FatalDownloadError || noRetry === true) throw err;
+                    if (err instanceof FatalDownloadError || noRetry === true || signal?.aborted) throw err;
                     lastErr = err;
                     this.proxyLogger(quiet).error(
                         `Download attempt ${attempt + 1}/${this.retry.maxRetries + 1} for ${link.title} failed: `
@@ -212,6 +238,11 @@ export class DownloadModel {
 
             // Capture the name now. Pack extraction can change dest to a directory.
             const filename = dest ? dest.split(/[\\/]/).pop()! : link.title;
+
+            if (signal?.aborted) {
+                if (dest) await unlink(dest).catch(() => {});
+                signal.throwIfAborted();
+            }
 
             if (this.packExtractor && dest) {
                 try {
@@ -252,20 +283,22 @@ export class DownloadModel {
         noRetry,
         outputDir,
         onProgress,
-        quiet
+        quiet,
+        signal
     }: {
         link: TDownloadLink,
         noRetry: boolean,
         outputDir: string,
         onProgress?: (event: TProgressEvent) => void,
-        quiet: boolean
+        quiet: boolean,
+        signal?: AbortSignal
     }): Promise<string> => {
 
         let response: Response;
         let statusRetries = 0;
 
         while (true) {
-            response = await this.fetchSource(link.downloadLink!);
+            response = await this.fetchSource(link.downloadLink!, signal);
             const contentType = response.headers.get('content-type') ?? '';
             if (contentType.includes('text/html')) {
                 const preview = await response.clone().text();
@@ -288,7 +321,7 @@ export class DownloadModel {
                 reason: 'http',
                 delaySec: REQUEST_DELAY / 1000
             });
-            await new Promise(r => setTimeout(r, REQUEST_DELAY));
+            await abortableSleep(REQUEST_DELAY, signal);
         }
 
         const filename = this.resolveFilename(response, link);

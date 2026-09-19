@@ -157,7 +157,8 @@
     color: #f2a1a1;
 }
 
-.retry {
+.retry,
+.stop {
     align-self: flex-start;
     font-family: var(--font-sans);
     font-size: 11px;
@@ -172,11 +173,13 @@
     cursor: pointer;
 }
 
-.retry:hover {
+.retry:hover,
+.stop:hover {
     background: rgba(220, 90, 90, 0.12);
 }
 
-.retry:disabled {
+.retry:disabled,
+.stop:disabled {
     opacity: 0.5;
     cursor: default;
 }
