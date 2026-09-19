@@ -8,7 +8,7 @@ import { LibraryFolderRow } from "@/components/library-folder-row/library-folder
 import { toast } from "../services/toast.service";
 import { DOCUMENT_TITLE_CONTEXT } from "../context/document-title.context";
 import { BRButton } from "../components/br-button/br-button";
-import { getStoredServerUrl, hasNativeFolderPicker } from "../services/server-config.service";
+import { clearRemoteServer, getStoredServerUrl, hasNativeFolderPicker, isRemoteModeEnabled } from "../services/server-config.service";
 import { LIBRARY_CONTEXT } from "../context/library.context";
 import { SERVER_MODAL_CTX } from "../context/server-modal.context";
 import { CONFIRM_MODAL_CTX } from "../context/confirm-modal.context";
@@ -120,6 +120,17 @@ export function SettingsPage() {
         LIBRARY_CONTEXT.reidentifyAll();
     }
 
+    async function onUnlinkServer() {
+        const confirmed = await CONFIRM_MODAL_CTX.confirmDialog({
+            title: 'Unlink from remote server?',
+            message: 'The app will disconnect from the remote server and go back to your local library.',
+            confirmLabel: 'Unlink'
+        });
+        if (!confirmed) return;
+        clearRemoteServer();
+        window.location.reload();
+    }
+
     async function onSave() {
         
         const partial: Partial<Omit<IAppSettings, 'outputDirs'>> = {
@@ -198,7 +209,15 @@ export function SettingsPage() {
                         BRButton({
                             text: 'Change server',
                             eventHandler: { click: () => SERVER_MODAL_CTX.openServerModal() }
-                        })
+                        }),
+
+                        ...(isRemoteModeEnabled() ? [
+                            BRButton({
+                                text: 'Unlink server',
+                                variant: 'secondary',
+                                eventHandler: { click: onUnlinkServer }
+                            })
+                        ] : [])
 
                     ]
 
