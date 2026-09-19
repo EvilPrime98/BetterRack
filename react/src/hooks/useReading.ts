@@ -17,7 +17,8 @@ export function useReading() {
 
         let isCurrent = true;
 
-        getReading()
+        useComicCacheStore.getState().flushPending()
+            .then(() => getReading())
             .then(data => {
                 if (isCurrent) setItems(data.items);
             })

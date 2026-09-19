@@ -6,14 +6,18 @@ import { eq } from "drizzle-orm";
 import type { TComicData, TComicDataModel } from "#src/types.ts";
 import { comicData } from "#src/database/schema.ts";
 
+const IN_MEMORY_DB_PATH = ':memory:';
+
 export class ComicDataModel implements TComicDataModel {
 
     private db: BunSQLiteDatabase;
 
-    constructor() {
-        const dbPath = path.resolve('src/database/comic-data.sqlite');
-        mkdirSync(path.dirname(dbPath), { recursive: true });
+    private sqlite: Database;
+
+    constructor(dbPath: string = path.resolve('src/database/comic-data.sqlite')) {
+        if (dbPath !== IN_MEMORY_DB_PATH) mkdirSync(path.dirname(dbPath), { recursive: true });
         const sqlite = new Database(dbPath, { create: true });
+        this.sqlite = sqlite;
         sqlite.run(`
             CREATE TABLE IF NOT EXISTS comic_data (
                 uid TEXT PRIMARY KEY,
@@ -109,6 +113,10 @@ export class ComicDataModel implements TComicDataModel {
             .run();
 
         return merged;
+    }
+
+    close = (): void => {
+        this.sqlite.close();
     }
 
     resetIdentification = (): void => {

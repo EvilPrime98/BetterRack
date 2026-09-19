@@ -13,6 +13,7 @@ export interface IComicCacheCtx {
     ready: () => Promise<void>;
     getCacheById: (uid: string) => IComicLSCache | undefined;
     setCacheById: (uid: string, pref: Partial<IComicLSCache>) => void;
+    flushPending: () => Promise<void>;
     subscribeById: (uid: string, fn: (entry: IComicLSCache | undefined) => void) => () => void;
 }
 
@@ -45,6 +46,16 @@ export const COMIC_CACHE_CONTEXT: IComicCacheCtx = ultraCompState({
             persistTimers.delete(uid);
             updateComicData(uid, currCache[uid]).catch(console.error);
         }, PERSIST_DEBOUNCE_MS));
+    },
+
+    flushPending: async (comp: IComicCacheCtx) => {
+        const pendingUids = [...persistTimers.keys()];
+        for (const timer of persistTimers.values()) clearTimeout(timer);
+        persistTimers.clear();
+        const cache = comp.cache.get();
+        await Promise.all(pendingUids.map(uid =>
+            updateComicData(uid, cache[uid]).catch(console.error)
+        ));
     },
 
     subscribeById: (comp: IComicCacheCtx, uid: string, fn: (entry: IComicLSCache | undefined) => void) => {

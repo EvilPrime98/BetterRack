@@ -1,27 +1,22 @@
-import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
-import { mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
+import { afterEach, describe, expect, test } from 'bun:test';
 import { ComicDataModel } from './comicDataModel';
 
-let workDir: string;
-let originalCwd: string;
+const openModels: ComicDataModel[] = [];
 
-beforeEach(async () => {
-    originalCwd = process.cwd();
-    workDir = await mkdtemp(path.join(tmpdir(), 'comic-data-test-'));
-    process.chdir(workDir);
-});
+function createModel(): ComicDataModel {
+    const model = new ComicDataModel(':memory:');
+    openModels.push(model);
+    return model;
+}
 
-afterEach(async () => {
-    process.chdir(originalCwd);
-    await rm(workDir, { recursive: true, force: true }).catch(() => undefined);
+afterEach(() => {
+    for (const model of openModels.splice(0)) model.close();
 });
 
 describe('ComicDataModel.upsert — lastReadAt', () => {
 
     test('stamps lastReadAt when reading progress changes', () => {
-        const model = new ComicDataModel();
+        const model = createModel();
         const before = Date.now();
 
         const saved = model.upsert('uid-1', { currentPage: 3, readPer: 30 });
@@ -31,7 +26,7 @@ describe('ComicDataModel.upsert — lastReadAt', () => {
     });
 
     test('keeps lastReadAt when only the rating changes', () => {
-        const model = new ComicDataModel();
+        const model = createModel();
         const first = model.upsert('uid-1', { currentPage: 3, readPer: 30 });
 
         const second = model.upsert('uid-1', { currentPage: 3, readPer: 30, rating: 4 });
@@ -40,7 +35,7 @@ describe('ComicDataModel.upsert — lastReadAt', () => {
     });
 
     test('ignores a lastReadAt supplied by the caller', () => {
-        const model = new ComicDataModel();
+        const model = createModel();
         const first = model.upsert('uid-1', { currentPage: 3, readPer: 30 });
 
         const second = model.upsert('uid-1', { currentPage: 3, readPer: 30, lastReadAt: 1 });
@@ -49,7 +44,7 @@ describe('ComicDataModel.upsert — lastReadAt', () => {
     });
 
     test('leaves lastReadAt unset for an entry that never had progress', () => {
-        const model = new ComicDataModel();
+        const model = createModel();
 
         const saved = model.upsert('uid-1', { rating: 5 });
 

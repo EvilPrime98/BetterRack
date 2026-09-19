@@ -12,6 +12,7 @@ interface IComicCacheStore {
     ready: () => Promise<void>;
     getCacheById: (uid: string) => IComicLSCache | undefined;
     setCacheById: (uid: string, pref: Partial<IComicLSCache>) => void;
+    flushPending: () => Promise<void>;
     subscribeById: (uid: string, fn: (entry: IComicLSCache | undefined) => void) => () => void;
 }
 
@@ -42,6 +43,15 @@ export const useComicCacheStore = create<IComicCacheStore>((set, get, api) => ({
             persistTimers.delete(uid);
             updateComicData(uid, currCache[uid]).catch(console.error);
         }, PERSIST_DEBOUNCE_MS));
+    },
+
+    flushPending: async () => {
+        const pendingUids = [...persistTimers.keys()];
+        for (const timer of persistTimers.values()) clearTimeout(timer);
+        persistTimers.clear();
+        await Promise.all(pendingUids.map(uid =>
+            updateComicData(uid, get().cache[uid]).catch(console.error)
+        ));
     },
 
     subscribeById: (uid, fn) => {
