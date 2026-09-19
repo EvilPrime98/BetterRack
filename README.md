@@ -18,11 +18,9 @@ Better Rack is a desktop app for organizing and reading a local comic book libra
 
 <img width="1915" height="914" alt="image" src="https://github.com/user-attachments/assets/9e595f6d-77ad-420b-bde0-b0b183f2f381" />
 
-<img width="1919" height="916" alt="image" src="https://github.com/user-attachments/assets/a2594be6-9b85-4364-bd99-2fffb82890fc" />
-
-<img width="1915" height="915" alt="image" src="https://github.com/user-attachments/assets/3b70fb94-75e8-449f-87dd-65783e31886d" />
-
 <img width="1382" height="945" alt="image" src="https://github.com/user-attachments/assets/853a68e0-4d15-45d0-8659-a8a2fac442f8" />
+
+<img width="1825" height="948" alt="image" src="https://github.com/user-attachments/assets/27a6a09b-9359-488e-9b90-84097933a1fd" />
 
 ## Installation
 
