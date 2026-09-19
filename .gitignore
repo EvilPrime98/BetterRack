@@ -16,3 +16,4 @@ release/
 logs/
 knip-report*.json
 scripts/run-better-rack.sh
+scripts/clean-branches.sh

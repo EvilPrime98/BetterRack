@@ -34,6 +34,7 @@
     "build:client:electron": "cd client && pnpm run build -- --mode electron",
     "dev": "bun run ./src/run.ts --watch",
     "front-dev": "cd client && pnpm run dev",
+    "git-remove-stale": "bash ./scripts/clean-branches.sh -n",
     "knip": "knip",
     "lint": "eslint .",
     "refresh": "bash ./scripts/refresh.sh",
