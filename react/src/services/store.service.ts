@@ -111,6 +111,14 @@ export async function retryDownloadJob(jobId: string): Promise<{ jobId: string; 
     return parseJsonResponse<{ error: boolean; jobId: string; state: string }>(response);
 }
 
+export async function cancelDownloadJob(jobId: string): Promise<{ jobId: string }> {
+    const response = await fetch(`${API_URL}/api/downloads/${jobId}`, {
+        method: 'DELETE',
+        headers: authHeaders()
+    });
+    return parseJsonResponse<{ error: boolean; jobId: string }>(response);
+}
+
 export async function startDownloadJob({
     id,
     title,

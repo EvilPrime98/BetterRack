@@ -273,3 +273,78 @@ describe('DownloadModel.downloadComic — transient network failures', () => {
     }, 15_000);
 
 });
+
+describe('DownloadModel.downloadComic — cancellation', () => {
+
+    test('stops mid-stream without retrying and removes the partial file', async () => {
+        const url = 'https://example.test/files/big.cbz';
+        let calls = 0;
+        globalThis.fetch = (async (_input: unknown, init?: RequestInit) => {
+            calls++;
+            const signal = init!.signal!;
+            let i = 0;
+            return {
+                ok: true,
+                status: 200,
+                url,
+                headers: new Headers({ 'content-type': 'application/octet-stream', 'content-length': '10' }),
+                clone() { return this; },
+                async text() { return ''; },
+                body: {
+                    getReader() {
+                        return {
+                            async read() {
+                                if (i++ === 0) return { done: false, value: bytes('AA') };
+                                if (signal.aborted) throw signal.reason;
+                                return new Promise((_resolve, reject) => {
+                                    signal.addEventListener('abort', () => reject(signal.reason));
+                                });
+                            },
+                        };
+                    },
+                },
+            } as unknown as Response;
+        }) as unknown as typeof fetch;
+        const abortController = new AbortController();
+        const events: TProgressEvent[] = [];
+
+        const dest = await makeModel().downloadComic({
+            link: { title: 'Big', downloadLink: url },
+            outputDir: workDir,
+            signal: abortController.signal,
+            onProgress: (event) => {
+                events.push(event);
+                if (event.type === 'progress') abortController.abort();
+            },
+            quiet: true,
+        });
+
+        expect(dest).toBeUndefined();
+        expect(calls).toBe(1);
+        expect(events.some(e => e.type === 'retrying')).toBe(false);
+        expect(events.some(e => e.type === 'done')).toBe(false);
+        expect(events.at(-1)?.type).toBe('error');
+        expect(existsSync(path.join(workDir, 'big.cbz'))).toBe(false);
+    });
+
+    test('removes a finished file when the signal is aborted before extraction', async () => {
+        const url = 'https://example.test/files/late.cbz';
+        stubFetch([fakeResponse({ url, chunks: [bytes('done')] })]);
+        const abortController = new AbortController();
+        abortController.abort();
+        const { events, onProgress } = collect();
+
+        const dest = await makeModel().downloadComic({
+            link: { title: 'Late', downloadLink: url },
+            outputDir: workDir,
+            signal: abortController.signal,
+            onProgress,
+            quiet: true,
+        });
+
+        expect(dest).toBeUndefined();
+        expect(events.some(e => e.type === 'done')).toBe(false);
+        expect(existsSync(path.join(workDir, 'late.cbz'))).toBe(false);
+    });
+
+});

@@ -44,14 +44,16 @@ export type TDownloadModel = {
         totalRows,
         noRetry,
         outputDir,
-        onProgress
+        onProgress,
+        signal
     }: {
         link: TDownloadLink,
         rowIndex?: number,
         totalRows?: number,
         noRetry?: boolean,
         outputDir: string,
-        onProgress?: (event: TProgressEvent) => void
+        onProgress?: (event: TProgressEvent) => void,
+        signal?: AbortSignal
     }) => Promise<string | undefined>
     downloadComicBundle: ({
         postLinks,
