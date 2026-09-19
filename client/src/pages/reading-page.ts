@@ -31,6 +31,7 @@ export function ReadingPage() {
             comp.isLoading.set(true);
             comp.error.set('');
             try {
+                await COMIC_CACHE_CONTEXT.flushPending();
                 const data = await getReading();
                 comp.items.set(data.items);
             } catch (e) {
