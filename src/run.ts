@@ -24,6 +24,7 @@ import { downloadsRouter } from './routers/downloadsRouter';
 import { ThumbnailModel } from './models/thumbnail/thumbnail.model';
 import { thumbnailRouter } from './routers/thumbnailRouter';
 import { apiKeyAuth } from './middleware/apiKeyAuthMiddleware';
+import { storeApiUrlGuard } from './middleware/storeApiUrlGuard';
 import { logger } from '#utils/logger';
 import type { TProgressEvent } from './types';
 import pkg from '../package.json' with { type: 'json' };
@@ -64,6 +65,13 @@ async function startApp() {
 
     app.use('/api/*', apiKeyAuth());
     app.use('/read/*', apiKeyAuth());
+
+    const requireStoreApiUrl = storeApiUrlGuard(prefsModel);
+
+    app.use('/api/comics/*', requireStoreApiUrl);
+    app.get('/api/downloads', requireStoreApiUrl);
+    app.post('/api/downloads', requireStoreApiUrl);
+    app.post('/api/downloads/:jobId/retry', requireStoreApiUrl);
 
     app.route('/api/library', libraryRouter(libModel));
 
