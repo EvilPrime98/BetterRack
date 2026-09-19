@@ -5,9 +5,15 @@ export interface IConfirmOptions {
     message: string;
     confirmLabel?: string;
     cancelLabel?: string;
+    /**
+     * When provided, the modal shows a "Don't ask again" checkbox. The callback runs only if the
+     * user confirms with the box checked, so callers persist the opt-out themselves.
+     */
+    onDontAskAgain?: () => void;
 }
 
 let resolver: ((result: boolean) => void) | null = null;
+let dontAskAgainCallback: (() => void) | null = null;
 
 export interface IConfirmModalCtx {
     isVisible: IUltraCompStateStateful<boolean>;
@@ -15,6 +21,8 @@ export interface IConfirmModalCtx {
     message: IUltraCompStateStateful<string>;
     confirmLabel: IUltraCompStateStateful<string>;
     cancelLabel: IUltraCompStateStateful<string>;
+    hasDontAskAgain: IUltraCompStateStateful<boolean>;
+    dontAskAgain: IUltraCompStateStateful<boolean>;
     /** Opens the confirm modal and resolves once the user picks confirm or cancel/dismiss. */
     confirmDialog: (options: IConfirmOptions) => Promise<boolean>;
     resolveConfirmDialog: (result: boolean) => void;
@@ -27,15 +35,20 @@ export const CONFIRM_MODAL_CTX: IConfirmModalCtx = ultraCompState({
     message: '' as string,
     confirmLabel: 'Confirm' as string,
     cancelLabel: 'Cancel' as string,
+    hasDontAskAgain: false,
+    dontAskAgain: false,
 
     confirmDialog: (
         comp: IConfirmModalCtx,
-        { title = 'Are you sure?', message, confirmLabel = 'Confirm', cancelLabel = 'Cancel' }: IConfirmOptions
+        { title = 'Are you sure?', message, confirmLabel = 'Confirm', cancelLabel = 'Cancel', onDontAskAgain }: IConfirmOptions
     ): Promise<boolean> => {
+        dontAskAgainCallback = onDontAskAgain ?? null;
         comp.title.set(title);
         comp.message.set(message);
         comp.confirmLabel.set(confirmLabel);
         comp.cancelLabel.set(cancelLabel);
+        comp.hasDontAskAgain.set(onDontAskAgain !== undefined);
+        comp.dontAskAgain.set(false);
         comp.isVisible.set(true);
         return new Promise<boolean>((resolve) => {
             resolver = resolve;
@@ -43,9 +56,11 @@ export const CONFIRM_MODAL_CTX: IConfirmModalCtx = ultraCompState({
     },
 
     resolveConfirmDialog: (comp: IConfirmModalCtx, result: boolean) => {
+        if (result && comp.dontAskAgain.get()) dontAskAgainCallback?.();
         comp.isVisible.set(false);
         resolver?.(result);
         resolver = null;
+        dontAskAgainCallback = null;
     }
 
 });

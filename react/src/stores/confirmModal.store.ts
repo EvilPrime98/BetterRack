@@ -5,9 +5,11 @@ export interface IConfirmOptions {
     message: string;
     confirmLabel?: string;
     cancelLabel?: string;
+    onDontAskAgain?: () => void;
 }
 
 let resolver: ((result: boolean) => void) | null = null;
+let dontAskAgainCallback: (() => void) | null = null;
 
 interface IConfirmModalStore {
     isVisible: boolean;
@@ -15,30 +17,45 @@ interface IConfirmModalStore {
     message: string;
     confirmLabel: string;
     cancelLabel: string;
+    hasDontAskAgain: boolean;
+    dontAskAgain: boolean;
+    setDontAskAgain: (value: boolean) => void;
     /** Opens the confirm modal and resolves once the user picks confirm or cancel/dismiss. */
     confirmDialog: (options: IConfirmOptions) => Promise<boolean>;
     resolveConfirmDialog: (result: boolean) => void;
 }
 
-export const useConfirmModalStore = create<IConfirmModalStore>((set) => ({
+export const useConfirmModalStore = create<IConfirmModalStore>((set, get) => ({
 
     isVisible: false,
     title: 'Are you sure?',
     message: '',
     confirmLabel: 'Confirm',
     cancelLabel: 'Cancel',
+    hasDontAskAgain: false,
+    dontAskAgain: false,
 
-    confirmDialog: ({ title = 'Are you sure?', message, confirmLabel = 'Confirm', cancelLabel = 'Cancel' }) => {
-        set({ title, message, confirmLabel, cancelLabel, isVisible: true });
+    setDontAskAgain: (value) => set({ dontAskAgain: value }),
+
+    confirmDialog: ({ title = 'Are you sure?', message, confirmLabel = 'Confirm', cancelLabel = 'Cancel', onDontAskAgain }) => {
+        dontAskAgainCallback = onDontAskAgain ?? null;
+        set({
+            title, message, confirmLabel, cancelLabel,
+            hasDontAskAgain: onDontAskAgain !== undefined,
+            dontAskAgain: false,
+            isVisible: true
+        });
         return new Promise<boolean>((resolve) => {
             resolver = resolve;
         });
     },
 
     resolveConfirmDialog: (result) => {
+        if (result && get().dontAskAgain) dontAskAgainCallback?.();
         set({ isVisible: false });
         resolver?.(result);
         resolver = null;
+        dontAskAgainCallback = null;
     }
 
 }));

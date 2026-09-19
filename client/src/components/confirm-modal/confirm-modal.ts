@@ -78,6 +78,32 @@ export function ConfirmModal() {
                         ]
                     }),
 
+                    UltraActivity({
+                        mode: {
+                            state: CONFIRM_MODAL_CTX.hasDontAskAgain.get,
+                            subscriber: CONFIRM_MODAL_CTX.hasDontAskAgain.subscribe
+                        },
+                        component: '<label></label>',
+                        className: [styles.dontAskAgain],
+                        children: [
+                            UltraComponent({
+                                component: '<input type="checkbox" />',
+                                eventHandler: {
+                                    change: (e: Event) => {
+                                        CONFIRM_MODAL_CTX.dontAskAgain.set((e.currentTarget as HTMLInputElement).checked);
+                                    }
+                                },
+                                trigger: [{
+                                    subscriber: CONFIRM_MODAL_CTX.dontAskAgain.subscribe,
+                                    triggerFunction: ($input: HTMLElement) => {
+                                        ($input as HTMLInputElement).checked = CONFIRM_MODAL_CTX.dontAskAgain.get();
+                                    }
+                                }]
+                            }),
+                            `<span>Don't ask again</span>`
+                        ]
+                    }),
+
                     UltraComponent({
                         component: '<div></div>',
                         className: [styles.actions],
