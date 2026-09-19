@@ -1,8 +1,23 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "tags": ["-lintignore"],
-  "entry": ["src/run.ts"],
   "ignore": ["client/**"],
   "ignoreBinaries": ["warp-cli"],
-  "ignoreUnresolved": ["vite/client"]
+  "ignoreUnresolved": ["vite/client"],
+  "workspaces": {
+    ".": {
+      "entry": [
+        "src/run.ts",
+        "electron/main.ts",
+        "electron/preload.ts",
+        "electron-builder.config.js",
+        "scripts/*.ts"
+      ]
+    },
+    "react": {
+      "ignore": ["android/**"],
+      "ignoreBinaries": ["gradlew"],
+      "ignoreDependencies": ["@fontsource/geist-mono", "@fontsource/geist-sans"]
+    }
+  }
 }
