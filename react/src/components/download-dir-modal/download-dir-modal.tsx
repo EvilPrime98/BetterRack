@@ -3,7 +3,7 @@ import styles from './download-dir-modal.module.css';
 import { FolderIcon } from '@/icons/folder.icon';
 import { useSettingsStore } from '@/stores/settings.store';
 import { useDownloadDirModalContext } from '@/context/DownloadDirModalContext';
-import { getDirectories } from '@/services/fs.service';
+import { areDirectoryListsEqual, getCachedDirectories, refreshDirectories } from '@/services/fs.service';
 
 type TListState =
     | { status: 'loading' }
@@ -30,16 +30,25 @@ export function DownloadDirModal() {
 
     useEffect(() => {
         if (!isVisible) return;
-        setListState({ status: 'loading' });
+        const cachedDirs = getCachedDirectories();
+        setListState(cachedDirs ? { status: 'ready', dirs: cachedDirs } : { status: 'loading' });
         let cancelled = false;
         (async () => {
             try {
-                const dirs = await getDirectories();
-                if (!cancelled) setListState({ status: 'ready', dirs });
+                const dirs = await refreshDirectories();
+                if (cancelled) return;
+                setListState((prev) => (
+                    prev.status === 'ready' && areDirectoryListsEqual(prev.dirs, dirs)
+                        ? prev
+                        : { status: 'ready', dirs }
+                ));
             } catch (e) {
-                if (!cancelled) {
-                    setListState({ status: 'error', message: e instanceof Error ? e.message : 'Failed to load directories.' });
-                }
+                if (cancelled) return;
+                setListState((prev) => (
+                    prev.status === 'ready'
+                        ? prev
+                        : { status: 'error', message: e instanceof Error ? e.message : 'Failed to load directories.' }
+                ));
             }
         })();
         return () => { cancelled = true; };

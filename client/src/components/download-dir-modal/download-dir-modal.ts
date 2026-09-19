@@ -3,12 +3,13 @@ import styles from './download-dir-modal.module.css';
 import { FolderIcon } from "@/icons/folder.icon";
 import { SETTINGS_CONTEXT } from "@/context/settings.context";
 import { DOWNLOAD_DIR_MODAL_CTX } from "@/context/download-dir-modal.context";
-import { getDirectories } from "@/services/fs.service";
+import { areDirectoryListsEqual, getCachedDirectories, refreshDirectories } from "@/services/fs.service";
 
 export function DownloadDirModal() {
 
     let $list: HTMLElement | null = null;
     let loading = false;
+    let displayedDirs: string[] | null = null;
 
     const cancel = () => DOWNLOAD_DIR_MODAL_CTX.closeDownloadDirModal();
 
@@ -53,13 +54,17 @@ export function DownloadDirModal() {
     const loadAndRender = async () => {
         if (!$list || loading) return;
         loading = true;
-        renderMessage('Loading…');
+        displayedDirs = getCachedDirectories();
+        if (displayedDirs) renderList(displayedDirs);
+        else renderMessage('Loading…');
         try {
-            const dirs = await getDirectories();
+            const dirs = await refreshDirectories();
             if (!DOWNLOAD_DIR_MODAL_CTX.isVisible.get()) return;
+            if (displayedDirs && areDirectoryListsEqual(displayedDirs, dirs)) return;
+            displayedDirs = dirs;
             renderList(dirs);
         } catch (e) {
-            renderMessage(e instanceof Error ? e.message : 'Failed to load directories.');
+            if (!displayedDirs) renderMessage(e instanceof Error ? e.message : 'Failed to load directories.');
         } finally {
             loading = false;
         }

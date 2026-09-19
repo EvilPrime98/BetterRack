@@ -1,11 +1,18 @@
 import type { IAppSettings } from "../settings.types";
 import { API_URL } from "./library.service";
 import { authHeaders } from "./server-config.service";
+import { invalidateDirectories } from "./fs.service";
 
 async function parseSettingsResponse(response: Response): Promise<IAppSettings> {
     const data = await response.json();
     if (!response.ok) throw new Error(data.message || 'Request failed');
     return data;
+}
+
+async function parseSettingsMutationResponse(response: Response): Promise<IAppSettings> {
+    const settings = await parseSettingsResponse(response);
+    invalidateDirectories();
+    return settings;
 }
 
 export async function getSettings(): Promise<IAppSettings> {
@@ -21,7 +28,7 @@ export async function updateSettings(
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify(partial)
     });
-    return parseSettingsResponse(response);
+    return parseSettingsMutationResponse(response);
 }
 
 export async function addLibraryFolder(
@@ -32,7 +39,7 @@ export async function addLibraryFolder(
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ path })
     });
-    return parseSettingsResponse(response);
+    return parseSettingsMutationResponse(response);
 }
 
 export async function removeLibraryFolder(
@@ -43,5 +50,5 @@ export async function removeLibraryFolder(
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ path })
     });
-    return parseSettingsResponse(response);
+    return parseSettingsMutationResponse(response);
 }
