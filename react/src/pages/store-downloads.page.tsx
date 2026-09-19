@@ -6,127 +6,10 @@ import { useLibraryStore } from '@/stores/library.store';
 import { useConfirmModalStore } from '@/stores/confirmModal.store';
 import { toast } from '@/services/toast.service';
 import { POLL_INTERVAL_MS } from '@/data';
-import type { TStoreProgressEvent } from '@/store.types';
 import styles from './store-downloads.page.module.css';
-
-const STATE_LABEL: Record<TJobStatus['state'], string> = {
-    queued: 'Queued',
-    running: 'Downloading',
-    done: 'Done',
-    error: 'Failed'
-};
-
-function percentFor(progress?: TStoreProgressEvent): number | null {
-    if (!progress) return null;
-    if (progress.type === 'progress') return Math.round(progress.percent);
-    if (progress.type === 'extracting') {
-        return progress.total > 0
-            ? Math.round((progress.done / progress.total) * 100)
-            : null;
-    }
-    return null;
-}
-
-function detailFor(progress?: TStoreProgressEvent): string {
-    if (!progress) return '';
-    switch (progress.type) {
-        case 'preparing':
-            return 'Preparing…';
-        case 'retrying':
-            return progress.status
-                ? `Retrying after HTTP ${progress.status} — waiting ${progress.delaySec}s`
-                : `Connection lost — retrying in ${progress.delaySec}s`;
-        case 'progress':
-            return `${progress.receivedMB} / ${progress.totalMB} MB`;
-        case 'extracting':
-            return `Extracting ${progress.done} / ${progress.total}`;
-        case 'done':
-            return progress.filename;
-        case 'error':
-            return progress.message;
-    }
-}
-
-function canStop(job: TJobStatus): boolean {
-    const isActive = job.state === 'queued' || job.state === 'running';
-    return isActive && job.progress?.type !== 'extracting';
-}
-
-type TJobStates = Map<string, TJobStatus['state']>;
-
-function stateByJobId(jobs: TJobStatus[]): TJobStates {
-    return new Map(jobs.map((job) => [job.jobId, job.state]));
-}
-
-function findNewlyDone(previous: TJobStates, jobs: TJobStatus[]): TJobStatus[] {
-    return jobs.filter((job) => {
-        const before = previous.get(job.jobId);
-        return job.state === 'done' && before !== undefined && before !== 'done';
-    });
-}
-
-async function notifyFinished(finished: TJobStatus[]) {
-    if (finished.length === 0) return;
-    finished.forEach((job) => toast.success(`${job.label} downloaded`));
-    await useLibraryStore.getState().refreshLibrary({ silent: true });
-}
-
-function JobRow({ job, onRetry, retrying, onStop, stopping }: {
-    job: TJobStatus;
-    onRetry: (jobId: string) => void;
-    retrying: boolean;
-    onStop: (job: TJobStatus) => void;
-    stopping: boolean;
-}) {
-
-    const percent = percentFor(job.progress);
-    const detail = detailFor(job.progress);
-
-    return (
-        <li className={styles.row} data-state={job.state}>
-
-            <div className={styles.rowHead}>
-                <span className={styles.label}>{job.label}</span>
-                <span className={styles.badge} data-state={job.state}>{STATE_LABEL[job.state]}</span>
-            </div>
-
-            {percent !== null && (
-                <>
-                    <div className={styles.progress}>
-                        <span className={styles.progressFill} style={{ width: `${percent}%` }} />
-                    </div>
-                    <span className={styles.percent}>{percent}%</span>
-                </>
-            )}
-
-            {detail && <span className={styles.detail}>{detail}</span>}
-
-            {job.state === 'error' && (
-                <button
-                    type="button"
-                    className={styles.retry}
-                    disabled={retrying}
-                    onClick={() => onRetry(job.jobId)}
-                >
-                    Retry
-                </button>
-            )}
-
-            {canStop(job) && (
-                <button
-                    type="button"
-                    className={styles.stop}
-                    disabled={stopping}
-                    onClick={() => onStop(job)}
-                >
-                    Stop
-                </button>
-            )}
-
-        </li>
-    );
-
-}
+import { JobRow } from '@/components/downloads-page/job-row';
+import type { TJobStates } from '@/store.types';
+import { useUserPrefStore } from '@/stores/userPref.store';
 
 export function StoreDownloadsPage() {
 
@@ -136,6 +19,62 @@ export function StoreDownloadsPage() {
     const [loaded, setLoaded] = useState(false);
     const [retryingIds, setRetryingIds] = useState<Set<string>>(new Set());
     const [stoppingIds, setStoppingIds] = useState<Set<string>>(new Set());
+
+    function stateByJobId(jobs: TJobStatus[]): TJobStates {
+        return new Map(jobs.map((job) => [job.jobId, job.state]));
+    }
+
+    function findNewlyDone(previous: TJobStates, jobs: TJobStatus[]): TJobStatus[] {
+        return jobs.filter((job) => {
+            const before = previous.get(job.jobId);
+            return job.state === 'done' && before !== undefined && before !== 'done';
+        });
+    }
+
+    async function notifyFinished(finished: TJobStatus[]) {
+        if (finished.length === 0) return;
+        finished.forEach((job) => toast.success(`${job.label} downloaded`));
+        await useLibraryStore.getState().refreshLibrary({ silent: true });
+    }
+
+    async function handleRetry(jobId: string) {
+        setRetryingIds((prev) => new Set(prev).add(jobId));
+        try {
+            await retryDownloadJob(jobId);
+            setJobs(await getDownloadJobs());
+        } finally {
+            setRetryingIds((prev) => {
+                const next = new Set(prev);
+                next.delete(jobId);
+                return next;
+            });
+        }
+    }
+
+    async function handleStop(job: TJobStatus) {
+        if (useUserPrefStore.getState().pref.askStopDownloads === true){
+            const confirmed = await useConfirmModalStore.getState().confirmDialog({
+                title: 'Stop this download?',
+                message: `"${job.label}" will be stopped and removed from the list.`,
+                confirmLabel: 'Stop download',
+                onDontAskAgain: () => useUserPrefStore.getState().setPref({ askStopDownloads: false })
+            });
+            if (!confirmed) return;
+        }
+        setStoppingIds((prev) => new Set(prev).add(job.jobId));
+        try {
+            await cancelDownloadJob(job.jobId);
+            setJobs(await getDownloadJobs());
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : 'Failed to stop the download.');
+        } finally {
+            setStoppingIds((prev) => {
+                const next = new Set(prev);
+                next.delete(job.jobId);
+                return next;
+            });
+        }
+    }
 
     useEffect(() => {
         setTitle('Downloads');
@@ -172,42 +111,6 @@ export function StoreDownloadsPage() {
         };
 
     }, []);
-
-    async function handleRetry(jobId: string) {
-        setRetryingIds((prev) => new Set(prev).add(jobId));
-        try {
-            await retryDownloadJob(jobId);
-            setJobs(await getDownloadJobs());
-        } finally {
-            setRetryingIds((prev) => {
-                const next = new Set(prev);
-                next.delete(jobId);
-                return next;
-            });
-        }
-    }
-
-    async function handleStop(job: TJobStatus) {
-        const confirmed = await useConfirmModalStore.getState().confirmDialog({
-            title: 'Stop this download?',
-            message: `"${job.label}" will be stopped and removed from the list.`,
-            confirmLabel: 'Stop download'
-        });
-        if (!confirmed) return;
-        setStoppingIds((prev) => new Set(prev).add(job.jobId));
-        try {
-            await cancelDownloadJob(job.jobId);
-            setJobs(await getDownloadJobs());
-        } catch (e) {
-            toast.error(e instanceof Error ? e.message : 'Failed to stop the download.');
-        } finally {
-            setStoppingIds((prev) => {
-                const next = new Set(prev);
-                next.delete(job.jobId);
-                return next;
-            });
-        }
-    }
 
     return (
         <Layout>
