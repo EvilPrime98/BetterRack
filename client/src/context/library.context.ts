@@ -57,6 +57,7 @@ export interface ILibraryCtx {
     libraryLoaded: IUltraCompStateStateful<boolean>;
     queryClient: IUltraCompStateStateful<typeof queryClient>;
     searchQuery: IUltraCompStateStateful<string>;
+    lastDeleted: IUltraCompStateStateful<{ uid: string } | null>;
     fetchLibrary: (options?: { force?: boolean }) => Promise<void>;
     refreshLibrary: (options?: { silent?: boolean }) => Promise<void>;
     deleteFile: (uid: string) => Promise<void>;
@@ -80,6 +81,8 @@ export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
     queryClient: queryClient,
 
     searchQuery: '' as string,
+
+    lastDeleted: null as { uid: string } | null,
 
     fetchLibrary: async (comp: ILibraryCtx, options?: { force?: boolean }) => {
 
@@ -160,6 +163,7 @@ export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
         try {
             const data = await requestDeleteFile(uid);
             await reloadLibrary(comp);
+            comp.lastDeleted.set({ uid });
             toast.success(data.message || 'File deleted');
         } catch (e) {
             toast.error(e instanceof Error ? e.message : 'Failed to delete file.');
@@ -170,6 +174,7 @@ export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
         try {
             const data = await requestDeleteFolder(uid);
             await reloadLibrary(comp);
+            comp.lastDeleted.set({ uid });
             toast.success(data.message || 'Folder deleted');
         } catch (e) {
             toast.error(e instanceof Error ? e.message : 'Failed to delete folder.');

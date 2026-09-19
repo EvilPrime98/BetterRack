@@ -7,6 +7,7 @@ import { toast } from "../services/toast.service";
 import type { ILibraryResponseItem } from "../library.types";
 import { DOCUMENT_TITLE_CONTEXT } from "../context/document-title.context";
 import { COMIC_CACHE_CONTEXT } from "../context/comic-cache.context";
+import { LIBRARY_CONTEXT } from "../context/library.context";
 import { matchesReadFilter } from "../context/read-types.context";
 
 interface IReadingPageState {
@@ -15,6 +16,7 @@ interface IReadingPageState {
     error: IUltraCompStateStateful<string>;
     load: () => Promise<void>;
     dropNotInProgress: () => void;
+    dropDeleted: (uid: string) => void;
 }
 
 export function ReadingPage() {
@@ -46,6 +48,12 @@ export function ReadingPage() {
                 matchesReadFilter('reading', COMIC_CACHE_CONTEXT.getCacheById(item.uid)?.readPer ?? 0)
             );
             if (inProgress.length !== currItems.length) comp.items.set(inProgress);
+        },
+
+        dropDeleted: (comp: IReadingPageState, uid: string) => {
+            const currItems = comp.items.get();
+            const remaining = currItems.filter(item => item.uid !== uid);
+            if (remaining.length !== currItems.length) comp.items.set(remaining);
         }
 
     });
@@ -87,6 +95,9 @@ export function ReadingPage() {
             onMount: [
                 () => { store.load(); },
                 () => COMIC_CACHE_CONTEXT.cache.subscribe(() => store.dropNotInProgress()),
+                () => LIBRARY_CONTEXT.lastDeleted.subscribe(deleted => {
+                    if (deleted) store.dropDeleted(deleted.uid);
+                }),
                 () => DOCUMENT_TITLE_CONTEXT.setTitle('Keep reading')
             ],
 

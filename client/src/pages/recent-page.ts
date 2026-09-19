@@ -7,6 +7,7 @@ import { toast } from "../services/toast.service";
 import { ChevronDownIcon } from "../icons/chevron.icon";
 import { RECENT_WINDOW_OPTIONS, type ILibraryResponseItem } from "../library.types";
 import { DOCUMENT_TITLE_CONTEXT } from "../context/document-title.context";
+import { LIBRARY_CONTEXT } from "../context/library.context";
 
 interface IRecentPageState {
     items: IUltraCompStateStateful<ILibraryResponseItem[]>;
@@ -14,6 +15,7 @@ interface IRecentPageState {
     isLoading: IUltraCompStateStateful<boolean>;
     error: IUltraCompStateStateful<string>;
     load: () => Promise<void>;
+    dropDeleted: (uid: string) => void;
 }
 
 function labelForWindow(hours: number): string {
@@ -125,6 +127,12 @@ export function RecentPage() {
             } finally {
                 comp.isLoading.set(false);
             }
+        },
+
+        dropDeleted: (comp: IRecentPageState, uid: string) => {
+            const currItems = comp.items.get();
+            const remaining = currItems.filter(item => item.uid !== uid);
+            if (remaining.length !== currItems.length) comp.items.set(remaining);
         }
 
     });
@@ -165,6 +173,9 @@ export function RecentPage() {
 
             onMount: [
                 () => { store.load(); },
+                () => LIBRARY_CONTEXT.lastDeleted.subscribe(deleted => {
+                    if (deleted) store.dropDeleted(deleted.uid);
+                }),
                 () => DOCUMENT_TITLE_CONTEXT.setTitle('Recently added')
             ],
 
