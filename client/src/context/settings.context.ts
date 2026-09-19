@@ -15,8 +15,6 @@ export const SETTINGS_CONTEXT: ISettingsCtx = ultraCompState({
     settings: {
         outputDirs: [],
         apiUrl: '',
-        baseUrl: '',
-        hostDomain: '',
         downloadDir: '',
         identifyFromMeta: false,
     } as IAppSettings,

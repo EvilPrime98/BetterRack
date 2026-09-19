@@ -20,8 +20,6 @@ export function SettingsPage() {
 
     const fieldsState = ultraCompState({
         apiUrl: '',
-        baseUrl: '',
-        hostDomain: '',
         downloadDir: '',
         folderPath: '',
         identifyFromMeta: false
@@ -42,8 +40,6 @@ export function SettingsPage() {
     function syncFields() {
         const settings = SETTINGS_CONTEXT.settings.get();
         fieldsState.apiUrl.set(settings.apiUrl);
-        fieldsState.baseUrl.set(settings.baseUrl);
-        fieldsState.hostDomain.set(settings.hostDomain);
         fieldsState.downloadDir.set(settings.downloadDir);
         fieldsState.identifyFromMeta.set(settings.identifyFromMeta);
     }
@@ -128,8 +124,6 @@ export function SettingsPage() {
         
         const partial: Partial<Omit<IAppSettings, 'outputDirs'>> = {
             apiUrl: fieldsState.apiUrl.get(),
-            baseUrl: fieldsState.baseUrl.get(),
-            hostDomain: fieldsState.hostDomain.get(),
             downloadDir: fieldsState.downloadDir.get(),
             identifyFromMeta: fieldsState.identifyFromMeta.get(),
         };
@@ -343,30 +337,6 @@ export function SettingsPage() {
                                         input: (e: Event) => {
                                             const $input = e.target as HTMLInputElement;
                                             fieldsState.apiUrl.set($input.value)
-                                        }
-                                    }
-                                }),
-
-                                TextField({
-                                    key: 'baseUrl',
-                                    label: 'Base URL',
-                                    placeholder: 'https://example.com',
-                                    eventHandler: {
-                                        input: (e: Event) => {
-                                            const $input = e.target as HTMLInputElement;
-                                            fieldsState.baseUrl.set($input.value)
-                                        }
-                                    }
-                                }),
-
-                                TextField({
-                                    key: 'hostDomain',
-                                    label: 'Host domain',
-                                    placeholder: 'https://example.com',
-                                    eventHandler: {
-                                        input: (e: Event) => {
-                                            const $input = e.target as HTMLInputElement;
-                                            fieldsState.hostDomain.set($input.value)
                                         }
                                     }
                                 }),

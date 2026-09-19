@@ -24,8 +24,6 @@ export function SettingsPage() {
     const [folderPath, setFolderPath] = useState('');
     const [draft, setDraft] = useState({
         apiUrl: settings.apiUrl,
-        baseUrl: settings.baseUrl,
-        hostDomain: settings.hostDomain,
         downloadDir: settings.downloadDir,
         identifyFromMeta: settings.identifyFromMeta,
     });
@@ -37,8 +35,6 @@ export function SettingsPage() {
     useEffect(() => {
         setDraft({
             apiUrl: settings.apiUrl,
-            baseUrl: settings.baseUrl,
-            hostDomain: settings.hostDomain,
             downloadDir: settings.downloadDir,
             identifyFromMeta: settings.identifyFromMeta,
         });
@@ -211,20 +207,6 @@ export function SettingsPage() {
                             label="API URL"
                             placeholder="https://example.com/wp-json/wp/v2"
                             onChange={(e) => setDraft((d) => ({ ...d, apiUrl: (e.target as HTMLInputElement).value }))}
-                        />
-
-                        <TextField
-                            fieldKey="baseUrl"
-                            label="Base URL"
-                            placeholder="https://example.com"
-                            onChange={(e) => setDraft((d) => ({ ...d, baseUrl: (e.target as HTMLInputElement).value }))}
-                        />
-
-                        <TextField
-                            fieldKey="hostDomain"
-                            label="Host domain"
-                            placeholder="https://example.com"
-                            onChange={(e) => setDraft((d) => ({ ...d, hostDomain: (e.target as HTMLInputElement).value }))}
                         />
 
                     </div>

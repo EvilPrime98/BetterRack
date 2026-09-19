@@ -3,6 +3,7 @@ import type { TCacheModel, TDownloadableObject, TDownloadLink, TGetComicsApiMode
 import he from 'he';
 import crypto from 'node:crypto';
 import { GcwHtmlParser } from './gcwHtmlParserModel';
+import { deriveStoreOrigin } from '#utils/store-origin';
 
 export class GetComicsApiModel implements TGetComicsApiModel {
 
@@ -18,8 +19,12 @@ export class GetComicsApiModel implements TGetComicsApiModel {
         return this.prefsModel.getAppSettings().apiUrl;
     }
 
+    private get storeOrigin(): string {
+        return deriveStoreOrigin(this.apiUrl);
+    }
+
     private buildHeaders = (): HeadersInit => {
-        const { baseUrl } = this.prefsModel.getAppSettings();
+        const baseUrl = this.storeOrigin;
         return {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
             'Accept': 'application/json, text/plain, */*',
@@ -124,8 +129,7 @@ export class GetComicsApiModel implements TGetComicsApiModel {
         rawHtml: string,
         strat: TStrat = 'all'
     ): Promise<TDownloadLink[]> => {
-        const { hostDomain } = this.prefsModel.getAppSettings();
-        const parser = new GcwHtmlParser(rawHtml, hostDomain);
+        const parser = new GcwHtmlParser(rawHtml, this.storeOrigin);
         return parser.strategize(strat);
     }
 

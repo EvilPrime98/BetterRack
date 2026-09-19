@@ -12,8 +12,6 @@ const log = logger.child({ module: 'PreferencesModel' });
 const DEFAULT_SETTINGS: TAppSettings = {
     outputDirs: [],
     apiUrl: '',
-    baseUrl: '',
-    hostDomain: '',
     downloadDir: '',
     identifyFromMeta: true,
 };
@@ -77,8 +75,6 @@ export class PreferencesModel implements TPreferencesModel {
             const seed: Partial<TAppSettings> = {};
             if (outputDirs.length > 0) seed.outputDirs = outputDirs;
             if (env.API_URL) seed.apiUrl = env.API_URL;
-            if (env.BASE_URL) seed.baseUrl = env.BASE_URL;
-            if (env.HOST_DOMAIN) seed.hostDomain = env.HOST_DOMAIN;
             if (env.DOWNLOAD_DIR) seed.downloadDir = env.DOWNLOAD_DIR;
             if (Object.keys(seed).length > 0) this.updateAppSettings(seed);
 
@@ -128,8 +124,6 @@ export class PreferencesModel implements TPreferencesModel {
         return {
             outputDirs: values.outputDirs ? JSON.parse(values.outputDirs) : DEFAULT_SETTINGS.outputDirs,
             apiUrl: values.apiUrl ?? DEFAULT_SETTINGS.apiUrl,
-            baseUrl: values.baseUrl ?? DEFAULT_SETTINGS.baseUrl,
-            hostDomain: values.hostDomain ?? DEFAULT_SETTINGS.hostDomain,
             downloadDir: values.downloadDir ?? DEFAULT_SETTINGS.downloadDir,
             identifyFromMeta: values.identifyFromMeta === undefined
                 ? DEFAULT_SETTINGS.identifyFromMeta
@@ -139,7 +133,7 @@ export class PreferencesModel implements TPreferencesModel {
 
     updateAppSettings = (partial: Partial<TAppSettings>): TAppSettings => {
         for (const [key, value] of Object.entries(partial)) {
-            if (value === undefined) continue;
+            if (value === undefined || !(key in DEFAULT_SETTINGS)) continue;
             const stored = key === 'outputDirs' ? JSON.stringify(value) : String(value);
             this.db.insert(appSettings)
                 .values({ key, value: stored })
