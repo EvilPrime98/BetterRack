@@ -157,8 +157,6 @@ export type TLibraryModel = {
 export type TAppSettings = {
     outputDirs: string[];
     apiUrl: string;
-    baseUrl: string;
-    hostDomain: string;
     downloadDir: string;
     identifyFromMeta: boolean;
 }

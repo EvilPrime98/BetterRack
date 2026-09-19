@@ -34,7 +34,7 @@ cd client && pnpm install //for the ultra-light-js client
 cd react && pnpm install //for the React client
 ```
 
-Optional environment variables (place in a `.env` file at the project root): `PORT`, `API_URL`, `BASE_URL`, `HOST_DOMAIN`, `DOWNLOAD_DIR`, `OUTPUT_DIR`, `BR_API_KEY`.
+Optional environment variables (place in a `.env` file at the project root): `PORT`, `API_URL`, `DOWNLOAD_DIR`, `OUTPUT_DIR`, `BR_API_KEY`.
 
 Set `BR_API_KEY` to require that key on every `/api/*` and `/read/*` request — needed when exposing the server beyond a trusted LAN, such as for a desktop client's remote-mode connection. Leave it unset to keep the default open, LAN-trust behavior.
 

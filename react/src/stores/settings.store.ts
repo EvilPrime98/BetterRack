@@ -15,8 +15,6 @@ export const useSettingsStore = create<ISettingsStore>((set) => ({
     settings: {
         outputDirs: [],
         apiUrl: '',
-        baseUrl: '',
-        hostDomain: '',
         downloadDir: '',
         identifyFromMeta: false,
     },
