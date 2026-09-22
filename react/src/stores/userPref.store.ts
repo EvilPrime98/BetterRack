@@ -6,6 +6,7 @@ export interface IUserPref {
     comicType: TComicsTypes;
     /** Whether or not to show a confirmation modal when stopping a download job. */
     askStopDownloads: boolean;
+    zoom: number;
 }
 
 interface IUserPrefStore {
@@ -20,7 +21,8 @@ interface IUserPrefStore {
 const DEFAULT_PREF: IUserPref = {
     filter: 'Alphabetically',
     comicType: 'detail',
-    askStopDownloads: true
+    askStopDownloads: true,
+    zoom: 1
 }
 
 export const useUserPrefStore = create<IUserPrefStore>((set, get) => ({

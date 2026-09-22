@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
+import { useUserPrefStore } from '../stores/userPref.store';
 
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 3;
@@ -8,25 +9,34 @@ const ZOOM_STEP = 0.1;
 const clampZoom = (value: number) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, +value.toFixed(2)));
 
 export function useReaderZoom(
-    pageRef: RefObject<HTMLElement | null>, 
+    pageRef: RefObject<HTMLElement | null>,
     viewerRef: RefObject<HTMLElement | null>
 ) {
 
-    const [zoom, setZoom] = useState(1);
+    const [zoom, setZoom] = useState(() => useUserPrefStore.getState().getPref('zoom'));
     const zoomRef = useRef(zoom);
     zoomRef.current = zoom;
 
-    const zoomIn = useCallback(() => {
-        setZoom((z) => clampZoom(z + ZOOM_STEP))
+    const persistZoom = useCallback((value: number) => {
+        useUserPrefStore.getState().setPref({ zoom: value });
     }, []);
+
+    const zoomIn = useCallback(() => {
+        const next = clampZoom(zoomRef.current + ZOOM_STEP);
+        setZoom(next);
+        persistZoom(next);
+    }, [persistZoom]);
 
     const zoomOut = useCallback(() => {
-        setZoom((z) => clampZoom(z - ZOOM_STEP))
-    }, []);
+        const next = clampZoom(zoomRef.current - ZOOM_STEP);
+        setZoom(next);
+        persistZoom(next);
+    }, [persistZoom]);
 
     const zoomReset = useCallback(() => {
-        setZoom(1)
-    }, []);
+        setZoom(1);
+        persistZoom(1);
+    }, [persistZoom]);
 
     const onWheel = useCallback((e: React.WheelEvent) => {
         if (!e.ctrlKey) return;
@@ -81,6 +91,7 @@ export function useReaderZoom(
 
         const settle = () => {
             if (pointers.size >= 2) return;
+            if (pinching) persistZoom(zoomRef.current);
             pinching = false;
             startDistance = 0;
         };
@@ -115,6 +126,7 @@ export function useReaderZoom(
                 const close = Math.hypot(e.clientX - lastTapX, e.clientY - lastTapY) < 24;
                 if (quick && close) {
                     setZoom(1);
+                    persistZoom(1);
                     lastTapTime = 0;
                 } else {
                     lastTapTime = now;
@@ -141,7 +153,7 @@ export function useReaderZoom(
             $page.removeEventListener('pointerup', onPointerUp);
             $page.removeEventListener('pointercancel', onPointerCancel);
         };
-    }, [pageRef]);
+    }, [pageRef, persistZoom]);
 
     return { onWheel };
 
