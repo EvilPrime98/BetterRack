@@ -106,7 +106,11 @@ export function ServerModal() {
                     {!isMandatory && (
                         <BRButton text="Cancel" variant="secondary" onClick={cancel} />
                     )}
-                    <BRButton text="Connect" variant="primary" onClick={submit} />
+                    <BRButton 
+                        text="Connect" 
+                        variant="classic" 
+                        onClick={submit}
+                    />
                 </div>
 
             </div>

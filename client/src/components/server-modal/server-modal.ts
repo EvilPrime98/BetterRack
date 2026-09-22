@@ -169,7 +169,7 @@ export function ServerModal() {
                                     ]),
                                     BRButton({
                                         text: 'Connect',
-                                        variant: 'primary',
+                                        variant: 'classic',
                                         eventHandler: { click: submit }
                                     })
                                 )
