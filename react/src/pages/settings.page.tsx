@@ -17,8 +17,6 @@ export function SettingsPage() {
 
     const settings = useSettingsStore((s) => s.settings);
     const setTitle = useDocumentTitleStore((s) => s.setTitle);
-    const isServerModalVisible = useServerModalStore((s) => s.isVisible);
-
     const [folderError, setFolderError] = useState('');
     const [settingsError, setSettingsError] = useState('');
     const [folderPath, setFolderPath] = useState('');
@@ -27,18 +25,6 @@ export function SettingsPage() {
         downloadDir: settings.downloadDir,
         identifyFromMeta: settings.identifyFromMeta,
     });
-
-    useEffect(() => {
-        setTitle('Settings');
-    }, [setTitle]);
-
-    useEffect(() => {
-        setDraft({
-            apiUrl: settings.apiUrl,
-            downloadDir: settings.downloadDir,
-            identifyFromMeta: settings.identifyFromMeta,
-        });
-    }, [settings]);
 
     function clearFolderError() {
         setFolderError('');
@@ -121,6 +107,18 @@ export function SettingsPage() {
 
     }
 
+    useEffect(() => {
+        setTitle('Settings');
+    }, [setTitle]);
+
+    useEffect(() => {
+        setDraft({
+            apiUrl: settings.apiUrl,
+            downloadDir: settings.downloadDir,
+            identifyFromMeta: settings.identifyFromMeta,
+        });
+    }, [settings]);
+
     return (
         <Layout>
             <section className={styles.page}>
@@ -129,174 +127,175 @@ export function SettingsPage() {
 
                 <div className={styles.grid}>
 
-                <section className={`${styles.section} ${styles.colLeft}`}>
+                    <section className={`${styles.section} ${styles.colLeft}`}>
 
-                    <h2 className={styles.sectionTitle}>Server</h2>
+                        <h2 className={styles.sectionTitle}>Server</h2>
 
-                    <p className={styles.empty}>
-                        {isServerModalVisible ? undefined : (getStoredServerUrl() || 'No server configured')}
-                    </p>
+                        <p className={styles.empty}>
+                            {getStoredServerUrl()
+                                || 'No server configured'}
+                        </p>
 
-                    <BRButton
-                        text="Change server"
-                        onClick={() => useServerModalStore.getState().openServerModal()}
-                    />
-
-                    {isRemoteModeEnabled() && (
                         <BRButton
-                            text="Unlink server"
-                            variant="secondary"
-                            onClick={onUnlinkServer}
-                        />
-                    )}
-
-                </section>
-        
-                <section className={`${styles.section} ${styles.colLeft}`}>
-
-                    <h2 className={styles.sectionTitle}>Library folders</h2>
-
-                    <ul className={styles.folderList}>
-                        {settings.outputDirs.length === 0
-                            ? <li className={styles.empty}>No library folders configured yet.</li>
-                            : settings.outputDirs.map(dir => (
-                                <LibraryFolderRow
-                                    key={dir}
-                                    dir={dir}
-                                    clearFolderError={clearFolderError}
-                                    setFolderError={setFolderError}
-                                />
-                            ))
-                        }
-                    </ul>
-
-                    <div className={styles.addRow}>
-
-                        <input
-                            type="text"
-                            className={styles.input}
-                            placeholder="Folder path"
-                            aria-label="Folder path"
-                            value={folderPath}
-                            onChange={(e) => setFolderPath(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === 'Enter') onAddFolder(); }}
+                            text="Change server"
+                            onClick={() => useServerModalStore.getState().openServerModal()}
                         />
 
-                        {hasNativeFolderPicker() && (
+                        {isRemoteModeEnabled() && (
                             <BRButton
-                                text="Browse…"
+                                text="Unlink server"
                                 variant="secondary"
-                                className={styles.browseBtn}
-                                onClick={onBrowseFolder}
+                                onClick={onUnlinkServer}
                             />
                         )}
 
-                        <BRButton
-                            text="Add Folder"
-                            onClick={onAddFolder}
-                        />
+                    </section>
 
-                    </div>
+                    <section className={`${styles.section} ${styles.colLeft}`}>
 
-                    <p className={styles.errorText}>{folderError}</p>
+                        <h2 className={styles.sectionTitle}>Library folders</h2>
 
-                </section>
+                        <ul className={styles.folderList}>
+                            {settings.outputDirs.length === 0
+                                ? <li className={styles.empty}>No library folders configured yet.</li>
+                                : settings.outputDirs.map(dir => (
+                                    <LibraryFolderRow
+                                        key={dir}
+                                        dir={dir}
+                                        clearFolderError={clearFolderError}
+                                        setFolderError={setFolderError}
+                                    />
+                                ))
+                            }
+                        </ul>
 
-                <section className={`${styles.section} ${styles.colRight}`}>
+                        <div className={styles.addRow}>
 
-                    <div className={styles.fieldGroup}>
+                            <input
+                                type="text"
+                                className={styles.input}
+                                placeholder="Folder path"
+                                aria-label="Folder path"
+                                value={folderPath}
+                                onChange={(e) => setFolderPath(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === 'Enter') onAddFolder(); }}
+                            />
 
-                        <h2 className={styles.sectionTitle}>Downloads</h2>
-
-                        <TextField
-                            fieldKey="downloadDir"
-                            label="Download folder"
-                            placeholder="/path/to/downloads"
-                            onChange={(e) => setDraft((d) => ({ ...d, downloadDir: e.target.value }))}
-                        />
-
-                    </div>
-
-                    <div className={styles.fieldGroup}>
-
-                        <h2 className={`${styles.sectionTitle} ${styles.groupDivider}`}>Store configuration</h2>
-
-                        <TextField
-                            fieldKey="apiUrl"
-                            label="API URL"
-                            placeholder="https://example.com/wp-json/wp/v2"
-                            onChange={(e) => setDraft((d) => ({ ...d, apiUrl: (e.target as HTMLInputElement).value }))}
-                        />
-
-                    </div>
-
-                    <div className={styles.fieldGroup}>
-
-                        <h2 className={`${styles.sectionTitle} ${styles.groupDivider}`}>Identification</h2>
-
-                        <div className={styles.toggleRow}>
-
-                            <label className={styles.toggleLabel}>
-                                <input
-                                    type="checkbox"
-                                    checked={draft.identifyFromMeta}
-                                    onChange={(e) => {
-                                        const checked = e.currentTarget.checked;
-                                        setDraft((d) => ({ ...d, identifyFromMeta: checked }));
-                                    }}
+                            {hasNativeFolderPicker() && (
+                                <BRButton
+                                    text="Browse…"
+                                    variant="secondary"
+                                    className={styles.browseBtn}
+                                    onClick={onBrowseFolder}
                                 />
-                                {' '}Identify from metadata
-                            </label>
+                            )}
 
-                            <span 
-                                className={styles.infoIcon} 
-                                tabIndex={0}
-                            >
-                                <svg
-                                    width={16}
-                                    height={16}
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="#fff"
-                                    strokeWidth={1.5}
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    >
-                                    <circle cx={12} cy={12} r={10} />
-                                    <line x1={12} y1={16} x2={12} y2={12} />
-                                    <line x1={12} y1={8} x2={12.01} y2={8} />
-                                </svg>
-                                <span 
-                                    className={styles.infoTooltip} 
-                                    role="tooltip"
-                                >
-                                    Reads ComicInfo.xml when present, otherwise uses the wiki.
-                                </span>
-                            </span>
-                        
                             <BRButton
-                                style={{
-                                    width: 'fit-content'
-                                }}
-                                variant="secondary"
-                                text="Re-identify all"
-                                onClick={onReidentifyAll}
+                                text="Add Folder"
+                                onClick={onAddFolder}
                             />
 
                         </div>
 
-                    </div>
+                        <p className={styles.errorText}>{folderError}</p>
 
-                    <BRButton
-                        className={styles.saveButton}
-                        text="Save"
-                        onClick={onSave}
-                    />
+                    </section>
 
-                    <p className={styles.errorText}>{settingsError}</p>
+                    <section className={`${styles.section} ${styles.colRight}`}>
 
-                </section>
+                        <div className={styles.fieldGroup}>
+
+                            <h2 className={styles.sectionTitle}>Downloads</h2>
+
+                            <TextField
+                                fieldKey="downloadDir"
+                                label="Download folder"
+                                placeholder="/path/to/downloads"
+                                onChange={(e) => setDraft((d) => ({ ...d, downloadDir: e.target.value }))}
+                            />
+
+                        </div>
+
+                        <div className={styles.fieldGroup}>
+
+                            <h2 className={`${styles.sectionTitle} ${styles.groupDivider}`}>Store configuration</h2>
+
+                            <TextField
+                                fieldKey="apiUrl"
+                                label="API URL"
+                                placeholder="https://example.com/wp-json/wp/v2"
+                                onChange={(e) => setDraft((d) => ({ ...d, apiUrl: (e.target as HTMLInputElement).value }))}
+                            />
+
+                        </div>
+
+                        <div className={styles.fieldGroup}>
+
+                            <h2 className={`${styles.sectionTitle} ${styles.groupDivider}`}>Identification</h2>
+
+                            <div className={styles.toggleRow}>
+
+                                <label className={styles.toggleLabel}>
+                                    <input
+                                        type="checkbox"
+                                        checked={draft.identifyFromMeta}
+                                        onChange={(e) => {
+                                            const checked = e.currentTarget.checked;
+                                            setDraft((d) => ({ ...d, identifyFromMeta: checked }));
+                                        }}
+                                    />
+                                    {' '}Identify from metadata
+                                </label>
+
+                                <span
+                                    className={styles.infoIcon}
+                                    tabIndex={0}
+                                >
+                                    <svg
+                                        width={16}
+                                        height={16}
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="#fff"
+                                        strokeWidth={1.5}
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                    >
+                                        <circle cx={12} cy={12} r={10} />
+                                        <line x1={12} y1={16} x2={12} y2={12} />
+                                        <line x1={12} y1={8} x2={12.01} y2={8} />
+                                    </svg>
+                                    <span
+                                        className={styles.infoTooltip}
+                                        role="tooltip"
+                                    >
+                                        Reads ComicInfo.xml when present, otherwise uses the wiki.
+                                    </span>
+                                </span>
+
+                                <BRButton
+                                    style={{
+                                        width: 'fit-content'
+                                    }}
+                                    variant="secondary"
+                                    text="Re-identify all"
+                                    onClick={onReidentifyAll}
+                                />
+
+                            </div>
+
+                        </div>
+
+                        <BRButton
+                            className={styles.saveButton}
+                            text="Save"
+                            onClick={onSave}
+                        />
+
+                        <p className={styles.errorText}>{settingsError}</p>
+
+                    </section>
 
                 </div>
 

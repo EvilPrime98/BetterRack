@@ -194,16 +194,7 @@ export function SettingsPage() {
                             component: `<p class="${styles.empty}"></p>`,
                             onMount: [($p: HTMLElement) => {
                                 $p.textContent = getStoredServerUrl() || 'No server configured';
-                            }],
-                            trigger: [
-                                {
-                                    subscriber: SERVER_MODAL_CTX.isVisible.subscribe,
-                                    triggerFunction: ($p: HTMLElement) => {
-                                        if (SERVER_MODAL_CTX.isVisible.get()) return;
-                                        $p.textContent = getStoredServerUrl() || 'No server configured';
-                                    }
-                                }
-                            ]
+                            }]
                         }),
 
                         BRButton({
