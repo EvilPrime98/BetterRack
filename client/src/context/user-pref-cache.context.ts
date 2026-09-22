@@ -3,9 +3,10 @@ import type { TComicsTypes, TFilterOptions } from "../library.types";
 
 export interface IUserPref {
     filter: TFilterOptions,
-    comicType: TComicsTypes; 
+    comicType: TComicsTypes;
     /** Whether or not to show a confirmation modal when stopping a download job. */
     askStopDownloads: boolean;
+    zoom: number;
 }
 
 export interface IUserPrefCtx {
@@ -20,7 +21,8 @@ export interface IUserPrefCtx {
 const DEFAULT_PREF: IUserPref = {
     filter: 'Alphabetically',
     comicType: 'detail',
-    askStopDownloads: true
+    askStopDownloads: true,
+    zoom: 1
 }
 
 export const USER_PREF = ultraCompState({

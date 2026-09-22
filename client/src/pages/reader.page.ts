@@ -8,6 +8,7 @@ import { ReaderPageHeader } from "../components/reader-page-header/reader-page-h
 import { ReaderPageProgressBar } from "../components/reader-page-progress-bar/reader-page-progress-bar";
 import { COMIC_CACHE_CONTEXT } from "../context/comic-cache.context";
 import { DOCUMENT_TITLE_CONTEXT } from "../context/document-title.context";
+import { USER_PREF } from "../context/user-pref-cache.context";
 
 const PRELOAD_WINDOW = 2;
 
@@ -31,7 +32,7 @@ export function ReaderPage({
     const [isLoading, setIsLoading, subsIsLoading] = ultraState(true);
     const [hasError, setHasError, subsHasError] = ultraState(false);
     const [currentPage, setCurrentPage, subsCurrentPage] = ultraState(comicCache?.currentPage || 1);
-    const [zoom, setZoom, subsZoom] = ultraState(1);
+    const [zoom, setZoom, subsZoom] = ultraState(USER_PREF.getPref('zoom'));
     const [bookmarks, setBookmarks, subsBookmarks] = ultraState<IBookmark[]>([]);
     const [isRefreshing, setIsRefreshing, subsIsRefreshing] = ultraState(false);
     const [isHeaderVisible, setIsHeaderVisible, subsIsHeaderVisible] = ultraState(true);
@@ -151,9 +152,22 @@ export function ReaderPage({
 
     const clampZoom = (value: number) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, +value.toFixed(2)));
 
-    const zoomIn = () => setZoom(clampZoom(zoom() + ZOOM_STEP));
-    const zoomOut = () => setZoom(clampZoom(zoom() - ZOOM_STEP));
-    const zoomReset = () => setZoom(1);
+    const persistZoom = (value: number) => USER_PREF.setPref({ zoom: value });
+
+    const zoomIn = () => {
+        const next = clampZoom(zoom() + ZOOM_STEP);
+        setZoom(next);
+        persistZoom(next);
+    };
+    const zoomOut = () => {
+        const next = clampZoom(zoom() - ZOOM_STEP);
+        setZoom(next);
+        persistZoom(next);
+    };
+    const zoomReset = () => {
+        setZoom(1);
+        persistZoom(1);
+    };
 
     const toggleHeader = () => setIsHeaderVisible(!isHeaderVisible());
 
@@ -178,6 +192,7 @@ export function ReaderPage({
 
     const settlePinch = () => {
         if (activePointers.size >= 2) return;
+        if (isPinching) persistZoom(zoom());
         isPinching = false;
         pinchStartDistance = 0;
     }
