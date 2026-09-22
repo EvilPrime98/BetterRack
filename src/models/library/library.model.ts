@@ -149,10 +149,15 @@ export class LibraryModel {
 
         const entries = (await Promise.all(
             this.libPaths.map(async (libPath, libIndex) => {
-                const dirEntries = await readdir(libPath, { withFileTypes: true, recursive: true });
-                return dirEntries
-                    .filter(entry => entry.isDirectory() || COMIC_EXTENSIONS.has(path.extname(entry.name).toLowerCase()))
-                    .map(entry => ({ entry, libIndex }));
+                try {
+                    const dirEntries = await readdir(libPath, { withFileTypes: true, recursive: true });
+                    return dirEntries
+                        .filter(entry => entry.isDirectory() || COMIC_EXTENSIONS.has(path.extname(entry.name).toLowerCase()))
+                        .map(entry => ({ entry, libIndex }));
+                } catch (e) {
+                    log.error({ err: e, libPath }, 'Skipping unreachable library folder');
+                    return [];
+                }
             })
         )).flat();
 
