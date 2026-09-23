@@ -220,6 +220,7 @@ export type TThumbnailModel = {
      * first image page and caches it. Returns null if unavailable/ungeneratable.
      */
     getThumbnail: (uid: string, filePath?: string) => Promise<string | null>,
+    retry: (uid: string, filePath: string) => Promise<string | null>,
 }
 
 export type TComicInfoModel = {

@@ -1,5 +1,5 @@
 import { createWriteStream } from 'fs';
-import { mkdir, stat, unlink } from 'fs/promises';
+import { mkdir, rename, stat, unlink } from 'fs/promises';
 import { join } from 'path';
 import { HOST as PIXELDRAIN_HOST } from '../pixel-drain/constants';
 import { RotatingFetchModel } from '../rotating-fetch/rotating-fetch.model';
@@ -7,6 +7,8 @@ import type { PackExtractor } from './pack-extractor.model';
 import type { TDownloadLink, TLogger, TProgressEvent } from './types';
 
 const REQUEST_DELAY = 3 * 1000;
+
+const IN_FLIGHT_SUFFIX = '.part';
 
 const MAX_NETWORK_RETRIES = 3;
 
@@ -326,13 +328,14 @@ export class DownloadModel {
 
         const filename = this.resolveFilename(response, link);
         const dest = join(outputDir, filename);
+        const inFlightDest = `${dest}${IN_FLIGHT_SUFFIX}`;
         const total = Number(response.headers.get('content-length') ?? 0);
         const totalMB = (total / 1024 / 1024).toFixed(1);
 
         await mkdir(outputDir, { recursive: true });
 
         const reader = response.body!.getReader();
-        const fileStream = createWriteStream(dest);
+        const fileStream = createWriteStream(inFlightDest);
         let received = 0;
 
         try {
@@ -364,9 +367,11 @@ export class DownloadModel {
             if (!fileStream.closed) {
                 await new Promise<void>(res => fileStream.once('close', () => res()));
             }
-            await unlink(dest).catch(() => {});
+            await unlink(inFlightDest).catch(() => {});
             throw err;
         }
+
+        await rename(inFlightDest, dest);
 
         return dest;
     }

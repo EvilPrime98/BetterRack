@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { mkdir, readdir, rm } from "node:fs/promises";
+import { mkdir, readdir, rm, stat } from "node:fs/promises";
 import path from "node:path";
 import { createConcurrencyLimiter } from "#utils/concurrencyLimiter";
 import { EXTRACT_CONCURRENCY, RAW_EXTRACT_DIR, THUMBNAIL_CACHE_DIR, THUMBNAIL_QUALITY, THUMBNAIL_WIDTH } from "./constants";
@@ -21,7 +21,7 @@ export class ThumbnailModel {
     private log: TLogger | undefined;
     private compressorModel: TCompressorModel;
     private resolved = new Map<string, string>();
-    private unavailable = new Set<string>();
+    private failedSignatures = new Map<string, string>();
     private inFlight = new Map<string, Promise<string | null>>();
     private limiter = createConcurrencyLimiter(EXTRACT_CONCURRENCY);
 
@@ -42,17 +42,8 @@ export class ThumbnailModel {
 
         try {
 
-            const file = Bun.file(filePath);
-            if (!(await file.exists())) {
-                this.unavailable.add(uid);
-                return null;
-            }
-
             const pages = await this.compressorModel.listPages({ filePath });
-            if (!pages.length) {
-                this.unavailable.add(uid);
-                return null;
-            }
+            if (!pages.length) return null;
 
             const rawDir = path.join(RAW_EXTRACT_DIR, uid);
 
@@ -62,21 +53,46 @@ export class ThumbnailModel {
                 entryName: pages[0]!
             });
 
-            let generated: string | null = null;
-
             try {
-                generated = await this.optimize(uid, rawDir);
+                return await this.optimize(uid, rawDir);
             } finally {
                 await rm(rawDir, { recursive: true, force: true });
             }
 
-            if (!generated) this.unavailable.add(uid);
-
-            return generated;
-
         } finally {
             release();
         }
+
+    }
+
+    private fileSignature = async (
+        filePath: string
+    ): Promise<string | null> => {
+        try {
+            const stats = await stat(filePath);
+            return `${stats.size}:${stats.mtimeMs}`;
+        } catch {
+            return null;
+        }
+    }
+
+    private attempt = async (
+        uid: string,
+        filePath: string
+    ): Promise<string | null> => {
+
+        const signature = await this.fileSignature(filePath);
+        if (signature === null || this.failedSignatures.get(uid) === signature) return null;
+
+        const generated = await this.generate(uid, filePath).catch((e) => {
+            this.log?.error({ err: e }, `Failed to generate thumbnail for: ${uid}`);
+            return null;
+        });
+
+        if (generated) this.failedSignatures.delete(uid);
+        else this.failedSignatures.set(uid, signature);
+
+        return generated;
 
     }
 
@@ -161,22 +177,32 @@ export class ThumbnailModel {
         const cached = await this.findCached(uid);
         if (cached) return cached;
 
-        if (!filePath || this.unavailable.has(uid)) return null;
+        if (!filePath) return null;
 
         const existing = this.inFlight.get(uid);
         if (existing) return existing;
 
-        const job = this.generate(uid, filePath)
-            .catch((e) => {
-                this.log?.error({ err: e }, `Failed to generate thumbnail for: ${uid}`);
-                this.unavailable.add(uid);
-                return null;
-            })
+        const job = this.attempt(uid, filePath)
             .finally(() => this.inFlight.delete(uid));
 
         this.inFlight.set(uid, job);
 
         return job;
+
+    }
+
+    retry = async (
+        uid: string,
+        filePath: string
+    ): Promise<string | null> => {
+
+        await this.inFlight.get(uid);
+
+        this.failedSignatures.delete(uid);
+        this.resolved.delete(uid);
+        await rm(path.join(THUMBNAIL_CACHE_DIR, uid), { recursive: true, force: true });
+
+        return this.getThumbnail(uid, filePath);
 
     }
 

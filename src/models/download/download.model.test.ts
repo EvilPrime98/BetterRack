@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
-import { existsSync } from 'node:fs';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { existsSync, readdirSync } from 'node:fs';
+import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { DownloadModel } from './download.model';
@@ -345,6 +345,30 @@ describe('DownloadModel.downloadComic — cancellation', () => {
         expect(dest).toBeUndefined();
         expect(events.some(e => e.type === 'done')).toBe(false);
         expect(existsSync(path.join(workDir, 'late.cbz'))).toBe(false);
+    });
+
+});
+
+describe('DownloadModel.downloadComic — in-flight file naming', () => {
+
+    test('only exposes the final file name once the transfer is complete', async () => {
+        const url = 'https://example.test/files/inflight.cbz';
+        const entriesMidTransfer: string[] = [];
+        stubFetch([fakeResponse({ url, chunks: [bytes('AB'), bytes('CD')] })]);
+
+        const dest = await makeModel().downloadComic({
+            link: { title: 'Inflight', downloadLink: url },
+            outputDir: workDir,
+            onProgress: (event) => {
+                if (event.type === 'progress') entriesMidTransfer.push(...readdirSync(workDir));
+            },
+            quiet: true,
+        });
+
+        expect(entriesMidTransfer).not.toContain('inflight.cbz');
+        expect(dest).toBe(path.join(workDir, 'inflight.cbz'));
+        expect(await readFile(dest!, 'utf8')).toBe('ABCD');
+        expect(await readdir(workDir)).toEqual(['inflight.cbz']);
     });
 
 });
