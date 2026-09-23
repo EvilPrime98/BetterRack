@@ -197,3 +197,16 @@ export async function moveFile(
     invalidateDirectories();
     return data;
 }
+
+export async function retryThumbnail(
+    uid: string
+): Promise<void> {
+    const response = await fetch(`${API_URL}/api/thumbnail/${uid}/retry`, {
+        method: 'POST',
+        headers: authHeaders()
+    });
+    if (!response.ok) {
+        const data: { message?: string } = await response.json().catch(() => ({}));
+        throw new Error(data.message ?? 'Thumbnail generation failed.');
+    }
+}

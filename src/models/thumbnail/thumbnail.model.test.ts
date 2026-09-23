@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, spyOn, test, type Mock } from 'bun:test';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, utimes, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { ThumbnailModel } from './thumbnail.model';
@@ -93,6 +93,69 @@ describe('ThumbnailModel.optimize', () => {
         expect(await model.getThumbnail(uid, archivePath)).toBeNull();
         expect(await model.getThumbnail(uid, archivePath)).toBeNull();
         expect(spawn).toHaveBeenCalledTimes(1);
+    });
+
+});
+
+describe('ThumbnailModel failure handling', () => {
+
+    test('retries a failed extraction once the source file changes', async () => {
+        fakeFfmpeg(spawn, 1);
+
+        const model = new ThumbnailModel(makeCompressorModel());
+        const uid = `changed-${Date.now()}`;
+
+        expect(await model.getThumbnail(uid, archivePath)).toBeNull();
+
+        await writeFile(archivePath, 'the completed archive, now with more bytes');
+        await utimes(archivePath, new Date(), new Date(Date.now() + 60_000));
+        fakeFfmpeg(spawn, 0);
+
+        expect(await model.getThumbnail(uid, archivePath)).toBe(path.join(THUMBNAIL_CACHE_DIR, uid, `${uid}.webp`));
+        expect(spawn).toHaveBeenCalledTimes(2);
+    });
+
+    test('returns null without marking a failure when the source file is missing', async () => {
+        fakeFfmpeg(spawn, 0);
+
+        const model = new ThumbnailModel(makeCompressorModel());
+        const uid = `missing-${Date.now()}`;
+        const missingPath = path.join(workDir, 'missing.cbz');
+
+        expect(await model.getThumbnail(uid, missingPath)).toBeNull();
+
+        await writeFile(missingPath, 'arrived later');
+
+        expect(await model.getThumbnail(uid, missingPath)).not.toBeNull();
+        expect(spawn).toHaveBeenCalledTimes(1);
+    });
+
+    test('retry regenerates an unchanged file that previously failed', async () => {
+        fakeFfmpeg(spawn, 1);
+
+        const model = new ThumbnailModel(makeCompressorModel());
+        const uid = `retry-${Date.now()}`;
+
+        expect(await model.getThumbnail(uid, archivePath)).toBeNull();
+
+        fakeFfmpeg(spawn, 0);
+
+        expect(await model.retry(uid, archivePath)).toBe(path.join(THUMBNAIL_CACHE_DIR, uid, `${uid}.webp`));
+        expect(spawn).toHaveBeenCalledTimes(2);
+    });
+
+    test('retry replaces an already cached thumbnail', async () => {
+        fakeFfmpeg(spawn, 0);
+
+        const model = new ThumbnailModel(makeCompressorModel());
+        const uid = `recache-${Date.now()}`;
+
+        await model.getThumbnail(uid, archivePath);
+        await model.getThumbnail(uid, archivePath);
+        expect(spawn).toHaveBeenCalledTimes(1);
+
+        await model.retry(uid, archivePath);
+        expect(spawn).toHaveBeenCalledTimes(2);
     });
 
 });

@@ -6,5 +6,6 @@ export function thumbnailRouter(thumbnailModel: TThumbnailModel, libModel: TLibr
     const app = new Hono();
     const cc = new thumbnailController(thumbnailModel, libModel);
     app.get('/:uuid', async (c) => await cc.get(c));
+    app.post('/:uuid/retry', async (c) => await cc.retry(c));
     return app;
 }

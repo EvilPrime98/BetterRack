@@ -10,14 +10,17 @@ import { withAuthQuery } from '@/services/server-config.service';
 
 export function ComicCardCover({
     item,
-    comic
+    comic,
+    coverVersion
 }: {
     item: ILibraryResponseItem;
     comic: WikiComic | null;
+    coverVersion: number;
 }) {
 
     const readerHref = `/${item.uid}/reader`;
-    const coverSrc = withAuthQuery(`${API_URL}/api/thumbnail/${item.uid}`);
+    const versionQuery = coverVersion ? `?v=${coverVersion}` : '';
+    const coverSrc = withAuthQuery(`${API_URL}/api/thumbnail/${item.uid}${versionQuery}`);
 
     const [loaded, setLoaded] = useState(false);
     const [imgSrc, setImgSrc] = useState(coverSrc);

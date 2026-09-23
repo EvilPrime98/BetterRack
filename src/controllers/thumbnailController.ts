@@ -18,6 +18,63 @@ export class thumbnailController {
         this.libModel = libModel;
     }
 
+    private filePathFor(
+        uuid: string
+    ): string | undefined {
+        const entry = this.libModel.get(uuid);
+        return entry && !Array.isArray(entry) && !entry.did
+        ? entry.path
+        : undefined;
+    }
+
+    public async retry(
+        c: Context
+    ) {
+
+        try {
+
+            const uuid = c.req.param('uuid');
+
+            if (!uuid) {
+                return c.json({
+                    error: true,
+                    message: 'A valid uid is required.'
+                }, 400);
+            }
+
+            const filePath = this.filePathFor(uuid);
+
+            if (!filePath) {
+                return c.json({
+                    error: true,
+                    message: 'No comic file found for this uid.'
+                }, 404);
+            }
+
+            const thumbnailPath = await this.thumbnailModel.retry(uuid, filePath);
+
+            if (!thumbnailPath) {
+                return c.json({
+                    error: true,
+                    message: 'No thumbnail available for this comic.'
+                }, 404);
+            }
+
+            return c.json({ ok: true });
+
+        } catch (e) {
+
+            log.error({ err: e }, 'Failed to retry thumbnail generation');
+
+            return c.json({
+                error: true,
+                message: e instanceof Error ? e.message : 'There was an error generating the thumbnail.'
+            }, 500);
+
+        }
+
+    }
+
     public async get(
         c: Context
     ) {
@@ -33,11 +90,8 @@ export class thumbnailController {
                 }, 400);
             }
 
-            const entry = this.libModel.get(uuid);
-            const filePath = entry && !Array.isArray(entry) && !entry.did
-            ? entry.path
-            : undefined;
-            
+            const filePath = this.filePathFor(uuid);
+
             const thumbnailPath = await this.thumbnailModel.getThumbnail(uuid, filePath);
 
             if (!thumbnailPath) {

@@ -10,19 +10,32 @@ import { withAuthQuery } from "@/services/server-config.service";
 export function ComicCardCover({
     item,
     comic,
-    subsComic
+    subsComic,
+    coverVersion,
+    subsCoverVersion
 }: {
     item: ILibraryResponseItem;
     comic: () => WikiComic | null;
     subsComic: (fn: (value: WikiComic | null) => void) => () => void;
+    coverVersion: () => number;
+    subsCoverVersion: (fn: (value: number) => void) => () => void;
 }) {
 
     const readerHref = `/${item.uid}/reader`;
-    const coverSrc = withAuthQuery(`${API_URL}/api/thumbnail/${item.uid}`);
     const [loaded, setIsLoaded, subsIsLoaded] = ultraState(false);
-    
+
+    const coverSrc = () => {
+        const versionQuery = coverVersion() ? `?v=${coverVersion()}` : '';
+        return withAuthQuery(`${API_URL}/api/thumbnail/${item.uid}${versionQuery}`);
+    }
+
     const onCoverMount = ($img: HTMLElement) => {
-        ($img as HTMLImageElement).src = coverSrc;
+        ($img as HTMLImageElement).src = coverSrc();
+    }
+
+    const onCoverVersionChange = ($img: HTMLElement) => {
+        setIsLoaded(false);
+        ($img as HTMLImageElement).src = coverSrc();
     }
 
     const onEventChange = ($span: HTMLElement) => {
@@ -65,7 +78,11 @@ export function ComicCardCover({
                     load: () => setIsLoaded(true),
                     error: onCoverError
                 },
-                onMount: [onCoverMount]
+                onMount: [onCoverMount],
+                trigger: [{
+                    subscriber: subsCoverVersion,
+                    triggerFunction: onCoverVersionChange
+                }]
             }),
 
             UltraComponent({

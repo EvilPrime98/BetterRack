@@ -26,6 +26,7 @@ export function ComicCard({
     const [metaSource, setMetaSource, subsMetaSource] = ultraState(item.metaSource);
     const [identified, setIdentified, subsIdentified] = ultraState(item.identified !== false);
     const [isLoadingInfo, setIsLoadingInfo, subsIsLoadingInfo] = ultraState(item.identified === undefined);
+    const [coverVersion, setCoverVersion, subsCoverVersion] = ultraState(0);
 
     const [itemCache, setItemCache, subsItemCache] = ultraState<IComicLSCache | null>(
         COMIC_CACHE_CONTEXT.getCacheById(item.uid) || null
@@ -137,6 +138,8 @@ export function ComicCard({
                     ComicCardCover({
                         comic,
                         subsComic,
+                        coverVersion,
+                        subsCoverVersion,
                         item
                     }),
 
@@ -231,7 +234,8 @@ export function ComicCard({
 
                             ComicCardActions({
                                 uid: item.uid,
-                                name: item.name
+                                name: item.name,
+                                onThumbnailRetried: () => setCoverVersion(Date.now())
                             })
                         ]
                     })

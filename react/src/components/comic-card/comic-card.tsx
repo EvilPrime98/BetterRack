@@ -31,6 +31,7 @@ export function ComicCard({
     const [metaSource, setMetaSource] = useState(item.metaSource);
     const [identified, setIdentified] = useState(item.identified !== false);
     const [isLoadingInfo, setIsLoadingInfo] = useState(item.identified === undefined);
+    const [coverVersion, setCoverVersion] = useState(0);
     const articleRef = useRef<HTMLElement>(null);
     const readerHref = `/${item.uid}/reader`;
     const comicsType = useComicsTypeStore((s) => s.type);
@@ -130,7 +131,7 @@ export function ComicCard({
 
                 <div className={styles.board} />
 
-                <ComicCardCover comic={comic} item={item} />
+                <ComicCardCover key={coverVersion} coverVersion={coverVersion} comic={comic} item={item} />
 
                 <div className={styles.bagOverlay} />
 
@@ -169,7 +170,11 @@ export function ComicCard({
 
                 <div className={styles.actionsBlock}>
                     <ComicRating uid={item.uid} />
-                    <ComicCardActions uid={item.uid} name={item.name} />
+                    <ComicCardActions
+                        uid={item.uid}
+                        name={item.name}
+                        onThumbnailRetried={() => setCoverVersion(Date.now())}
+                    />
                 </div>
 
             </div>
