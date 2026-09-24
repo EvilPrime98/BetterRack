@@ -16,10 +16,35 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            // Credentials come from android/keystore.properties (gitignored) or the
+            // ANDROID_KEYSTORE_* environment variables (CI). See keystore.properties.example.
+            def props = new Properties()
+            def propsFile = rootProject.file('keystore.properties')
+            if (propsFile.exists()) {
+                propsFile.withInputStream { props.load(it) }
+            }
+            def storePath = props['storeFile'] ?: System.getenv('ANDROID_KEYSTORE_FILE')
+            if (storePath) {
+                storeFile rootProject.file(storePath)
+                storePassword props['storePassword'] ?: System.getenv('ANDROID_KEYSTORE_PASSWORD')
+                keyAlias props['keyAlias'] ?: System.getenv('ANDROID_KEY_ALIAS')
+                keyPassword props['keyPassword'] ?: System.getenv('ANDROID_KEY_PASSWORD')
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (signingConfigs.release.storeFile != null) {
+                signingConfig signingConfigs.release
+            } else {
+                // No release keystore configured: sign with the debug key so the APK still installs.
+                logger.warn("No release keystore configured; signing release APK with the debug key.")
+                signingConfig signingConfigs.debug
+            }
         }
     }
 }
