@@ -25,32 +25,32 @@ type TWikiComicClient = {
     findComicById: (pageId: number, thumbnailSize: number) => Promise<WikiComic | null>;
 };
 
-const createMarvelClient = (url: TWikiUrl): TWikiComicClient => {
-    const client = wiki({ plugin: 'marvel-fandom', url });
-    return {
-        findComic: (title, thumbnailSize) => client.getComic(title, { thumbnailSize, includeCollections: true }),
-        findComics: (title, thumbnailSize) => client.getComic(title, { multiple: true, thumbnailSize, includeCollections: true }),
-        findComicById: (pageId, thumbnailSize) => client.getComicById(pageId, { thumbnailSize }),
-    };
-};
-
-const createDcClient = (url: TWikiUrl): TWikiComicClient => {
-    const client = wiki({ plugin: 'dc-fandom', url });
-    return {
-        findComic: (title, thumbnailSize) => client.getComic(title, { thumbnailSize, includeCollections: true, fields: COMIC_FIELDS }),
-        findComics: (title, thumbnailSize) => client.getComic(title, { multiple: true, thumbnailSize, includeCollections: true }),
-        findComicById: (pageId, thumbnailSize) => client.getComicById(pageId, { thumbnailSize }),
-    };
-};
-
-const createClient = (url: TWikiUrl): TWikiComicClient =>
-    url === MARVEL_WIKI_URL ? createMarvelClient(url) : createDcClient(url);
-
 export class WikiModel implements TWikiModel {
+
+    private createMarvelClient = (url: TWikiUrl): TWikiComicClient => {
+        const client = wiki({ plugin: 'marvel-fandom', url });
+        return {
+            findComic: (title, thumbnailSize) => client.getComic(title, { thumbnailSize, includeCollections: true }),
+            findComics: (title, thumbnailSize) => client.getComic(title, { multiple: true, thumbnailSize, includeCollections: true }),
+            findComicById: (pageId, thumbnailSize) => client.getComicById(pageId, { thumbnailSize }),
+        };
+    };
+
+    private createDcClient = (url: TWikiUrl): TWikiComicClient => {
+        const client = wiki({ plugin: 'dc-fandom', url });
+        return {
+            findComic: (title, thumbnailSize) => client.getComic(title, { thumbnailSize, includeCollections: true, fields: COMIC_FIELDS }),
+            findComics: (title, thumbnailSize) => client.getComic(title, { multiple: true, thumbnailSize, includeCollections: true }),
+            findComicById: (pageId, thumbnailSize) => client.getComicById(pageId, { thumbnailSize }),
+        };
+    };
+
+    private createClient = (url: TWikiUrl): TWikiComicClient =>
+        url === MARVEL_WIKI_URL ? this.createMarvelClient(url) : this.createDcClient(url);
 
     private clients: Record<TWikiUrl, TWikiComicClient> = WIKI_URLS.reduce(
         (acc, url) => {
-            acc[url] = createClient(url);
+            acc[url] = this.createClient(url);
             return acc;
         },
         {} as Record<TWikiUrl, TWikiComicClient>
