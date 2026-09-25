@@ -6,14 +6,54 @@ const log = logger.child({ module: 'WikiModel' });
 
 const DEFAULT_THUMBNAIL_SIZE = 120;
 
+const MARVEL_WIKI_URL: TWikiUrl = 'https://marvel.fandom.com';
+
+const COMIC_FIELDS: (keyof WikiComic)[] = [
+    'cover',
+    'credits',
+    'pageId',
+    'issue',
+    'title',
+    'volume',
+    'releaseDate',
+    'sourceWiki'
+];
+
+type TWikiComicClient = {
+    findComic: (title: string, thumbnailSize: number) => Promise<WikiComic | null>;
+    findComics: (title: string, thumbnailSize: number) => Promise<WikiComic[]>;
+    findComicById: (pageId: number, thumbnailSize: number) => Promise<WikiComic | null>;
+};
+
 export class WikiModel implements TWikiModel {
 
-    private clients: Record<TWikiUrl, ReturnType<typeof wiki<'dc-fandom'>>> = WIKI_URLS.reduce(
+    private createMarvelClient = (url: TWikiUrl): TWikiComicClient => {
+        const client = wiki({ plugin: 'marvel-fandom', url });
+        return {
+            findComic: (title, thumbnailSize) => client.getComic(title, { thumbnailSize, includeCollections: true }),
+            findComics: (title, thumbnailSize) => client.getComic(title, { multiple: true, thumbnailSize, includeCollections: true }),
+            findComicById: (pageId, thumbnailSize) => client.getComicById(pageId, { thumbnailSize }),
+        };
+    };
+
+    private createDcClient = (url: TWikiUrl): TWikiComicClient => {
+        const client = wiki({ plugin: 'dc-fandom', url });
+        return {
+            findComic: (title, thumbnailSize) => client.getComic(title, { thumbnailSize, includeCollections: true, fields: COMIC_FIELDS }),
+            findComics: (title, thumbnailSize) => client.getComic(title, { multiple: true, thumbnailSize, includeCollections: true }),
+            findComicById: (pageId, thumbnailSize) => client.getComicById(pageId, { thumbnailSize }),
+        };
+    };
+
+    private createClient = (url: TWikiUrl): TWikiComicClient =>
+        url === MARVEL_WIKI_URL ? this.createMarvelClient(url) : this.createDcClient(url);
+
+    private clients: Record<TWikiUrl, TWikiComicClient> = WIKI_URLS.reduce(
         (acc, url) => {
-            acc[url] = wiki({ plugin: 'dc-fandom', url });
+            acc[url] = this.createClient(url);
             return acc;
         },
-        {} as Record<TWikiUrl, ReturnType<typeof wiki<'dc-fandom'>>>
+        {} as Record<TWikiUrl, TWikiComicClient>
     );
 
     getComic = async (
@@ -21,27 +61,10 @@ export class WikiModel implements TWikiModel {
         thumbnailSize: number = DEFAULT_THUMBNAIL_SIZE
     ): Promise<WikiComic | null> => {
 
-        const flags = {
-            thumbnailSize,
-            includeCollections: true,
-        };
-
         const results = await Promise.all(
             Object.values(this.clients).map(client => {
                 log.info(`Searching wiki info for: ${title}`)
-                return client.getComic(title, {
-                    ...flags,
-                    fields: [
-                        'cover',
-                        'credits',
-                        'pageId',
-                        'issue',
-                        'title',
-                        'volume',
-                        'releaseDate',
-                        'sourceWiki'
-                    ]
-                })
+                return client.findComic(title, thumbnailSize)
             })
         );
 
@@ -56,8 +79,7 @@ export class WikiModel implements TWikiModel {
         thumbnailSize: number = DEFAULT_THUMBNAIL_SIZE
     ): Promise<WikiComic | null> => {
 
-        return await this.clients[sourceWiki]
-            .getComicById(pageId, { thumbnailSize });
+        return await this.clients[sourceWiki].findComicById(pageId, thumbnailSize);
 
     }
 
@@ -66,10 +88,8 @@ export class WikiModel implements TWikiModel {
         thumbnailSize: number = DEFAULT_THUMBNAIL_SIZE
     ): Promise<WikiComic[]> => {
 
-        const flags = { multiple: true, thumbnailSize, includeCollections: true } as const;
-
         const results = await Promise.all(
-            Object.values(this.clients).map(client => client.getComic(title, flags))
+            Object.values(this.clients).map(client => client.findComics(title, thumbnailSize))
         );
 
         return results.flat();
