@@ -20,6 +20,10 @@ const PREFETCH_BEHIND = 1;
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 3;
 const ZOOM_STEP = 0.1;
+const PAGE_BASE_WIDTH = 900;
+
+const maxZoomFor = (viewerWidth: number) =>
+    Math.max(1, Math.floor(Math.min(MAX_ZOOM, viewerWidth / PAGE_BASE_WIDTH) * 100) / 100);
 
 export function ReaderPage({
     uid
@@ -150,7 +154,19 @@ export function ReaderPage({
         }
     }
 
-    const clampZoom = (value: number) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, +value.toFixed(2)));
+    const currentMaxZoom = () => {
+        const width = viewer?.clientWidth ?? 0;
+        return width > 0 ? maxZoomFor(width) : MAX_ZOOM;
+    };
+
+    const clampZoom = (value: number) => Math.min(currentMaxZoom(), Math.max(MIN_ZOOM, +value.toFixed(2)));
+
+    const fitZoom = () => {
+        const limit = currentMaxZoom();
+        if (zoom() <= limit) return;
+        setZoom(limit);
+        persistZoom(limit);
+    };
 
     const persistZoom = (value: number) => USER_PREF.setPref({ zoom: value });
 
@@ -248,6 +264,7 @@ export function ReaderPage({
     }
 
     const onZoomChange = ($viewer: HTMLElement) => {
+        viewer = $viewer;
         $viewer.style.setProperty('--reader-zoom', String(zoom()));
     }
 
@@ -283,6 +300,7 @@ export function ReaderPage({
 
         observer?.disconnect();
         viewer = $section;
+        fitZoom();
 
         const numPages = pages().length;
         const savedPage = comicCache?.currentPage || 1;
@@ -340,8 +358,10 @@ export function ReaderPage({
             () => DOCUMENT_TITLE_CONTEXT.setTitle('Reader'),
             () => {
                 window.addEventListener('keydown', onKeydown);
+                window.addEventListener('resize', fitZoom);
                 return () => {
                     window.removeEventListener('keydown', onKeydown);
+                    window.removeEventListener('resize', fitZoom);
                     observer?.disconnect();
                 }
             },

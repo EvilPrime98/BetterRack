@@ -5,8 +5,12 @@ import { useUserPrefStore } from '../stores/userPref.store';
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 3;
 const ZOOM_STEP = 0.1;
+const PAGE_BASE_WIDTH = 900;
 
-const clampZoom = (value: number) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, +value.toFixed(2)));
+const maxZoomFor = (viewerWidth: number) =>
+    Math.max(1, Math.floor(Math.min(MAX_ZOOM, viewerWidth / PAGE_BASE_WIDTH) * 100) / 100);
+
+const clampZoom = (value: number, maxZoom: number) => Math.min(maxZoom, Math.max(MIN_ZOOM, +value.toFixed(2)));
 
 export function useReaderZoom(
     pageRef: RefObject<HTMLElement | null>,
@@ -21,17 +25,24 @@ export function useReaderZoom(
         useUserPrefStore.getState().setPref({ zoom: value });
     }, []);
 
+    const currentMaxZoom = useCallback(() => {
+        const width = viewerRef.current?.clientWidth ?? 0;
+        return width > 0 ? maxZoomFor(width) : MAX_ZOOM;
+    }, [viewerRef]);
+
+    const clamp = useCallback((value: number) => clampZoom(value, currentMaxZoom()), [currentMaxZoom]);
+
     const zoomIn = useCallback(() => {
-        const next = clampZoom(zoomRef.current + ZOOM_STEP);
+        const next = clamp(zoomRef.current + ZOOM_STEP);
         setZoom(next);
         persistZoom(next);
-    }, [persistZoom]);
+    }, [clamp, persistZoom]);
 
     const zoomOut = useCallback(() => {
-        const next = clampZoom(zoomRef.current - ZOOM_STEP);
+        const next = clamp(zoomRef.current - ZOOM_STEP);
         setZoom(next);
         persistZoom(next);
-    }, [persistZoom]);
+    }, [clamp, persistZoom]);
 
     const zoomReset = useCallback(() => {
         setZoom(1);
@@ -69,6 +80,18 @@ export function useReaderZoom(
     useEffect(() => {
         if (viewerRef.current) viewerRef.current.style.setProperty('--reader-zoom', String(zoom));
     }, [zoom, viewerRef]);
+
+    useEffect(() => {
+        const fitZoom = () => {
+            const limit = currentMaxZoom();
+            if (zoomRef.current <= limit) return;
+            setZoom(limit);
+            persistZoom(limit);
+        };
+        fitZoom();
+        window.addEventListener('resize', fitZoom);
+        return () => window.removeEventListener('resize', fitZoom);
+    }, [currentMaxZoom, persistZoom]);
 
     useEffect(() => {
         const $page = pageRef.current;
@@ -114,7 +137,7 @@ export function useReaderZoom(
             const current = gap();
             if (startDistance <= 0 || current <= 0) return;
             e.preventDefault();
-            setZoom(clampZoom(startZoom * (current / startDistance)));
+            setZoom(clamp(startZoom * (current / startDistance)));
         };
 
         const onPointerUp = (e: PointerEvent) => {
@@ -153,7 +176,7 @@ export function useReaderZoom(
             $page.removeEventListener('pointerup', onPointerUp);
             $page.removeEventListener('pointercancel', onPointerCancel);
         };
-    }, [pageRef, persistZoom]);
+    }, [pageRef, clamp, persistZoom]);
 
     return { onWheel };
 
