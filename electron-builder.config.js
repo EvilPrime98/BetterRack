@@ -17,10 +17,12 @@ export default {
   extraResources: [
     { from: "dist/server", to: "server" },
     { from: `${frontendDir}/dist`, to: "client" },
-    { from: "vendor/7zip/win32", to: "bin" },
   ],
   win: {
     target: "nsis",
+    extraResources: [
+      { from: "vendor/7zip/win32", to: "bin" },
+    ],
     icon: "build/icon.ico",
     signtoolOptions: {
       publisherName: "AminPerez",
@@ -45,6 +47,11 @@ export default {
     category: "public.app-category.entertainment",
   },
   linux: {
+    target: "AppImage",
+    extraResources: [
+      { from: "vendor/7zip/linux-x64", to: "bin" },
+    ],
+    artifactName: "${productName}-${version}.${ext}",
     icon: "build/icon.png",
     category: "Graphics;Viewer",
     synopsis: "Local comic book library reader",

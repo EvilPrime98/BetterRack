@@ -12,7 +12,7 @@ Better Rack is a desktop app for organizing and reading a local comic book libra
 - Wiki-backed metadata lookup for comic info
 - Configurable settings for source URLs and download/output directories
 - Desktop app can optionally connect to a remote BetterRack deployment instead of its local server, sharing that deployment's library and data
-- Packaged as a Windows desktop app (NSIS installer) via Electron Builder, with an Android build via Capacitor
+- Packaged as a Windows desktop app (NSIS installer) and a Linux desktop app (AppImage) via Electron Builder, with an Android build via Capacitor
 
 <img width="1916" height="917" alt="image" src="https://github.com/user-attachments/assets/21d98172-f3ba-468e-b404-33bf962fcffa" />
 
@@ -57,6 +57,12 @@ Build a distributable Windows installer for the desktop app (output in `release/
 bun run dist
 ```
 
+Build a Linux AppImage (run on Linux, output in `release/`). It bundles 7-Zip, so no archive tools are needed to open CBZ/CBR files. Thumbnail generation still requires `ffmpeg` on the `PATH`:
+
+```bash
+bun run dist:linux
+```
+
 Build client (requires backend deployment) for Android (from `client/` or `react/`, requires Capacitor Android tooling):
 
 ```bash
@@ -68,7 +74,7 @@ pnpm android:apk
 
 [GPL-3.0](LICENSE)
 
-The Windows installer bundles 7-Zip 26.02 (`vendor/7zip/win32`), which is distributed under the GNU LGPL with the unRAR license restriction on its RAR decoder. See [`vendor/7zip/win32/License.txt`](vendor/7zip/win32/License.txt).
+The Windows installer and the Linux AppImage bundle 7-Zip 26.02 (`vendor/7zip/win32` and `vendor/7zip/linux-x64`), which is distributed under the GNU LGPL with the unRAR license restriction on its RAR decoder. See [`vendor/7zip/win32/License.txt`](vendor/7zip/win32/License.txt) and [`vendor/7zip/linux-x64/License.txt`](vendor/7zip/linux-x64/License.txt).
 
 ## Author
 

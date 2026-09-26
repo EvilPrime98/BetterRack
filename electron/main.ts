@@ -229,10 +229,11 @@ async function startDesktopApp() {
       if (app.isPackaged) {
 
         const resourcesPath = process.resourcesPath;
-        const exePath = path.join(resourcesPath, "server", "run.exe");
+        const isWindows = process.platform === "win32";
+        const exePath = path.join(resourcesPath, "server", isWindows ? "run.exe" : "run");
         const clientDistDir = path.join(resourcesPath, "client");
         const nodePath = path.join(resourcesPath, "server", "vendor", "node_modules");
-        const sevenZipPath = path.join(resourcesPath, "bin", "7z.exe");
+        const sevenZipPath = path.join(resourcesPath, "bin", isWindows ? "7z.exe" : "7zz");
 
         log(`Server executable: ${exePath}`);
         log(`Client dist dir: ${clientDistDir}`);

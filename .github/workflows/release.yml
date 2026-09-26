@@ -6,8 +6,20 @@ on:
 
 jobs:
   release:
-    name: Build & publish release
-    runs-on: windows-latest
+    name: Build & publish release (${{ matrix.platform }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows
+            os: windows-latest
+            dist-script: dist
+            artifacts: release/**/*.exe
+          - platform: linux
+            os: ubuntu-latest
+            dist-script: dist:linux
+            artifacts: release/**/*.AppImage
     steps:
       - uses: actions/checkout@v4
 
@@ -30,6 +42,10 @@ jobs:
         run: pnpm install --frozen-lockfile
         working-directory: client
 
+      - name: Install react client dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: react
+
       # main.ts packages a literal `.env` file into the app via electron-builder's
       # extraResources. That file is gitignored, so it must come from a secret here.
       # Populate the APP_ENV repository secret with the contents of your local .env.
@@ -38,12 +54,12 @@ jobs:
         run: echo "${{ secrets.APP_ENV }}" > .env
 
       - name: Build & package
-        run: bun run dist
+        run: bun run ${{ matrix.dist-script }}
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: release/**/*.exe
+          files: ${{ matrix.artifacts }}
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

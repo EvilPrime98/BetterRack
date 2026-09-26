@@ -1,1 +1,3 @@
 vendor/7zip/win32/* binary
+vendor/7zip/linux-x64/7zz binary
+vendor/7zip/linux-x64/License.txt -text
