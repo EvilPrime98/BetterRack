@@ -5,7 +5,7 @@ import { serveStatic } from 'hono/bun';
 import { LibraryModel } from './models/library/library.model';
 import { libraryRouter } from './routers/libraryRouter';
 import { comicReaderRouter } from './routers/comic-reader.router';
-import { Zip7Decompressor } from './models/decompressor/decompressor.model';
+import { SevenZipDecompressor } from './models/decompressor/seven-zip-decompressor.model';
 import { WikiModel } from './models/wiki/wikiModel';
 import { wikiRouter } from './routers/wikiRouter';
 import { ComicDataModel } from './models/comic-data/comicDataModel';
@@ -35,7 +35,7 @@ async function startApp() {
     
     const prefsModel = new PreferencesModel();
     
-    const zipModel = new Zip7Decompressor();
+    const zipModel = new SevenZipDecompressor();
     
     const wikiModel = new WikiModel();
     

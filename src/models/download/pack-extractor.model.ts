@@ -1,8 +1,7 @@
 import { existsSync } from 'node:fs';
 import { mkdir, mkdtemp, readdir, rename, rm } from 'node:fs/promises';
 import path from 'node:path';
-import type { Zip7Decompressor } from '#src/models/decompressor/decompressor.model.ts';
-import type { TPackExtractProgress, TPackExtractResult } from './types';
+import type { TPackDecompressorModel, TPackExtractProgress, TPackExtractResult } from './types';
 
 const COMIC_MEMBER_EXTENSIONS = new Set(['.cbz', '.cbr', '.cb7', '.cbt']);
 
@@ -12,8 +11,6 @@ const NESTED_ARCHIVE_EXTENSIONS = new Set(['.zip', '.rar', '.7z']);
 
 const INSPECTABLE_EXTENSIONS = new Set(['.zip', '.rar', '.7z', '.cbz', '.cbr']);
 
-const RAR_EXTENSIONS = new Set(['.rar', '.cbr']);
-
 const SIZE_GATE_BYTES = 20 * 1024 * 1024; //below this size we don't check if it contains multiple items
 
 const MAX_NESTED_DEPTH = 2;
@@ -22,24 +19,10 @@ const SKIPPED: TPackExtractResult = { action: 'skipped', members: [], wrapperRem
 
 export class PackExtractor {
 
-    private decompressor: Zip7Decompressor;
+    private decompressor: TPackDecompressorModel;
 
-    constructor(decompressor: Zip7Decompressor) {
+    constructor(decompressor: TPackDecompressorModel) {
         this.decompressor = decompressor;
-    }
-
-    private isRar = (
-        filePath: string
-    ): boolean => {
-        return RAR_EXTENSIONS.has(path.extname(filePath).toLowerCase());
-    }
-
-    private listEntries = (
-        filePath: string
-    ): Promise<string[]> => {
-        return this.isRar(filePath)
-            ? this.decompressor.listEntriesUnrar(filePath)
-            : this.decompressor.listEntries7z(filePath);
     }
 
     private classify = (entries: string[]) => {
@@ -101,7 +84,7 @@ export class PackExtractor {
 
         let entries: string[];
         try {
-            entries = await this.listEntries(filePath);
+            entries = await this.decompressor.listEntries(filePath);
         } catch {
             return SKIPPED;
         }

@@ -5,17 +5,12 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { PackExtractor } from './pack-extractor.model';
 
-// This fake replaces Zip7Decompressor. It reports a scripted entry list for
-// each archive path and writes stub files on an extract call. The tests can
-// then exercise the orchestration (classify, temp dir, rename, wrapper
-// removal, recursion cap) without 7z or unrar installed.
 class FakeDecompressor {
 
     entriesByFile: Record<string, string[]> = {};
     extractCalls: { filePath: string, outDir: string, entryNames: string[] }[] = [];
 
-    listEntries7z = async (filePath: string) => this.entriesByFile[filePath] ?? [];
-    listEntriesUnrar = async (filePath: string) => this.entriesByFile[filePath] ?? [];
+    listEntries = async (filePath: string) => this.entriesByFile[filePath] ?? [];
 
     extractEntries = async ({ filePath, outDir, entryNames }: { filePath: string, outDir: string, entryNames: string[] }) => {
         this.extractCalls.push({ filePath, outDir, entryNames });
@@ -176,8 +171,7 @@ describe('PackExtractor.extractPack', () => {
         // members" case, not a listing failure. Use a separate stub that
         // throws to test the failure path.
         const throwingExtractor = new PackExtractor({
-            listEntries7z: async () => { throw new Error('unsupported codec'); },
-            listEntriesUnrar: async () => { throw new Error('unsupported codec'); },
+            listEntries: async () => { throw new Error('unsupported codec'); },
             extractEntries: async () => { throw new Error('should not be called'); }
         } as unknown as ConstructorParameters<typeof PackExtractor>[0]);
 
