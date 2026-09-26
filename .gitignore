@@ -17,3 +17,5 @@ logs/
 knip-report*.json
 scripts/run-better-rack.sh
 scripts/clean-branches.sh
+vendor/ffmpeg/win32/ffmpeg.exe
+vendor/ffmpeg/linux-x64/ffmpeg

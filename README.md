@@ -57,7 +57,7 @@ Build a distributable Windows installer for the desktop app (output in `release/
 bun run dist
 ```
 
-Build a Linux AppImage (run on Linux, output in `release/`). It bundles 7-Zip, so no archive tools are needed to open CBZ/CBR files. Thumbnail generation still requires `ffmpeg` on the `PATH`:
+Build a Linux AppImage (run on Linux, output in `release/`). It bundles 7-Zip and ffmpeg, so no archive or image tools are needed to open CBZ/CBR files and generate thumbnails:
 
 ```bash
 bun run dist:linux
@@ -75,6 +75,8 @@ pnpm android:apk
 [GPL-3.0](LICENSE)
 
 The Windows installer and the Linux AppImage bundle 7-Zip 26.02 (`vendor/7zip/win32` and `vendor/7zip/linux-x64`), which is distributed under the GNU LGPL with the unRAR license restriction on its RAR decoder. See [`vendor/7zip/win32/License.txt`](vendor/7zip/win32/License.txt) and [`vendor/7zip/linux-x64/License.txt`](vendor/7zip/linux-x64/License.txt).
+
+They also bundle FFmpeg n8.1.3, an LGPL-3.0 build (no `--enable-gpl`, no `--enable-nonfree`) that runs as a separate process to generate thumbnails. Its license text ships next to the executable, and [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) links to the exact corresponding source. Version, hashes and provenance are pinned in [`vendor/ffmpeg/README.md`](vendor/ffmpeg/README.md); `bun run ffmpeg:fetch` downloads the binaries before packaging, and CI checks their license. Set `FFMPEG_PATH` to use a different ffmpeg instead of the bundled one.
 
 ## Author
 

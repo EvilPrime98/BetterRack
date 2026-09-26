@@ -3,18 +3,8 @@ import { mkdir, readdir, rm, stat } from "node:fs/promises";
 import path from "node:path";
 import { createConcurrencyLimiter } from "#utils/concurrencyLimiter";
 import { EXTRACT_CONCURRENCY, RAW_EXTRACT_DIR, THUMBNAIL_CACHE_DIR, THUMBNAIL_QUALITY, THUMBNAIL_WIDTH } from "./constants";
+import { defaultFfmpegLookup, resolveFfmpegPath } from "./ffmpeg-path";
 import type { TLogger, TCompressorModel } from "./types";
-
-const FALLBACK_FFMPEG_PATHS = process.platform === "win32"
-? [
-    "C:\\ffmpeg\\bin\\ffmpeg.exe",
-    "C:\\Program Files\\ffmpeg\\bin\\ffmpeg.exe"
-]
-: [
-    "/usr/bin/ffmpeg",
-    "/usr/local/bin/ffmpeg",
-    "/opt/homebrew/bin/ffmpeg"
-];
 
 export class ThumbnailModel {
 
@@ -96,12 +86,6 @@ export class ThumbnailModel {
 
     }
 
-    private resolveFfmpegPath = (): string => {
-        const bin = Bun.which("ffmpeg") ?? FALLBACK_FFMPEG_PATHS.find(existsSync);
-        if (!bin) throw new Error("ffmpeg executable not found. Install ffmpeg (https://ffmpeg.org/download.html) or add it to PATH.");
-        return bin;
-    };
-
     private optimize = async (
         uid: string,
         rawDir: string
@@ -120,7 +104,7 @@ export class ThumbnailModel {
         const outPath = path.join(outDir, `${uid}.webp`);
 
         const proc = Bun.spawn([
-            this.resolveFfmpegPath(),
+            resolveFfmpegPath(defaultFfmpegLookup()),
             "-y",
             "-i", rawPath,
             "-vf", `scale='min(iw,${THUMBNAIL_WIDTH})':-1`,

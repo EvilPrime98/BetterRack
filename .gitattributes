@@ -1,3 +1,6 @@
 vendor/7zip/win32/* binary
 vendor/7zip/linux-x64/7zz binary
 vendor/7zip/linux-x64/License.txt -text
+vendor/ffmpeg/win32/ffmpeg.exe binary
+vendor/ffmpeg/linux-x64/ffmpeg binary
+vendor/ffmpeg/*/ffmpeg-LICENSE.txt -text

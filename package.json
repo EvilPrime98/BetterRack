@@ -39,13 +39,15 @@
     "lint": "eslint .",
     "refresh": "bash ./scripts/refresh.sh",
     "typecheck": "tsc --noEmit",
-    "test": "bun test src/",
+    "test": "bun test src/ scripts/",
+    "ffmpeg:fetch": "bun run ./scripts/fetch-ffmpeg.ts",
+    "ffmpeg:verify": "bun run ./scripts/verify-ffmpeg-license.ts",
     "build-app": "bun build ./electron/main.ts --outfile dist/main.js --target node --format esm --external electron && bun build ./electron/preload.ts --outfile dist/preload.cjs --target node --format cjs --external electron",
     "build-server": "bun build ./src/run.ts --compile --outfile dist/server/run",
     "build-server:linux": "bun build ./src/run.ts --compile --target=bun-linux-x64 --outfile dist/server/run",
-    "dist": "bun run build:react:electron && bun run build-app && bun run build-server && electron-builder --config electron-builder.config.js --win nsis --publish=never",
-    "dist:linux": "bun run build:react:electron && bun run build-app && bun run build-server:linux && electron-builder --config electron-builder.config.js --linux AppImage --publish=never",
-    "dist:client": "bun run build:client:electron && bun run build-app && bun run build-server && ELECTRON_FRONTEND=client electron-builder --config electron-builder.config.js --win nsis --publish=never"
+    "dist": "bun run ffmpeg:fetch && bun run build:react:electron &&bun run build-app && bun run build-server && electron-builder --config electron-builder.config.js --win nsis --publish=never",
+    "dist:linux": "bun run ffmpeg:fetch && bun run build:react:electron &&bun run build-app && bun run build-server:linux && electron-builder --config electron-builder.config.js --linux AppImage --publish=never",
+    "dist:client": "bun run ffmpeg:fetch && bun run build:client:electron &&bun run build-app && bun run build-server && ELECTRON_FRONTEND=client electron-builder --config electron-builder.config.js --win nsis --publish=never"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

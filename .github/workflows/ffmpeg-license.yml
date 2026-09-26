@@ -1,0 +1,44 @@
+name: ffmpeg license
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'vendor/ffmpeg/**'
+      - 'scripts/*ffmpeg*'
+      - 'THIRD_PARTY_NOTICES.md'
+      - '.github/workflows/ffmpeg-license.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'vendor/ffmpeg/**'
+      - 'scripts/*ffmpeg*'
+      - 'THIRD_PARTY_NOTICES.md'
+      - '.github/workflows/ffmpeg-license.yml'
+
+jobs:
+  verify:
+    name: Bundled ffmpeg is LGPL-only (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Fetch pinned ffmpeg and verify hashes and license
+        run: bun run ffmpeg:fetch
+
+      - name: Verify license
+        run: bun run ffmpeg:verify
+
+      - name: Test license check
+        run: bun test scripts/

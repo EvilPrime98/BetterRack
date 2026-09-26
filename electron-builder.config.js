@@ -17,11 +17,13 @@ export default {
   extraResources: [
     { from: "dist/server", to: "server" },
     { from: `${frontendDir}/dist`, to: "client" },
+    { from: "THIRD_PARTY_NOTICES.md", to: "THIRD_PARTY_NOTICES.md" },
   ],
   win: {
     target: "nsis",
     extraResources: [
       { from: "vendor/7zip/win32", to: "bin" },
+      { from: "vendor/ffmpeg/win32", to: "bin" },
     ],
     icon: "build/icon.ico",
     signtoolOptions: {
@@ -50,6 +52,7 @@ export default {
     target: "AppImage",
     extraResources: [
       { from: "vendor/7zip/linux-x64", to: "bin" },
+      { from: "vendor/ffmpeg/linux-x64", to: "bin" },
     ],
     artifactName: "${productName}-${version}.${ext}",
     icon: "build/icon.png",
