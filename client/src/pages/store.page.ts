@@ -6,14 +6,10 @@ import { searchComics, getLatestComics } from "../services/store.service";
 import { toast } from "../services/toast.service";
 import type { IStorePost } from "../store.types";
 import { DOCUMENT_TITLE_CONTEXT } from "../context/document-title.context";
+import { STORE_PAGE_CONTEXT } from "../context/store-page.context";
 import { BRButton } from "../components/br-button/br-button";
 
 interface IStorePageState {
-    query: IUltraCompStateStateful<string>;
-    activeSearch: IUltraCompStateStateful<string>;
-    results: IUltraCompStateStateful<IStorePost[]>;
-    page: IUltraCompStateStateful<number>;
-    hasMore: IUltraCompStateStateful<boolean>;
     isLoading: IUltraCompStateStateful<boolean>;
     isLoadingMore: IUltraCompStateStateful<boolean>;
     error: IUltraCompStateStateful<string>;
@@ -29,17 +25,12 @@ export function StorePage() {
 
     const store: IStorePageState = ultraCompState({
 
-        query: '',
-        activeSearch: '',
-        results: [] as IStorePost[],
-        page: 1,
-        hasMore: true,
         isLoading: false,
         isLoadingMore: false,
         error: '',
 
-        fetchPage: async (comp: IStorePageState, pageNum: number): Promise<IStorePost[]> => {
-            const term = comp.activeSearch.get();
+        fetchPage: async (_comp: IStorePageState, pageNum: number): Promise<IStorePost[]> => {
+            const term = STORE_PAGE_CONTEXT.activeSearch.get();
             return term
                 ? searchComics({ search: term, page: pageNum, perPage: PAGE_SIZE })
                 : getLatestComics({ page: pageNum, perPage: PAGE_SIZE });
@@ -50,9 +41,10 @@ export function StorePage() {
             comp.error.set('');
             try {
                 const items = await comp.fetchPage(1);
-                comp.results.set(items);
-                comp.page.set(1);
-                comp.hasMore.set(items.length === PAGE_SIZE);
+                STORE_PAGE_CONTEXT.results.set(items);
+                STORE_PAGE_CONTEXT.page.set(1);
+                STORE_PAGE_CONTEXT.hasMore.set(items.length === PAGE_SIZE);
+                STORE_PAGE_CONTEXT.hasLoaded.set(true);
             } catch (e) {
                 const message = e instanceof Error ? e.message : 'Failed to load comics.';
                 comp.error.set(message);
@@ -63,14 +55,14 @@ export function StorePage() {
         },
 
         loadMore: async (comp: IStorePageState) => {
-            if (!comp.hasMore.get() || comp.isLoading.get() || comp.isLoadingMore.get()) return;
-            const nextPage = comp.page.get() + 1;
+            if (!STORE_PAGE_CONTEXT.hasMore.get() || comp.isLoading.get() || comp.isLoadingMore.get()) return;
+            const nextPage = STORE_PAGE_CONTEXT.page.get() + 1;
             comp.isLoadingMore.set(true);
             try {
                 const items = await comp.fetchPage(nextPage);
-                comp.results.set([...comp.results.get(), ...items]);
-                comp.page.set(nextPage);
-                comp.hasMore.set(items.length === PAGE_SIZE);
+                STORE_PAGE_CONTEXT.results.set([...STORE_PAGE_CONTEXT.results.get(), ...items]);
+                STORE_PAGE_CONTEXT.page.set(nextPage);
+                STORE_PAGE_CONTEXT.hasMore.set(items.length === PAGE_SIZE);
             } catch (e) {
                 const message = e instanceof Error ? e.message : 'Failed to load more comics.';
                 toast.error(message);
@@ -80,11 +72,31 @@ export function StorePage() {
         },
 
         runSearch: (comp: IStorePageState) => {
-            comp.activeSearch.set(comp.query.get().trim());
+            STORE_PAGE_CONTEXT.activeSearch.set(STORE_PAGE_CONTEXT.query.get().trim());
             comp.loadFirstPage();
         }
 
     });
+
+    function saveScrollY() {
+        STORE_PAGE_CONTEXT.scrollY.set(window.scrollY);
+    }
+
+    function trackScroll() {
+        const savedScrollY = STORE_PAGE_CONTEXT.scrollY.get();
+        const frame = requestAnimationFrame(() => {
+            if (savedScrollY > 0) window.scrollTo(0, savedScrollY);
+            window.addEventListener('scroll', saveScrollY, { passive: true });
+        });
+        return () => {
+            cancelAnimationFrame(frame);
+            window.removeEventListener('scroll', saveScrollY);
+        };
+    }
+
+    function loadFirstPageIfEmpty() {
+        if (!STORE_PAGE_CONTEXT.hasLoaded.get()) store.loadFirstPage();
+    }
 
     const itemsMap = new Map<string, UltraLightElement>();
     
@@ -93,7 +105,7 @@ export function StorePage() {
     }
 
     function onQueryInput(e: Event) {
-        store.query.set((e.target as HTMLInputElement).value);
+        STORE_PAGE_CONTEXT.query.set((e.target as HTMLInputElement).value);
     }
 
     function onQueryKeydown(e: Event) {
@@ -124,7 +136,7 @@ export function StorePage() {
 
     function onResultsChange($section: HTMLElement) {
 
-        const currResults = store.results.get();
+        const currResults = STORE_PAGE_CONTEXT.results.get();
 
         if (currResults.length === 0) {
             
@@ -174,8 +186,9 @@ export function StorePage() {
             className: [styles.page],
 
             onMount: [
-                () => { store.loadFirstPage(); },
-                () => DOCUMENT_TITLE_CONTEXT.setTitle('Store')
+                loadFirstPageIfEmpty,
+                () => DOCUMENT_TITLE_CONTEXT.setTitle('Store'),
+                trackScroll
             ],
 
             children: [
@@ -198,9 +211,9 @@ export function StorePage() {
                                 'aria-label': 'Search comics'
                             },
                             trigger: [{
-                                subscriber: store.query.subscribe,
+                                subscriber: STORE_PAGE_CONTEXT.query.subscribe,
                                 triggerFunction: ($el: HTMLElement) => {
-                                    ($el as HTMLInputElement).value = store.query.get();
+                                    ($el as HTMLInputElement).value = STORE_PAGE_CONTEXT.query.get();
                                 }
                             }],
                             eventHandler: {
@@ -229,19 +242,19 @@ export function StorePage() {
                     mode: {
                         subscriber: [
                             store.isLoading.subscribe,
-                            store.results.subscribe
+                            STORE_PAGE_CONTEXT.results.subscribe
                         ],
                         state: () => !store.isLoading.get() 
-                        && store.results.get().length === 0
+                        && STORE_PAGE_CONTEXT.results.get().length === 0
                     },
                     component: '<p></p>',
                     className: [styles.empty],
                     trigger: [{
                         subscriber: [
-                            store.results.subscribe,
+                            STORE_PAGE_CONTEXT.results.subscribe,
                             store.isLoading.subscribe,
                             store.isLoadingMore.subscribe,
-                            store.hasMore.subscribe
+                            STORE_PAGE_CONTEXT.hasMore.subscribe
                         ],
                         triggerFunction: ($p: HTMLElement) => {
                             $p.textContent = store.isLoading.get() 
@@ -257,10 +270,10 @@ export function StorePage() {
                     onMount: [onResultsChange],
                     trigger: [{
                         subscriber: [
-                            store.results.subscribe,
+                            STORE_PAGE_CONTEXT.results.subscribe,
                             store.isLoading.subscribe,
                             store.isLoadingMore.subscribe,
-                            store.hasMore.subscribe
+                            STORE_PAGE_CONTEXT.hasMore.subscribe
                         ],
                         triggerFunction: onResultsChange,
                         defer: true
