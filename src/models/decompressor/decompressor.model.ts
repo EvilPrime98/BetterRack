@@ -1,7 +1,7 @@
 import { existsSync, statSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { ComicInfoModel } from "#src/models/comicInfo.model.ts";
+import { ComicInfoModel } from "#src/models/comic-info/comicInfo.model.ts";
 import type { IComicInfoXML, TComicInfoModel } from "#src/types.ts";
 
 const SEVEN_ZIP_BIN_NAMES = process.platform === "win32"

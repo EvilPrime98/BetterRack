@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { mkdir, mkdtemp, readdir, rename, rm } from 'node:fs/promises';
 import path from 'node:path';
-import type { Zip7Decompressor } from '#models/decompressor.model.ts';
+import type { Zip7Decompressor } from '#src/models/decompressor/decompressor.model.ts';
 import type { TPackExtractProgress, TPackExtractResult } from './types';
 
 const COMIC_MEMBER_EXTENSIONS = new Set(['.cbz', '.cbr', '.cb7', '.cbt']);
