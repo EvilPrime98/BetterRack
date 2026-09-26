@@ -22,6 +22,17 @@ export function createBeforeInputHandler({
             return;
         }
 
+        const modifier = isMac ? input.meta : input.control;
+        
+        const key = input.key.toLowerCase();
+        
+        const isBrowserShortcut = modifier && ["p", "s", "u"].includes(key);
+
+        if (isBrowserShortcut) {
+            event.preventDefault();
+            return;
+        }
+
         const isDevToolsShortcut = input.key === "F12" ||
             (isMac
                 ? input.meta && input.alt && input.key.toLowerCase() === "i"
