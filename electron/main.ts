@@ -7,6 +7,7 @@ import http from "node:http";
 import { createBrowserWindowConfig } from "./window.config";
 import { createBeforeInputHandler } from "./events/before-input.event";
 import { handleWindowOpen } from "./events/window-open.event";
+import { createNavigationGuard } from "./events/navigation-guard.event";
 import { registerPickFolderHandler } from "./ipc/pick-folder.ipc";
 import { registerToggleFullscreenHandler } from "./ipc/toggle-fullscreen.ipc";
 import { registerWindowControlsHandlers } from "./ipc/window-controls.ipc";
@@ -200,6 +201,10 @@ async function startDesktopApp() {
     bindMaximizeChangeEvents(win);
 
     win.webContents.setWindowOpenHandler(handleWindowOpen);
+
+    const navigationGuard = createNavigationGuard({ appUrl: serverUrl });
+    win.webContents.on("will-navigate", navigationGuard);
+    win.webContents.on("will-redirect", navigationGuard);
 
     win.once("ready-to-show", () => {
       win.show();
