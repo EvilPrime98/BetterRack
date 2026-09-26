@@ -3,10 +3,11 @@ name: Release
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
 
 jobs:
-  release:
-    name: Build & publish release (${{ matrix.platform }})
+  build:
+    name: Build (${{ matrix.platform }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -15,11 +16,11 @@ jobs:
           - platform: windows
             os: windows-latest
             dist-script: dist
-            artifacts: release/**/*.exe
+            artifacts: release/*.exe
           - platform: linux
             os: ubuntu-latest
             dist-script: dist:linux
-            artifacts: release/**/*.AppImage
+            artifacts: release/*.AppImage
     steps:
       - uses: actions/checkout@v4
 
@@ -34,6 +35,18 @@ jobs:
       - uses: pnpm/action-setup@v4
         with:
           version: 10
+
+      # The installer and AppImage names come from package.json, so a tag that
+      # disagrees with it would publish files labelled with the wrong version.
+      - name: Check tag matches package.json version
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          PKG_VERSION="$(node -p "require('./package.json').version")"
+          if [ "${GITHUB_REF_NAME}" != "v${PKG_VERSION}" ]; then
+            echo "Tag ${GITHUB_REF_NAME} does not match package.json version ${PKG_VERSION}" >&2
+            exit 1
+          fi
 
       - name: Install server dependencies
         run: bun install --frozen-lockfile
@@ -56,10 +69,32 @@ jobs:
       - name: Build & package
         run: bun run ${{ matrix.dist-script }}
 
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-${{ matrix.platform }}
+          path: ${{ matrix.artifacts }}
+          if-no-files-found: error
+
+  # A single job creates the release, so the two builds cannot race to create it.
+  release:
+    name: Publish GitHub Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: package-*
+          merge-multiple: true
+          path: packages
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ matrix.artifacts }}
+          files: packages/*
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
