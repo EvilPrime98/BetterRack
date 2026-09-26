@@ -29,8 +29,8 @@ Prebuilt packages are published on the [GitHub Releases](https://github.com/Evil
 
 | Platform | Package |
 |---|---|
-| Windows | NSIS installer (`Better Rack-Setup-<version>.exe`) |
-| Linux | AppImage |
+| Windows | Installer (`.exe`) |
+| Linux | AppImage (`.AppImage`) |
 
 ### Run from source
 
