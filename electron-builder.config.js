@@ -17,6 +17,7 @@ export default {
   extraResources: [
     { from: "dist/server", to: "server" },
     { from: `${frontendDir}/dist`, to: "client" },
+    { from: "vendor/7zip/win32", to: "bin" },
   ],
   win: {
     target: "nsis",

@@ -25,3 +25,12 @@ export type TPackExtractResult = {
     destDir?: string;
     renamedTo?: string;
 };
+
+export type TPackDecompressorModel = {
+    listEntries: (filePath: string) => Promise<string[]>;
+    extractEntries: ({ filePath, outDir, entryNames }: {
+        filePath: string;
+        outDir: string;
+        entryNames: string[];
+    }) => Promise<void>;
+}

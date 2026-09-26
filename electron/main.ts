@@ -232,6 +232,7 @@ async function startDesktopApp() {
         const exePath = path.join(resourcesPath, "server", "run.exe");
         const clientDistDir = path.join(resourcesPath, "client");
         const nodePath = path.join(resourcesPath, "server", "vendor", "node_modules");
+        const sevenZipPath = path.join(resourcesPath, "bin", "7z.exe");
 
         log(`Server executable: ${exePath}`);
         log(`Client dist dir: ${clientDistDir}`);
@@ -239,6 +240,10 @@ async function startDesktopApp() {
 
         if (!fs.existsSync(exePath)) {
           throw new Error(`Server executable not found at ${exePath}`);
+        }
+
+        if (!fs.existsSync(sevenZipPath)) {
+          throw new Error(`Bundled 7-Zip not found at ${sevenZipPath}`);
         }
 
         serverProcess = spawn(exePath, [], {
@@ -250,6 +255,7 @@ async function startDesktopApp() {
             PORT,
             CLIENT_DIST_DIR: clientDistDir,
             NODE_PATH: nodePath,
+            SEVEN_ZIP_PATH: sevenZipPath,
           },
 
         });
