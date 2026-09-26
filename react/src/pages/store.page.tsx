@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import styles from './store.page.module.css';
 import { Layout } from '@/layout';
 import { StoreCard } from '@/components/store-card/store-card';
@@ -6,6 +6,7 @@ import { searchComics, getLatestComics } from '@/services/store.service';
 import { toast } from '@/services/toast.service';
 import type { IStorePost } from '@/store.types';
 import { useDocumentTitleStore } from '@/stores/documentTitle.store';
+import { useStorePageStore } from '@/stores/store.store';
 import { BRButton } from '@/components/br-button/br-button';
 
 const PAGE_SIZE = 30;
@@ -18,18 +19,17 @@ export function StorePage() {
 
     const setTitle = useDocumentTitleStore((s) => s.setTitle);
 
-    const [query, setQuery] = useState('');
-    const [activeSearch, setActiveSearch] = useState('');
-    const [results, setResults] = useState<IStorePost[]>([]);
-    const [page, setPage] = useState(1);
-    const [hasMore, setHasMore] = useState(true);
+    const query = useStorePageStore((s) => s.query);
+    const results = useStorePageStore((s) => s.results);
+    const setStoreState = useStorePageStore((s) => s.set);
+
     const [isLoading, setIsLoading] = useState(false);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [error, setError] = useState('');
 
-    const stateRef = useRef({ hasMore, isLoading, isLoadingMore, page, activeSearch });
+    const loadingRef = useRef({ isLoading, isLoadingMore });
     useEffect(() => {
-        stateRef.current = { hasMore, isLoading, isLoadingMore, page, activeSearch };
+        loadingRef.current = { isLoading, isLoadingMore };
     });
 
     async function fetchPage(pageNum: number, term: string): Promise<IStorePost[]> {
@@ -43,9 +43,12 @@ export function StorePage() {
         setError('');
         try {
             const items = await fetchPage(1, term);
-            setResults(items);
-            setPage(1);
-            setHasMore(items.length === PAGE_SIZE);
+            setStoreState({
+                results: items,
+                page: 1,
+                hasMore: items.length === PAGE_SIZE,
+                hasLoaded: true
+            });
         } catch (e) {
             const message = e instanceof Error ? e.message : 'Failed to load comics.';
             setError(message);
@@ -56,15 +59,18 @@ export function StorePage() {
     }
 
     async function loadMore() {
-        const s = stateRef.current;
-        if (!s.hasMore || s.isLoading || s.isLoadingMore) return;
-        const nextPage = s.page + 1;
+        const cached = useStorePageStore.getState();
+        const { isLoading, isLoadingMore } = loadingRef.current;
+        if (!cached.hasMore || isLoading || isLoadingMore) return;
+        const nextPage = cached.page + 1;
         setIsLoadingMore(true);
         try {
-            const items = await fetchPage(nextPage, s.activeSearch);
-            setResults((prev) => [...prev, ...items]);
-            setPage(nextPage);
-            setHasMore(items.length === PAGE_SIZE);
+            const items = await fetchPage(nextPage, cached.activeSearch);
+            setStoreState({
+                results: [...useStorePageStore.getState().results, ...items],
+                page: nextPage,
+                hasMore: items.length === PAGE_SIZE
+            });
         } catch (e) {
             const message = e instanceof Error ? e.message : 'Failed to load more comics.';
             toast.error(message);
@@ -75,14 +81,20 @@ export function StorePage() {
 
     function runSearch() {
         const term = query.trim();
-        setActiveSearch(term);
+        setStoreState({ activeSearch: term });
         loadFirstPage(term);
     }
 
     useEffect(() => {
         setTitle('Store');
-        loadFirstPage('');
+        if (!useStorePageStore.getState().hasLoaded) loadFirstPage('');
         
+    }, []);
+
+    useLayoutEffect(() => {
+        const savedScrollY = useStorePageStore.getState().scrollY;
+        if (savedScrollY > 0) window.scrollTo(0, savedScrollY);
+        return () => useStorePageStore.setState({ scrollY: window.scrollY });
     }, []);
 
     const sentinelRef = useRef<HTMLDivElement>(null);
@@ -115,7 +127,7 @@ export function StorePage() {
                         placeholder="Search for a comic…"
                         aria-label="Search comics"
                         value={query}
-                        onChange={(e) => setQuery(e.target.value)}
+                        onChange={(e) => setStoreState({ query: e.target.value })}
                         onKeyDown={(e) => { if (e.key === 'Enter') runSearch(); }}
                     />
 
