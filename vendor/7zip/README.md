@@ -13,7 +13,7 @@ Official 7-Zip **26.02 (x64)** console binaries, shipped with the Windows instal
 - Source: https://www.7-zip.org/ (release dated 2026-06-25). The Linux files come from `7z2602-linux-x64.tar.xz` (SHA-256 `41aaba7b1235304ab5aa0624530c67ae829496cd29e875925271efdccc28c03e`).
 - `7z.exe` needs `7z.dll` in the same directory.
 - `linux-x64/7zz` is committed executable (mode 755); `.gitattributes` marks it binary.
-- Each platform's folder is packaged into `resources/bin/` by its own `win` / `linux` block in `electron-builder.config.js`; the Electron main process passes the path to the server as `SEVEN_ZIP_PATH`.
+- Each platform's folder is packaged into `resources/bin/` by its own `win` / `linux` block in `electron/electron-builder.config.js`; the Electron main process passes the path to the server as `SEVEN_ZIP_PATH`.
 - License: LGPL, with the unRAR license restriction on the RAR decoder. See `win32/License.txt` and `linux-x64/License.txt`.
 
 To upgrade, replace the files from an official release, update the version and hashes above, and run `bun test src/models/decompressor`.

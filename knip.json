@@ -10,7 +10,8 @@
         "src/run.ts",
         "electron/main.ts",
         "electron/preload.ts",
-        "electron-builder.config.js",
+        "electron/thumbnail-worker.cjs",
+        "electron/electron-builder.config.js",
         "scripts/*.ts"
       ]
     },

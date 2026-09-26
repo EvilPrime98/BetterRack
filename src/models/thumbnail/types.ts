@@ -14,6 +14,8 @@ export type TCompressorModel = {
     getPageMimeType: (entryName: string) => string
 }
 
+export type TThumbnailEncoder = (inputPath: string, outputPath: string) => Promise<void>;
+
 export type TLogger = {
     info: (...params: unknown[]) => void|Promise<void>;
     error: (...params: unknown[]) => void|Promise<void>;

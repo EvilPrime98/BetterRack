@@ -7,4 +7,5 @@ export default defineConfig([
   { ignores: ["dist/**", "release/**", "graphify-out/**", "client/**", "react/**", "tmp-decompressor/**", "tmp-thumbnails/**"] },
   { files: ["**/*.{js,mjs,cjs,ts,mts,cts}"], plugins: { js }, extends: ["js/recommended"], languageOptions: { globals: globals.browser } },
   tseslint.configs.recommended,
+  { files: ["**/*.cjs"], languageOptions: { globals: globals.node }, rules: { "@typescript-eslint/no-require-imports": "off" } },
 ]);

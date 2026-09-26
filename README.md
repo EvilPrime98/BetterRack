@@ -57,7 +57,7 @@ Build a distributable Windows installer for the desktop app (output in `release/
 bun run dist
 ```
 
-Build a Linux AppImage (run on Linux, output in `release/`). It bundles 7-Zip, so no archive tools are needed to open CBZ/CBR files. Thumbnail generation still requires `ffmpeg` on the `PATH`:
+Build a Linux AppImage (run on Linux, output in `release/`). It bundles 7-Zip and sharp, so no archive or image tools are needed to open CBZ/CBR files and generate thumbnails:
 
 ```bash
 bun run dist:linux
