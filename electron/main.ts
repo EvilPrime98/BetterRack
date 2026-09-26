@@ -234,6 +234,7 @@ async function startDesktopApp() {
         const clientDistDir = path.join(resourcesPath, "client");
         const nodePath = path.join(resourcesPath, "server", "vendor", "node_modules");
         const sevenZipPath = path.join(resourcesPath, "bin", isWindows ? "7z.exe" : "7zz");
+        const thumbnailWorkerPath = path.join(resourcesPath, "thumbnail-worker", "worker.cjs");
 
         log(`Server executable: ${exePath}`);
         log(`Client dist dir: ${clientDistDir}`);
@@ -247,6 +248,10 @@ async function startDesktopApp() {
           throw new Error(`Bundled 7-Zip not found at ${sevenZipPath}`);
         }
 
+        if (!fs.existsSync(thumbnailWorkerPath)) {
+          throw new Error(`Bundled thumbnail worker not found at ${thumbnailWorkerPath}`);
+        }
+
         serverProcess = spawn(exePath, [], {
 
           cwd: app.getPath("userData"),
@@ -257,6 +262,8 @@ async function startDesktopApp() {
             CLIENT_DIST_DIR: clientDistDir,
             NODE_PATH: nodePath,
             SEVEN_ZIP_PATH: sevenZipPath,
+            THUMBNAIL_RUNTIME_PATH: process.execPath,
+            THUMBNAIL_WORKER_PATH: thumbnailWorkerPath,
           },
 
         });

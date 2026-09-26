@@ -1,4 +1,5 @@
 import process from 'node:process';
+import { sharpLinuxResources, sharpResources, sharpWin32Resources } from './vendors/sharp.js';
 
 const frontendDir = process.env.ELECTRON_FRONTEND === "client"
 ? "client" //ultra-light-js implementation
@@ -17,11 +18,13 @@ export default {
   extraResources: [
     { from: "dist/server", to: "server" },
     { from: `${frontendDir}/dist`, to: "client" },
+    ...sharpResources,
   ],
   win: {
     target: "nsis",
     extraResources: [
       { from: "vendor/7zip/win32", to: "bin" },
+      ...sharpWin32Resources,
     ],
     icon: "build/icon.ico",
     signtoolOptions: {
@@ -50,6 +53,7 @@ export default {
     target: "AppImage",
     extraResources: [
       { from: "vendor/7zip/linux-x64", to: "bin" },
+      ...sharpLinuxResources,
     ],
     artifactName: "${productName}-${version}.${ext}",
     icon: "build/icon.png",

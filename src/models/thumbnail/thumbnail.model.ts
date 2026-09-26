@@ -2,24 +2,15 @@ import { existsSync } from "node:fs";
 import { mkdir, readdir, rm, stat } from "node:fs/promises";
 import path from "node:path";
 import { createConcurrencyLimiter } from "#utils/concurrencyLimiter";
-import { EXTRACT_CONCURRENCY, RAW_EXTRACT_DIR, THUMBNAIL_CACHE_DIR, THUMBNAIL_QUALITY, THUMBNAIL_WIDTH } from "./constants";
-import type { TLogger, TCompressorModel } from "./types";
-
-const FALLBACK_FFMPEG_PATHS = process.platform === "win32"
-? [
-    "C:\\ffmpeg\\bin\\ffmpeg.exe",
-    "C:\\Program Files\\ffmpeg\\bin\\ffmpeg.exe"
-]
-: [
-    "/usr/bin/ffmpeg",
-    "/usr/local/bin/ffmpeg",
-    "/opt/homebrew/bin/ffmpeg"
-];
+import { EXTRACT_CONCURRENCY, RAW_EXTRACT_DIR, THUMBNAIL_CACHE_DIR } from "./constants";
+import { createThumbnailEncoder } from "./encoder";
+import type { TLogger, TCompressorModel, TThumbnailEncoder } from "./types";
 
 export class ThumbnailModel {
 
     private log: TLogger | undefined;
     private compressorModel: TCompressorModel;
+    private encode: TThumbnailEncoder;
     private resolved = new Map<string, string>();
     private failedSignatures = new Map<string, string>();
     private inFlight = new Map<string, Promise<string | null>>();
@@ -27,10 +18,12 @@ export class ThumbnailModel {
 
     constructor(
         compressorModel: TCompressorModel,
-        log?: TLogger
+        log?: TLogger,
+        encode: TThumbnailEncoder = createThumbnailEncoder()
     ) {
         this.log = log;
         this.compressorModel = compressorModel;
+        this.encode = encode;
     }
 
     private generate = async (
@@ -96,12 +89,6 @@ export class ThumbnailModel {
 
     }
 
-    private resolveFfmpegPath = (): string => {
-        const bin = Bun.which("ffmpeg") ?? FALLBACK_FFMPEG_PATHS.find(existsSync);
-        if (!bin) throw new Error("ffmpeg executable not found. Install ffmpeg (https://ffmpeg.org/download.html) or add it to PATH.");
-        return bin;
-    };
-
     private optimize = async (
         uid: string,
         rawDir: string
@@ -119,26 +106,7 @@ export class ThumbnailModel {
         await mkdir(outDir, { recursive: true });
         const outPath = path.join(outDir, `${uid}.webp`);
 
-        const proc = Bun.spawn([
-            this.resolveFfmpegPath(),
-            "-y",
-            "-i", rawPath,
-            "-vf", `scale='min(iw,${THUMBNAIL_WIDTH})':-1`,
-            "-c:v", "libwebp",
-            "-quality", String(THUMBNAIL_QUALITY),
-            "-frames:v", "1",
-            outPath
-        ], {
-            stdout: "ignore",
-            stderr: "pipe"
-        });
-
-        const errorOutput = await new Response(proc.stderr).text();
-        const exitCode = await proc.exited;
-
-        if (exitCode !== 0) {
-            throw new Error(`Thumbnail encoding failed with code ${exitCode}${errorOutput.trim() ? `: ${errorOutput.trim()}` : ''}`);
-        }
+        await this.encode(rawPath, outPath);
 
         this.resolved.set(uid, outPath);
 
