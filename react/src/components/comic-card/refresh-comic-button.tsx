@@ -14,9 +14,7 @@ export function RefreshComicButton({
 
     const [isRefreshing, setIsRefreshing] = useState(false);
 
-    const onClick = (e: MouseEvent) => {
-        e.stopPropagation();
-        e.preventDefault();
+    const refresh = () => {
         if (isRefreshing) return;
         setIsRefreshing(true);
         Promise.allSettled([
@@ -38,8 +36,15 @@ export function RefreshComicButton({
             });
     };
 
+    const onClick = (e: MouseEvent) => {
+        e.stopPropagation();
+        e.preventDefault();
+        refresh();
+    };
+
     return (
-        <span
+        <button
+            type="button"
             className={styles.refreshComicButton}
             aria-label="Regenerate the cover thumbnail and re-identify this comic"
             title="Regenerate the cover thumbnail and re-identify this comic"
@@ -47,7 +52,7 @@ export function RefreshComicButton({
             onClick={onClick}
         >
             <RefreshIcon size={16} />
-        </span>
+        </button>
     );
 
 }
