@@ -2,6 +2,7 @@ import { UltraActivity, UltraComponent, ultraCompState, type IUltraCompStateStat
 import styles from './reading-page.module.css';
 import { Layout } from "../layout";
 import { ComicCard } from "@/components/comic-card/comic-card";
+import { LayoutSelector } from "@/components/layout/layout-selector";
 import { getReading } from "../services/library.service";
 import { toast } from "../services/toast.service";
 import type { ILibraryResponseItem } from "../library.types";
@@ -108,8 +109,22 @@ export function ReadingPage() {
                     component: '<header></header>',
                     className: [styles.header],
                     children: [
-                        `<span class="${styles.eyebrow}">Keep reading</span>`,
-                        `<h1 class="${styles.title}">Currently reading</h1>`
+
+                        UltraComponent({
+                            component: '<div></div>',
+                            className: [styles.left],
+                            children: [
+                                `<span class="${styles.eyebrow}">Keep reading</span>`,
+                                `<h1 class="${styles.title}">Currently reading</h1>`
+                            ]
+                        }),
+
+                        UltraComponent({
+                            component: '<div></div>',
+                            className: [styles.right],
+                            children: [LayoutSelector()]
+                        })
+
                     ]
                 }),
 
