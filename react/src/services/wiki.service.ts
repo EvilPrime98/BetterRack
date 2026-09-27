@@ -10,7 +10,9 @@ export async function fetchComics(
 
     const params = new URLSearchParams({ title, thumbnailSize: String(thumbnailSize) });
     const response = await fetch(`${API_URL}/api/wiki/comics?${params}`, { headers: authHeaders() });
-    return await response.json();
+    const data = await response.json();
+    if (!response.ok) throw new Error((data as { message?: string })?.message || 'Failed to search the wiki.');
+    return data;
 
 }
 
@@ -20,5 +22,7 @@ export async function fetchComicById(
 ): Promise<WikiComic> {
     const params = new URLSearchParams({ sourceWiki })
     const response = await fetch(`${API_URL}/api/wiki/comic/${id}?${params.toString()}`, { headers: authHeaders() });
-    return await response.json();
+    const data = await response.json();
+    if (!response.ok) throw new Error((data as { message?: string })?.message || 'Failed to load wiki comic.');
+    return data;
 }

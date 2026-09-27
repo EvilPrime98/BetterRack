@@ -6,12 +6,10 @@ import { getWindowRange } from '@/utils/reader.page.utils';
 export function useReaderPageTracking(
     uid: string | undefined, 
     pages: string[], 
-    viewerRef: RefObject<HTMLElement | null>
+    viewerRef: RefObject<HTMLDivElement | null>
 ) {
 
     const [currentPage, setCurrentPage] = useState(1);
-    const currentPageRef = useRef(currentPage);
-    currentPageRef.current = currentPage;
     const observerRef = useRef<IntersectionObserver | null>(null);
 
     const goToPage = useCallback((page: number) => {
@@ -54,6 +52,6 @@ export function useReaderPageTracking(
 
     }, [pages, uid, viewerRef]);
 
-    return { currentPage, currentPageRef, goToPage };
+    return { currentPage, goToPage };
 
 }

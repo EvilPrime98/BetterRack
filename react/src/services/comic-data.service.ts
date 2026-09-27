@@ -5,7 +5,9 @@ import { authHeaders } from "./server-config.service";
 export async function getComicData(): Promise<Record<string, IComicLSCache>> {
 
     const response = await fetch(`${API_URL}/api/comic-data`, { headers: authHeaders() });
-    return await response.json();
+    const data = await response.json();
+    if (!response.ok) throw new Error((data as { message?: string })?.message || 'Failed to load comic data.');
+    return data;
 
 }
 
@@ -19,6 +21,8 @@ export async function updateComicData(
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify(partial)
     });
-    return await response.json();
+    const data = await response.json();
+    if (!response.ok) throw new Error((data as { message?: string })?.message || 'Failed to update comic data.');
+    return data;
 
 }

@@ -26,13 +26,14 @@ export function FolderCardActions({
 
     return <div className={styles.folderActions}>
         <MoveFileButton uid={uid} name={title} />
-        <span
+        <button
+            type="button"
             className={[styles.folderActionButton, styles.folderDeleteButton].join(' ')}
             aria-label="Delete this folder"
             onClick={onDeleteClick}
         >
             <TrashIcon size={14} />
-        </span>
+        </button>
     </div>
     
 }

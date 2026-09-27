@@ -1,12 +1,6 @@
 import type { ButtonHTMLAttributes } from 'react';
 import styles from './br-button.module.css';
-
-export const BR_BUTTON_VARIANTS = {
-    primary: 'primary',
-    secondary: 'secondary',
-    ghost: 'ghost',
-    classic: 'classic'
-} as const; 
+import { BR_BUTTON_VARIANTS } from './br-button.constants';
 
 interface BRButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     text: string;

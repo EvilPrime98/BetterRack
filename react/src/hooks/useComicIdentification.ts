@@ -18,21 +18,27 @@ export function useComicIdentification(
     const lastIdentified = useComicIdentStore((s) => s.lastIdentified);
     const lastUnidentified = useComicIdentStore((s) => s.lastUnidentified);
 
-    useEffect(() => {
-        if (lastIdentified?.uid !== item.uid) return;
-        setComic(lastIdentified.comic);
-        setMetaSource(lastIdentified.metaSource);
-        setIdentified(true);
-        setIsLoadingInfo(false);
-    }, [lastIdentified, item.uid]);
+    const [prevLastIdentified, setPrevLastIdentified] = useState(lastIdentified);
+    if (lastIdentified !== prevLastIdentified) {
+        setPrevLastIdentified(lastIdentified);
+        if (lastIdentified?.uid === item.uid) {
+            setComic(lastIdentified.comic);
+            setMetaSource(lastIdentified.metaSource);
+            setIdentified(true);
+            setIsLoadingInfo(false);
+        }
+    }
 
-    useEffect(() => {
-        if (lastUnidentified?.uid !== item.uid) return;
-        setComic(null);
-        setMetaSource(undefined);
-        setIdentified(false);
-        setIsLoadingInfo(false);
-    }, [lastUnidentified, item.uid]);
+    const [prevLastUnidentified, setPrevLastUnidentified] = useState(lastUnidentified);
+    if (lastUnidentified !== prevLastUnidentified) {
+        setPrevLastUnidentified(lastUnidentified);
+        if (lastUnidentified?.uid === item.uid) {
+            setComic(null);
+            setMetaSource(undefined);
+            setIdentified(false);
+            setIsLoadingInfo(false);
+        }
+    }
 
     useEffect(() => {
 

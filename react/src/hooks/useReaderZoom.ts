@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import { useUserPrefStore } from '../stores/userPref.store';
 
@@ -14,12 +14,14 @@ const clampZoom = (value: number, maxZoom: number) => Math.min(maxZoom, Math.max
 
 export function useReaderZoom(
     pageRef: RefObject<HTMLElement | null>,
-    viewerRef: RefObject<HTMLElement | null>
+    viewerRef: RefObject<HTMLDivElement | null>
 ) {
 
     const [zoom, setZoom] = useState(() => useUserPrefStore.getState().getPref('zoom'));
     const zoomRef = useRef(zoom);
-    zoomRef.current = zoom;
+    useLayoutEffect(() => {
+        zoomRef.current = zoom;
+    }, [zoom]);
 
     const persistZoom = useCallback((value: number) => {
         useUserPrefStore.getState().setPref({ zoom: value });

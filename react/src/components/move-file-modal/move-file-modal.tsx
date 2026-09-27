@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react';
 import styles from './move-file-modal.module.css';
 import { FolderIcon } from "@/icons/folder.icon";
 import { useLibraryStore } from "@/stores/library.store";
-import { useMoveFileModalContext } from "@/context/MoveFileModalContext";
+import { useMoveFileModalContext } from "@/context/MoveFileModalContext.hooks";
 import type { ILibraryGroup } from "@/library.types";
 
 function buildFolderPath(uid: string, groups: ILibraryGroup[]): string {
@@ -68,18 +68,18 @@ export function MoveFileModal() {
     const cancel = () => closeMoveFileModal();
 
     useEffect(() => {
+        if (!isVisible) return;
         const onKeydown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') cancel();
+            if (e.key === 'Escape') closeMoveFileModal();
         };
         document.addEventListener('keydown', onKeydown);
         return () => document.removeEventListener('keydown', onKeydown);
-        
-    }, []);
+    }, [isVisible, closeMoveFileModal]);
 
     return (
         <div className={styles.overlay} style={{ display: isVisible ? undefined : 'none' }}>
 
-            <div className={styles.backdrop} onClick={cancel} />
+            <button type="button" className={styles.backdrop} aria-label="Close dialog" onClick={cancel} />
 
             <div
                 role="dialog"
@@ -92,20 +92,24 @@ export function MoveFileModal() {
 
                 <ul className={styles.list}>
 
-                    <li className={styles.item} onClick={() => selectMoveTarget(undefined)}>
-                        <FolderIcon size={14} color="#34c3d1" />
-                        <span>Library root</span>
+                    <li>
+                        <button type="button" className={styles.item} onClick={() => selectMoveTarget(undefined)}>
+                            <FolderIcon size={14} color="#34c3d1" />
+                            <span>Library root</span>
+                        </button>
                     </li>
 
                     {folders.length
                         ? folders.map(folder => (
-                            <li
-                                key={folder.uid}
-                                className={styles.item}
-                                onClick={() => selectMoveTarget(folder.uid)}
-                            >
-                                <FolderIcon size={14} color="#c7c7c7" />
-                                <span>{buildFolderPath(folder.uid, groups)}</span>
+                            <li key={folder.uid}>
+                                <button
+                                    type="button"
+                                    className={styles.item}
+                                    onClick={() => selectMoveTarget(folder.uid)}
+                                >
+                                    <FolderIcon size={14} color="#c7c7c7" />
+                                    <span>{buildFolderPath(folder.uid, groups)}</span>
+                                </button>
                             </li>
                         ))
                         : <li className={styles.empty}>No folders yet.</li>}

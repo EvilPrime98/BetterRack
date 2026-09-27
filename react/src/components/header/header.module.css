@@ -31,7 +31,7 @@
     align-self: stretch;
 }
 
-.burger {
+.iconBtn.burger {
     grid-column: 1;
     justify-self: start;
     align-self: center;
@@ -135,6 +135,12 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    border: none;
+    background: transparent;
     border-radius: 8px;
     color: #fff;
     cursor: pointer;

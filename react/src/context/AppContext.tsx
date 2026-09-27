@@ -1,23 +1,12 @@
-import { createContext, useContext, useState, type ReactNode } from 'react';
-
-interface IAppContextValue {
-    isLoading: boolean;
-    setIsLoading: (isLoading: boolean) => void;
-}
-
-const AppContext = createContext<IAppContextValue | null>(null);
+import { useMemo, useState, type ReactNode } from 'react';
+import { AppContext } from './AppContext.hooks';
 
 export function AppProvider({ children }: { children: ReactNode }) {
     const [isLoading, setIsLoading] = useState(false);
+    const value = useMemo(() => ({ isLoading, setIsLoading }), [isLoading]);
     return (
-        <AppContext.Provider value={{ isLoading, setIsLoading }}>
+        <AppContext.Provider value={value}>
             {children}
         </AppContext.Provider>
     );
-}
-
-export function useAppContext(): IAppContextValue {
-    const ctx = useContext(AppContext);
-    if (!ctx) throw new Error('useAppContext must be used within AppProvider');
-    return ctx;
 }

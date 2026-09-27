@@ -1,4 +1,4 @@
-import type { WikiComic } from 'better-wiki';
+import type { ReleaseDate, WikiComic } from 'better-wiki';
 import styles from './comic-card.module.css';
 import type { TMetaSource } from '@/library.types';
 import { InfoRow } from './info-row';
@@ -11,6 +11,12 @@ const metaSourceLabel: Record<TMetaSource, string> = {
     wiki: 'From wiki',
     comicinfo: 'From ComicInfo.xml'
 };
+
+function formatReleaseDate(releaseDate?: ReleaseDate | null): string {
+    const { releaseMonth, releaseDay, releaseYear } = releaseDate || {};
+    if (!releaseMonth || !releaseDay || !releaseYear) return '';
+    return [releaseMonth, releaseDay].map(n => n.padStart(2, '0')).join('/') + `/${releaseYear}`;
+}
 
 export function ComicCardInfo({
     navigate,
@@ -40,13 +46,7 @@ export function ComicCardInfo({
         );
     }
 
-    const releaseDate = comic?.releaseDate;
-
-    const { releaseMonth, releaseDay, releaseYear } = releaseDate || {};
-
-    const released = releaseMonth && releaseDay && releaseYear
-    ? [releaseMonth, releaseDay].map(n => n.padStart(2, '0')).join('/') + `/${releaseYear}`
-    : '';
+    const released = formatReleaseDate(comic?.releaseDate);
 
     const writers = (comic?.credits?.writers || []);
     const firstWriter = writers[0];

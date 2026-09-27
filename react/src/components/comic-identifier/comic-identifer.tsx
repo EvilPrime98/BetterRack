@@ -78,7 +78,7 @@ export function ComicIdentifier() {
     return (
         <div className={styles.overlay} style={{ display: isVisible ? undefined : 'none' }}>
 
-            <div className={styles.backdrop} onClick={close} />
+            <button type="button" className={styles.backdrop} aria-label="Close dialog" onClick={close} />
 
             <div
                 className={styles.modal}
@@ -95,6 +95,7 @@ export function ComicIdentifier() {
                         ref={inputRef}
                         type="text"
                         placeholder="Search a comic.."
+                        aria-label="Search a comic"
                         value={search}
                         onChange={(e) => setSearch(e.currentTarget.value)}
                     />
@@ -107,14 +108,14 @@ export function ComicIdentifier() {
                         onClick={onUnidentify}
                     />
 
-                    <span
+                    <button
+                        type="button"
                         className={styles.closeButton}
-                        role="button"
                         aria-label="Close search"
                         onClick={close}
                     >
                         <CloseIcon size={14} />
-                    </span>
+                    </button>
 
                 </div>
 

@@ -8,7 +8,7 @@ import { useComicsTypeStore } from '@/stores/comicsTypes.store';
 import { ComicCardTitle } from './title';
 import { ComicCardInfo } from './info';
 import { ComicCardCover } from './cover';
-import { matchesReadFilter as readFilterMatches, useReadTypesContext } from '@/context/ReadTypesContext';
+import { matchesReadFilter as readFilterMatches, useReadTypesContext } from '@/context/ReadTypesContext.hooks';
 import { useComicCacheStore } from '@/stores/comicCache.store';
 import { useComicIdentification } from '@/hooks/useComicIdentification';
 import { IdentifyButton } from './identify-button';

@@ -1,16 +1,6 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { useState, useCallback, useMemo, type ReactNode } from 'react';
 import { useLibraryStore } from '../stores/library.store';
-
-interface IMoveFileModalContextValue {
-    isVisible: boolean;
-    fileUid: string;
-    fileName: string;
-    openMoveFileModal: (fileUid: string, fileName: string) => void;
-    closeMoveFileModal: () => void;
-    selectMoveTarget: (targetFolderUid?: string) => Promise<void>;
-}
-
-const MoveFileModalContext = createContext<IMoveFileModalContextValue | null>(null);
+import { MoveFileModalContext } from './MoveFileModalContext.hooks';
 
 export function MoveFileModalProvider({ children }: { children: ReactNode }) {
     const [isVisible, setIsVisible] = useState(false);
@@ -32,18 +22,14 @@ export function MoveFileModalProvider({ children }: { children: ReactNode }) {
         await useLibraryStore.getState().moveFile(fileUid, targetFolderUid);
     }, [fileUid, closeMoveFileModal]);
 
+    const value = useMemo(() => ({
+        isVisible, fileUid, fileName,
+        openMoveFileModal, closeMoveFileModal, selectMoveTarget
+    }), [isVisible, fileUid, fileName, openMoveFileModal, closeMoveFileModal, selectMoveTarget]);
+
     return (
-        <MoveFileModalContext.Provider value={{
-            isVisible, fileUid, fileName,
-            openMoveFileModal, closeMoveFileModal, selectMoveTarget
-        }}>
+        <MoveFileModalContext.Provider value={value}>
             {children}
         </MoveFileModalContext.Provider>
     );
-}
-
-export function useMoveFileModalContext(): IMoveFileModalContextValue {
-    const ctx = useContext(MoveFileModalContext);
-    if (!ctx) throw new Error('useMoveFileModalContext must be used within MoveFileModalProvider');
-    return ctx;
 }
