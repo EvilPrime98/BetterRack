@@ -1,40 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import type { WikiComic } from 'better-wiki';
-import type { IComicFilters, ILibraryResponseItem, TMetaSource } from '@/library.types';
+import type { IComicFilters, ILibraryResponseItem } from '@/library.types';
 import { useComicIdentStore } from '@/stores/comicIdent.store';
 import { identifyLibraryEntry } from '@/services/library.service';
-
-/** Keeps a card's identification state in 
- * sync with manual identify/un-identify actions broadcast from elsewhere in the app. 
- * */
-function useComicIdentBroadcast(
-    uid: string,
-    setComic: (comic: WikiComic | null) => void,
-    setMetaSource: (metaSource: TMetaSource | undefined) => void,
-    setIdentified: (identified: boolean) => void,
-    setIsLoadingInfo: (isLoadingInfo: boolean) => void
-) {
-
-    const lastIdentified = useComicIdentStore((s) => s.lastIdentified);
-    const lastUnidentified = useComicIdentStore((s) => s.lastUnidentified);
-
-    useEffect(() => {
-        if (lastIdentified?.uid !== uid) return;
-        setComic(lastIdentified.comic);
-        setMetaSource(lastIdentified.metaSource);
-        setIdentified(true);
-        setIsLoadingInfo(false);
-    }, [lastIdentified, uid]);
-
-    useEffect(() => {
-        if (lastUnidentified?.uid !== uid) return;
-        setComic(null);
-        setMetaSource(undefined);
-        setIdentified(false);
-        setIsLoadingInfo(false);
-    }, [lastUnidentified, uid]);
-
-}
 
 export function useComicIdentification(
     item: ILibraryResponseItem,
@@ -47,7 +15,24 @@ export function useComicIdentification(
     const [isLoadingInfo, setIsLoadingInfo] = useState(item.identified === undefined);
     const articleRef = useRef<HTMLElement>(null);
 
-    useComicIdentBroadcast(item.uid, setComic, setMetaSource, setIdentified, setIsLoadingInfo);
+    const lastIdentified = useComicIdentStore((s) => s.lastIdentified);
+    const lastUnidentified = useComicIdentStore((s) => s.lastUnidentified);
+
+    useEffect(() => {
+        if (lastIdentified?.uid !== item.uid) return;
+        setComic(lastIdentified.comic);
+        setMetaSource(lastIdentified.metaSource);
+        setIdentified(true);
+        setIsLoadingInfo(false);
+    }, [lastIdentified, item.uid]);
+
+    useEffect(() => {
+        if (lastUnidentified?.uid !== item.uid) return;
+        setComic(null);
+        setMetaSource(undefined);
+        setIdentified(false);
+        setIsLoadingInfo(false);
+    }, [lastUnidentified, item.uid]);
 
     useEffect(() => {
 
