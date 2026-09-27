@@ -21,14 +21,14 @@ export function SidebarCloseButton() {
     }
 
     return (
-        <div
+        <button
+            type="button"
             className={styles.button}
-            role="button"
             aria-label={isDesktop ? 'Collapse sidebar' : 'Close sidebar'}
             onClick={handleClick}
         >
             {isDesktop ? <ArrowLeftIcon size={20} /> : <CloseIcon size={20} />}
-        </div>
+        </button>
     );
 
 }

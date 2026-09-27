@@ -23,14 +23,15 @@ export function DeleteFileButton({
     };
 
     return (
-        <span
+        <button
+            type="button"
             className={styles.deleteButton}
             aria-label="Delete this comic from the library"
             title="Delete this comic from the library"
             onClick={onClick}
         >
             <TrashIcon size={20} />
-        </span>
+        </button>
     );
 
 }

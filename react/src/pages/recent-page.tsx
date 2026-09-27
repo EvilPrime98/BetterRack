@@ -20,8 +20,8 @@ export function RecentPage() {
     const navigate = useNavigate();
     
     const [selectedWindow, setSelectedWindow] = useState<TRecentWindow>(
-        RECENT_WINDOW_OPTIONS.find(opt => opt.label === filter) ||
-        RECENT_WINDOW_OPTIONS[0]
+        () => RECENT_WINDOW_OPTIONS.find(opt => opt.label === filter) ||
+            RECENT_WINDOW_OPTIONS[0]
     );
     
     const { items, isLoading, error } = useRecentlyAdded(selectedWindow.hours);

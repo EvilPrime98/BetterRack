@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { FILTER_OPTIONS, type ILibraryFilters, type ILibraryResponseItem } from '../library.types';
 import { useUserPrefStore } from '../stores/userPref.store';
 
@@ -18,49 +18,34 @@ function sortByReleaseDate(
     })
 }
 
-export function useFilters({
-    rawItems,
-    setItems,
-}: {
-    rawItems: () => ILibraryResponseItem[];
-    setItems: (value: ILibraryResponseItem[]) => void;
-}) {
+export function applyFilters(
+    rawItems: ILibraryResponseItem[],
+    filters: ILibraryFilters
+): ILibraryResponseItem[] {
+    const items = [...rawItems];
+    if (filters.sortByReleaseDate) sortByReleaseDate(items);
+    return items;
+}
+
+export function useFilters() {
 
     const [filters, setFiltersState] = useState<ILibraryFilters>(() => ({
         sortByCreation: false,
         sortByReleaseDate: useUserPrefStore.getState().getPref('filter') === FILTER_OPTIONS.byReleaseDate
     }));
 
-    const rawItemsRef = useRef(rawItems);
-    rawItemsRef.current = rawItems;
-
-    function applyFilters(current: ILibraryFilters = filters) {
-        const source = [...rawItemsRef.current()];
-        if (current.sortByReleaseDate) sortByReleaseDate(source);
-        setItems(source);
-    }
-
     function setFilters(updates: Partial<ILibraryFilters>) {
-        const next = { ...filters, ...updates };
-        setFiltersState(next);
-        applyFilters(next);
+        setFiltersState((prev) => ({ ...prev, ...updates }));
     }
 
     function resetFilters() {
-        const next: ILibraryFilters = { sortByCreation: false, sortByReleaseDate: false };
-        setFiltersState(next);
-        setItems(rawItemsRef.current());
+        setFiltersState({ sortByCreation: false, sortByReleaseDate: false });
     }
-
-    useEffect(() => {
-        applyFilters(filters);      
-    }, []);
 
     return {
         filters,
         setFilters,
         resetFilters,
-        applyFilters: () => applyFilters(filters),
     }
 
 }

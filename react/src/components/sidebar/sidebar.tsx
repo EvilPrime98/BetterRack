@@ -34,16 +34,16 @@ export function SideBar() {
 
     useEffect(() => {
         setIsLoading(true);
-        fetchLibrary().finally(() => setIsLoading(false));      
-    }, []);
+        fetchLibrary().finally(() => setIsLoading(false));
+    }, [fetchLibrary]);
 
     useEffect(() => {
         function onKeydown(event: KeyboardEvent) {
-            if (event.key === 'Escape') closeSidebar();
+            if (event.key === 'Escape') setIsExpanded(false);
         }
         document.addEventListener('keydown', onKeydown);
         return () => document.removeEventListener('keydown', onKeydown);
-    }, []);
+    }, [setIsExpanded]);
 
     useEffect(() => {
         const $aside = asideRef.current;

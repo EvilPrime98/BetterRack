@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { getReading } from '@/services/library.service';
 import { useLibraryStore } from '@/stores/library.store';
 import { useComicCacheStore } from '@/stores/comicCache.store';
-import { matchesReadFilter } from '@/context/ReadTypesContext';
+import { matchesReadFilter } from '@/context/ReadTypesContext.hooks';
 import type { ILibraryResponseItem } from '@/library.types';
 
 export function useReading() {

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import styles from './download-dir-modal.module.css';
 import { FolderIcon } from '@/icons/folder.icon';
 import { useSettingsStore } from '@/stores/settings.store';
-import { useDownloadDirModalContext } from '@/context/DownloadDirModalContext';
+import { useDownloadDirModalContext } from '@/context/DownloadDirModalContext.hooks';
 import { areDirectoryListsEqual, getCachedDirectories, refreshDirectories } from '@/services/fs.service';
 
 type TListState =
@@ -57,7 +57,7 @@ export function DownloadDirModal() {
     return (
         <div className={styles.overlay} style={{ display: isVisible ? undefined : 'none' }}>
 
-            <div className={styles.backdrop} onClick={cancel} />
+            <button type="button" className={styles.backdrop} aria-label="Close dialog" onClick={cancel} />
 
             <div
                 role="dialog"
@@ -81,14 +81,16 @@ export function DownloadDirModal() {
                     {listState.status === 'ready' && listState.dirs.map((dir) => {
                         const isDefault = dir === currentDefault;
                         return (
-                            <li
-                                key={dir}
-                                className={[styles.item, isDefault ? styles.default : ''].filter(Boolean).join(' ')}
-                                onClick={() => confirmDownloadDir(dir)}
-                            >
-                                <FolderIcon size={14} color={isDefault ? '#34c3d1' : '#c7c7c7'} />
-                                <span>{dir}</span>
-                                {isDefault && <span className={styles.badge}>default</span>}
+                            <li key={dir}>
+                                <button
+                                    type="button"
+                                    className={[styles.item, isDefault ? styles.default : ''].filter(Boolean).join(' ')}
+                                    onClick={() => confirmDownloadDir(dir)}
+                                >
+                                    <FolderIcon size={14} color={isDefault ? '#34c3d1' : '#c7c7c7'} />
+                                    <span>{dir}</span>
+                                    {isDefault && <span className={styles.badge}>default</span>}
+                                </button>
                             </li>
                         );
                     })}

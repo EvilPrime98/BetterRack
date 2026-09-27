@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useLayoutEffect, useRef, useState } from 'react';
 import styles from './server-modal.module.css';
 import { BRButton } from '@/components/br-button/br-button';
 import { useServerModalStore, getStoredServerUrl } from '@/stores/serverModal.store';
@@ -15,32 +15,28 @@ export function ServerModal() {
     const [apiKey, setApiKey] = useState('');
     const inputRef = useRef<HTMLInputElement>(null);
 
-    // The keydown listener registers once. It reads the refs, not the state.
-    // This lets Escape and Enter always use the latest values.
-    const textRef = useRef(text);
-    textRef.current = text;
-    const remoteModeRef = useRef(remoteMode);
-    remoteModeRef.current = remoteMode;
-    const apiKeyRef = useRef(apiKey);
-    apiKeyRef.current = apiKey;
-
     const showRemoteModeOption = !isAndroidPlatform();
 
     const buildRemoteOpts = () => showRemoteModeOption
-        ? { enabled: remoteModeRef.current, apiKey: apiKeyRef.current }
+        ? { enabled: remoteMode, apiKey }
         : undefined;
 
     const cancel = () => useServerModalStore.getState().closeServerModal();
-    const submit = () => useServerModalStore.getState().submitServer(textRef.current, buildRemoteOpts());
+    const submit = () => useServerModalStore.getState().submitServer(text, buildRemoteOpts());
+
+    // Effect Event so the listener always reads the latest text/remoteMode/apiKey
+    // without re-registering on every keystroke.
+    const onKeydown = useEffectEvent((e: KeyboardEvent) => {
+        if (e.key === 'Escape') useServerModalStore.getState().closeServerModal();
+        if (e.key === 'Enter') useServerModalStore.getState().submitServer(text, buildRemoteOpts());
+    });
 
     useEffect(() => {
-        const onKeydown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') useServerModalStore.getState().closeServerModal();
-            if (e.key === 'Enter') useServerModalStore.getState().submitServer(textRef.current, buildRemoteOpts());
-        };
-        document.addEventListener('keydown', onKeydown);
-        return () => document.removeEventListener('keydown', onKeydown);
-    }, []);
+        if (!isVisible) return;
+        const handleKeydown = (e: KeyboardEvent) => onKeydown(e);
+        document.addEventListener('keydown', handleKeydown);
+        return () => document.removeEventListener('keydown', handleKeydown);
+    }, [isVisible]);
 
     // Reseed the fields from storage. Focus the address input again each time the modal becomes visible.
     useLayoutEffect(() => {
@@ -55,7 +51,7 @@ export function ServerModal() {
     return (
         <div className={styles.overlay} style={{ display: isVisible ? undefined : 'none' }}>
 
-            <div className={styles.backdrop} onClick={cancel} />
+            <button type="button" className={styles.backdrop} aria-label="Close dialog" onClick={cancel} />
 
             <div
                 className={styles.modal}
@@ -73,6 +69,7 @@ export function ServerModal() {
                     className={styles.field}
                     type="text"
                     placeholder="192.168.1.100:3000"
+                    aria-label="Server address"
                     value={text}
                     onChange={(e) => setText(e.currentTarget.value)}
                 />
@@ -93,6 +90,7 @@ export function ServerModal() {
                                 className={styles.field}
                                 type="text"
                                 placeholder="API key (optional)"
+                                aria-label="API key (optional)"
                                 value={apiKey}
                                 onChange={(e) => setApiKey(e.currentTarget.value)}
                             />

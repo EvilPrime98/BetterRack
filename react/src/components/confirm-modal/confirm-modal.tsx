@@ -27,7 +27,7 @@ export function ConfirmModal() {
     return (
         <div className={styles.overlay} style={{ display: isVisible ? undefined : 'none' }}>
 
-            <div className={styles.backdrop} onClick={cancel} />
+            <button type="button" className={styles.backdrop} aria-label="Close dialog" onClick={cancel} />
 
             <div
                 className={styles.modal}

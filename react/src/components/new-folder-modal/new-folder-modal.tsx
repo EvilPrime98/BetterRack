@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import styles from './new-folder-modal.module.css';
 import { BRButton } from "@/components/br-button/br-button";
-import { useNewFolderModalContext } from "@/context/NewFolderModalContext";
+import { useNewFolderModalContext } from "@/context/NewFolderModalContext.hooks";
 
 export function NewFolderModal() {
 
@@ -20,14 +20,14 @@ export function NewFolderModal() {
 
     // Reads textRef.current (kept fresh above) rather than `text`, so it never closes over a stale value.
     useEffect(() => {
+        if (!isVisible) return;
         const onKeydown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') cancel();
-            if (e.key === 'Enter') submit();
+            if (e.key === 'Escape') closeNewFolderModal();
+            if (e.key === 'Enter') submitNewFolder(textRef.current);
         };
         document.addEventListener('keydown', onKeydown);
         return () => document.removeEventListener('keydown', onKeydown);
-        
-    }, []);
+    }, [isVisible, closeNewFolderModal, submitNewFolder]);
 
     useLayoutEffect(() => {
         if (!isVisible || !inputRef.current) return;
@@ -39,7 +39,7 @@ export function NewFolderModal() {
     return (
         <div className={styles.overlay} style={{ display: isVisible ? undefined : 'none' }}>
 
-            <div className={styles.backdrop} onClick={cancel} />
+            <button type="button" className={styles.backdrop} aria-label="Close dialog" onClick={cancel} />
 
             <div
                 role="dialog"
@@ -55,6 +55,7 @@ export function NewFolderModal() {
                     type="text"
                     className={styles.field}
                     placeholder="Folder name"
+                    aria-label="Folder name"
                     onChange={(e) => setText(e.currentTarget.value)}
                 />
 

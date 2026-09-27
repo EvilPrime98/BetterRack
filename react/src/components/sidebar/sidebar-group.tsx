@@ -1,7 +1,7 @@
 import { useState, type MouseEvent } from 'react';
 import styles from './sidebar.module.css';
 import { useLibraryStore } from '@/stores/library.store';
-import { useNewFolderModalContext } from '@/context/NewFolderModalContext';
+import { useNewFolderModalContext } from '@/context/NewFolderModalContext.hooks';
 import { SideBarElement } from './sider-bar-element';
 import { FolderIcon } from '@/icons/folder.icon';
 import { FolderPlusIcon } from '@/icons/folder-plus.icon';
@@ -34,9 +34,20 @@ export function SideBarGroup({
     return (
         <div className={styles.group}>
 
-            <div className={styles.groupHeader} onClick={toggle}>
-                <FolderIcon size={16} />
-                <span>{group.name}</span>
+            <div className={styles.groupHeader}>
+                <button
+                    type="button"
+                    className={styles.groupHeaderToggle}
+                    aria-expanded={isExpanded}
+                    aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${group.name}`}
+                    onClick={toggle}
+                >
+                    <FolderIcon size={16} />
+                    <span>{group.name}</span>
+                    <div className={[styles.chevron, isExpanded ? styles.chevronExpanded : ''].filter(Boolean).join(' ')}>
+                        <ChevronDownIcon size={14} />
+                    </div>
+                </button>
                 <button
                     type="button"
                     className={styles.groupHeaderAction}
@@ -45,9 +56,6 @@ export function SideBarGroup({
                 >
                     <FolderPlusIcon size={14} />
                 </button>
-                <div className={[styles.chevron, isExpanded ? styles.chevronExpanded : ''].filter(Boolean).join(' ')}>
-                    <ChevronDownIcon size={14} />
-                </div>
             </div>
 
             <nav className={styles.groupList}>

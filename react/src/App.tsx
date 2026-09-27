@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Routes, Route, useParams } from 'react-router-dom';
-import { useAppContext } from '@/context/AppContext';
+import { useAppContext } from '@/context/AppContext.hooks';
 import { useLibraryStore } from '@/stores/library.store';
 import { useComicCacheStore } from '@/stores/comicCache.store';
 import { useComicsTypeStore } from '@/stores/comicsTypes.store';
@@ -51,8 +51,8 @@ export function App() {
             
             setIsLoading(false);
 
-        })();      
-    }, []);
+        })();
+    }, [setIsLoading]);
 
     return (
         <>

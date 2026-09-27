@@ -22,7 +22,7 @@ export function SuggestionCard({
     }
 
     return (
-        <article className={styles.suggestionCard} onClick={onClick}>
+        <button type="button" className={styles.suggestionCard} onClick={onClick}>
 
             <div className={styles.suggestionCover}>
                 <ImageGen src={comic.cover} />
@@ -33,7 +33,7 @@ export function SuggestionCard({
                 <p className={styles.suggestionMeta}>{meta}</p>
             </div>
 
-        </article>
+        </button>
     );
 
 }
