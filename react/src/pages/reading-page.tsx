@@ -4,6 +4,7 @@ import { Layout } from '@/layout';
 import { useComicsTypeStore } from '@/stores/comicsTypes.store';
 import { useReading } from '@/hooks/useReading';
 import { ArrowLeftIcon } from '@/icons/arrow-left.icon';
+import { LayoutSelector } from '@/components/layout/layout-selector';
 import styles from './reading-page.module.css';
 
 export function ReadingPage() {
@@ -18,18 +19,26 @@ export function ReadingPage() {
 
                 <header className={styles.header}>
 
-                    <button
-                        type="button"
-                        className={styles.backButton}
-                        onClick={() => navigate('/')}
-                        aria-label="Back to library"
-                    >
-                        <ArrowLeftIcon size={16} />
-                    </button>
+                    <div className={styles.left}>
 
-                    <div className={styles.summary}>
-                        <span className={styles.eyebrow}>Keep reading</span>
-                        <h1 className={styles.title}>Currently reading</h1>
+                        <button
+                            type="button"
+                            className={styles.backButton}
+                            onClick={() => navigate('/')}
+                            aria-label="Back to library"
+                        >
+                            <ArrowLeftIcon size={16} />
+                        </button>
+
+                        <div className={styles.summary}>
+                            <span className={styles.eyebrow}>Keep reading</span>
+                            <h1 className={styles.title}>Currently reading</h1>
+                        </div>
+
+                    </div>
+
+                    <div className={styles.right}>
+                        <LayoutSelector />
                     </div>
 
                 </header>
