@@ -9,7 +9,7 @@ import { WindowControls } from '@/components/window-controls/window-controls';
 
 export function Header() {
 
-    const iconSize = 30;
+    const iconSize = 24;
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const isDesktop = useIsDesktop();
@@ -77,9 +77,9 @@ export function Header() {
                         className={styles.text} 
                         style={{ userSelect: 'none' }}
                     >
-                        <span 
-                            className={styles.title} 
-                            style={{ fontSize: '1.5rem' }}
+                        <span
+                            className={styles.title}
+                            style={{ fontSize: '1.15rem' }}
                         >
                             BetterRack
                         </span>
