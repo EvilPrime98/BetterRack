@@ -63,12 +63,12 @@ export function FolderCard({
                     <ChevronDownIcon size={14} color="currentColor" />
                 </span>
 
-            </Link>
+                <FolderCardActions
+                    title={title}
+                    uid={uid}
+                />
 
-            <FolderCardActions
-                title={title}
-                uid={uid}
-            />
+            </Link>
 
         </article>
     );

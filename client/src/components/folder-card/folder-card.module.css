@@ -182,10 +182,6 @@
     }
 
     .folderActions {
-        position: absolute;
-        top: 6px;
-        right: 6px;
-        z-index: 3;
         display: none;
         flex-direction: row;
         gap: 4px;
@@ -246,12 +242,6 @@
     max-width: none;
     margin-inline: 0;
     padding: 14px;
-
-    .folderActions {
-        top: 50%;
-        right: 50px;
-        transform: translateY(-50%);
-    }
 
     .cardLink {
         flex-direction: row;

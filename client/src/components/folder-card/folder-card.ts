@@ -78,14 +78,14 @@ export function FolderCard({
                         children: [
                             ChevronDownIcon({ size: 14, color: 'currentColor' })
                         ]
+                    }),
+
+                    FolderCardActions({
+                        title,
+                        uid
                     })
 
                 ]
-            }),
-
-            FolderCardActions({
-                title,
-                uid
             })
 
         ]
