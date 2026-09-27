@@ -105,7 +105,7 @@ export function ComicCard({
                     <ComicCardActions
                         uid={item.uid}
                         name={item.name}
-                        onThumbnailRetried={() => setCoverVersion(Date.now())}
+                        onComicRefreshed={() => setCoverVersion(Date.now())}
                     />
                 </div>
 

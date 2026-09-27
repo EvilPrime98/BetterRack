@@ -21,7 +21,7 @@ function useComicIdentBroadcast(
     useEffect(() => {
         if (lastIdentified?.uid !== uid) return;
         setComic(lastIdentified.comic);
-        setMetaSource('wiki');
+        setMetaSource(lastIdentified.metaSource);
         setIdentified(true);
         setIsLoadingInfo(false);
     }, [lastIdentified, uid]);

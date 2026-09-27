@@ -64,7 +64,7 @@ export function ComicCard({
     COMIC_IDENT_CTX.lastIdentified.subscribe((entry) => {
         if (entry?.uid !== item.uid) return;
         setComic(entry.comic);
-        setMetaSource('wiki');
+        setMetaSource(entry.metaSource);
         setIdentified(true);
         setIsLoadingInfo(false);
     });
@@ -235,7 +235,7 @@ export function ComicCard({
                             ComicCardActions({
                                 uid: item.uid,
                                 name: item.name,
-                                onThumbnailRetried: () => setCoverVersion(Date.now())
+                                onComicRefreshed: () => setCoverVersion(Date.now())
                             })
                         ]
                     })

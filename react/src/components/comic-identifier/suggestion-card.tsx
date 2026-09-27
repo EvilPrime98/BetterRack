@@ -17,7 +17,7 @@ export function SuggestionCard({
     const onClick = () => {
         const uid = useComicIdentStore.getState().itemUid;
         commitIdentifyFile(uid, comic).catch(console.error);
-        useComicIdentStore.getState().setLastIdentified({ uid, comic });
+        useComicIdentStore.getState().setLastIdentified({ uid, comic, metaSource: 'wiki' });
         useComicIdentStore.getState().setIsVisible(false);
     }
 

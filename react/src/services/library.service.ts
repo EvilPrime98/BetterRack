@@ -146,6 +146,18 @@ export async function identifyLibraryEntry(
     return data;
 }
 
+export async function reidentifyFile(
+    uid: string
+): Promise<Pick<ILibraryResponseItem, 'identified' | 'comic' | 'metaSource'>> {
+    const response = await fetch(`${API_URL}/api/library/${uid}/identify/reset`, {
+        method: 'POST',
+        headers: authHeaders()
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message);
+    return data;
+}
+
 export async function unidentifyFile(
     fileUid: string
 ): Promise<ILibraryRefreshResponse> {
