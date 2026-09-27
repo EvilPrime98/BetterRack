@@ -2,14 +2,30 @@
     position: relative;
     display: flex;
     align-items: center;
+}
+
+.trigger {
+    display: flex;
+    align-items: center;
     gap: 6px;
     cursor: pointer;
     user-select: none;
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    color: inherit;
 }
 
 .dropdown:hover .label,
-.dropdown:hover > svg {
+.dropdown:hover svg {
     opacity: 0.8;
+}
+
+.trigger:focus-visible {
+    outline: 2px solid #e8a33d;
+    outline-offset: 2px;
+    border-radius: 4px;
 }
 
 .dropdown svg {
@@ -35,6 +51,7 @@
 }
 
 .menu {
+    display: none;
     position: absolute;
     top: calc(100% + 8px);
     left: -3px;
@@ -47,6 +64,10 @@
     border-radius: 8px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
     z-index: 10;
+}
+
+.dropdown.open .menu {
+    display: block;
 }
 
 .option {
@@ -62,7 +83,12 @@
     transition: background 0.15s ease-in-out, color 0.15s ease-in-out;
 }
 
-.option:hover {
+.option:hover,
+.option:focus-visible {
     background: rgba(232, 163, 61, 0.12);
     color: #e8a33d;
+}
+
+.option:focus-visible {
+    outline: none;
 }
