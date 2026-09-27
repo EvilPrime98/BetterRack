@@ -278,6 +278,30 @@ export class LibraryModel {
 
     };
 
+    reidentifyFile = async (
+        uid: string
+    ): Promise<TLibraryEntry> => {
+
+        const entry = this.entryByUid.get(uid);
+        if (!entry || entry.did) throw new Error('Comic not found.');
+
+        this.identifyInFlight.delete(uid);
+        this.comicDataModel.upsert(uid, {
+            identified: undefined,
+            comic: undefined,
+            sourceWiki: undefined,
+            metaSource: undefined,
+            prefId: undefined,
+        });
+        entry.identified = undefined;
+        entry.comic = undefined;
+        entry.metaSource = undefined;
+        this.inheritanceCache = null;
+
+        return this.identify(uid);
+
+    };
+
     getPreferences = (uid: string) => {
         return this.pref.find(pref => pref.uid === uid);
     }

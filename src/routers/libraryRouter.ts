@@ -22,5 +22,6 @@ export function libraryRouter(
     app.post('/file/identify', (c) => cc.commitIdentify(c));
     app.post('/identify/reset-all', (c) => cc.reidentifyAll(c));
     app.get('/:uid/identify', (c) => cc.identify(c));
+    app.post('/:uid/identify/reset', (c) => cc.reidentifyFile(c));
     return app;
 }

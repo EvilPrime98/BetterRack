@@ -150,6 +150,8 @@ export type TLibraryModel = {
     commitIdentify: (fileUid: string, comic: WikiComic) => Promise<void>,
     /** Resolves wiki metadata for a single comic on demand; cached results skip the wiki call. */
     identify: (uid: string) => Promise<TLibraryEntry>,
+    /** Clears a single entry's stored identification and immediately re-runs `identify()`, forcing a fresh lookup even if it was already identified. */
+    reidentifyFile: (uid: string) => Promise<TLibraryEntry>,
     reidentifyAll: () => Promise<void>,
     addLibraryPath: (dir: string) => Promise<void>,
     removeLibraryPath: (dir: string) => Promise<void>,
