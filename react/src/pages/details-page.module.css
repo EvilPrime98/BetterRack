@@ -184,6 +184,12 @@
 }
 
 .creditRowClickable {
+    width: 100%;
+    box-sizing: border-box;
+    font: inherit;
+    text-align: left;
+    border: none;
+    background: transparent;
     cursor: pointer;
     border-radius: 3px;
     margin: 0 -6px;
