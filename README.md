@@ -7,10 +7,6 @@ BetterRack is a desktop app for organizing and reading a local comic book librar
 
 <img width="1916" height="917" alt="BetterRack library view" src="https://github.com/user-attachments/assets/21d98172-f3ba-468e-b404-33bf962fcffa" />
 
-## Why BetterRack
-
-Comic collections tend to end up spread across folders, with a different tool for each job: one to read, one to find new issues, one to look up what a series is about. BetterRack puts these in a single app that runs on your machine, over the folders you already have, with no account or cloud service required.
-
 ## What BetterRack does
 
 - **Library**: scans your comic folders and keeps a browsable library of CBR and CBZ files, with thumbnails.
