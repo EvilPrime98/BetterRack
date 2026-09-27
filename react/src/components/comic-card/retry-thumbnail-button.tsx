@@ -30,6 +30,7 @@ export function RetryThumbnailButton({
         <span
             className={styles.retryThumbnailButton}
             aria-label="Regenerate the cover thumbnail"
+            title="Regenerate the cover thumbnail"
             aria-busy={isRetrying}
             onClick={onClick}
         >

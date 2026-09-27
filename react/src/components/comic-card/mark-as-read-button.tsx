@@ -22,12 +22,14 @@ export function MarkAsReadButton({
     const isRead = useComicCacheStore((s) => s.cache[uid]?.read === true);
 
     const onClick = () => toggleComicRead(uid);
+    const label = isRead ? 'Mark this comic as unread' : 'Mark this comic as read';
 
     return (
         <span
             className={[styles.markAsReadButton, isRead ? styles.isRead : ''].filter(Boolean).join(' ')}
             aria-pressed={isRead}
-            aria-label={isRead ? 'Mark this comic as unread' : 'Mark this comic as read'}
+            aria-label={label}
+            title={label}
             onClick={onClick}
         >
             <BookmarkIcon size={16} />

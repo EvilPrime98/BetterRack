@@ -23,6 +23,7 @@ export function MoveFileButton({
         <span
             className={styles.moveButton}
             aria-label="Move to another folder"
+            title="Move to another folder"
             onClick={onClick}
         >
             <FolderIcon size={18} />
