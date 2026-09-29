@@ -26,7 +26,6 @@ export function LibraryPage() {
     const comicContainerRef = useRef<HTMLElement>(null);
     const { filters, setFilters, resetFilters } = useFilters();
     const { type: readFilter } = useReadTypesContext();
-    const comicCache = useComicCacheStore((s) => s.cache);
 
     const getLibraryItems = useCallback((): ILibraryResponseItem[] => {
         const items = useLibraryStore.getState().getLibraryItems({ onlyDir: !uid, uid });
@@ -38,8 +37,9 @@ export function LibraryPage() {
     const rawItems = useMemo(() => getLibraryItems(), [groups, searchQuery, uid, getLibraryItems]);
     const items = useMemo(() => applyFilters(rawItems, filters), [rawItems, filters]);
 
-    const hasVisibleItems = items.some(item => item.did
-        || matchesReadFilter(readFilter, comicCache[item.uid]?.readPer || 0));
+    const hasVisibleItems = useComicCacheStore((s) => items.some(item => item.did
+        || matchesReadFilter(readFilter, s.cache[item.uid]?.readPer || 0))
+    );
 
     useEffect(() => {
         setTitle('Library');

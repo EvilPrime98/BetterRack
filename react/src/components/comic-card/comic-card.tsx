@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './comic-card.module.css';
 import { ReadBar } from '@/components/read-bar/read-bar';
@@ -16,7 +16,7 @@ import { ComicCardActions } from './actions';
 import { CrButton } from '@/components/cr-button/cr-button';
 import { COMIC_FILTERS, type IComicFilters } from '@/library.types';
 
-export function ComicCard({
+export const ComicCard = memo(function ComicCard({
     item,
     filters
 }: {
@@ -114,4 +114,4 @@ export function ComicCard({
         </article>
     );
 
-}
+});
