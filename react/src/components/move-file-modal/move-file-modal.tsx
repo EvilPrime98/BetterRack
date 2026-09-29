@@ -1,6 +1,7 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import styles from './move-file-modal.module.css';
 import { FolderIcon } from "@/icons/folder.icon";
+import { Checkbox } from "@/components/checkbox/checkbox";
 import { useLibraryStore } from "@/stores/library.store";
 import { useMoveFileModalContext } from "@/context/MoveFileModalContext.hooks";
 import type { ILibraryGroup } from "@/library.types";
@@ -37,7 +38,15 @@ function buildFolderPath(uid: string, groups: ILibraryGroup[]): string {
 
 export function MoveFileModal() {
 
-    const { isVisible, fileUid, closeMoveFileModal, selectMoveTarget } = useMoveFileModalContext();
+    const { isVisible } = useMoveFileModalContext();
+
+    return isVisible ? <MoveFileModalContent /> : null;
+
+}
+
+function MoveFileModalContent() {
+
+    const { fileUid, closeMoveFileModal, selectMoveTarget } = useMoveFileModalContext();
     const groups = useLibraryStore((s) => s.groups);
     // getLibraryItems() builds a fresh array every call — selecting it directly (rather than
     // deriving it via useMemo off the stable `groups` reference) makes every render produce a
@@ -65,19 +74,34 @@ export function MoveFileModal() {
         [groups, fileUid]
     );
 
+    const [query, setQuery] = useState('');
+    const [showSubfolders, setShowSubfolders] = useState(true);
+
+    const destinations = useMemo(
+        () => folders
+            .filter(folder => showSubfolders || !folder.parentId)
+            .map(folder => ({ uid: folder.uid, path: buildFolderPath(folder.uid, groups) })),
+        [folders, groups, showSubfolders]
+    );
+
+    const normalizedQuery = query.trim().toLowerCase();
+    const filteredDestinations = normalizedQuery
+        ? destinations.filter(d => d.path.toLowerCase().includes(normalizedQuery))
+        : destinations;
+    const showRoot = !normalizedQuery || 'library root'.includes(normalizedQuery);
+
     const cancel = () => closeMoveFileModal();
 
     useEffect(() => {
-        if (!isVisible) return;
         const onKeydown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') closeMoveFileModal();
         };
         document.addEventListener('keydown', onKeydown);
         return () => document.removeEventListener('keydown', onKeydown);
-    }, [isVisible, closeMoveFileModal]);
+    }, [closeMoveFileModal]);
 
     return (
-        <div className={styles.overlay} style={{ display: isVisible ? undefined : 'none' }}>
+        <div className={styles.overlay}>
 
             <button type="button" className={styles.backdrop} aria-label="Close dialog" onClick={cancel} />
 
@@ -90,29 +114,57 @@ export function MoveFileModal() {
 
                 <p className={styles.title}>Move to: </p>
 
+                <div className={styles.searchRow}>
+
+                    <input
+                        type="text"
+                        autoFocus
+                        className={styles.search}
+                        placeholder="Search folders..."
+                        aria-label="Search folders"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                    />
+
+                    <Checkbox
+                        className={styles.checkbox}
+                        label="Sub-folders"
+                        checked={showSubfolders}
+                        onChange={(e) => setShowSubfolders(e.target.checked)}
+                    />
+
+                </div>
+
                 <ul className={styles.list}>
 
-                    <li>
-                        <button type="button" className={styles.item} onClick={() => selectMoveTarget(undefined)}>
-                            <FolderIcon size={14} color="#34c3d1" />
-                            <span>Library root</span>
-                        </button>
-                    </li>
+                    {showRoot && (
+                        <li>
+                            <button type="button" className={styles.item} title="Library root" onClick={() => selectMoveTarget(undefined)}>
+                                <FolderIcon size={14} color="#34c3d1" />
+                                <span>Library root</span>
+                            </button>
+                        </li>
+                    )}
 
-                    {folders.length
-                        ? folders.map(folder => (
-                            <li key={folder.uid}>
-                                <button
-                                    type="button"
-                                    className={styles.item}
-                                    onClick={() => selectMoveTarget(folder.uid)}
-                                >
-                                    <FolderIcon size={14} color="#c7c7c7" />
-                                    <span>{buildFolderPath(folder.uid, groups)}</span>
-                                </button>
-                            </li>
-                        ))
-                        : <li className={styles.empty}>No folders yet.</li>}
+                    {filteredDestinations.map(({ uid, path }) => (
+                        <li key={uid}>
+                            <button
+                                type="button"
+                                className={styles.item}
+                                title={path}
+                                onClick={() => selectMoveTarget(uid)}
+                            >
+                                <FolderIcon size={14} color="#c7c7c7" />
+                                <span>{path}</span>
+                            </button>
+                        </li>
+                    ))}
+
+                    {!showRoot && !filteredDestinations.length && (
+                        <li className={styles.empty}>
+                            {folders.length ? 'No folders match your search.' : 'No folders yet.'}
+                        </li>
+                    )}
 
                 </ul>
 
