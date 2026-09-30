@@ -1,6 +1,7 @@
 import { UltraErrorBoundary } from "ultra-light-js";
 import { App } from "./App";
 import { AppLoader } from "./components/app-loader/app-loader";
+import { registerDesktopCloseGuard } from './services/close-guard.service';
 
 declare global {
     interface Window {
@@ -18,9 +19,14 @@ declare global {
             closeWindow(): Promise<void>;
             isWindowMaximized(): Promise<boolean>;
             onMaximizedChange(callback: (isMaximized: boolean) => void): () => void;
+            confirmClose(): Promise<void>;
+            cancelClose(): Promise<void>;
+            onCloseRequested(callback: (activeDownloads: number) => void): () => void;
         };
     }
 }
+
+registerDesktopCloseGuard();
 
 const platform = window.versions?.platform;
 if (platform) document.documentElement.dataset.platform = platform;
