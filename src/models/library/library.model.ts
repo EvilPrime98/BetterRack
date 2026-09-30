@@ -20,7 +20,7 @@ import type {
 import fs from "node:fs";
 import { logger } from "#utils/logger";
 import { createConcurrencyLimiter } from "#utils/concurrencyLimiter";
-import { COMIC_EXTENSIONS, DEFAULT_LIBRARY_PAGE_SIZE, IDENTIFY_CONCURRENCY, MAX_LIBRARY_PAGE_SIZE, RECENT_WINDOW_HOURS, STAT_CONCURRENCY } from "./constants";
+import { COMIC_EXTENSIONS, DEFAULT_LIBRARY_PAGE_SIZE, IDENTIFY_BATCH_SIZE, IDENTIFY_CONCURRENCY, MAX_LIBRARY_PAGE_SIZE, RECENT_WINDOW_HOURS, STAT_CONCURRENCY } from "./constants";
 import { comiInfoToWikiComicDTO } from "#src/dtos/comicInfoToLibraryEntry.ts";
 
 const log = logger.child({ module: 'LibraryModel' });
@@ -286,9 +286,15 @@ export class LibraryModel {
 
         onProgress?.(0, files.length);
 
-        for (const [index, file] of files.entries()) {
-            await this.identify(file.uid);
-            onProgress?.(index + 1, files.length);
+        let done = 0;
+
+        for (let start = 0; start < files.length; start += IDENTIFY_BATCH_SIZE) {
+            const batch = files.slice(start, start + IDENTIFY_BATCH_SIZE);
+
+            await Promise.all(batch.map(async file => {
+                await this.identify(file.uid);
+                onProgress?.(++done, files.length);
+            }));
         }
 
     };
