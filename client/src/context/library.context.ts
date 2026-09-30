@@ -9,10 +9,13 @@ import {
     createFolder as requestCreateFolder,
     moveFile as requestMoveFile,
     unidentifyFile as requestUnidentifyFile,
-    reidentifyAllLibrary as requestReidentifyAllLibrary
+    reidentifyAllLibrary as requestReidentifyAllLibrary,
+    startIdentifyLibrary,
+    getIdentifyLibraryStatus
 } from "../services/library.service";
-import type { ILibraryGroup, ILibraryIndexGroup, ILibraryPage, ILibraryResponseItem } from "../library.types";
+import type { ILibraryGroup, ILibraryIndexGroup, ILibraryPage, ILibraryResponseItem, TIdentifyLibraryStatus, TIdentifyProgress } from "../library.types";
 import { toast } from "../services/toast.service";
+import { CONFIRM_MODAL_CTX } from "./confirm-modal.context";
 
 const queryClient = ultraQuery();
 
@@ -21,6 +24,9 @@ const LIBRARY_STALE_TIME = 60 * 5 * 10000;
 // Overlapping mounts (sidebar and page) share one load run. Without this guard,
 // each mount starts its own pagination sweep.
 let libraryLoadInFlight: Promise<void> | null = null;
+
+const IDENTIFY_POLL_INTERVAL_MS = 1000;
+let identifyPolling = false;
 
 /** Merge a page of entries into the groups in the store. Keep group order. Do not add an entry twice. */
 function mergeLibraryPage(existing: ILibraryGroup[], page: ILibraryPage): ILibraryGroup[] {
@@ -58,8 +64,10 @@ export interface ILibraryCtx {
     queryClient: IUltraCompStateStateful<typeof queryClient>;
     searchQuery: IUltraCompStateStateful<string>;
     lastDeleted: IUltraCompStateStateful<{ uid: string } | null>;
+    identifyProgress: IUltraCompStateStateful<Extract<TIdentifyProgress, { type: 'identifying' }> | null>;
     fetchLibrary: (options?: { force?: boolean }) => Promise<void>;
     refreshLibrary: (options?: { silent?: boolean }) => Promise<void>;
+    refreshLibraryWithPrompt: () => Promise<void>;
     deleteFile: (uid: string) => Promise<void>;
     deleteFolder: (uid: string) => Promise<void>;
     createFolder: (folderName: string, parentFolderUid?: string) => Promise<void>;
@@ -83,6 +91,8 @@ export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
     searchQuery: '' as string,
 
     lastDeleted: null as { uid: string } | null,
+
+    identifyProgress: null as Extract<TIdentifyProgress, { type: 'identifying' }> | null,
 
     fetchLibrary: async (comp: ILibraryCtx, options?: { force?: boolean }) => {
 
@@ -156,6 +166,58 @@ export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
             if (!options?.silent) toast.success('Library refreshed');
         } catch (e) {
             toast.error(e instanceof Error ? e.message : 'Failed to refresh library.');
+        }
+    },
+
+    refreshLibraryWithPrompt: async (comp: ILibraryCtx) => {
+        await comp.refreshLibrary({ silent: true });
+
+        if (comp.groups.get().every(g => g.entries.length === 0)) {
+            toast.success('Library refreshed');
+            return;
+        }
+
+        const identify = await CONFIRM_MODAL_CTX.confirmDialog({
+            title: 'Identify library?',
+            message: 'Do you also want to identify every comic in your library after refreshing? This can take a while and runs in the background.',
+            confirmLabel: 'Refresh & identify',
+            cancelLabel: 'Just refresh'
+        });
+
+        if (!identify) {
+            toast.success('Library refreshed');
+            return;
+        }
+
+        if (identifyPolling) return;
+
+        identifyPolling = true;
+        try {
+            let status: TIdentifyLibraryStatus = await startIdentifyLibrary();
+
+            for (;;) {
+                if (status.state === 'idle') return;
+                const progress = status.progress;
+
+                if (status.state === 'error' || progress?.type === 'error') {
+                    toast.error(progress?.type === 'error' ? progress.message : 'Library identification failed.');
+                    return;
+                }
+                if (status.state === 'done' || progress?.type === 'done') {
+                    await reloadLibrary(comp);
+                    toast.success('Library identified');
+                    return;
+                }
+
+                comp.identifyProgress.set(progress?.type === 'identifying' ? progress : { type: 'identifying', done: 0, total: 0 });
+                await new Promise(resolve => setTimeout(resolve, IDENTIFY_POLL_INTERVAL_MS));
+                status = await getIdentifyLibraryStatus();
+            }
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : 'Failed to identify library.');
+        } finally {
+            identifyPolling = false;
+            comp.identifyProgress.set(null);
         }
     },
 

@@ -278,6 +278,21 @@ export class LibraryModel {
 
     };
 
+    identifyLibrary = async (
+        onProgress?: (done: number, total: number) => void
+    ): Promise<void> => {
+
+        const files = this.db.filter(entry => !entry.did);
+
+        onProgress?.(0, files.length);
+
+        for (const [index, file] of files.entries()) {
+            await this.identify(file.uid);
+            onProgress?.(index + 1, files.length);
+        }
+
+    };
+
     reidentifyFile = async (
         uid: string
     ): Promise<TLibraryEntry> => {

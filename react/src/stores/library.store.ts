@@ -7,10 +7,13 @@ import {
     createFolder as requestCreateFolder,
     moveFile as requestMoveFile,
     unidentifyFile as requestUnidentifyFile,
-    reidentifyAllLibrary as requestReidentifyAllLibrary
+    reidentifyAllLibrary as requestReidentifyAllLibrary,
+    startIdentifyLibrary,
+    getIdentifyLibraryStatus
 } from '../services/library.service';
-import type { ILibraryGroup, ILibraryResponseItem } from '../library.types';
+import type { ILibraryGroup, ILibraryResponseItem, TIdentifyLibraryStatus, TIdentifyProgress } from '../library.types';
 import { toast } from '../services/toast.service';
+import { useConfirmModalStore } from './confirmModal.store';
 
 // React Query's hooks only work inside components, so rather than force a useQuery call
 // into this store action, fetchLibrary keeps a lightweight staleTime + in-flight-promise
@@ -18,6 +21,9 @@ import { toast } from '../services/toast.service';
 const LIBRARY_STALE_TIME_MS = 60 * 5 * 10000;
 let lastFetchedAt = 0;
 let inFlight: Promise<void> | null = null;
+
+const IDENTIFY_POLL_INTERVAL_MS = 1000;
+let identifyPolling = false;
 
 interface ILibraryStore {
     groups: ILibraryGroup[];
@@ -29,9 +35,11 @@ interface ILibraryStore {
      * and the consuming effect runs again.
      */
     lastDeleted: { uid: string } | null;
+    identifyProgress: Extract<TIdentifyProgress, { type: 'identifying' }> | null;
     setSearchQuery: (query: string) => void;
     fetchLibrary: () => Promise<void>;
     refreshLibrary: (options?: { silent?: boolean }) => Promise<void>;
+    refreshLibraryWithPrompt: () => Promise<void>;
     deleteFile: (uid: string) => Promise<void>;
     deleteFolder: (uid: string) => Promise<void>;
     createFolder: (folderName: string, parentFolderUid?: string) => Promise<void>;
@@ -47,6 +55,7 @@ export const useLibraryStore = create<ILibraryStore>((set, get) => ({
     groups: [],
     searchQuery: '',
     lastDeleted: null,
+    identifyProgress: null,
 
     setSearchQuery: (searchQuery) => set({ searchQuery }),
 
@@ -71,6 +80,59 @@ export const useLibraryStore = create<ILibraryStore>((set, get) => ({
             if (!options?.silent) toast.success('Library refreshed');
         } catch (e) {
             toast.error(e instanceof Error ? e.message : 'Failed to refresh library.');
+        }
+    },
+
+    refreshLibraryWithPrompt: async () => {
+        await get().refreshLibrary({ silent: true });
+
+        if (get().groups.every((g) => g.entries.length === 0)) {
+            toast.success('Library refreshed');
+            return;
+        }
+
+        const identify = await useConfirmModalStore.getState().confirmDialog({
+            title: 'Identify library?',
+            message: 'Do you also want to identify every comic in your library after refreshing? This can take a while and runs in the background.',
+            confirmLabel: 'Refresh & identify',
+            cancelLabel: 'Just refresh'
+        });
+
+        if (!identify) {
+            toast.success('Library refreshed');
+            return;
+        }
+
+        if (identifyPolling) return;
+
+        identifyPolling = true;
+        try {
+            let status: TIdentifyLibraryStatus = await startIdentifyLibrary();
+
+            for (;;) {
+                if (status.state === 'idle') return;
+                const progress = status.progress;
+
+                if (status.state === 'error' || progress?.type === 'error') {
+                    toast.error(progress?.type === 'error' ? progress.message : 'Library identification failed.');
+                    return;
+                }
+                if (status.state === 'done' || progress?.type === 'done') {
+                    lastFetchedAt = 0;
+                    await get().fetchLibrary();
+                    toast.success('Library identified');
+                    return;
+                }
+
+                set({ identifyProgress: progress?.type === 'identifying' ? progress : { type: 'identifying', done: 0, total: 0 } });
+                await new Promise((resolve) => setTimeout(resolve, IDENTIFY_POLL_INTERVAL_MS));
+                status = await getIdentifyLibraryStatus();
+            }
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : 'Failed to identify library.');
+        } finally {
+            identifyPolling = false;
+            set({ identifyProgress: null });
         }
     },
 

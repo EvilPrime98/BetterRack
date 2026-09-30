@@ -1,5 +1,5 @@
 import type { WikiComic } from "better-wiki";
-import type { IReadResponse, IBookmarksResponse, ILibraryGroup, ILibraryPage, ILibraryRefreshResponse, ILibraryResponseItem, IReadingResponse, IRecentlyAddedResponse } from "../library.types";
+import type { IReadResponse, IBookmarksResponse, ILibraryGroup, ILibraryPage, ILibraryRefreshResponse, ILibraryResponseItem, TIdentifyLibraryStatus, IReadingResponse, IRecentlyAddedResponse } from "../library.types";
 import { API_URL, authHeaders } from "./server-config.service";
 import { invalidateDirectories } from "./fs.service";
 
@@ -192,6 +192,26 @@ export async function reidentifyAllLibrary(): Promise<{ error: boolean; message:
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.message);
+    return data;
+}
+
+export async function startIdentifyLibrary(): Promise<TIdentifyLibraryStatus> {
+    const response = await fetch(`${API_URL}/api/library/identify/all`, {
+        method: 'POST',
+        headers: authHeaders()
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message ?? 'Failed to start library identification.');
+    return data;
+}
+
+export async function getIdentifyLibraryStatus(): Promise<TIdentifyLibraryStatus> {
+    const response = await fetch(`${API_URL}/api/library/identify/all`, {
+        cache: 'no-store',
+        headers: authHeaders()
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message ?? 'Failed to read identification status.');
     return data;
 }
 

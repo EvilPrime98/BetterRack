@@ -27,8 +27,9 @@ export const comicData = sqliteTable('comic_data', {
     lastReadAt: integer('last_read_at'),
 });
 
-export const downloadJobs = sqliteTable('download_jobs', {
+export const jobsTable = sqliteTable('jobs', {
     id: text('id').primaryKey(),
+    kind: text('kind').notNull().default('download'),
     resourceKey: text('resource_key').notNull(),
     label: text('label').notNull(),
     state: text('state').notNull(),

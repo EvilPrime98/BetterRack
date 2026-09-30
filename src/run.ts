@@ -26,7 +26,8 @@ import { thumbnailRouter } from './routers/thumbnailRouter';
 import { apiKeyAuth } from './middleware/apiKeyAuthMiddleware';
 import { storeApiUrlGuard } from './middleware/storeApiUrlGuard';
 import { logger } from '#utils/logger';
-import type { TProgressEvent } from './types';
+import type { TIdentifyProgress, TProgressEvent } from './types';
+import type { TJobModel } from './types/jobs.types';
 import pkg from '../package.json' with { type: 'json' };
 
 async function startApp() {
@@ -57,7 +58,7 @@ async function startApp() {
         new PackExtractor(zipModel)
     );
     
-    const dwnJobModel = new JobModel<TProgressEvent>();
+    const jobModel = new JobModel<TProgressEvent | TIdentifyProgress>();
     
     const fsModel = new FileSystemModel(process.cwd());
 
@@ -73,7 +74,7 @@ async function startApp() {
     app.post('/api/downloads', requireStoreApiUrl);
     app.post('/api/downloads/:jobId/retry', requireStoreApiUrl);
 
-    app.route('/api/library', libraryRouter(libModel));
+    app.route('/api/library', libraryRouter(libModel, jobModel as TJobModel<TIdentifyProgress>));
 
     app.route('/api/wiki', wikiRouter(wikiModel));
 
@@ -83,7 +84,7 @@ async function startApp() {
 
     app.route('/api/comics', comicsRouter(gcwModel));
 
-    app.route('/api/downloads', downloadsRouter(dwnModel, gcwModel, fsModel, libModel, dwnJobModel));
+    app.route('/api/downloads', downloadsRouter(dwnModel, gcwModel, fsModel, libModel, jobModel as TJobModel<TProgressEvent>));
 
     app.route('/api/directories', fsRouter(fsModel, prefsModel));
 

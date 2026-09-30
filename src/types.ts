@@ -37,6 +37,11 @@ export type TProgressEvent =
     | { type: 'done'; filename: string }
     | { type: 'error'; message: string }
 
+export type TIdentifyProgress =
+    | { type: 'identifying'; done: number; total: number }
+    | { type: 'done'; total: number }
+    | { type: 'error'; message: string }
+
 export type TDownloadModel = {
     downloadComic: ({
         link,
@@ -150,6 +155,7 @@ export type TLibraryModel = {
     commitIdentify: (fileUid: string, comic: WikiComic) => Promise<void>,
     /** Resolves wiki metadata for a single comic on demand; cached results skip the wiki call. */
     identify: (uid: string) => Promise<TLibraryEntry>,
+    identifyLibrary: (onProgress?: (done: number, total: number) => void) => Promise<void>,
     /** Clears a single entry's stored identification and immediately re-runs `identify()`, forcing a fresh lookup even if it was already identified. */
     reidentifyFile: (uid: string) => Promise<TLibraryEntry>,
     reidentifyAll: () => Promise<void>,

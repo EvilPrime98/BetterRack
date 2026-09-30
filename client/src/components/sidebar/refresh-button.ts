@@ -5,14 +5,20 @@ import styles from './sidebar.module.css';
 export function RefreshLibraryButton() {
 
     function refreshLibrary(){ 
-        LIBRARY_CONTEXT.refreshLibrary() 
+        LIBRARY_CONTEXT.refreshLibraryWithPrompt() 
     };
 
     function onRefreshingChange($button: HTMLElement) {
-        $button.classList.toggle(
-            styles.spinning,
-            LIBRARY_CONTEXT.queryClient.get().isFetching()
-        );
+        const progress = LIBRARY_CONTEXT.identifyProgress.get();
+        const isBusy = LIBRARY_CONTEXT.queryClient.get().isFetching() || progress !== null;
+        $button.classList.toggle(styles.spinning, isBusy);
+        ($button as HTMLButtonElement).disabled = isBusy;
+        const $label = $button.lastElementChild;
+        if ($label) {
+            $label.textContent = progress
+                ? `Identifying${progress.total ? ` ${progress.done}/${progress.total}` : '…'}`
+                : 'Refresh Libraries';
+        }
     }
 
     return UltraComponent({
@@ -26,7 +32,10 @@ export function RefreshLibraryButton() {
             `<span>Refresh Libraries</span>`
         ],
         trigger: [{
-            subscriber: LIBRARY_CONTEXT.queryClient.get().subscribeToFetching,
+            subscriber: [
+                LIBRARY_CONTEXT.queryClient.get().subscribeToFetching,
+                LIBRARY_CONTEXT.identifyProgress.subscribe
+            ],
             triggerFunction: onRefreshingChange
         }]
     })

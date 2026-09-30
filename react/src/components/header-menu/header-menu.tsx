@@ -16,7 +16,7 @@ function onEnterOrSpace(handler: () => void) {
 export function HeaderMenu() {
 
     const [isOpen, setOpen] = useState(false);
-    const refreshLibrary = useLibraryStore((s) => s.refreshLibrary);
+    const refreshLibrary = useLibraryStore((s) => s.refreshLibraryWithPrompt);
 
     const closeMenu = () => setOpen(false);
 
