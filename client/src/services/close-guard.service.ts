@@ -2,7 +2,7 @@ import { CONFIRM_MODAL_CTX } from '@/context/confirm-modal.context';
 
 function describeActiveDownloads(activeDownloads: number): string {
     const noun = activeDownloads === 1 ? 'download is' : 'downloads are';
-    return `${activeDownloads} ${noun} still in progress. Closing Better Rack will cancel ${activeDownloads === 1 ? 'it' : 'them'}.`;
+    return `(${activeDownloads}) ${noun} still in progress. Closing BetterRack will cancel ${activeDownloads === 1 ? 'it' : 'them'}.`;
 }
 
 export function registerDesktopCloseGuard(): void {
