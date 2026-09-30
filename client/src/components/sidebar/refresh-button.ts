@@ -16,7 +16,7 @@ export function RefreshLibraryButton() {
         const $label = $button.lastElementChild;
         if ($label) {
             $label.textContent = progress
-                ? `Identifying${progress.total ? ` ${progress.done}/${progress.total}` : '…'}`
+                ? `Identifying${progress.total ? ` ${progress.done}/${progress.total}` : 'â€¦'}`
                 : 'Refresh Libraries';
         }
     }
