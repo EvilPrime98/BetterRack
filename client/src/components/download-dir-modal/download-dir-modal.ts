@@ -1,15 +1,27 @@
 import { UltraActivity, UltraComponent } from "ultra-light-js";
 import styles from './download-dir-modal.module.css';
 import { FolderIcon } from "@/icons/folder.icon";
+import { Checkbox } from "@/components/checkbox/checkbox";
 import { SETTINGS_CONTEXT } from "@/context/settings.context";
 import { DOWNLOAD_DIR_MODAL_CTX } from "@/context/download-dir-modal.context";
 import { areDirectoryListsEqual, getCachedDirectories, refreshDirectories } from "@/services/fs.service";
+
+function normalizePath(dir: string): string {
+    return dir.replace(/\\/g, '/').replace(/\/+$/, '').toLowerCase();
+}
+
+function getTopLevelDirs(dirs: string[]): string[] {
+    const normalized = dirs.map(normalizePath);
+    return dirs.filter((_, i) => !normalized.some((other, j) => j !== i && normalized[i].startsWith(`${other}/`)));
+}
 
 export function DownloadDirModal() {
 
     let $list: HTMLElement | null = null;
     let loading = false;
     let displayedDirs: string[] | null = null;
+    let query = '';
+    let showSubfolders = true;
 
     const cancel = () => DOWNLOAD_DIR_MODAL_CTX.closeDownloadDirModal();
 
@@ -24,6 +36,14 @@ export function DownloadDirModal() {
         );
     }
 
+    const onVisibleChange = ($input: HTMLElement) => {
+        if (!DOWNLOAD_DIR_MODAL_CTX.isVisible.get() || !$input) return;
+        query = '';
+        ($input as HTMLInputElement).value = '';
+        $input.focus();
+        if (displayedDirs) renderList(displayedDirs);
+    }
+
     const renderList = (dirs: string[]) => {
 
         if (!$list) return;
@@ -35,11 +55,22 @@ export function DownloadDirModal() {
             return;
         }
 
+        const candidates = showSubfolders ? dirs : getTopLevelDirs(dirs);
+        const normalizedQuery = query.trim().toLowerCase();
+        const visibleDirs = normalizedQuery
+            ? candidates.filter(dir => dir.toLowerCase().includes(normalizedQuery))
+            : candidates;
+
+        if (visibleDirs.length === 0) {
+            renderMessage('No folders match your search.');
+            return;
+        }
+
         $list.replaceChildren(
-            ...dirs.map(dir => {
+            ...visibleDirs.map(dir => {
                 const isDefault = dir === currentDefault;
                 return UltraComponent({
-                    component: `<li class="${styles.item}${isDefault ? ` ${styles.default}` : ''}"></li>`,
+                    component: `<li class="${styles.item}${isDefault ? ` ${styles.default}` : ''}" title="${dir}"></li>`,
                     eventHandler: { click: () => DOWNLOAD_DIR_MODAL_CTX.confirmDownloadDir(dir) },
                     children: [
                         FolderIcon({ size: 14, color: isDefault ? '#34c3d1' : '#c7c7c7' }),
@@ -119,6 +150,47 @@ export function DownloadDirModal() {
                 children: [
 
                     `<p class="${styles.title}">Download to: </p>`,
+
+                    UltraComponent({
+
+                        component: '<div></div>',
+
+                        className: [styles.searchRow],
+
+                        children: [
+
+                            UltraComponent({
+                                component: '<input type="text" />',
+                                className: [styles.search],
+                                attributes: {
+                                    placeholder: 'Search folders...',
+                                    'aria-label': 'Search folders'
+                                },
+                                eventHandler: {
+                                    input: (e) => {
+                                        query = (e.currentTarget as HTMLInputElement).value;
+                                        if (displayedDirs) renderList(displayedDirs);
+                                    }
+                                },
+                                trigger: [{
+                                    subscriber: DOWNLOAD_DIR_MODAL_CTX.isVisible.subscribe,
+                                    triggerFunction: onVisibleChange,
+                                    defer: true
+                                }]
+                            }),
+
+                            Checkbox({
+                                className: [styles.checkbox],
+                                label: 'Sub-folders',
+                                checked: showSubfolders,
+                                onChange: (checked) => {
+                                    showSubfolders = checked;
+                                    if (displayedDirs) renderList(displayedDirs);
+                                }
+                            })
+
+                        ]
+                    }),
 
                     UltraComponent({
                         component: `<ul class="${styles.list}"></ul>`,
