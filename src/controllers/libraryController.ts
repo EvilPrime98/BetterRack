@@ -1,18 +1,24 @@
-import type { TLibraryModel } from "#src/types.ts";
+import type { TIdentifyProgress, TLibraryModel } from "#src/types.ts";
+import type { TJob, TJobModel } from "#src/types/jobs.types.ts";
 import type { Context } from "hono";
 import { logger } from "#utils/logger";
 import { MoveError } from "#models/library/library.model";
 
 const log = logger.child({ module: 'libraryController' });
 
+const IDENTIFY_LIBRARY_RESOURCE = 'identify-library';
+
 export class libraryController{
 
     private libModel: TLibraryModel;
+    private jobModel: TJobModel<TIdentifyProgress>;
 
     constructor(
-        libModel: TLibraryModel
+        libModel: TLibraryModel,
+        jobModel: TJobModel<TIdentifyProgress>
     ) {
         this.libModel = libModel;
+        this.jobModel = jobModel;
     }
 
     public async getPreferences(
@@ -265,6 +271,75 @@ export class libraryController{
             )
 
         }
+    }
+
+    private toJobPayload(
+        job: TJob<TIdentifyProgress>
+    ){
+        return {
+            jobId: job.id,
+            state: job.state,
+            progress: job.progress
+        };
+    }
+
+    private runIdentifyLibrary(
+        jobId: string
+    ){
+        this.jobModel.update(jobId, 'running');
+
+        this.libModel.identifyLibrary((done, total) => {
+            this.jobModel.update(jobId, 'running', { type: 'identifying', done, total });
+        }).then(() => {
+            const current = this.jobModel.get(jobId)?.progress;
+            const total = current?.type === 'identifying' ? current.total : 0;
+            this.jobModel.update(jobId, 'done', { type: 'done', total });
+        }).catch((e) => {
+            log.error({ err: e }, 'Identify library job failed');
+            this.jobModel.update(jobId, 'error', {
+                type: 'error',
+                message: e instanceof Error ? e.message : 'Failed to identify library'
+            });
+        });
+    }
+
+    public async startIdentifyLibrary(
+        c: Context
+    ){
+        try{
+
+            const { job, created } = this.jobModel.getOrCreate(
+                IDENTIFY_LIBRARY_RESOURCE,
+                'Identify library',
+                { comicId: 0 },
+                'identify-library'
+            );
+
+            if (created) this.runIdentifyLibrary(job.id);
+
+            return c.json({ error: false, ...this.toJobPayload(job) }, created ? 202 : 200);
+
+        }catch(e){
+
+            log.error({ err: e }, 'Failed to start identify library job');
+
+            return c.json(
+                { error: true, message: 'There was an issue identifying the library. Please, try again later.'},
+                500
+            )
+
+        }
+    }
+
+    public async getIdentifyLibraryStatus(
+        c: Context
+    ){
+        const latest = this.jobModel.list('identify-library')
+            .sort((a, b) => b.createdAt - a.createdAt)[0];
+
+        if (!latest) return c.json({ error: false, state: 'idle' }, 200);
+
+        return c.json({ error: false, ...this.toJobPayload(latest) }, 200);
     }
 
     public async reidentifyFile(

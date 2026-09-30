@@ -4,8 +4,8 @@ import { mkdirSync } from "node:fs";
 import { Database } from "bun:sqlite";
 import { drizzle, type BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
 import { and, desc, eq, inArray, lt } from "drizzle-orm";
-import { downloadJobs } from "#src/database/schema.ts";
-import type { JobListener, TJob, TJobModel, TJobRequest, TJobState } from "./types";
+import { jobsTable } from "#src/database/schema.ts";
+import type { JobListener, TJob, TJobKind, TJobModel, TJobRequest, TJobState } from "./types";
 
 const MAX_HISTORY_ROWS = 200;
 
@@ -25,9 +25,14 @@ export class JobModel<TProgress = unknown> implements TJobModel<TProgress> {
         const dbPath = path.resolve('src/database/jobs.sqlite');
         mkdirSync(path.dirname(dbPath), { recursive: true });
         const sqlite = new Database(dbPath, { create: true });
+        const hasTable = (name: string) => !!sqlite.query(`SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?`).get(name);
+        if (hasTable('download_jobs') && !hasTable('jobs')) {
+            sqlite.run(`ALTER TABLE download_jobs RENAME TO jobs`);
+        }
         sqlite.run(`
-            CREATE TABLE IF NOT EXISTS download_jobs (
+            CREATE TABLE IF NOT EXISTS jobs (
                 id TEXT PRIMARY KEY,
+                kind TEXT NOT NULL DEFAULT 'download',
                 resource_key TEXT NOT NULL,
                 label TEXT NOT NULL,
                 state TEXT NOT NULL,
@@ -40,16 +45,21 @@ export class JobModel<TProgress = unknown> implements TJobModel<TProgress> {
                 updated_at INTEGER NOT NULL
             )
         `);
+        const columns = sqlite.query(`PRAGMA table_info(jobs)`).all() as { name: string }[];
+        if (!columns.some((column) => column.name === 'kind')) {
+            sqlite.run(`ALTER TABLE jobs ADD COLUMN kind TEXT NOT NULL DEFAULT 'download'`);
+        }
         this.db = drizzle(sqlite);
         this.reconcileInterruptedJobs();
         this.pruneHistory();
     }
 
     private rowToJob(
-        row: typeof downloadJobs.$inferSelect
+        row: typeof jobsTable.$inferSelect
     ): TJob<TProgress> {
         return {
             id: row.id,
+            kind: row.kind as TJobKind,
             resourceKey: row.resourceKey,
             label: row.label,
             state: row.state as TJobState,
@@ -70,9 +80,10 @@ export class JobModel<TProgress = unknown> implements TJobModel<TProgress> {
     ): void {
         const progress = job.progress === undefined ? null : JSON.stringify(job.progress);
 
-        this.db.insert(downloadJobs)
+        this.db.insert(jobsTable)
             .values({
                 id: job.id,
+                kind: job.kind,
                 resourceKey: job.resourceKey,
                 label: job.label,
                 state: job.state,
@@ -85,7 +96,7 @@ export class JobModel<TProgress = unknown> implements TJobModel<TProgress> {
                 updatedAt: job.updatedAt,
             })
             .onConflictDoUpdate({
-                target: downloadJobs.id,
+                target: jobsTable.id,
                 set: {
                     state: job.state,
                     progress,
@@ -96,7 +107,7 @@ export class JobModel<TProgress = unknown> implements TJobModel<TProgress> {
     }
 
     private reconcileInterruptedJobs(): void {
-        const rows = this.db.select().from(downloadJobs).all();
+        const rows = this.db.select().from(jobsTable).all();
 
         for (const row of rows) {
             const job = this.rowToJob(row);
@@ -115,15 +126,15 @@ export class JobModel<TProgress = unknown> implements TJobModel<TProgress> {
     private pruneHistory(): void {
         const cutoff = Date.now() - HISTORY_RETENTION_MS;
 
-        const expired = this.db.select({ id: downloadJobs.id })
-            .from(downloadJobs)
-            .where(and(inArray(downloadJobs.state, TERMINAL_STATES), lt(downloadJobs.updatedAt, cutoff)))
+        const expired = this.db.select({ id: jobsTable.id })
+            .from(jobsTable)
+            .where(and(inArray(jobsTable.state, TERMINAL_STATES), lt(jobsTable.updatedAt, cutoff)))
             .all();
 
-        const terminalRows = this.db.select({ id: downloadJobs.id })
-            .from(downloadJobs)
-            .where(inArray(downloadJobs.state, TERMINAL_STATES))
-            .orderBy(desc(downloadJobs.updatedAt))
+        const terminalRows = this.db.select({ id: jobsTable.id })
+            .from(jobsTable)
+            .where(inArray(jobsTable.state, TERMINAL_STATES))
+            .orderBy(desc(jobsTable.updatedAt))
             .all();
 
         const staleIds = new Set([
@@ -133,7 +144,7 @@ export class JobModel<TProgress = unknown> implements TJobModel<TProgress> {
 
         if (staleIds.size === 0) return;
 
-        this.db.delete(downloadJobs).where(inArray(downloadJobs.id, [...staleIds])).run();
+        this.db.delete(jobsTable).where(inArray(jobsTable.id, [...staleIds])).run();
         for (const id of staleIds) this.jobs.delete(id);
     }
 
@@ -148,7 +159,8 @@ export class JobModel<TProgress = unknown> implements TJobModel<TProgress> {
     public getOrCreate(
         resourceKey: string,
         label: string,
-        request: TJobRequest
+        request: TJobRequest,
+        kind: TJobKind = 'download'
     ): { job: TJob<TProgress>; created: boolean } {
 
         const existingId = this.jobIdByResource.get(resourceKey);
@@ -158,6 +170,7 @@ export class JobModel<TProgress = unknown> implements TJobModel<TProgress> {
 
         const job: TJob<TProgress> = {
             id: randomUUID(),
+            kind,
             resourceKey,
             label,
             state: 'queued',
@@ -187,8 +200,9 @@ export class JobModel<TProgress = unknown> implements TJobModel<TProgress> {
         return this.jobs.get(jobId);
     }
 
-    public list(): TJob<TProgress>[] {
-        return [...this.jobs.values()];
+    public list(kind?: TJobKind): TJob<TProgress>[] {
+        const jobs = [...this.jobs.values()];
+        return kind ? jobs.filter((job) => job.kind === kind) : jobs;
     }
 
     public update(
@@ -243,7 +257,7 @@ export class JobModel<TProgress = unknown> implements TJobModel<TProgress> {
         this.jobs.delete(jobId);
         if (this.jobIdByResource.get(job.resourceKey) === jobId) this.jobIdByResource.delete(job.resourceKey);
         this.listeners.delete(jobId);
-        this.db.delete(downloadJobs).where(eq(downloadJobs.id, jobId)).run();
+        this.db.delete(jobsTable).where(eq(jobsTable.id, jobId)).run();
 
         return true;
     }
