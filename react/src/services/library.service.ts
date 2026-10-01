@@ -5,15 +5,16 @@ import { invalidateDirectories } from "./fs.service";
 
 export { API_URL };
 
-// GET /api/library is paginated (ILibraryPage, not a bare group array). Walk every
-// page and merge the slices back into one group list, because the store and
-// getLibraryItems() expect the whole library in memory.
-export async function getLibrary(): Promise<ILibraryGroup[]> {
+export type TLibraryStructure = 'folders' | 'series';
+
+export async function getLibrary(structure: TLibraryStructure = 'folders'): Promise<ILibraryGroup[]> {
+
+    const endpoint = structure === 'series' ? '/api/library/by-series' : '/api/library';
     const merged = new Map<string, ILibraryGroup>();
     let offset = 0;
 
     for (;;) {
-        const response = await fetch(`${API_URL}/api/library?offset=${offset}`, { headers: authHeaders() });
+        const response = await fetch(`${API_URL}${endpoint}?offset=${offset}`, { headers: authHeaders() });
         const page = await response.json();
         if (!response.ok) throw new Error((page as { message?: string })?.message || 'Failed to load library.');
 
