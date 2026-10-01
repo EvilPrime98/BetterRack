@@ -13,6 +13,8 @@ import { DOCUMENT_TITLE_CONTEXT } from "../context/document-title.context";
 import { matchesReadFilter, READ_TYPES_CTX } from "../context/read-types.context";
 import { COMIC_CACHE_CONTEXT } from "../context/comic-cache.context";
 
+const PAGE_SIZE = 60;
+
 export function LibraryPage({
     uid
 }: {
@@ -25,6 +27,12 @@ export function LibraryPage({
     }
     
     const itemsMap = new Map<string, UltraLightElement>();
+
+    let renderCount = PAGE_SIZE;
+    let sentinelObserver: IntersectionObserver | null = null;
+    const $sentinel = document.createElement('div');
+    $sentinel.style.gridColumn = '1 / -1';
+    $sentinel.style.height = '1px';
 
     const [items, setItems, subsItems] = ultraState<ILibraryResponseItem[]>([]);
     
@@ -46,7 +54,8 @@ export function LibraryPage({
         $section: HTMLElement
     ){
 
-        const currComics = [...items()];
+        const allComics = [...items()];
+        const currComics = allComics.slice(0, renderCount);
         const currIds = new Set(currComics.map(c => c.uid));
 
         for (const [uid, node] of itemsMap) {
@@ -73,6 +82,12 @@ export function LibraryPage({
             const $item = itemsMap.get(c.uid);
             if ($item) $section.appendChild($item);
         })
+
+        if (renderCount < allComics.length) {
+            $section.appendChild($sentinel);
+        } else {
+            $sentinel.remove();
+        }
 
     }
 
@@ -129,6 +144,20 @@ export function LibraryPage({
                         LIBRARY_CONTEXT.fetchLibrary();
                         if (LIBRARY_CONTEXT.groups.get().length) applyFilters();
                         $el.scrollTo(0, 0);
+
+                        sentinelObserver = new IntersectionObserver(
+                            (entries) => {
+                                if (!entries.some(e => e.isIntersecting)) return;
+                                renderCount += PAGE_SIZE;
+                                sentinelObserver?.unobserve($sentinel);
+                                onItemsChange($el);
+                                if ($sentinel.isConnected) sentinelObserver?.observe($sentinel);
+                            },
+                            { rootMargin: '600px' }
+                        );
+                        sentinelObserver.observe($sentinel);
+
+                        return () => sentinelObserver?.disconnect();
                     }],
 
                     component: '<section></section>',
