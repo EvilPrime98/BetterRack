@@ -44,6 +44,7 @@ export default {
     createStartMenuShortcut: true,
     shortcutName: "Better Rack",
     uninstallDisplayName: "${productName} ${version}",
+    include: "build/installer.nsh",
   },
   mac: {
     icon: "build/icon.png",
