@@ -140,6 +140,7 @@ export type TLibraryModel = {
     getLibraryIndex: () => TLibraryIndexGroup[],
     /** A slice of the flat entry list in group order, re-nested into its groups, with pagination metadata. `limit` and `offset` count entries, not groups. */
     getLibraryPage: (options?: { limit?: number; offset?: number }) => TLibraryPage,
+    getLibraryPageBySeries: (options?: { limit?: number; offset?: number }) => TLibraryPage,
     /** A flat list of file entries, newest first, whose `createdAt` is inside the look-back window. `windowHours` defaults to 24. */
     getRecentlyAdded: (options?: { windowHours?: number; nowMs?: number }) => TRecentlyAddedResponse,
     getReading: () => TReadingResponse,

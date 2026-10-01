@@ -22,6 +22,7 @@ import { logger } from "#utils/logger";
 import { createConcurrencyLimiter } from "#utils/concurrencyLimiter";
 import { COMIC_EXTENSIONS, DEFAULT_LIBRARY_PAGE_SIZE, IDENTIFY_BATCH_SIZE, IDENTIFY_CONCURRENCY, MAX_LIBRARY_PAGE_SIZE, RECENT_WINDOW_HOURS, STAT_CONCURRENCY } from "./constants";
 import { comiInfoToWikiComicDTO } from "#src/dtos/comicInfoToLibraryEntry.ts";
+import { seriesOf } from "./series";
 
 const log = logger.child({ module: 'LibraryModel' });
 
@@ -371,17 +372,18 @@ export class LibraryModel {
         }));
     }
 
-    getLibraryPage = (
-        options: { limit?: number; offset?: number } = {},
+    private paginateGroups = (
+        groups: TLibraryGroup[],
+        options: { limit?: number; offset?: number },
     ): TLibraryPage => {
 
-        const groups = this.getByLibrary();
         const total = groups.reduce((sum, group) => sum + group.entries.length, 0);
 
         const limit = Math.min(
             Math.max(1, Math.trunc(options.limit ?? DEFAULT_LIBRARY_PAGE_SIZE)),
             MAX_LIBRARY_PAGE_SIZE,
         );
+
         const offset = Math.min(Math.max(0, Math.trunc(options.offset ?? 0)), total);
         const end = Math.min(offset + limit, total);
 
@@ -413,6 +415,47 @@ export class LibraryModel {
             offset,
             hasMore: end < total,
         };
+
+    }
+
+    getLibraryPageBySeries = (options: { 
+        limit?: number; 
+        offset?: number;
+    } = {}, ): TLibraryPage => {
+
+        const bySeries = new Map<string, TLibraryGroup>();
+
+        for (const entry of this.resolveInheritance()) {
+            if (entry.did) continue;
+            const { key, name } = seriesOf(entry);
+            const group = bySeries.get(key);
+            if (group) group.entries.push(entry);
+            else bySeries.set(key, {
+                uid: this.uidFromPath(`series:${key}`),
+                name,
+                path: '',
+                entries: [entry],
+            });
+        }
+
+        const byName = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+
+        const groups = [...bySeries.values()].sort((a, b) => byName(a.name, b.name));
+        for (const group of groups) {
+            group.entries.sort((a, b) => byName(a.comic?.issue || a.name, b.comic?.issue || b.name));
+        }
+
+        return this.paginateGroups(groups, options);
+
+    }
+
+    getLibraryPage = (options: { 
+        limit?: number; 
+        offset?: number;
+    } = {}, ): TLibraryPage => {
+
+        const groups = this.getByLibrary();
+        return this.paginateGroups(groups, options);
 
     }
 
