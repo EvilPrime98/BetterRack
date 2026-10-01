@@ -21,11 +21,11 @@ const fakeComicInfo = {
 } as unknown as IComicInfoXML;
 
 const makeModel = (
-    identifyFromMeta: boolean,
+    wikiSearch: boolean,
     comicInfo: IComicInfoXML | null
 ) => {
     const prefsModel = {
-        getAppSettings: () => ({ outputDirs: [root], identifyFromMeta } as unknown as TAppSettings),
+        getAppSettings: () => ({ outputDirs: [root], wikiSearch } as unknown as TAppSettings),
         getAllLibraryPrefs: () => [],
     };
     const comicDataModel = {
@@ -59,22 +59,10 @@ afterEach(async () => {
     await rm(root, { recursive: true, force: true });
 });
 
-describe('LibraryModel.identify — identifyFromMeta gating', () => {
+describe('LibraryModel.identify — wikiSearch gating', () => {
 
-    test('never reads ComicInfo.xml when the setting is off', async () => {
+    test('uses ComicInfo.xml and never the wiki when wiki search is off', async () => {
         const { model, calls } = makeModel(false, fakeComicInfo);
-        await model.ready;
-
-        const result = await model.identify(uidFromPath(path.join(root, 'comic.cbz')));
-
-        expect(calls().zipCalls).toBe(0);
-        expect(calls().wikiCalls).toBe(1);
-        expect(result.comic?.title).toBe('Wiki Title');
-        expect(result.metaSource).toBe('wiki');
-    });
-
-    test('prefers ComicInfo.xml over the wiki when the setting is on and XML is found', async () => {
-        const { model, calls } = makeModel(true, fakeComicInfo);
         await model.ready;
 
         const result = await model.identify(uidFromPath(path.join(root, 'comic.cbz')));
@@ -85,7 +73,29 @@ describe('LibraryModel.identify — identifyFromMeta gating', () => {
         expect(result.metaSource).toBe('comicinfo');
     });
 
-    test('falls back to the wiki when the setting is on but no usable XML is found', async () => {
+    test('stays unidentified without hitting the wiki when wiki search is off and no XML is found', async () => {
+        const { model, calls } = makeModel(false, null);
+        await model.ready;
+
+        const result = await model.identify(uidFromPath(path.join(root, 'comic.cbz')));
+
+        expect(calls().zipCalls).toBe(1);
+        expect(calls().wikiCalls).toBe(0);
+        expect(result.identified).toBe(false);
+    });
+
+    test('prefers ComicInfo.xml over the wiki when wiki search is on and XML is found', async () => {
+        const { model, calls } = makeModel(true, fakeComicInfo);
+        await model.ready;
+
+        const result = await model.identify(uidFromPath(path.join(root, 'comic.cbz')));
+
+        expect(calls().zipCalls).toBe(1);
+        expect(calls().wikiCalls).toBe(0);
+        expect(result.metaSource).toBe('comicinfo');
+    });
+
+    test('falls back to the wiki when wiki search is on but no usable XML is found', async () => {
         const { model, calls } = makeModel(true, null);
         await model.ready;
 

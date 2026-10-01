@@ -23,7 +23,7 @@ export function SettingsPage() {
     const [draft, setDraft] = useState({
         apiUrl: settings.apiUrl,
         downloadDir: settings.downloadDir,
-        identifyFromMeta: settings.identifyFromMeta,
+        wikiSearch: settings.wikiSearch,
     });
 
     function clearFolderError() {
@@ -115,7 +115,7 @@ export function SettingsPage() {
         setDraft({
             apiUrl: settings.apiUrl,
             downloadDir: settings.downloadDir,
-            identifyFromMeta: settings.identifyFromMeta,
+            wikiSearch: settings.wikiSearch,
         });
     }, [settings]);
 
@@ -238,13 +238,13 @@ export function SettingsPage() {
                                 <label className={styles.toggleLabel}>
                                     <input
                                         type="checkbox"
-                                        checked={draft.identifyFromMeta}
+                                        checked={draft.wikiSearch}
                                         onChange={(e) => {
                                             const checked = e.currentTarget.checked;
-                                            setDraft((d) => ({ ...d, identifyFromMeta: checked }));
+                                            setDraft((d) => ({ ...d, wikiSearch: checked }));
                                         }}
                                     />
-                                    {' '}Identify from metadata
+                                    {' '}Search the wiki for metadata
                                 </label>
 
                                 <span
@@ -270,7 +270,7 @@ export function SettingsPage() {
                                         className={styles.infoTooltip}
                                         role="tooltip"
                                     >
-                                        Reads ComicInfo.xml when present, otherwise uses the wiki.
+                                        Comics are always identified from ComicInfo.xml. When enabled, comics without it are looked up on the wiki.
                                     </span>
                                 </span>
 

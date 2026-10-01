@@ -16,7 +16,7 @@ let root: string;
 
 const makeModel = (comic: WikiComic | null) => {
     const prefsModel = {
-        getAppSettings: () => ({ outputDirs: [root], identifyFromMeta: false } as unknown as TAppSettings),
+        getAppSettings: () => ({ outputDirs: [root], wikiSearch: true } as unknown as TAppSettings),
         getAllLibraryPrefs: () => [],
     };
     const store = new Map<string, TComicData>();
