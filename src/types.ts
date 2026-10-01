@@ -168,7 +168,7 @@ export type TAppSettings = {
     outputDirs: string[];
     apiUrl: string;
     downloadDir: string;
-    identifyFromMeta: boolean;
+    wikiSearch: boolean;
 }
 
 export type TPreferencesModel = {

@@ -228,18 +228,18 @@ export class LibraryModel {
             const release = await this.identifyLimiter.acquire();
             try {
 
-                const identifyFromMeta = this.prefsModel.getAppSettings().identifyFromMeta;
-                const comicInfo = identifyFromMeta
-                    ? await this.zipModel.extractComicInfo({ filePath: entry.path })
-                    : null;
+                const wikiSearch = this.prefsModel.getAppSettings().wikiSearch;
+                const comicInfo = await this.zipModel.extractComicInfo({ filePath: entry.path });
 
-                if (identifyFromMeta && !comicInfo) {
+                if (!comicInfo && wikiSearch) {
                     log.debug({ uid }, 'No usable ComicInfo.xml found; falling back to wiki lookup');
                 }
 
                 const found = comicInfo
                     ? comiInfoToWikiComicDTO(comicInfo)
-                    : await this.wikiModel.getComic(entry.name);
+                    : wikiSearch
+                        ? await this.wikiModel.getComic(entry.name)
+                        : null;
 
                 const freshlyStored = this.comicDataModel.getByUid(uid);
                 if (freshlyStored?.identified !== undefined) {

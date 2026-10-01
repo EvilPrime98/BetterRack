@@ -13,7 +13,7 @@ const DEFAULT_SETTINGS: TAppSettings = {
     outputDirs: [],
     apiUrl: '',
     downloadDir: '',
-    identifyFromMeta: true,
+    wikiSearch: false,
 };
 
 export class PreferencesModel implements TPreferencesModel {
@@ -125,9 +125,9 @@ export class PreferencesModel implements TPreferencesModel {
             outputDirs: values.outputDirs ? JSON.parse(values.outputDirs) : DEFAULT_SETTINGS.outputDirs,
             apiUrl: values.apiUrl ?? DEFAULT_SETTINGS.apiUrl,
             downloadDir: values.downloadDir ?? DEFAULT_SETTINGS.downloadDir,
-            identifyFromMeta: values.identifyFromMeta === undefined
-                ? DEFAULT_SETTINGS.identifyFromMeta
-                : values.identifyFromMeta === 'true',
+            wikiSearch: values.wikiSearch === undefined
+                ? DEFAULT_SETTINGS.wikiSearch
+                : values.wikiSearch === 'true',
         };
     }
 

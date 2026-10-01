@@ -22,7 +22,7 @@ export function SettingsPage() {
         apiUrl: '',
         downloadDir: '',
         folderPath: '',
-        identifyFromMeta: false
+        wikiSearch: false
     })
 
     function onFolderError($p: HTMLElement) {
@@ -41,12 +41,12 @@ export function SettingsPage() {
         const settings = SETTINGS_CONTEXT.settings.get();
         fieldsState.apiUrl.set(settings.apiUrl);
         fieldsState.downloadDir.set(settings.downloadDir);
-        fieldsState.identifyFromMeta.set(settings.identifyFromMeta);
+        fieldsState.wikiSearch.set(settings.wikiSearch);
     }
 
-    function syncIdentifyFromMetaCheckbox($el: HTMLElement) {
+    function syncWikiSearchCheckbox($el: HTMLElement) {
         const $checkbox = $el.querySelector('input') as HTMLInputElement;
-        $checkbox.checked = fieldsState.identifyFromMeta.get();
+        $checkbox.checked = fieldsState.wikiSearch.get();
     }
 
     function renderFolders(
@@ -136,7 +136,7 @@ export function SettingsPage() {
         const partial: Partial<Omit<IAppSettings, 'outputDirs'>> = {
             apiUrl: fieldsState.apiUrl.get(),
             downloadDir: fieldsState.downloadDir.get(),
-            identifyFromMeta: fieldsState.identifyFromMeta.get(),
+            wikiSearch: fieldsState.wikiSearch.get(),
         };
 
         setSettingsError('');
@@ -367,26 +367,26 @@ export function SettingsPage() {
 
                                 UltraComponent({
                                     component: `<div class="${styles.toggleRow}">
-                                        <label class="${styles.toggleLabel}"><input type="checkbox" /> Identify from metadata</label>
+                                        <label class="${styles.toggleLabel}"><input type="checkbox" /> Search the wiki for metadata</label>
                                         <span class="${styles.infoIcon}" tabindex="0">
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
                                                 <circle cx="12" cy="12" r="10" />
                                                 <line x1="12" y1="16" x2="12" y2="12" />
                                                 <line x1="12" y1="8" x2="12.01" y2="8" />
                                             </svg>
-                                            <span class="${styles.infoTooltip}" role="tooltip">Reads ComicInfo.xml when present, otherwise uses the wiki.</span>
+                                            <span class="${styles.infoTooltip}" role="tooltip">Comics are always identified from ComicInfo.xml. When enabled, comics without it are looked up on the wiki.</span>
                                         </span>
                                     </div>`,
                                     onMount: [($el: HTMLElement) => {
-                                        syncIdentifyFromMetaCheckbox($el);
+                                        syncWikiSearchCheckbox($el);
                                         $el.querySelector('input')?.addEventListener(
                                             'change',
-                                            (e) => fieldsState.identifyFromMeta.set((e.currentTarget as HTMLInputElement).checked)
+                                            (e) => fieldsState.wikiSearch.set((e.currentTarget as HTMLInputElement).checked)
                                         );
                                     }],
                                     trigger: [{
-                                        subscriber: fieldsState.identifyFromMeta.subscribe,
-                                        triggerFunction: syncIdentifyFromMetaCheckbox
+                                        subscriber: fieldsState.wikiSearch.subscribe,
+                                        triggerFunction: syncWikiSearchCheckbox
                                     }]
                                 }),
 

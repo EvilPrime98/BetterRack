@@ -2,7 +2,7 @@ export interface IAppSettings {
     outputDirs: string[];
     apiUrl: string;
     downloadDir: string;
-    identifyFromMeta: boolean;
+    wikiSearch: boolean;
 }
 
 export type TFieldKey = 'apiUrl'
