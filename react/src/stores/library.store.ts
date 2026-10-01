@@ -40,6 +40,7 @@ interface ILibraryStore {
     fetchLibrary: () => Promise<void>;
     refreshLibrary: (options?: { silent?: boolean }) => Promise<void>;
     refreshLibraryWithPrompt: () => Promise<void>;
+    identifyLibrary: () => Promise<void>;
     deleteFile: (uid: string) => Promise<void>;
     deleteFolder: (uid: string) => Promise<void>;
     createFolder: (folderName: string, parentFolderUid?: string) => Promise<void>;
@@ -103,6 +104,10 @@ export const useLibraryStore = create<ILibraryStore>((set, get) => ({
             return;
         }
 
+        await get().identifyLibrary();
+    },
+
+    identifyLibrary: async () => {
         if (identifyPolling) return;
 
         identifyPolling = true;
