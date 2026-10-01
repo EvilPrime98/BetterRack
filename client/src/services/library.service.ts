@@ -31,15 +31,20 @@ export async function getLibraryIndex(): Promise<ILibraryIndexGroup[]> {
     return data as ILibraryIndexGroup[];
 }
 
+export type TLibraryStructure = 'folders' | 'series';
+
 export async function getLibraryPage({
     limit = LIBRARY_PAGE_SIZE,
-    offset = 0
+    offset = 0,
+    structure = 'folders'
 }: {
     limit?: number;
     offset?: number;
+    structure?: TLibraryStructure;
 } = {}): Promise<ILibraryPage> {
+    const endpoint = structure === 'series' ? '/api/library/by-series' : '/api/library';
     const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
-    const response = await fetch(`${API_URL}/api/library?${params}`, { headers: authHeaders() });
+    const response = await fetch(`${API_URL}${endpoint}?${params}`, { headers: authHeaders() });
     const data = await response.json();
     if (!response.ok) throw new Error((data as { message?: string })?.message || 'Failed to load library.');
     return data as ILibraryPage;

@@ -10,6 +10,7 @@ export function libraryRouter(
     const app = new Hono();
     const cc = new libraryController(libModel, jobModel);
     app.get('/', (c) => cc.get(c));
+    app.get('/by-series', (c) => cc.getBySeries(c));
     app.get('/index', (c) => cc.getIndex(c));
     app.get('/recent', (c) => cc.getRecent(c));
     app.get('/reading', (c) => cc.getReading(c));

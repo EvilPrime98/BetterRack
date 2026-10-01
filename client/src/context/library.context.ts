@@ -11,7 +11,8 @@ import {
     unidentifyFile as requestUnidentifyFile,
     reidentifyAllLibrary as requestReidentifyAllLibrary,
     startIdentifyLibrary,
-    getIdentifyLibraryStatus
+    getIdentifyLibraryStatus,
+    type TLibraryStructure
 } from "../services/library.service";
 import type { ILibraryGroup, ILibraryIndexGroup, ILibraryPage, ILibraryResponseItem, TIdentifyLibraryStatus, TIdentifyProgress } from "../library.types";
 import { toast } from "../services/toast.service";
@@ -24,9 +25,22 @@ const LIBRARY_STALE_TIME = 60 * 5 * 10000;
 // Overlapping mounts (sidebar and page) share one load run. Without this guard,
 // each mount starts its own pagination sweep.
 let libraryLoadInFlight: Promise<void> | null = null;
+let libraryLoadId = 0;
 
 const IDENTIFY_POLL_INTERVAL_MS = 1000;
 let identifyPolling = false;
+
+const STRUCTURE_STORAGE_KEY = 'library-structure';
+
+const structureCache: Partial<Record<TLibraryStructure, ILibraryGroup[]>> = {};
+
+function readStoredStructure(): TLibraryStructure {
+    try {
+        return localStorage.getItem(STRUCTURE_STORAGE_KEY) === 'series' ? 'series' : 'folders';
+    } catch {
+        return 'folders';
+    }
+}
 
 /** Merge a page of entries into the groups in the store. Keep group order. Do not add an entry twice. */
 function mergeLibraryPage(existing: ILibraryGroup[], page: ILibraryPage): ILibraryGroup[] {
@@ -52,6 +66,9 @@ function mergeLibraryPage(existing: ILibraryGroup[], page: ILibraryPage): ILibra
 async function reloadLibrary(comp: ILibraryCtx) {
     queryClient.invalidateCache('library');
     queryClient.invalidateCache('library-index');
+    queryClient.invalidateCache('library-series');
+    delete structureCache.folders;
+    delete structureCache.series;
     await comp.fetchLibrary({ force: true });
 }
 
@@ -63,8 +80,10 @@ export interface ILibraryCtx {
     libraryLoaded: IUltraCompStateStateful<boolean>;
     queryClient: IUltraCompStateStateful<typeof queryClient>;
     searchQuery: IUltraCompStateStateful<string>;
+    structure: IUltraCompStateStateful<TLibraryStructure>;
     lastDeleted: IUltraCompStateStateful<{ uid: string } | null>;
     identifyProgress: IUltraCompStateStateful<Extract<TIdentifyProgress, { type: 'identifying' }> | null>;
+    setStructure: (structure: TLibraryStructure) => Promise<void>;
     fetchLibrary: (options?: { force?: boolean }) => Promise<void>;
     refreshLibrary: (options?: { silent?: boolean }) => Promise<void>;
     refreshLibraryWithPrompt: () => Promise<void>;
@@ -91,9 +110,32 @@ export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
 
     searchQuery: '' as string,
 
+    structure: readStoredStructure() as TLibraryStructure,
+
     lastDeleted: null as { uid: string } | null,
 
     identifyProgress: null as Extract<TIdentifyProgress, { type: 'identifying' }> | null,
+
+    setStructure: async (comp: ILibraryCtx, structure: TLibraryStructure) => {
+        const current = comp.structure.get();
+        if (current === structure) return;
+
+        try { localStorage.setItem(STRUCTURE_STORAGE_KEY, structure); } catch { /* storage unavailable */ }
+
+        if (comp.libraryLoaded.get()) structureCache[current] = comp.groups.get();
+        const cached = structureCache[structure];
+
+        libraryLoadInFlight = null;
+        comp.structure.set(structure);
+        comp.libraryLoaded.set(Boolean(cached));
+        comp.groups.set(cached ?? []);
+
+        try {
+            await comp.fetchLibrary();
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : 'Failed to load library.');
+        }
+    },
 
     fetchLibrary: async (comp: ILibraryCtx, options?: { force?: boolean }) => {
 
@@ -105,31 +147,40 @@ export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
         if (comp.libraryLoaded.get() && comp.groups.get().length) return;
         if (libraryLoadInFlight) return libraryLoadInFlight;
 
-        libraryLoadInFlight = (async () => {
+        const structure = comp.structure.get();
+        const isCurrent = () => comp.structure.get() === structure;
+
+        const loadId = ++libraryLoadId;
+
+        const run: Promise<void> = (async () => {
             try {
-                const { data: index } = await queryClient.fetch(
-                    'library-index',
-                    getLibraryIndex,
-                    LIBRARY_STALE_TIME
-                ) as { data: ILibraryIndexGroup[] };
+                let merged: ILibraryGroup[] = [];
 
-                comp.indexGroups.set(index);
+                if (structure === 'folders') {
+                    const { data: index } = await queryClient.fetch(
+                        'library-index',
+                        getLibraryIndex,
+                        LIBRARY_STALE_TIME
+                    ) as { data: ILibraryIndexGroup[] };
+                    if (!isCurrent()) return;
 
-                // Build the tree structure from the index first. Then each entry
-                // page fills its group when it arrives.
-                let merged: ILibraryGroup[] = index.map(group => ({
-                    uid: group.uid,
-                    name: group.name,
-                    path: '',
-                    entries: []
-                }));
-                comp.groups.set([...merged]);
+                    comp.indexGroups.set(index);
+
+                    merged = index.map(group => ({
+                        uid: group.uid,
+                        name: group.name,
+                        path: '',
+                        entries: []
+                    }));
+                    comp.groups.set([...merged]);
+                }
 
                 const { data: firstPage } = await queryClient.fetch(
-                    'library',
-                    () => getLibraryPage({ offset: 0 }),
+                    structure === 'series' ? 'library-series' : 'library',
+                    () => getLibraryPage({ offset: 0, structure }),
                     LIBRARY_STALE_TIME
                 ) as { data: ILibraryPage };
+                if (!isCurrent()) return;
 
                 merged = mergeLibraryPage(merged, firstPage);
                 comp.groups.set([...merged]);
@@ -139,7 +190,8 @@ export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
                 let hasMore = firstPage.hasMore;
 
                 while (hasMore) {
-                    const nextPage = await getLibraryPage({ offset, limit: pageSize });
+                    const nextPage = await getLibraryPage({ offset, limit: pageSize, structure });
+                    if (!isCurrent()) return;
                     merged = mergeLibraryPage(merged, nextPage);
                     comp.groups.set([...merged]);
                     offset = nextPage.offset + pageSize;
@@ -148,11 +200,12 @@ export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
 
                 comp.libraryLoaded.set(true);
             } finally {
-                libraryLoadInFlight = null;
+                if (libraryLoadId === loadId) libraryLoadInFlight = null;
             }
         })();
 
-        return libraryLoadInFlight;
+        libraryLoadInFlight = run;
+        return run;
     },
 
     refreshLibrary: async (comp: ILibraryCtx, options?: { silent?: boolean }) => {
@@ -294,6 +347,16 @@ export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
     ): ILibraryResponseItem[] => {
 
         const groups = comp.groups.get();
+
+        if (comp.structure.get() === 'series') {
+            if (!uid) {
+                return onlyDir
+                    ? groups.map(g => ({ uid: g.uid, did: true, name: g.name, path: g.path, parentId: '', createdAt: 0 }))
+                    : groups.flatMap(g => g.entries);
+            }
+            const series = groups.find(g => g.uid === uid);
+            if (series) return onlyDir ? [] : series.entries;
+        }
 
         let data: ILibraryResponseItem[];
 

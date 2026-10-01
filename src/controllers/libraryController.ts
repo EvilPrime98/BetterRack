@@ -79,6 +79,17 @@ export class libraryController{
         return c.json(page, 200);
     }
 
+    public async getBySeries(
+        c: Context
+    ) {
+        await this.libModel.ready;
+        const page = this.libModel.getLibraryPageBySeries({
+            limit: this.parsePageOption(c.req.query('limit')),
+            offset: this.parsePageOption(c.req.query('offset')),
+        });
+        return c.json(page, 200);
+    }
+
     public async getRecent(
         c: Context
     ) {

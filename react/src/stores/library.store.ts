@@ -9,7 +9,8 @@ import {
     unidentifyFile as requestUnidentifyFile,
     reidentifyAllLibrary as requestReidentifyAllLibrary,
     startIdentifyLibrary,
-    getIdentifyLibraryStatus
+    getIdentifyLibraryStatus,
+    type TLibraryStructure
 } from '../services/library.service';
 import type { ILibraryGroup, ILibraryResponseItem, TIdentifyLibraryStatus, TIdentifyProgress } from '../library.types';
 import { toast } from '../services/toast.service';
@@ -18,16 +19,32 @@ import { useConfirmModalStore } from './confirmModal.store';
 // React Query's hooks only work inside components, so rather than force a useQuery call
 // into this store action, fetchLibrary keeps a lightweight staleTime + in-flight-promise
 // cache here instead.
-const LIBRARY_STALE_TIME_MS = 60 * 5 * 10000;
-let lastFetchedAt = 0;
-let inFlight: Promise<void> | null = null;
+const LIBRARY_STALE_TIME_MS = 60 * 5 * 1000;
+const cache: Partial<Record<TLibraryStructure, { groups: ILibraryGroup[]; fetchedAt: number }>> = {};
+const inFlight: Partial<Record<TLibraryStructure, Promise<void>>> = {};
+
+function invalidateLibraryCache() {
+    delete cache.folders;
+    delete cache.series;
+}
 
 const IDENTIFY_POLL_INTERVAL_MS = 1000;
 let identifyPolling = false;
 
+const STRUCTURE_STORAGE_KEY = 'library-structure';
+
+function readStoredStructure(): TLibraryStructure {
+    try {
+        return localStorage.getItem(STRUCTURE_STORAGE_KEY) === 'series' ? 'series' : 'folders';
+    } catch {
+        return 'folders';
+    }
+}
+
 interface ILibraryStore {
     groups: ILibraryGroup[];
     searchQuery: string;
+    structure: TLibraryStructure;
     /**
      * Holds the uid of the last deleted entry. The /new view (through useRecentlyAdded)
      * reads this to remove that entry from its own list snapshot without an app reload.
@@ -37,6 +54,7 @@ interface ILibraryStore {
     lastDeleted: { uid: string } | null;
     identifyProgress: Extract<TIdentifyProgress, { type: 'identifying' }> | null;
     setSearchQuery: (query: string) => void;
+    setStructure: (structure: TLibraryStructure) => Promise<void>;
     fetchLibrary: () => Promise<void>;
     refreshLibrary: (options?: { silent?: boolean }) => Promise<void>;
     refreshLibraryWithPrompt: () => Promise<void>;
@@ -55,28 +73,45 @@ export const useLibraryStore = create<ILibraryStore>((set, get) => ({
 
     groups: [],
     searchQuery: '',
+    structure: readStoredStructure(),
     lastDeleted: null,
     identifyProgress: null,
 
     setSearchQuery: (searchQuery) => set({ searchQuery }),
 
-    fetchLibrary: async () => {
-        const isFresh = Date.now() - lastFetchedAt < LIBRARY_STALE_TIME_MS;
-        if (isFresh && !inFlight) return;
-        if (!inFlight) {
-            inFlight = (async () => {
-                const data = await getLibrary();
-                lastFetchedAt = Date.now();
-                if (get().groups !== data) set({ groups: data });
-            })().finally(() => { inFlight = null; });
+    setStructure: async (structure) => {
+        if (get().structure === structure) return;
+        try { localStorage.setItem(STRUCTURE_STORAGE_KEY, structure); } catch { /* storage unavailable */ }
+        const cached = cache[structure];
+        set(cached ? { structure, groups: cached.groups } : { structure });
+        try {
+            await get().fetchLibrary();
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : 'Failed to load library.');
         }
-        await inFlight;
+    },
+
+    fetchLibrary: async () => {
+        const structure = get().structure;
+        const cached = cache[structure];
+        if (cached && Date.now() - cached.fetchedAt < LIBRARY_STALE_TIME_MS && !inFlight[structure]) {
+            if (get().groups !== cached.groups) set({ groups: cached.groups });
+            return;
+        }
+        if (!inFlight[structure]) {
+            inFlight[structure] = (async () => {
+                const data = await getLibrary(structure);
+                cache[structure] = { groups: data, fetchedAt: Date.now() };
+                if (get().structure === structure) set({ groups: data });
+            })().finally(() => { delete inFlight[structure]; });
+        }
+        await inFlight[structure];
     },
 
     refreshLibrary: async (options) => {
         try {
             await requestLibraryRefresh();
-            lastFetchedAt = 0;
+            invalidateLibraryCache();
             await get().fetchLibrary();
             if (!options?.silent) toast.success('Library refreshed');
         } catch (e) {
@@ -123,7 +158,7 @@ export const useLibraryStore = create<ILibraryStore>((set, get) => ({
                     return;
                 }
                 if (status.state === 'done' || progress?.type === 'done') {
-                    lastFetchedAt = 0;
+                    invalidateLibraryCache();
                     await get().fetchLibrary();
                     toast.success('Library identified');
                     return;
@@ -144,7 +179,7 @@ export const useLibraryStore = create<ILibraryStore>((set, get) => ({
     deleteFile: async (uid) => {
         try {
             const data = await requestDeleteFile(uid);
-            lastFetchedAt = 0;
+            invalidateLibraryCache();
             await get().fetchLibrary();
             set({ lastDeleted: { uid } });
             toast.success(data.message || 'File deleted');
@@ -156,7 +191,7 @@ export const useLibraryStore = create<ILibraryStore>((set, get) => ({
     deleteFolder: async (uid) => {
         try {
             const data = await requestDeleteFolder(uid);
-            lastFetchedAt = 0;
+            invalidateLibraryCache();
             await get().fetchLibrary();
             set({ lastDeleted: { uid } });
             toast.success(data.message || 'Folder deleted');
@@ -168,7 +203,7 @@ export const useLibraryStore = create<ILibraryStore>((set, get) => ({
     createFolder: async (folderName, parentFolderUid) => {
         try {
             const data = await requestCreateFolder(folderName, parentFolderUid);
-            lastFetchedAt = 0;
+            invalidateLibraryCache();
             await get().fetchLibrary();
             toast.success(data.message || 'Folder created');
         } catch (e) {
@@ -179,7 +214,7 @@ export const useLibraryStore = create<ILibraryStore>((set, get) => ({
     moveFile: async (fileUid, targetFolderUid) => {
         try {
             const data = await requestMoveFile(fileUid, targetFolderUid);
-            lastFetchedAt = 0;
+            invalidateLibraryCache();
             await get().fetchLibrary();
             toast.success(data.message || 'File moved');
         } catch (e) {
@@ -190,7 +225,7 @@ export const useLibraryStore = create<ILibraryStore>((set, get) => ({
     unidentifyFile: async (uid) => {
         try {
             const data = await requestUnidentifyFile(uid);
-            lastFetchedAt = 0;
+            invalidateLibraryCache();
             await get().fetchLibrary();
             toast.success(data.message || 'File un-identified');
         } catch (e) {
@@ -201,7 +236,7 @@ export const useLibraryStore = create<ILibraryStore>((set, get) => ({
     reidentifyAll: async () => {
         try {
             const data = await requestReidentifyAllLibrary();
-            lastFetchedAt = 0;
+            invalidateLibraryCache();
             await get().fetchLibrary();
             toast.success(data.message || 'Library flagged for re-identification');
         } catch (e) {
@@ -212,6 +247,16 @@ export const useLibraryStore = create<ILibraryStore>((set, get) => ({
     getLibraryItems: ({ onlyDir, uid }) => {
 
         const groups = get().groups;
+
+        if (get().structure === 'series') {
+            if (!uid) {
+                return onlyDir
+                    ? groups.map(g => ({ uid: g.uid, did: true, name: g.name, path: g.path, parentId: '', createdAt: 0 }))
+                    : groups.flatMap(g => g.entries);
+            }
+            const series = groups.find(g => g.uid === uid);
+            if (series) return onlyDir ? [] : series.entries;
+        }
 
         let data: ILibraryResponseItem[];
 

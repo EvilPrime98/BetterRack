@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import styles from './library-page.module.css';
 import { PageHeader } from '@/components/page-header/page-header';
@@ -13,6 +13,36 @@ import { SearchPage } from './search.page';
 import { useDocumentTitleStore } from '@/stores/documentTitle.store';
 import { matchesReadFilter, useReadTypesContext } from '@/context/ReadTypesContext.hooks';
 import { useComicCacheStore } from '@/stores/comicCache.store';
+
+const PAGE_SIZE = 60;
+
+function ItemsGrid({ items }: { items: ILibraryResponseItem[] }) {
+
+    const [count, setCount] = useState(PAGE_SIZE);
+
+    const sentinelRef = useCallback((node: HTMLDivElement | null) => {
+        if (!node) return;
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries.some(e => e.isIntersecting)) setCount(c => c + PAGE_SIZE);
+            },
+            { rootMargin: '600px' }
+        );
+        observer.observe(node);
+        return () => observer.disconnect();
+    }, [count]);
+
+    return (
+        <>
+            {items.slice(0, count).map(item => item.did
+                ? <FolderCard key={item.uid} title={item.name} uid={item.uid} />
+                : <ComicCard key={item.uid} item={item} />
+            )}
+            {count < items.length && <div ref={sentinelRef} style={{ gridColumn: '1 / -1', height: 1 }} />}
+        </>
+    );
+
+}
 
 export function LibraryPage() {
 
@@ -74,10 +104,7 @@ export function LibraryPage() {
                         ref={comicContainerRef}
                         className={[styles.comicContainer, comicsType === 'detail' ? styles.detailLayout : ''].filter(Boolean).join(' ')}
                     >
-                        {items.map(item => item.did
-                            ? <FolderCard key={item.uid} title={item.name} uid={item.uid} />
-                            : <ComicCard key={item.uid} item={item} />
-                        )}
+                        <ItemsGrid key={uid ?? 'root'} items={items} />
                     </section>
                 )}
 
