@@ -2,6 +2,8 @@ export const COMIC_EXTENSIONS = new Set(['.cbz', '.cbr', '.cb7', '.cbt']);
 
 export const IDENTIFY_CONCURRENCY = 4;
 
+export const IDENTIFY_BATCH_SIZE = IDENTIFY_CONCURRENCY;
+
 export const STAT_CONCURRENCY = 64;
 
 /** The entries per page when a GET /api/library request has no limit value. */

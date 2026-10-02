@@ -2,6 +2,8 @@ export type JobListener<TProgress> = (job: TJob<TProgress>) => void;
 
 export type TJobState = 'queued' | 'running' | 'done' | 'error';
 
+export type TJobKind = 'download' | 'identify-library';
+
 export type TJobRequest = {
     comicId: number;
     outputDir?: string;
@@ -11,6 +13,7 @@ export type TJobRequest = {
 
 export type TJob<TProgress = unknown> = {
     id: string;
+    kind: TJobKind;
     resourceKey: string;
     label: string;
     state: TJobState;
@@ -21,10 +24,10 @@ export type TJob<TProgress = unknown> = {
 }
 
 export type TJobModel<TProgress = unknown> = {
-    getOrCreate: (resourceKey: string, label: string, request: TJobRequest) => { job: TJob<TProgress>; created: boolean },
+    getOrCreate: (resourceKey: string, label: string, request: TJobRequest, kind?: TJobKind) => { job: TJob<TProgress>; created: boolean },
     getByResource: (resourceKey: string) => TJob<TProgress> | undefined,
     get: (jobId: string) => TJob<TProgress> | undefined,
-    list: () => TJob<TProgress>[],
+    list: (kind?: TJobKind) => TJob<TProgress>[],
     update: (jobId: string, state: TJobState, progress?: TProgress) => void,
     retry: (jobId: string) => TJob<TProgress> | undefined,
     remove: (jobId: string) => boolean,

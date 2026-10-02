@@ -28,6 +28,12 @@ export function App() {
                 SETTINGS_CONTEXT.fetchSettings()
             ])
         ])
+        if (
+            SETTINGS_CONTEXT.settings.get().rescanOnStartup
+            && LIBRARY_CONTEXT.groups.get().length > 0
+        ) {
+            await LIBRARY_CONTEXT.identifyLibrary();
+        }
         USER_PREF.init();
         COMICS_TYPE_CTX.init();
         APP_CTX.isLoading.set(false);
@@ -49,6 +55,15 @@ export function App() {
         )
     }
 
+    function onIdentifyProgress($loader: HTMLElement) {
+        const progress = LIBRARY_CONTEXT.identifyProgress.get();
+        const $hint = $loader.querySelector('p:last-of-type');
+        if (!$hint) return;
+        $hint.textContent = progress
+            ? `Identifying library${progress.total ? ` ${progress.done}/${progress.total}` : '…'}`
+            : 'Loading your library…';
+    }
+
     return UltraComponent({
 
         onMount: [onMount],
@@ -67,6 +82,9 @@ export function App() {
                 trigger: [{
                     subscriber: APP_CTX.isLoading.subscribe,
                     triggerFunction: onAppLoad
+                }, {
+                    subscriber: LIBRARY_CONTEXT.identifyProgress.subscribe,
+                    triggerFunction: onIdentifyProgress
                 }]
             }),
 

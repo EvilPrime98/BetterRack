@@ -3,16 +3,16 @@ import styles from './comic-card.module.css';
 import { MarkAsReadButton } from "./mark-as-read-button";
 import { DeleteFileButton } from "./delete-button";
 import { MoveFileButton } from "./move-button";
-import { RetryThumbnailButton } from "./retry-thumbnail-button";
+import { RefreshComicButton } from "./refresh-comic-button";
 
 export function ComicCardActions({
     uid,
     name,
-    onThumbnailRetried
+    onComicRefreshed
 }: {
     uid: string;
     name: string;
-    onThumbnailRetried: () => void;
+    onComicRefreshed: () => void;
 }) {
 
     return UltraComponent({
@@ -21,7 +21,7 @@ export function ComicCardActions({
         children: [
             MarkAsReadButton({ uid }),
             MoveFileButton({ uid, name }),
-            RetryThumbnailButton({ uid, onRetried: onThumbnailRetried }),
+            RefreshComicButton({ uid, onRefreshed: onComicRefreshed }),
             DeleteFileButton({ uid })
         ]
     })

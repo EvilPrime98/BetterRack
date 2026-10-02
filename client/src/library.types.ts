@@ -104,6 +104,15 @@ export interface ILibraryRefreshResponse {
     page?: ILibraryPage;
 }
 
+export type TIdentifyProgress =
+    | { type: 'identifying'; done: number; total: number }
+    | { type: 'done'; total: number }
+    | { type: 'error'; message: string };
+
+export type TIdentifyLibraryStatus =
+    | { state: 'idle' }
+    | { jobId: string; state: 'queued' | 'running' | 'done' | 'error'; progress?: TIdentifyProgress };
+
 export interface IComicLSCache {
     /**Rating for the comic */
     rating: number;

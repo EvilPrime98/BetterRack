@@ -1,15 +1,6 @@
-import { createContext, useContext, useState, useCallback, useRef, type ReactNode } from 'react';
+import { useState, useCallback, useMemo, useRef, type ReactNode } from 'react';
 import { useLibraryStore } from '../stores/library.store';
-
-interface INewFolderModalContextValue {
-    isVisible: boolean;
-    parentFolderUid: string | undefined;
-    openNewFolderModal: (parentFolderUid?: string) => void;
-    closeNewFolderModal: () => void;
-    submitNewFolder: (folderName: string) => Promise<void>;
-}
-
-const NewFolderModalContext = createContext<INewFolderModalContextValue | null>(null);
+import { NewFolderModalContext } from './NewFolderModalContext.hooks';
 
 export function NewFolderModalProvider({ children }: { children: ReactNode }) {
     const [isVisible, setIsVisible] = useState(false);
@@ -33,18 +24,14 @@ export function NewFolderModalProvider({ children }: { children: ReactNode }) {
         await useLibraryStore.getState().createFolder(trimmed, parentFolderUidRef.current);
     }, [closeNewFolderModal]);
 
+    const value = useMemo(() => ({
+        isVisible, parentFolderUid,
+        openNewFolderModal, closeNewFolderModal, submitNewFolder
+    }), [isVisible, parentFolderUid, openNewFolderModal, closeNewFolderModal, submitNewFolder]);
+
     return (
-        <NewFolderModalContext.Provider value={{
-            isVisible, parentFolderUid,
-            openNewFolderModal, closeNewFolderModal, submitNewFolder
-        }}>
+        <NewFolderModalContext.Provider value={value}>
             {children}
         </NewFolderModalContext.Provider>
     );
-}
-
-export function useNewFolderModalContext(): INewFolderModalContextValue {
-    const ctx = useContext(NewFolderModalContext);
-    if (!ctx) throw new Error('useNewFolderModalContext must be used within NewFolderModalProvider');
-    return ctx;
 }

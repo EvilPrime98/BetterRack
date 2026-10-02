@@ -29,7 +29,7 @@ export function HeaderMenu() {
     }
 
     const refresh = () => {
-        LIBRARY_CONTEXT.refreshLibrary();
+        LIBRARY_CONTEXT.refreshLibraryWithPrompt();
         setOpen(false);
     }
 

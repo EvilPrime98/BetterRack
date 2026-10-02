@@ -1,16 +1,6 @@
-import { createContext, useContext, useState, useCallback, useRef, type ReactNode } from 'react';
+import { useState, useCallback, useMemo, useRef, type ReactNode } from 'react';
 import type { IStoreLink } from '@/store.types';
-
-interface ILinkPickerModalContextValue {
-    isVisible: boolean;
-    comicTitle: string;
-    links: IStoreLink[];
-    openLinkPickerModal: (links: IStoreLink[], comicTitle: string) => Promise<IStoreLink | null>;
-    pickLink: (link: IStoreLink) => void;
-    closeLinkPickerModal: () => void;
-}
-
-const LinkPickerModalContext = createContext<ILinkPickerModalContextValue | null>(null);
+import { LinkPickerModalContext } from './LinkPickerModalContext.hooks';
 
 export function LinkPickerModalProvider({ children }: { children: ReactNode }) {
     const [isVisible, setIsVisible] = useState(false);
@@ -44,18 +34,14 @@ export function LinkPickerModalProvider({ children }: { children: ReactNode }) {
         settle(null);
     }, [settle]);
 
+    const value = useMemo(() => ({
+        isVisible, comicTitle, links,
+        openLinkPickerModal, pickLink, closeLinkPickerModal
+    }), [isVisible, comicTitle, links, openLinkPickerModal, pickLink, closeLinkPickerModal]);
+
     return (
-        <LinkPickerModalContext.Provider value={{
-            isVisible, comicTitle, links,
-            openLinkPickerModal, pickLink, closeLinkPickerModal
-        }}>
+        <LinkPickerModalContext.Provider value={value}>
             {children}
         </LinkPickerModalContext.Provider>
     );
-}
-
-export function useLinkPickerModalContext(): ILinkPickerModalContextValue {
-    const ctx = useContext(LinkPickerModalContext);
-    if (!ctx) throw new Error('useLinkPickerModalContext must be used within LinkPickerModalProvider');
-    return ctx;
 }

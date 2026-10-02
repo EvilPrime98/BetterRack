@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { memo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { WikiComic } from 'better-wiki';
 import styles from './comic-card.module.css';
 import { ReadBar } from '@/components/read-bar/read-bar';
 import { ComicRating } from './rating';
@@ -9,16 +8,15 @@ import { useComicsTypeStore } from '@/stores/comicsTypes.store';
 import { ComicCardTitle } from './title';
 import { ComicCardInfo } from './info';
 import { ComicCardCover } from './cover';
-import { matchesReadFilter as readFilterMatches, useReadTypesContext } from '@/context/ReadTypesContext';
+import { matchesReadFilter as readFilterMatches, useReadTypesContext } from '@/context/ReadTypesContext.hooks';
 import { useComicCacheStore } from '@/stores/comicCache.store';
-import { useComicIdentStore } from '@/stores/comicIdent.store';
+import { useComicIdentification } from '@/hooks/useComicIdentification';
 import { IdentifyButton } from './identify-button';
 import { ComicCardActions } from './actions';
 import { CrButton } from '@/components/cr-button/cr-button';
-import { identifyLibraryEntry } from '@/services/library.service';
 import { COMIC_FILTERS, type IComicFilters } from '@/library.types';
 
-export function ComicCard({
+export const ComicCard = memo(function ComicCard({
     item,
     filters
 }: {
@@ -27,18 +25,12 @@ export function ComicCard({
 }) {
 
     const navigate = useNavigate();
-    const [comic, setComic] = useState<WikiComic | null>(item.comic ?? null);
-    const [metaSource, setMetaSource] = useState(item.metaSource);
-    const [identified, setIdentified] = useState(item.identified !== false);
-    const [isLoadingInfo, setIsLoadingInfo] = useState(item.identified === undefined);
+    const { comic, metaSource, identified, isLoadingInfo, articleRef } = useComicIdentification(item, filters);
     const [coverVersion, setCoverVersion] = useState(0);
-    const articleRef = useRef<HTMLElement>(null);
     const readerHref = `/${item.uid}/reader`;
     const comicsType = useComicsTypeStore((s) => s.type);
     const { type: readFilter } = useReadTypesContext();
     const itemCache = useComicCacheStore((s) => s.cache[item.uid] ?? null);
-    const lastIdentified = useComicIdentStore((s) => s.lastIdentified);
-    const lastUnidentified = useComicIdentStore((s) => s.lastUnidentified);
     const isRead = itemCache?.read === true;
     const readPer = itemCache ? (itemCache.read === true ? 100 : itemCache.readPer ?? 0) : 0;
 
@@ -53,66 +45,6 @@ export function ComicCard({
         return matchesWriter && readFilterMatches(readFilter, currReadPer);
 
     })();
-
-    useEffect(() => {
-        if (lastIdentified?.uid !== item.uid) return;
-        setComic(lastIdentified.comic);
-        setMetaSource('wiki');
-        setIdentified(true);
-        setIsLoadingInfo(false);
-    }, [lastIdentified, item.uid]);
-
-    useEffect(() => {
-        if (lastUnidentified?.uid !== item.uid) return;
-        setComic(null);
-        setMetaSource(undefined);
-        setIdentified(false);
-        setIsLoadingInfo(false);
-    }, [lastUnidentified, item.uid]);
-
-    useEffect(() => {
-
-        if (item.identified !== undefined) return undefined;
-
-        if (filters && Object.keys(filters).length > 0) {
-            let cancelled = false;
-            setIsLoadingInfo(true);
-            identifyLibraryEntry(item.uid)
-                .then((resolved) => {
-                    if (cancelled) return;
-                    setComic(resolved.comic ?? null);
-                    setMetaSource(resolved.metaSource);
-                    setIdentified(resolved.identified === true);
-                })
-                .catch(() => {})
-                .finally(() => {
-                    if (!cancelled) setIsLoadingInfo(false);
-                });
-            return () => { cancelled = true; };
-        }
-
-        const node = articleRef.current;
-        if (!node) return undefined;
-
-        const observer = new IntersectionObserver((entries) => {
-            if (!entries.some(e => e.isIntersecting)) return;
-            observer.disconnect();
-            setIsLoadingInfo(true);
-            identifyLibraryEntry(item.uid)
-            .then((resolved) => {
-                setComic(resolved.comic ?? null);
-                setMetaSource(resolved.metaSource);
-                setIdentified(resolved.identified === true);
-            })
-            .catch(() => {})
-            .finally(() => setIsLoadingInfo(false));
-        }, { rootMargin: '200px' });
-
-        observer.observe(node);
-
-        return () => observer.disconnect();
-
-    }, [item.uid, item.identified, filters]);
 
     const articleClassName = [
         styles.comicCard,
@@ -173,7 +105,7 @@ export function ComicCard({
                     <ComicCardActions
                         uid={item.uid}
                         name={item.name}
-                        onThumbnailRetried={() => setCoverVersion(Date.now())}
+                        onComicRefreshed={() => setCoverVersion(Date.now())}
                     />
                 </div>
 
@@ -182,4 +114,4 @@ export function ComicCard({
         </article>
     );
 
-}
+});

@@ -7,7 +7,7 @@ import { BRButton } from '@/components/br-button/br-button';
 import { FolderIcon } from '@/icons/folder.icon';
 import styles from './page-header.module.css';
 import type { ILibraryResponseItem, ILibraryFilters } from '@/library.types';
-import { useNewFolderModalContext } from '@/context/NewFolderModalContext';
+import { useNewFolderModalContext } from '@/context/NewFolderModalContext.hooks';
 import { ArrowLeftIcon } from '@/icons/arrow-left.icon';
 import { useNavigate } from 'react-router-dom';
 

@@ -5,8 +5,10 @@ import { VIEWPORT_CONTEXT } from "../../context/viewport.context";
 import { LIBRARY_CONTEXT } from "../../context/library.context";
 import { SideBarGroup } from "./sidebar-group";
 import type { ILibraryGroup } from "../../library.types";
+import type { TLibraryStructure } from "../../services/library.service";
+import { BRDropdown, type IBRDropdownOption } from "../br-dropdown/br-dropdown";
+import { SeriesList } from "./series-list";
 import { RefreshLibraryButton } from "./refresh-button";
-import { SidebarCloseButton } from "./close-button";
 import { SidebarSearch } from "./sidebar-search";
 import { Footer } from "../footer/footer";
 import { GearIcon } from "../../icons/gear.icon";
@@ -15,9 +17,16 @@ import { DownloadIcon } from "../../icons/download.icon";
 import { BookmarkIcon } from "../../icons/bookmark.icon";
 import { BookOpenIcon } from "../../icons/book-open.icon";
 
+const STRUCTURE_OPTIONS: IBRDropdownOption<TLibraryStructure>[] = [
+    { value: 'folders', label: 'Folders' },
+    { value: 'series', label: 'Series' }
+];
+
 export function SideBar() {
 
     const [items, setItems, subsItems] = ultraState<ILibraryGroup[]>([]);
+
+    const series = SeriesList({ groups: items, isHidden });
 
     function fetchLibrary() {
         LIBRARY_CONTEXT.fetchLibrary();
@@ -72,7 +81,10 @@ export function SideBar() {
                     className: [styles.emptyState]
                 })
             );
+        } else if (LIBRARY_CONTEXT.structure.get() === 'series') {
+            series.render($nav);
         } else {
+            series.disconnect();
             $nav.replaceChildren(
                 ...currItems.map(group => {
                     return SideBarGroup({ group })
@@ -128,15 +140,15 @@ export function SideBar() {
 
                     UltraComponent({
                         component: '<div></div>',
-                        className: [styles.header],
+                        className: [styles.section],
                         children: [
-                            `<span class="${styles.title}">Library</span>`,
-                            UltraComponent({
-                                component: '<div></div>',
-                                className: [styles.headerActions],
-                                children: [
-                                    SidebarCloseButton()
-                                ]
+                            `<span id="library-group-by-label" class="${styles.sectionTitle}">Group by</span>`,
+                            BRDropdown({
+                                ariaLabelledby: 'library-group-by-label',
+                                options: STRUCTURE_OPTIONS,
+                                value: LIBRARY_CONTEXT.structure.get,
+                                subscribe: LIBRARY_CONTEXT.structure.subscribe,
+                                onChange: (value) => { void LIBRARY_CONTEXT.setStructure(value) }
                             })
                         ]
                     }),
@@ -215,13 +227,28 @@ export function SideBar() {
                     RefreshLibraryButton(),
 
                     UltraComponent({
-                        onMount: [onItemsChange],
+                        onMount: [
+                            onItemsChange,
+                            () => series.disconnect
+                        ],
                         component: '<nav></nav>',
                         className: [styles.list],
-                        trigger: [{
-                            subscriber: subsItems,
-                            triggerFunction: onItemsChange
-                        }]
+                        trigger: [
+                            {
+                                subscriber: subsItems,
+                                triggerFunction: onItemsChange
+                            },
+                            {
+                                subscriber: [
+                                    SIDEBAR_CONTEXT.isExpanded.subscribe,
+                                    SIDEBAR_CONTEXT.isCollapsed.subscribe,
+                                    VIEWPORT_CONTEXT.isDesktop.subscribe
+                                ],
+                                triggerFunction: ($nav: HTMLElement) => {
+                                    if (items().length && LIBRARY_CONTEXT.structure.get() === 'series') series.render($nav);
+                                }
+                            }
+                        ]
                     }),
 
                     Footer()

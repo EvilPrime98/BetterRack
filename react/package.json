@@ -11,7 +11,8 @@
     "android:sync": "pnpm build && cap sync android",
     "android:apk": "pnpm android:sync && cd android && gradlew assembleDebug",
     "android:apk:release": "pnpm android:sync && cd android && gradlew assembleRelease",
-    "android:open": "cap open android"
+    "android:open": "cap open android",
+    "doctor": "npx react-doctor@latest"
   },
   "dependencies": {
     "@capacitor/core": "^8.5.0",

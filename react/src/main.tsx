@@ -3,6 +3,7 @@ import './main.css';
 import { Providers } from './Providers';
 import { ErrorBoundary } from './ErrorBoundary';
 import { App } from './App';
+import { registerDesktopCloseGuard } from './services/close-guard.service';
 
 declare global {
     interface Window {
@@ -20,9 +21,14 @@ declare global {
             closeWindow(): Promise<void>;
             isWindowMaximized(): Promise<boolean>;
             onMaximizedChange(callback: (isMaximized: boolean) => void): () => void;
+            confirmClose(): Promise<void>;
+            cancelClose(): Promise<void>;
+            onCloseRequested(callback: (activeDownloads: number) => void): () => void;
         };
     }
 }
+
+registerDesktopCloseGuard();
 
 const platform = window.versions?.platform;
 if (platform) document.documentElement.dataset.platform = platform;

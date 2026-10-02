@@ -23,7 +23,7 @@ export function SuggestionCard({
             identified: true,
             comic
         }).catch(console.error);
-        COMIC_IDENT_CTX.lastIdentified.set({ uid, comic });
+        COMIC_IDENT_CTX.lastIdentified.set({ uid, comic, metaSource: 'wiki' });
         COMIC_IDENT_CTX.isVisible.set(false);
     }
 

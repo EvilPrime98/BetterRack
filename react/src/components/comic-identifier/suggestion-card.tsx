@@ -17,12 +17,12 @@ export function SuggestionCard({
     const onClick = () => {
         const uid = useComicIdentStore.getState().itemUid;
         commitIdentifyFile(uid, comic).catch(console.error);
-        useComicIdentStore.getState().setLastIdentified({ uid, comic });
+        useComicIdentStore.getState().setLastIdentified({ uid, comic, metaSource: 'wiki' });
         useComicIdentStore.getState().setIsVisible(false);
     }
 
     return (
-        <article className={styles.suggestionCard} onClick={onClick}>
+        <button type="button" className={styles.suggestionCard} onClick={onClick}>
 
             <div className={styles.suggestionCover}>
                 <ImageGen src={comic.cover} />
@@ -33,7 +33,7 @@ export function SuggestionCard({
                 <p className={styles.suggestionMeta}>{meta}</p>
             </div>
 
-        </article>
+        </button>
     );
 
 }

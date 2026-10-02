@@ -2,7 +2,7 @@
   "name": "BetterRack",
   "productName": "Better Rack",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Desktop app for organizing and reading a local comic book library (CBR/CBZ), with built-in search, downloads and wiki metadata lookups.",
   "author": {
     "name": "AminPerez",

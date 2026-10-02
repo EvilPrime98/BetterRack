@@ -1,6 +1,7 @@
 import { UltraActivity, UltraComponent } from "ultra-light-js";
 import styles from './move-file-modal.module.css';
 import { FolderIcon } from "@/icons/folder.icon";
+import { BRCheckbox } from "@/components/br-checkbox/br-checkbox";
 import { LIBRARY_CONTEXT } from "@/context/library.context";
 import { MOVE_FILE_MODAL_CTX } from "@/context/move-file-modal.context";
 import type { ILibraryGroup } from "@/library.types";
@@ -38,11 +39,21 @@ function buildFolderPath(uid: string, groups: ILibraryGroup[]): string {
 export function MoveFileModal() {
 
     let $list: HTMLElement | null = null;
+    let query = '';
+    let showSubfolders = true;
 
     const cancel = () => MOVE_FILE_MODAL_CTX.closeMoveFileModal();
 
     const onKeydown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') cancel();
+    }
+
+    const onVisibleChange = ($input: HTMLElement) => {
+        if (!MOVE_FILE_MODAL_CTX.isVisible.get() || !$input) return;
+        query = '';
+        ($input as HTMLInputElement).value = '';
+        $input.focus();
+        renderFolders();
     }
 
     const renderFolders = () => {
@@ -70,29 +81,44 @@ export function MoveFileModal() {
             .getLibraryItems({ onlyDir: true })
             .filter(folder => !excluded.has(folder.uid));
 
+        const destinations = folders
+            .filter(folder => showSubfolders || !folder.parentId)
+            .map(folder => ({ uid: folder.uid, path: buildFolderPath(folder.uid, groups) }));
+
+        const normalizedQuery = query.trim().toLowerCase();
+        const filteredDestinations = normalizedQuery
+            ? destinations.filter(d => d.path.toLowerCase().includes(normalizedQuery))
+            : destinations;
+        const showRoot = !normalizedQuery || 'library root'.includes(normalizedQuery);
+
         $list.replaceChildren(
 
-            UltraComponent({
-                component: `<li class="${styles.item}"></li>`,
-                eventHandler: { click: () => MOVE_FILE_MODAL_CTX.selectMoveTarget(undefined) },
-                children: [
-                    FolderIcon({ size: 14, color: '#34c3d1' }),
-                    '<span>Library root</span>'
-                ]
-            }),
-
-            ...(folders.length
-                ? folders.map(folder => UltraComponent({
-                    component: `<li class="${styles.item}"></li>`,
-                    eventHandler: { click: () => MOVE_FILE_MODAL_CTX.selectMoveTarget(folder.uid) },
+            ...(showRoot
+                ? [UltraComponent({
+                    component: `<li class="${styles.item}" title="Library root"></li>`,
+                    eventHandler: { click: () => MOVE_FILE_MODAL_CTX.selectMoveTarget(undefined) },
                     children: [
-                        FolderIcon({ size: 14, color: '#c7c7c7' }),
-                        `<span>${buildFolderPath(folder.uid, groups)}</span>`
+                        FolderIcon({ size: 14, color: '#34c3d1' }),
+                        '<span>Library root</span>'
                     ]
-                }))
-                : [UltraComponent({
-                    component: `<li class="${styles.empty}">No folders yet.</li>`
                 })]
+                : []
+            ),
+
+            ...filteredDestinations.map(({ uid, path }) => UltraComponent({
+                component: `<li class="${styles.item}" title="${path}"></li>`,
+                eventHandler: { click: () => MOVE_FILE_MODAL_CTX.selectMoveTarget(uid) },
+                children: [
+                    FolderIcon({ size: 14, color: '#c7c7c7' }),
+                    `<span>${path}</span>`
+                ]
+            })),
+
+            ...(!showRoot && !filteredDestinations.length
+                ? [UltraComponent({
+                    component: `<li class="${styles.empty}">${folders.length ? 'No folders match your search.' : 'No folders yet.'}</li>`
+                })]
+                : []
             )
 
         );
@@ -151,7 +177,48 @@ export function MoveFileModal() {
                 children: [
 
                     `<p class="${styles.title}">Move to: </p>`,
-                    
+
+                    UltraComponent({
+
+                        component: '<div></div>',
+
+                        className: [styles.searchRow],
+
+                        children: [
+
+                            UltraComponent({
+                                component: '<input type="text" />',
+                                className: [styles.search],
+                                attributes: {
+                                    placeholder: 'Search folders...',
+                                    'aria-label': 'Search folders'
+                                },
+                                eventHandler: {
+                                    input: (e) => {
+                                        query = (e.currentTarget as HTMLInputElement).value;
+                                        renderFolders();
+                                    }
+                                },
+                                trigger: [{
+                                    subscriber: MOVE_FILE_MODAL_CTX.isVisible.subscribe,
+                                    triggerFunction: onVisibleChange,
+                                    defer: true
+                                }]
+                            }),
+
+                            BRCheckbox({
+                                className: [styles.checkbox],
+                                text: 'Sub-folders',
+                                checked: showSubfolders,
+                                onChange: (checked) => {
+                                    showSubfolders = checked;
+                                    renderFolders();
+                                }
+                            })
+
+                        ]
+                    }),
+
                     UltraComponent({
                         component: `<ul class="${styles.list}"></ul>`,
                         onMount: [

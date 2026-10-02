@@ -1,14 +1,10 @@
-import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import styles from './folder-card.module.css';
 import { ChevronDownIcon } from "@/icons/chevron.icon";
 import { useComicsTypeStore } from "@/stores/comicsTypes.store";
-import { useLibraryStore } from "@/stores/library.store";
 //import { FolderCardStack } from "./folder-card-stack";
 import { FolderCardBasic } from "./folder-card-basic";
 import { FolderCardActions } from './folder-card-actions';
-
-const STACK_SIZE = 3;
 
 export function FolderCard({
     title,
@@ -20,21 +16,11 @@ export function FolderCard({
 
     const comicsType = useComicsTypeStore((s) => s.type);
 
-    const groups = useLibraryStore((s) => s.groups);
-
-    const stackCovers = useMemo(
-        () => useLibraryStore.getState().getLibraryItems({ onlyDir: false, uid })
-            .filter(item => !item.did)
-            .slice(0, STACK_SIZE),
-        [groups, uid]
-    );
-
     return (
         <article
             className={[
                 styles.folderCard,
-                ...(comicsType === 'detail' ? [styles.detailMode] : []),
-                ...(stackCovers.length ? [styles.hasStack] : [])
+                ...(comicsType === 'detail' ? [styles.detailMode] : [])
             ].join(' ')}
         >
 
@@ -63,12 +49,12 @@ export function FolderCard({
                     <ChevronDownIcon size={14} color="currentColor" />
                 </span>
 
-            </Link>
+                <FolderCardActions
+                    title={title}
+                    uid={uid}
+                />
 
-            <FolderCardActions
-                title={title}
-                uid={uid}
-            />
+            </Link>
 
         </article>
     );

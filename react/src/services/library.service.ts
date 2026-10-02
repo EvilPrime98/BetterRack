@@ -1,19 +1,20 @@
 import type { WikiComic } from "better-wiki";
-import type { IReadResponse, IBookmarksResponse, ILibraryGroup, ILibraryPage, ILibraryRefreshResponse, ILibraryResponseItem, IReadingResponse, IRecentlyAddedResponse } from "../library.types";
+import type { IReadResponse, IBookmarksResponse, ILibraryGroup, ILibraryPage, ILibraryRefreshResponse, ILibraryResponseItem, TIdentifyLibraryStatus, IReadingResponse, IRecentlyAddedResponse } from "../library.types";
 import { API_URL, authHeaders } from "./server-config.service";
 import { invalidateDirectories } from "./fs.service";
 
 export { API_URL };
 
-// GET /api/library is paginated (ILibraryPage, not a bare group array). Walk every
-// page and merge the slices back into one group list, because the store and
-// getLibraryItems() expect the whole library in memory.
-export async function getLibrary(): Promise<ILibraryGroup[]> {
+export type TLibraryStructure = 'folders' | 'series';
+
+export async function getLibrary(structure: TLibraryStructure = 'folders'): Promise<ILibraryGroup[]> {
+
+    const endpoint = structure === 'series' ? '/api/library/by-series' : '/api/library';
     const merged = new Map<string, ILibraryGroup>();
     let offset = 0;
 
     for (;;) {
-        const response = await fetch(`${API_URL}/api/library?offset=${offset}`, { headers: authHeaders() });
+        const response = await fetch(`${API_URL}${endpoint}?offset=${offset}`, { headers: authHeaders() });
         const page = await response.json();
         if (!response.ok) throw new Error((page as { message?: string })?.message || 'Failed to load library.');
 
@@ -146,6 +147,18 @@ export async function identifyLibraryEntry(
     return data;
 }
 
+export async function reidentifyFile(
+    uid: string
+): Promise<Pick<ILibraryResponseItem, 'identified' | 'comic' | 'metaSource'>> {
+    const response = await fetch(`${API_URL}/api/library/${uid}/identify/reset`, {
+        method: 'POST',
+        headers: authHeaders()
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message);
+    return data;
+}
+
 export async function unidentifyFile(
     fileUid: string
 ): Promise<ILibraryRefreshResponse> {
@@ -180,6 +193,26 @@ export async function reidentifyAllLibrary(): Promise<{ error: boolean; message:
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.message);
+    return data;
+}
+
+export async function startIdentifyLibrary(): Promise<TIdentifyLibraryStatus> {
+    const response = await fetch(`${API_URL}/api/library/identify/all`, {
+        method: 'POST',
+        headers: authHeaders()
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message ?? 'Failed to start library identification.');
+    return data;
+}
+
+export async function getIdentifyLibraryStatus(): Promise<TIdentifyLibraryStatus> {
+    const response = await fetch(`${API_URL}/api/library/identify/all`, {
+        cache: 'no-store',
+        headers: authHeaders()
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message ?? 'Failed to read identification status.');
     return data;
 }
 

@@ -8,7 +8,7 @@ export interface IConfirmOptions {
     onDontAskAgain?: () => void;
 }
 
-let resolver: ((result: boolean) => void) | null = null;
+let resolver: ((result: boolean | null) => void) | null = null;
 let dontAskAgainCallback: (() => void) | null = null;
 
 interface IConfirmModalStore {
@@ -20,9 +20,8 @@ interface IConfirmModalStore {
     hasDontAskAgain: boolean;
     dontAskAgain: boolean;
     setDontAskAgain: (value: boolean) => void;
-    /** Opens the confirm modal and resolves once the user picks confirm or cancel/dismiss. */
-    confirmDialog: (options: IConfirmOptions) => Promise<boolean>;
-    resolveConfirmDialog: (result: boolean) => void;
+    confirmDialog: (options: IConfirmOptions) => Promise<boolean | null>;
+    resolveConfirmDialog: (result: boolean | null) => void;
 }
 
 export const useConfirmModalStore = create<IConfirmModalStore>((set, get) => ({
@@ -45,7 +44,7 @@ export const useConfirmModalStore = create<IConfirmModalStore>((set, get) => ({
             dontAskAgain: false,
             isVisible: true
         });
-        return new Promise<boolean>((resolve) => {
+        return new Promise<boolean | null>((resolve) => {
             resolver = resolve;
         });
     },

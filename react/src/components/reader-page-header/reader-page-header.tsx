@@ -34,10 +34,10 @@ export function ReaderPageHeader({
                 <span>Library</span>
             </button>
             {bookmarks.length > 0 && (
-                <select className={styles.bookmarks} value="" onChange={onBookmarkSelect}>
+                <select className={styles.bookmarks} aria-label="Jump to bookmark" value="" onChange={onBookmarkSelect}>
                     <option value="">Jump to bookmark…</option>
-                    {bookmarks.map((bookmark, i) => (
-                        <option key={i} value={bookmark.page}>
+                    {bookmarks.map((bookmark) => (
+                        <option key={bookmark.page} value={bookmark.page}>
                             {bookmark.label} · p.{bookmark.page}
                         </option>
                     ))}

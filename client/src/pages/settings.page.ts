@@ -8,6 +8,7 @@ import { LibraryFolderRow } from "@/components/library-folder-row/library-folder
 import { toast } from "../services/toast.service";
 import { DOCUMENT_TITLE_CONTEXT } from "../context/document-title.context";
 import { BRButton } from "../components/br-button/br-button";
+import { BRCheckbox } from "../components/br-checkbox/br-checkbox";
 import { clearRemoteServer, getStoredServerUrl, hasNativeFolderPicker, isRemoteModeEnabled } from "../services/server-config.service";
 import { LIBRARY_CONTEXT } from "../context/library.context";
 import { SERVER_MODAL_CTX } from "../context/server-modal.context";
@@ -22,7 +23,8 @@ export function SettingsPage() {
         apiUrl: '',
         downloadDir: '',
         folderPath: '',
-        identifyFromMeta: false
+        wikiSearch: false,
+        rescanOnStartup: true
     })
 
     function onFolderError($p: HTMLElement) {
@@ -41,12 +43,22 @@ export function SettingsPage() {
         const settings = SETTINGS_CONTEXT.settings.get();
         fieldsState.apiUrl.set(settings.apiUrl);
         fieldsState.downloadDir.set(settings.downloadDir);
-        fieldsState.identifyFromMeta.set(settings.identifyFromMeta);
+        fieldsState.wikiSearch.set(settings.wikiSearch);
+        fieldsState.rescanOnStartup.set(settings.rescanOnStartup);
     }
 
-    function syncIdentifyFromMetaCheckbox($el: HTMLElement) {
+    function syncWikiSearchCheckbox($el: HTMLElement) {
         const $checkbox = $el.querySelector('input') as HTMLInputElement;
-        $checkbox.checked = fieldsState.identifyFromMeta.get();
+        $checkbox.checked = fieldsState.wikiSearch.get();
+    }
+
+    function syncRescanCheckbox($el: HTMLElement) {
+        const $checkbox = $el.querySelector('input') as HTMLInputElement;
+        $checkbox.checked = fieldsState.rescanOnStartup.get();
+    }
+
+    function syncDownloadDirInput($el: HTMLElement) {
+        ($el as HTMLInputElement).value = fieldsState.downloadDir.get();
     }
 
     function renderFolders(
@@ -79,6 +91,7 @@ export function SettingsPage() {
             await SETTINGS_CONTEXT.addLibraryFolder(value);
             fieldsState.folderPath.set('');
             toast.success('Folder added');
+            LIBRARY_CONTEXT.refreshLibrary({ silent: true });
         } catch (e) {
             const message = e instanceof Error
                 ? e.message
@@ -110,6 +123,17 @@ export function SettingsPage() {
         if (selected) addFolder(selected);
     }
 
+    async function onBrowseDownloadDir() {
+        const picker = window.desktop?.pickLibraryFolder;
+        if (!picker) return;
+        try {
+            const selected = await picker();
+            if (selected) fieldsState.downloadDir.set(selected);
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : 'Could not open the folder picker.');
+        }
+    }
+
     async function onReidentifyAll() {
         const confirmed = await CONFIRM_MODAL_CTX.confirmDialog({
             title: 'Re-identify all comics?',
@@ -136,7 +160,8 @@ export function SettingsPage() {
         const partial: Partial<Omit<IAppSettings, 'outputDirs'>> = {
             apiUrl: fieldsState.apiUrl.get(),
             downloadDir: fieldsState.downloadDir.get(),
-            identifyFromMeta: fieldsState.identifyFromMeta.get(),
+            wikiSearch: fieldsState.wikiSearch.get(),
+            rescanOnStartup: fieldsState.rescanOnStartup.get(),
         };
 
         setSettingsError('');
@@ -170,7 +195,44 @@ export function SettingsPage() {
 
             children: [
 
-                `<h1 class="${styles.title}">Settings</h1>`,
+                UltraComponent({
+
+                    component: '<header></header>',
+
+                    className: [styles.header],
+
+                    children: [
+
+                        `<h1 class="${styles.title}">Settings</h1>`,
+
+                        UltraComponent({
+
+                            component: '<div></div>',
+
+                            className: [styles.headerActions],
+
+                            children: [
+
+                                UltraComponent({
+                                    component: `<p class="${styles.errorText}"></p>`,
+                                    trigger: [{
+                                        subscriber: subsSettingsError,
+                                        triggerFunction: onSettingsError
+                                    }]
+                                }),
+
+                                BRButton({
+                                    text: 'Save',
+                                    eventHandler: { click: onSave }
+                                })
+
+                            ]
+
+                        })
+
+                    ]
+
+                }),
 
                 UltraComponent({
 
@@ -180,150 +242,165 @@ export function SettingsPage() {
 
                     children: [
 
-                UltraComponent({
-
-                    component: '<section></section>',
-
-                    className: [styles.section, styles.colLeft],
-
-                    children: [
-
-                        `<h2 class="${styles.sectionTitle}">Server</h2>`,
-
                         UltraComponent({
-                            component: `<p class="${styles.empty}"></p>`,
-                            onMount: [($p: HTMLElement) => {
-                                $p.textContent = getStoredServerUrl() || 'No server configured';
-                            }]
-                        }),
 
-                        BRButton({
-                            text: 'Change server',
-                            eventHandler: { click: () => SERVER_MODAL_CTX.openServerModal() }
-                        }),
-
-                        ...(isRemoteModeEnabled() ? [
-                            BRButton({
-                                text: 'Unlink server',
-                                variant: 'secondary',
-                                eventHandler: { click: onUnlinkServer }
-                            })
-                        ] : [])
-
-                    ]
-
-                }),
-
-                UltraComponent({
-
-                    component: '<section></section>',
-
-                    className: [styles.section, styles.colLeft],
-
-                    children: [
-
-                        `<h2 class="${styles.sectionTitle}">Library folders</h2>`,
-
-                        UltraComponent({
-                            component: `<ul class="${styles.folderList}"></ul>`,
-                            onMount: [renderFolders],
-                            trigger: [{
-                                subscriber: SETTINGS_CONTEXT.settings.subscribe,
-                                triggerFunction: renderFolders,
-                                defer: true
-                            }]
-                        }),
-
-                        UltraComponent({
-                            
                             component: '<div></div>',
-                            
-                            className: [styles.addRow],
-                            
+
+                            className: [styles.column],
+
                             children: [
-                                
+
                                 UltraComponent({
-                                    component: '<input type="text" />',
-                                    className: [styles.input],
-                                    attributes: {
-                                        placeholder: 'Folder path',
-                                        'aria-label': 'Folder path'
-                                    },
-                                    trigger: [{
-                                        subscriber: fieldsState.folderPath.subscribe,
-                                        triggerFunction: ($el: HTMLElement) => {
-                                            ($el as HTMLInputElement).value = fieldsState.folderPath.get();
-                                        }
-                                    }],
-                                    eventHandler: {
-                                        input: (e: Event) => {
-                                            const $input = e.target as HTMLInputElement;
-                                            fieldsState.folderPath.set($input.value);
-                                        },
-                                        keydown: (e: Event) => {
-                                            const kE = e as KeyboardEvent;
-                                            if (kE.key === 'Enter') onAddFolder();
-                                        }
-                                    }
+
+                                    component: '<section></section>',
+
+                                    className: [styles.section],
+
+                                    children: [
+
+                                        `<h2 class="${styles.sectionTitle}">Server</h2>`,
+
+                                        UltraComponent({
+                                            component: `<p class="${styles.empty}"></p>`,
+                                            onMount: [($p: HTMLElement) => {
+                                                $p.textContent = getStoredServerUrl() || 'No server configured';
+                                            }]
+                                        }),
+
+                                        BRButton({
+                                            text: 'Change server',
+                                            eventHandler: { click: () => SERVER_MODAL_CTX.openServerModal() }
+                                        }),
+
+                                        ...(isRemoteModeEnabled() ? [
+                                            BRButton({
+                                                text: 'Unlink server',
+                                                variant: 'secondary',
+                                                eventHandler: { click: onUnlinkServer }
+                                            })
+                                        ] : [])
+
+                                    ]
+
                                 }),
 
-                                ...(hasNativeFolderPicker() ? [
-                                    BRButton({
-                                        text: 'Browse…',
-                                        variant: 'secondary',
-                                        className: [styles.browseBtn],
-                                        eventHandler: { click: onBrowseFolder }
-                                    })
-                                ] : []),
+                                UltraComponent({
 
-                                BRButton({
-                                    text: 'Add Folder',
-                                    eventHandler: { click: onAddFolder }
+                                    component: '<section></section>',
+
+                                    className: [styles.section],
+
+                                    children: [
+
+                                        UltraComponent({
+
+                                            component: '<div></div>',
+
+                                            className: [styles.fieldGroup],
+
+                                            children: [
+
+                                                `<h2 class="${styles.sectionTitle}">Downloads</h2>`,
+
+                                                UltraComponent({
+
+                                                    component: '<div></div>',
+
+                                                    className: [styles.field],
+
+                                                    children: [
+
+                                                        `<label class="${styles.label}" for="settings-downloadDir">Download folder</label>`,
+
+                                                        UltraComponent({
+
+                                                            component: '<div></div>',
+
+                                                            className: [styles.addRow],
+
+                                                            children: [
+
+                                                                UltraComponent({
+                                                                    component: '<input id="settings-downloadDir" type="text" />',
+                                                                    className: [styles.input],
+                                                                    attributes: {
+                                                                        placeholder: '/path/to/downloads'
+                                                                    },
+                                                                    onMount: [syncDownloadDirInput],
+                                                                    trigger: [{
+                                                                        subscriber: fieldsState.downloadDir.subscribe,
+                                                                        triggerFunction: syncDownloadDirInput
+                                                                    }],
+                                                                    eventHandler: {
+                                                                        input: (e: Event) => {
+                                                                            const $input = e.target as HTMLInputElement;
+                                                                            fieldsState.downloadDir.set($input.value)
+                                                                        }
+                                                                    }
+                                                                }),
+
+                                                                ...(hasNativeFolderPicker() ? [
+                                                                    BRButton({
+                                                                        text: 'Browse…',
+                                                                        variant: 'secondary',
+                                                                        className: [styles.browseBtn],
+                                                                        eventHandler: { click: onBrowseDownloadDir }
+                                                                    })
+                                                                ] : [])
+
+                                                            ]
+
+                                                        })
+
+                                                    ]
+
+                                                })
+
+                                            ]
+
+                                        })
+
+                                    ]
+
+                                }),
+
+                                UltraComponent({
+
+                                    component: '<section></section>',
+
+                                    className: [styles.section],
+
+                                    children: [
+
+                                        UltraComponent({
+
+                                            component: '<div></div>',
+
+                                            className: [styles.fieldGroup],
+
+                                            children: [
+
+                                                `<h2 class="${styles.sectionTitle}">API configuration</h2>`,
+
+                                                TextField({
+                                                    key: 'apiUrl',
+                                                    label: 'API URL',
+                                                    placeholder: 'https://example.com/wp-json/wp/v2',
+                                                    eventHandler: {
+                                                        input: (e: Event) => {
+                                                            const $input = e.target as HTMLInputElement;
+                                                            fieldsState.apiUrl.set($input.value)
+                                                        }
+                                                    }
+                                                }),
+
+                                            ]
+
+                                        })
+
+                                    ]
+
                                 })
-                            ]
-
-                        }),
-
-                        UltraComponent({
-                            component: `<p class="${styles.errorText}"></p>`,
-                            trigger: [{
-                                subscriber: subsFolderError,
-                                triggerFunction: onFolderError
-                            }]
-                        })
-
-                    ]
-                }),
-
-                UltraComponent({
-
-                    component: '<section></section>',
-
-                    className: [styles.section, styles.colRight],
-
-                    children: [
-
-                        UltraComponent({
-
-                            component: '<div></div>',
-
-                            className: [styles.fieldGroup],
-
-                            children: [
-
-                                `<h2 class="${styles.sectionTitle}">Downloads</h2>`,
-
-                                TextField({
-                                    key: 'downloadDir',
-                                    label: 'Download folder',
-                                    placeholder: '/path/to/downloads',
-                                    eventHandler: {
-                                        input: (e: Event) => {
-                                            const $input = e.target as HTMLInputElement;
-                                            fieldsState.downloadDir.set($input.value)
-                                        }
-                                    }
-                                }),
 
                             ]
 
@@ -333,91 +410,181 @@ export function SettingsPage() {
 
                             component: '<div></div>',
 
-                            className: [styles.fieldGroup],
+                            className: [styles.column],
 
                             children: [
-
-                                `<h2 class="${styles.sectionTitle} ${styles.groupDivider}">API configuration</h2>`,
-
-                                TextField({
-                                    key: 'apiUrl',
-                                    label: 'API URL',
-                                    placeholder: 'https://example.com/wp-json/wp/v2',
-                                    eventHandler: {
-                                        input: (e: Event) => {
-                                            const $input = e.target as HTMLInputElement;
-                                            fieldsState.apiUrl.set($input.value)
-                                        }
-                                    }
-                                }),
-
-                            ]
-
-                        }),
-
-                        UltraComponent({
-
-                            component: '<div></div>',
-
-                            className: [styles.fieldGroup],
-
-                            children: [
-
-                                `<h2 class="${styles.sectionTitle} ${styles.groupDivider}">Identification</h2>`,
 
                                 UltraComponent({
-                                    component: `<div class="${styles.toggleRow}">
-                                        <label class="${styles.toggleLabel}"><input type="checkbox" /> Identify from metadata</label>
-                                        <span class="${styles.infoIcon}" tabindex="0">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
-                                                <circle cx="12" cy="12" r="10" />
-                                                <line x1="12" y1="16" x2="12" y2="12" />
-                                                <line x1="12" y1="8" x2="12.01" y2="8" />
-                                            </svg>
-                                            <span class="${styles.infoTooltip}" role="tooltip">Reads ComicInfo.xml when present, otherwise uses the wiki.</span>
-                                        </span>
-                                    </div>`,
-                                    onMount: [($el: HTMLElement) => {
-                                        syncIdentifyFromMetaCheckbox($el);
-                                        $el.querySelector('input')?.addEventListener(
-                                            'change',
-                                            (e) => fieldsState.identifyFromMeta.set((e.currentTarget as HTMLInputElement).checked)
-                                        );
-                                    }],
-                                    trigger: [{
-                                        subscriber: fieldsState.identifyFromMeta.subscribe,
-                                        triggerFunction: syncIdentifyFromMetaCheckbox
-                                    }]
+
+                                    component: '<section></section>',
+
+                                    className: [styles.section],
+
+                                    children: [
+
+                                        `<h2 class="${styles.sectionTitle}">Library folders</h2>`,
+
+                                        UltraComponent({
+                                            component: `<ul class="${styles.folderList}"></ul>`,
+                                            onMount: [renderFolders],
+                                            trigger: [{
+                                                subscriber: SETTINGS_CONTEXT.settings.subscribe,
+                                                triggerFunction: renderFolders,
+                                                defer: true
+                                            }]
+                                        }),
+
+                                        UltraComponent({
+
+                                            component: '<div></div>',
+
+                                            className: [styles.addRow],
+
+                                            children: [
+
+                                                UltraComponent({
+                                                    component: '<input type="text" />',
+                                                    className: [styles.input],
+                                                    attributes: {
+                                                        placeholder: 'Folder path',
+                                                        'aria-label': 'Folder path'
+                                                    },
+                                                    trigger: [{
+                                                        subscriber: fieldsState.folderPath.subscribe,
+                                                        triggerFunction: ($el: HTMLElement) => {
+                                                            ($el as HTMLInputElement).value = fieldsState.folderPath.get();
+                                                        }
+                                                    }],
+                                                    eventHandler: {
+                                                        input: (e: Event) => {
+                                                            const $input = e.target as HTMLInputElement;
+                                                            fieldsState.folderPath.set($input.value);
+                                                        },
+                                                        keydown: (e: Event) => {
+                                                            const kE = e as KeyboardEvent;
+                                                            if (kE.key === 'Enter') onAddFolder();
+                                                        }
+                                                    }
+                                                }),
+
+                                                ...(hasNativeFolderPicker() ? [
+                                                    BRButton({
+                                                        text: 'Browse…',
+                                                        variant: 'secondary',
+                                                        className: [styles.browseBtn],
+                                                        eventHandler: { click: onBrowseFolder }
+                                                    })
+                                                ] : []),
+
+                                                BRButton({
+                                                    text: 'Add Folder',
+                                                    eventHandler: { click: onAddFolder }
+                                                })
+                                            ]
+
+                                        }),
+
+                                        UltraComponent({
+                                            component: `<p class="${styles.errorText}"></p>`,
+                                            trigger: [{
+                                                subscriber: subsFolderError,
+                                                triggerFunction: onFolderError
+                                            }]
+                                        })
+
+                                    ]
+
                                 }),
 
-                                BRButton({
-                                    text: 'Re-identify all',
-                                    variant: 'secondary',
-                                    styles: { width: 'fit-content' },
-                                    eventHandler: { click: onReidentifyAll }
-                                }),
+                                UltraComponent({
+
+                                    component: '<section></section>',
+
+                                    className: [styles.section],
+
+                                    children: [
+
+                                        UltraComponent({
+
+                                            component: '<div></div>',
+
+                                            className: [styles.fieldGroup],
+
+                                            children: [
+
+                                                `<h2 class="${styles.sectionTitle}">Identification</h2>`,
+
+                                                UltraComponent({
+
+                                                    component: '<div></div>',
+
+                                                    className: [styles.toggleRow],
+
+                                                    children: [
+
+                                                        BRCheckbox({
+                                                            text: 'Search the wiki for metadata',
+                                                            onChange: (checked) => fieldsState.wikiSearch.set(checked),
+                                                            trigger: [{
+                                                                subscriber: fieldsState.wikiSearch.subscribe,
+                                                                triggerFunction: syncWikiSearchCheckbox
+                                                            }],
+                                                            onMount: [syncWikiSearchCheckbox]
+                                                        }),
+
+                                                        `<span class="${styles.infoIcon}" tabindex="0">
+                                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+                                                                <circle cx="12" cy="12" r="10" />
+                                                                <line x1="12" y1="16" x2="12" y2="12" />
+                                                                <line x1="12" y1="8" x2="12.01" y2="8" />
+                                                            </svg>
+                                                            <span class="${styles.infoTooltip}" role="tooltip">Comics are always identified from ComicInfo.xml. When enabled, comics without it are looked up on the wiki.</span>
+                                                        </span>`,
+
+                                                        BRButton({
+                                                            text: 'Re-identify all',
+                                                            variant: 'secondary',
+                                                            className: [styles.reidentifyBtn],
+                                                            eventHandler: { click: onReidentifyAll }
+                                                        })
+
+                                                    ]
+
+                                                }),
+
+                                                UltraComponent({
+
+                                                    component: '<div></div>',
+
+                                                    className: [styles.toggleRow],
+
+                                                    children: [
+
+                                                        BRCheckbox({
+                                                            text: 'Re-scan on start up',
+                                                            onChange: (checked) => fieldsState.rescanOnStartup.set(checked),
+                                                            trigger: [{
+                                                                subscriber: fieldsState.rescanOnStartup.subscribe,
+                                                                triggerFunction: syncRescanCheckbox
+                                                            }],
+                                                            onMount: [syncRescanCheckbox]
+                                                        })
+
+                                                    ]
+
+                                                })
+
+                                            ]
+
+                                        })
+
+                                    ]
+
+                                })
 
                             ]
 
-                        }),
-
-                        BRButton({
-                            text: 'Save',
-                            className: [styles.saveButton],
-                            eventHandler: { click: onSave }
-                        }),
-
-                        UltraComponent({
-                            component: `<p class="${styles.errorText}"></p>`,
-                            trigger: [{
-                                subscriber: subsSettingsError,
-                                triggerFunction: onSettingsError
-                            }]
                         })
-
-                    ]
-
-                })
 
                     ]
 
