@@ -1,6 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import type { ILibraryGroup } from '@/library.types';
-import { SideBarElement } from './sider-bar-element';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import styles from './sidebar.module.css';
 import { useSidebarStore } from '@/stores/sidebar.store';
@@ -8,47 +6,21 @@ import { useLibraryStore } from '@/stores/library.store';
 import { useIsDesktop } from '@/hooks/useIsDesktop';
 import { SideBarGroup } from './sidebar-group';
 import { RefreshLibraryButton } from './refresh-button';
-import { SidebarCloseButton } from './close-button';
 import { SidebarSearch } from './sidebar-search';
-import { BRButton } from '@/components/br-button/br-button';
 import { Footer } from '@/components/footer/footer';
 import { GearIcon } from '@/icons/gear.icon';
 import { ShopIcon } from '@/icons/shop.icon';
 import { DownloadIcon } from '@/icons/download.icon';
 import { BookmarkIcon } from '@/icons/bookmark.icon';
 import { BookOpenIcon } from '@/icons/book-open.icon';
+import { SeriesList } from './series-list';
+import { BRDropdown, type BRDropdownOption } from '@/components/br-dropdown/br-dropdown';
+import type { TLibraryStructure } from '@/services/library.service';
 
-const SERIES_PAGE_SIZE = 50;
-
-function SeriesList({ groups, isHidden }: { groups: ILibraryGroup[]; isHidden: boolean }) {
-
-    const [count, setCount] = useState(SERIES_PAGE_SIZE);
-
-    const sentinelRef = useCallback((node: HTMLDivElement | null) => {
-        if (!node) return;
-        const observer = new IntersectionObserver(
-            (entries) => {
-                if (entries.some(e => e.isIntersecting)) setCount(c => c + SERIES_PAGE_SIZE);
-            },
-            { rootMargin: '300px' }
-        );
-        observer.observe(node);
-        return () => observer.disconnect();
-    }, [count]);
-
-    return (
-        <>
-            {!isHidden && groups.slice(0, count).map(group => (
-                <SideBarElement
-                    key={group.uid}
-                    item={{ uid: group.uid, did: true, name: group.name, path: group.path, parentId: '', createdAt: 0 }}
-                />
-            ))}
-            {!isHidden && count < groups.length && <div ref={sentinelRef} style={{ height: 1 }} />}
-        </>
-    );
-
-}
+const STRUCTURE_OPTIONS: BRDropdownOption<TLibraryStructure>[] = [
+    { value: 'folders', label: 'Folders' },
+    { value: 'series', label: 'Series' }
+];
 
 export function SideBar() {
 
@@ -98,10 +70,10 @@ export function SideBar() {
     return (
         <div>
 
-            {/*<div
+            <div
                 className={[styles.backdrop, isExpanded ? styles.visible : ''].filter(Boolean).join(' ')}
                 onClick={closeSidebar}
-            />*/}
+            />
 
             <aside
                 ref={asideRef}
@@ -114,11 +86,14 @@ export function SideBar() {
                 ].filter(Boolean).join(' ')}
             >
 
-                <div className={styles.header}>
-                    <span className={styles.title}>Library</span>
-                    <div className={styles.headerActions}>
-                        <SidebarCloseButton />
-                    </div>
+                <div className={styles.section}>
+                    <span id="library-group-by-label" className={styles.sectionTitle}>Group by</span>
+                    <BRDropdown
+                        aria-labelledby="library-group-by-label"
+                        value={structure}
+                        onChange={setStructure}
+                        options={STRUCTURE_OPTIONS}
+                    />
                 </div>
 
                 <div className={styles.section}>
@@ -156,22 +131,6 @@ export function SideBar() {
                 <SidebarSearch />
 
                 <RefreshLibraryButton />
-
-                <div className={styles.section}>
-                    <span className={styles.sectionTitle}>Structure</span>
-                    <div role="group" aria-label="Library structure" className={styles.toggleGroup}>
-                        {(['folders', 'series'] as const).map(option => (
-                            <BRButton
-                                key={option}
-                                text={option === 'folders' ? 'Folders' : 'By series'}
-                                variant={structure === option ? 'secondary' : 'ghost'}
-                                className={styles.toggleButton}
-                                aria-pressed={structure === option}
-                                onClick={() => setStructure(option)}
-                            />
-                        ))}
-                    </div>
-                </div>
 
                 <nav className={styles.list}>
                     {!groups.length ? (

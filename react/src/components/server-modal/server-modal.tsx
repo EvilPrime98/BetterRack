@@ -1,6 +1,7 @@
 import { useEffect, useEffectEvent, useLayoutEffect, useRef, useState } from 'react';
 import styles from './server-modal.module.css';
 import { BRButton } from '@/components/br-button/br-button';
+import { BRCheckbox } from '@/components/br-checkbox/br-checkbox';
 import { useServerModalStore, getStoredServerUrl } from '@/stores/serverModal.store';
 import { isAndroidPlatform, isRemoteModeEnabled, getStoredApiKey } from '@/services/server-config.service';
 
@@ -76,14 +77,11 @@ export function ServerModal() {
 
                 {showRemoteModeOption && (
                     <>
-                        <label className={styles.hint}>
-                            <input
-                                type="checkbox"
-                                checked={remoteMode}
-                                onChange={(e) => setRemoteMode(e.currentTarget.checked)}
-                            />
-                            {' '}Use this as my library server
-                        </label>
+                        <BRCheckbox
+                            text="Use this as my library server"
+                            checked={remoteMode}
+                            onChange={(e) => setRemoteMode(e.currentTarget.checked)}
+                        />
 
                         {remoteMode && (
                             <input
