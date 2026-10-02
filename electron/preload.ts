@@ -33,6 +33,20 @@ contextBridge.exposeInMainWorld("desktop", {
     return ipcRenderer.invoke("window:is-maximized")
   },
 
+  confirmClose: (): Promise<void> => {
+    return ipcRenderer.invoke("window:confirm-close")
+  },
+
+  cancelClose: (): Promise<void> => {
+    return ipcRenderer.invoke("window:cancel-close")
+  },
+
+  onCloseRequested: (callback: (activeDownloads: number) => void): (() => void) => {
+    const listener = (_event: IpcRendererEvent, activeDownloads: number) => callback(activeDownloads);
+    ipcRenderer.on("window:close-requested", listener);
+    return () => ipcRenderer.removeListener("window:close-requested", listener);
+  },
+
   onMaximizedChange: (callback: (isMaximized: boolean) => void): (() => void) => {
     const listener = (_event: IpcRendererEvent, isMaximized: boolean) => callback(isMaximized);
     ipcRenderer.on("window:maximized-changed", listener);

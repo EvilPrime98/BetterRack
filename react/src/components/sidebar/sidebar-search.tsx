@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import styles from './sidebar.module.css';
 import { useLibraryStore } from '@/stores/library.store';
@@ -15,6 +15,8 @@ export function SidebarSearch() {
     const setSearchQuery = useLibraryStore((s) => s.setSearchQuery);
     const setIsExpanded = useSidebarStore((s) => s.setIsExpanded);
 
+    const [hadSearchParamOnMount] = useState(() => !!searchParams.get('search'));
+
     function leaveSearchResults() {
         if (searchParams.get('search')) navigate('/');
     }
@@ -30,11 +32,11 @@ export function SidebarSearch() {
         const $input = inputRef.current;
         if (!$input) return;
         $input.value = useLibraryStore.getState().searchQuery;
-        if (searchParams.get('search')) {
+        if (hadSearchParamOnMount) {
             const end = $input.value.length;
             $input.setSelectionRange(end, end);
         }
-    }, []);
+    }, [hadSearchParamOnMount]);
 
     function onSearchKeydown(e: React.KeyboardEvent<HTMLInputElement>) {
         const key = e.key;

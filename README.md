@@ -1,17 +1,17 @@
-# Better Rack
+# BetterRack
 
 [![CI](https://github.com/EvilPrime98/BetterRack/actions/workflows/ci.yml/badge.svg)](https://github.com/EvilPrime98/BetterRack/actions/workflows/ci.yml)
 [![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
 
-Better Rack is a desktop app for organizing and reading a local comic book library (CBR/CBZ). It also includes a store to search and download comics from a configurable source, and metadata lookups through an integrated wiki.
+BetterRack is a desktop app for organizing and reading a local comic book library (CBR/CBZ). It also includes a store to search and download comics from a configurable source, and metadata lookups through an integrated wiki.
 
-<img width="1916" height="917" alt="Better Rack library view" src="https://github.com/user-attachments/assets/21d98172-f3ba-468e-b404-33bf962fcffa" />
+<img width="1916" height="917" alt="BetterRack library view" src="https://github.com/user-attachments/assets/21d98172-f3ba-468e-b404-33bf962fcffa" />
 
-## Why Better Rack
+## Why BetterRack
 
-Comic collections tend to end up spread across folders, with a different tool for each job: one to read, one to find new issues, one to look up what a series is about. Better Rack puts these in a single app that runs on your machine, over the folders you already have, with no account or cloud service required.
+Comic collections tend to end up spread across folders, with a different tool for each job: one to read, one to find new issues, one to look up what a series is about. BetterRack puts these in a single app that runs on your machine, over the folders you already have, with no account or cloud service required.
 
-## What Better Rack does
+## What BetterRack does
 
 - **Library**: scans your comic folders and keeps a browsable library of CBR and CBZ files, with thumbnails.
 - **Reader**: built-in reader with zoom controls, per-comic reading progress and an on-demand rescan of a comic's pages.
@@ -29,8 +29,8 @@ Prebuilt packages are published on the [GitHub Releases](https://github.com/Evil
 
 | Platform | Package |
 |---|---|
-| Windows | NSIS installer (`Better Rack-Setup-<version>.exe`) |
-| Linux | AppImage |
+| Windows | Installer (`.exe`) |
+| Linux | AppImage (`.AppImage`) |
 
 ### Run from source
 
@@ -106,7 +106,7 @@ The source URLs and the download/output directories are set from the Settings pa
 Reading and organizing your local library does not. The Store and the wiki metadata lookups do.
 
 **Which store does it support?**
-Currently only GetComics.org, through the GetComics API. The Store search and downloads work against that source only. Better Rack is not affiliated with GetComics.org.
+Currently only GetComics.org, through the GetComics API. The Store search and downloads work against that source only. BetterRack is not affiliated with GetComics.org.
 
 **Which file formats are supported?**
 CBZ and CBR.
@@ -122,11 +122,11 @@ Open an issue on the [issue tracker](https://github.com/EvilPrime98/BetterRack/i
 
 ## Screenshots
 
-<img width="1915" height="914" alt="Better Rack screenshot" src="https://github.com/user-attachments/assets/9e595f6d-77ad-420b-bde0-b0b183f2f381" />
+<img width="1915" height="914" alt="BetterRack screenshot" src="https://github.com/user-attachments/assets/9e595f6d-77ad-420b-bde0-b0b183f2f381" />
 
-<img width="1382" height="945" alt="Better Rack screenshot" src="https://github.com/user-attachments/assets/853a68e0-4d15-45d0-8659-a8a2fac442f8" />
+<img width="1382" height="945" alt="BetterRack screenshot" src="https://github.com/user-attachments/assets/853a68e0-4d15-45d0-8659-a8a2fac442f8" />
 
-<img width="1825" height="948" alt="Better Rack screenshot" src="https://github.com/user-attachments/assets/27a6a09b-9359-488e-9b90-84097933a1fd" />
+<img width="1825" height="948" alt="BetterRack screenshot" src="https://github.com/user-attachments/assets/27a6a09b-9359-488e-9b90-84097933a1fd" />
 
 ## Contributing
 

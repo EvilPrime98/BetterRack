@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import styles from './link-picker-modal.module.css';
-import { useLinkPickerModalContext } from '@/context/LinkPickerModalContext';
+import { useLinkPickerModalContext } from '@/context/LinkPickerModalContext.hooks';
 
 export function LinkPickerModal() {
 
@@ -20,7 +20,7 @@ export function LinkPickerModal() {
     return (
         <div className={styles.overlay} style={{ display: isVisible ? undefined : 'none' }}>
 
-            <div className={styles.backdrop} onClick={cancel} />
+            <button type="button" className={styles.backdrop} aria-label="Close dialog" onClick={cancel} />
 
             <div
                 role="dialog"

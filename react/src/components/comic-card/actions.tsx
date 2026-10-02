@@ -2,23 +2,23 @@ import styles from './comic-card.module.css';
 import { MarkAsReadButton } from './mark-as-read-button';
 import { DeleteFileButton } from './delete-button';
 import { MoveFileButton } from './move-button';
-import { RetryThumbnailButton } from './retry-thumbnail-button';
+import { RefreshComicButton } from './refresh-comic-button';
 
 export function ComicCardActions({
     uid,
     name,
-    onThumbnailRetried
+    onComicRefreshed
 }: {
     uid: string;
     name: string;
-    onThumbnailRetried: () => void;
+    onComicRefreshed: () => void;
 }) {
 
     return (
         <div className={styles.actions}>
             <MarkAsReadButton uid={uid} />
             <MoveFileButton uid={uid} name={name} />
-            <RetryThumbnailButton uid={uid} onRetried={onThumbnailRetried} />
+            <RefreshComicButton uid={uid} onRefreshed={onComicRefreshed} />
             <DeleteFileButton uid={uid} />
         </div>
     );

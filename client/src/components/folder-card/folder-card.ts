@@ -2,12 +2,9 @@ import { UltraComponent, UltraLink } from "ultra-light-js";
 import styles from './folder-card.module.css';
 import { ChevronDownIcon } from "@/icons/chevron.icon";
 import { COMICS_TYPE_CTX } from "@/context/comics-types.context";
-import { LIBRARY_CONTEXT } from "@/context/library.context";
 //import { FolderCardStack } from "./folder-card-stack";
 import { FolderCardBasic } from "./folder-card-basic";
 import { FolderCardActions } from "./folder-card-actions";
-
-const STACK_SIZE = 3;
 
 export function FolderCard({
     title,
@@ -16,11 +13,6 @@ export function FolderCard({
     title: string,
     uid: string
 }) {
-
-    const stackCovers = LIBRARY_CONTEXT.getLibraryItems({
-        onlyDir: false, uid
-    }).filter(item => !item.did)
-    .slice(0, STACK_SIZE);
 
     const onCardTypeChange = ($article: HTMLElement) => {
         $article.classList.toggle(
@@ -35,8 +27,7 @@ export function FolderCard({
 
         className: [
             styles.folderCard,
-            ...(COMICS_TYPE_CTX.type.get() === 'detail' ? [styles.detailMode] : []),
-            ...(stackCovers.length ? [styles.hasStack] : [])
+            ...(COMICS_TYPE_CTX.type.get() === 'detail' ? [styles.detailMode] : [])
         ],
 
         trigger: [{
@@ -78,14 +69,14 @@ export function FolderCard({
                         children: [
                             ChevronDownIcon({ size: 14, color: 'currentColor' })
                         ]
+                    }),
+
+                    FolderCardActions({
+                        title,
+                        uid
                     })
 
                 ]
-            }),
-
-            FolderCardActions({
-                title,
-                uid
             })
 
         ]

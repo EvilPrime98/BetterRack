@@ -6,7 +6,6 @@ import { useLibraryStore } from '@/stores/library.store';
 import { useIsDesktop } from '@/hooks/useIsDesktop';
 import { SideBarGroup } from './sidebar-group';
 import { RefreshLibraryButton } from './refresh-button';
-import { SidebarCloseButton } from './close-button';
 import { SidebarSearch } from './sidebar-search';
 import { Footer } from '@/components/footer/footer';
 import { GearIcon } from '@/icons/gear.icon';
@@ -14,6 +13,14 @@ import { ShopIcon } from '@/icons/shop.icon';
 import { DownloadIcon } from '@/icons/download.icon';
 import { BookmarkIcon } from '@/icons/bookmark.icon';
 import { BookOpenIcon } from '@/icons/book-open.icon';
+import { SeriesList } from './series-list';
+import { BRDropdown, type BRDropdownOption } from '@/components/br-dropdown/br-dropdown';
+import type { TLibraryStructure } from '@/services/library.service';
+
+const STRUCTURE_OPTIONS: BRDropdownOption<TLibraryStructure>[] = [
+    { value: 'folders', label: 'Folders' },
+    { value: 'series', label: 'Series' }
+];
 
 export function SideBar() {
 
@@ -23,6 +30,8 @@ export function SideBar() {
     const isCollapsed = useSidebarStore((s) => s.isCollapsed);
     const groups = useLibraryStore((s) => s.groups);
     const fetchLibrary = useLibraryStore((s) => s.fetchLibrary);
+    const structure = useLibraryStore((s) => s.structure);
+    const setStructure = useLibraryStore((s) => s.setStructure);
     const [isLoading, setIsLoading] = useState(false);
     const isDesktop = useIsDesktop();
 
@@ -34,16 +43,16 @@ export function SideBar() {
 
     useEffect(() => {
         setIsLoading(true);
-        fetchLibrary().finally(() => setIsLoading(false));      
-    }, []);
+        fetchLibrary().finally(() => setIsLoading(false));
+    }, [fetchLibrary]);
 
     useEffect(() => {
         function onKeydown(event: KeyboardEvent) {
-            if (event.key === 'Escape') closeSidebar();
+            if (event.key === 'Escape') setIsExpanded(false);
         }
         document.addEventListener('keydown', onKeydown);
         return () => document.removeEventListener('keydown', onKeydown);
-    }, []);
+    }, [setIsExpanded]);
 
     useEffect(() => {
         const $aside = asideRef.current;
@@ -61,10 +70,10 @@ export function SideBar() {
     return (
         <div>
 
-            {/*<div
+            <div
                 className={[styles.backdrop, isExpanded ? styles.visible : ''].filter(Boolean).join(' ')}
                 onClick={closeSidebar}
-            />*/}
+            />
 
             <aside
                 ref={asideRef}
@@ -77,11 +86,14 @@ export function SideBar() {
                 ].filter(Boolean).join(' ')}
             >
 
-                <div className={styles.header}>
-                    <span className={styles.title}>Library</span>
-                    <div className={styles.headerActions}>
-                        <SidebarCloseButton />
-                    </div>
+                <div className={styles.section}>
+                    <span id="library-group-by-label" className={styles.sectionTitle}>Group by</span>
+                    <BRDropdown
+                        aria-labelledby="library-group-by-label"
+                        value={structure}
+                        onChange={setStructure}
+                        options={STRUCTURE_OPTIONS}
+                    />
                 </div>
 
                 <div className={styles.section}>
@@ -125,6 +137,8 @@ export function SideBar() {
                         <p className={styles.emptyState}>
                             {isLoading ? 'Loading library…' : 'No folders found'}
                         </p>
+                    ) : structure === 'series' ? (
+                        <SeriesList groups={groups} isHidden={isHidden} />
                     ) : (
                         groups.map(group => (
                             <SideBarGroup key={group.uid} group={group} />

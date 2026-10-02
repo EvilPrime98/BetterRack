@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import styles from './search-page.module.css';
 import { PageHeader } from '@/components/page-header/page-header';
 import { useLibraryStore } from '@/stores/library.store';
@@ -6,9 +6,9 @@ import { ComicCard } from '@/components/comic-card/comic-card';
 import { Layout } from '@/layout';
 import { useComicsTypeStore } from '@/stores/comicsTypes.store';
 import type { ILibraryResponseItem } from '@/library.types';
-import { useFilters } from '@/hooks/useFilters';
+import { applyFilters, useFilters } from '@/hooks/useFilters';
 import { useDocumentTitleStore } from '@/stores/documentTitle.store';
-import { matchesReadFilter, useReadTypesContext } from '@/context/ReadTypesContext';
+import { matchesReadFilter, useReadTypesContext } from '@/context/ReadTypesContext.hooks';
 import { useComicCacheStore } from '@/stores/comicCache.store';
 
 const PAGE_SIZE = 60; //max chunk for pages
@@ -24,7 +24,6 @@ export function SearchPage({
     const comicsType = useComicsTypeStore((s) => s.type);
     const setTitle = useDocumentTitleStore((s) => s.setTitle);
 
-    const [items, setItems] = useState<ILibraryResponseItem[]>([]);
     const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
     const { type: readFilter } = useReadTypesContext();
     const comicCache = useComicCacheStore((s) => s.cache);
@@ -36,7 +35,9 @@ export function SearchPage({
         .filter(item => item.name.toLowerCase().includes(query));
     }
 
-    const { filters, setFilters, resetFilters, applyFilters } = useFilters({ rawItems: getSearchItems, setItems });
+    const { filters, setFilters, resetFilters } = useFilters();
+    const rawItems = useMemo(() => getSearchItems(), [groups, searchQuery]);
+    const items = useMemo(() => applyFilters(rawItems, filters), [rawItems, filters]);
 
     useEffect(() => {
         if (useLibraryStore.getState().searchQuery !== search) {
@@ -50,14 +51,7 @@ export function SearchPage({
 
     useEffect(() => {
         useLibraryStore.getState().fetchLibrary();
-        if (useLibraryStore.getState().groups.length) applyFilters();
-        
     }, []);
-
-    useEffect(() => {
-        applyFilters();
-        
-    }, [groups, searchQuery]);
 
     useEffect(() => {
         setVisibleCount(PAGE_SIZE);

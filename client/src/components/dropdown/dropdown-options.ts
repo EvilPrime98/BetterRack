@@ -14,6 +14,8 @@ export function DropdownOptions({
     resetFilters: () => void;
 }) {
 
+    const menuId = `dropdown-menu-${Math.random().toString(36).slice(2)}`;
+
     const [isOpen, setOpen, subsOpen] = ultraState(false);
 
     const closeMenu = () => setOpen(false);
@@ -23,8 +25,16 @@ export function DropdownOptions({
         setOpen(!isOpen());
     }
 
+    const onTriggerKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') setOpen(false);
+    }
+
     const onOpenChange = ($root: HTMLElement) => {
         $root.classList.toggle(styles.open, isOpen());
+    }
+
+    const onExpandedChange = ($button: HTMLElement) => {
+        $button.setAttribute('aria-expanded', String(isOpen()));
     }
 
     const getTitle = () => LIBRARY_CONTEXT.groups.get()
@@ -36,10 +46,23 @@ export function DropdownOptions({
         $span.setAttribute('title', title);
     }
 
+    const onLabelChange = ($button: HTMLElement) => {
+        $button.setAttribute('aria-label', `Sort options, currently ${getTitle() || 'Root'}`);
+    }
+
     const onIndicatorChange = ($li: HTMLElement, matches: () => boolean) => {
+        $li.setAttribute('aria-selected', String(matches()));
         const $indicator = $li.querySelector('span');
         if (!$indicator) return;
         $indicator.innerHTML = matches() ? ChevronDownIcon({ orientation: 'right' }) : '';
+    }
+
+    const onOptionKeyDown = (e: KeyboardEvent, onSelect: () => void) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            e.stopPropagation();
+            onSelect();
+        }
     }
 
     return UltraComponent({
@@ -47,10 +70,6 @@ export function DropdownOptions({
         component: '<div></div>',
 
         className: [styles.dropdown],
-
-        eventHandler: {
-            click: toggleMenu
-        },
 
         onMount: [
             onOpenChange,
@@ -68,19 +87,41 @@ export function DropdownOptions({
         children: [
 
             UltraComponent({
-                component: `<span class="${styles.label}"></span>`,
-                onMount: [onTitleChange],
-                trigger: [{
-                    subscriber: LIBRARY_CONTEXT.groups.subscribe,
-                    triggerFunction: onTitleChange
-                }]
-            }),
+                component: '<button></button>',
+                className: [styles.trigger],
+                attributes: {
+                    type: 'button',
+                    'aria-haspopup': 'listbox',
+                    'aria-controls': menuId
+                },
+                eventHandler: {
+                    click: toggleMenu,
+                    keydown: onTriggerKeyDown as EventListener
+                },
+                onMount: [onExpandedChange, onLabelChange],
+                trigger: [
+                    { subscriber: subsOpen, triggerFunction: onExpandedChange },
+                    { subscriber: LIBRARY_CONTEXT.groups.subscribe, triggerFunction: onLabelChange }
+                ],
+                children: [
 
-            ChevronDownIcon({ size: 14 }),
+                    UltraComponent({
+                        component: `<span class="${styles.label}"></span>`,
+                        onMount: [onTitleChange],
+                        trigger: [{
+                            subscriber: LIBRARY_CONTEXT.groups.subscribe,
+                            triggerFunction: onTitleChange
+                        }]
+                    }),
+
+                    ChevronDownIcon({ size: 14 })
+
+                ]
+            }),
 
             UltraActivity({
 
-                component: `<ul class="${styles.menu}"></ul>`,
+                component: `<ul id="${menuId}" role="listbox" class="${styles.menu}"></ul>`,
 
                 mode: {
                     state: isOpen,
@@ -90,7 +131,7 @@ export function DropdownOptions({
                 children: [
 
                     UltraComponent({
-                        component: `<li class="${styles.option}"><span></span>${FILTER_OPTIONS.nofilters}</li>`,
+                        component: `<li class="${styles.option}" role="option" tabindex="0"><span></span>${FILTER_OPTIONS.nofilters}</li>`,
                         onMount: [
                             ($li: HTMLElement) => onIndicatorChange($li, () => !filters.sortByReleaseDate.get())
                         ],
@@ -103,12 +144,16 @@ export function DropdownOptions({
                                 e.stopPropagation();
                                 resetFilters();
                                 setOpen(false);
-                            }
+                            },
+                            keydown: ((e: KeyboardEvent) => onOptionKeyDown(e, () => {
+                                resetFilters();
+                                setOpen(false);
+                            })) as EventListener
                         }
                     }),
 
                     UltraComponent({
-                        component: `<li class="${styles.option}"><span></span>${FILTER_OPTIONS.byReleaseDate}</li>`,
+                        component: `<li class="${styles.option}" role="option" tabindex="0"><span></span>${FILTER_OPTIONS.byReleaseDate}</li>`,
                         onMount: [
                             ($li: HTMLElement) => onIndicatorChange($li, () => filters.sortByReleaseDate.get())
                         ],
@@ -121,7 +166,11 @@ export function DropdownOptions({
                                 e.stopPropagation();
                                 filters.sortByReleaseDate.set(true);
                                 setOpen(false);
-                            }
+                            },
+                            keydown: ((e: KeyboardEvent) => onOptionKeyDown(e, () => {
+                                filters.sortByReleaseDate.set(true);
+                                setOpen(false);
+                            })) as EventListener
                         }
                     })
 

@@ -322,7 +322,7 @@ export class DownloadController {
         // createdAt, not updatedAt: progress ticks bump updatedAt and churn the order.
         const rank: Record<TJobState, number> = { running: 0, queued: 1, error: 2, done: 3 };
 
-        const jobs = this.jobModel.list()
+        const jobs = this.jobModel.list('download')
             .sort((a, b) =>
                 rank[a.state] - rank[b.state]
                 || b.createdAt - a.createdAt

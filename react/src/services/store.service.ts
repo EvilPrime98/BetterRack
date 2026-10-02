@@ -69,7 +69,14 @@ export async function downloadComic({
         const es = new EventSource(withAuthQuery(`${API_URL}/api/downloads/${jobId}/stream`));
 
         es.onmessage = (e) => {
-            const { progress }: { progress?: TStoreProgressEvent } = JSON.parse(e.data);
+            let progress: TStoreProgressEvent | undefined;
+            try {
+                ({ progress } = JSON.parse(e.data));
+            } catch {
+                es.close();
+                reject(new Error('Received an invalid progress update from the server.'));
+                return;
+            }
             if (!progress) return;
             onProgress(progress);
             if (progress.type === 'done') {

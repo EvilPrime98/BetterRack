@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import styles from './dropdown-options.module.css';
 import { ChevronDownIcon } from '@/icons/chevron.icon';
 import { FILTER_OPTIONS, type ILibraryFilters } from '@/library.types';
@@ -18,10 +18,25 @@ export function DropdownOptions({
 
     const [isOpen, setOpen] = useState(false);
     const closeMenu = () => setOpen(false);
+    const menuId = useId();
 
     const toggleMenu = (e: React.MouseEvent) => {
         e.stopPropagation();
         setOpen(!isOpen);
+    };
+
+    const handleTriggerKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Escape') {
+            setOpen(false);
+        }
+    };
+
+    const handleOptionKeyDown = (e: React.KeyboardEvent, onSelect: () => void) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            e.stopPropagation();
+            onSelect();
+        }
     };
 
     useEffect(() => {
@@ -34,35 +49,53 @@ export function DropdownOptions({
 
     return (
         <div
-            onClick={toggleMenu}
             className={[styles.dropdown, isOpen ? styles.open : '']
                 .filter(Boolean).join(' ')
             }
         >
 
-            <span 
-                title={title}
-                className={styles.label}
+            <button
+                type="button"
+                onClick={toggleMenu}
+                onKeyDown={handleTriggerKeyDown}
+                className={styles.trigger}
+                aria-haspopup="listbox"
+                aria-expanded={isOpen}
+                aria-controls={menuId}
+                aria-label={`Sort options, currently ${title || 'Root'}`}
             >
-                {title || 'Root'}
-            </span>
 
-            <ChevronDownIcon size={14} />
+                <span
+                    title={title}
+                    className={styles.label}
+                >
+                    {title || 'Root'}
+                </span>
+
+                <ChevronDownIcon size={14} />
+
+            </button>
 
             <ul
+                id={menuId}
                 className={styles.menu}
-                style={{
-                    display: isOpen ? undefined : 'none'
-                }}
+                role="listbox"
             >
 
                 <li
                     className={styles.option}
+                    role="option"
+                    aria-selected={!filters.sortByReleaseDate}
+                    tabIndex={0}
                     onClick={(e) => {
                         e.stopPropagation();
                         resetFilters();
                         setOpen(false);
                     }}
+                    onKeyDown={(e) => handleOptionKeyDown(e, () => {
+                        resetFilters();
+                        setOpen(false);
+                    })}
                 >
                     {
                         !filters.sortByReleaseDate
@@ -74,11 +107,18 @@ export function DropdownOptions({
 
                 <li
                     className={styles.option}
+                    role="option"
+                    aria-selected={filters.sortByReleaseDate}
+                    tabIndex={0}
                     onClick={(e) => {
                         e.stopPropagation();
                         setFilters({ sortByReleaseDate: true });
                         setOpen(false);
                     }}
+                    onKeyDown={(e) => handleOptionKeyDown(e, () => {
+                        setFilters({ sortByReleaseDate: true });
+                        setOpen(false);
+                    })}
                 >
                     {
                         filters.sortByReleaseDate

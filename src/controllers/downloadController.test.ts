@@ -7,9 +7,10 @@ import type { TJob, TJobModel, TJobState } from '#src/types/jobs.types.ts';
 function memoryJobModel(): TJobModel<TProgressEvent> {
     const jobs = new Map<string, TJob<TProgressEvent>>();
     return {
-        getOrCreate: (resourceKey, label, request) => {
+        getOrCreate: (resourceKey, label, request, kind = 'download') => {
             const job: TJob<TProgressEvent> = {
                 id: `job-${jobs.size + 1}`,
+                kind,
                 resourceKey,
                 label,
                 state: 'queued',
@@ -22,7 +23,7 @@ function memoryJobModel(): TJobModel<TProgressEvent> {
         },
         getByResource: (resourceKey) => [...jobs.values()].find(j => j.resourceKey === resourceKey),
         get: (jobId) => jobs.get(jobId),
-        list: () => [...jobs.values()],
+        list: (kind) => [...jobs.values()].filter(j => !kind || j.kind === kind),
         update: (jobId, state: TJobState, progress) => {
             const job = jobs.get(jobId);
             if (!job) return;

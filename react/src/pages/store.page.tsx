@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import styles from './store.page.module.css';
 import { Layout } from '@/layout';
 import { StoreCard } from '@/components/store-card/store-card';
@@ -32,13 +32,13 @@ export function StorePage() {
         loadingRef.current = { isLoading, isLoadingMore };
     });
 
-    async function fetchPage(pageNum: number, term: string): Promise<IStorePost[]> {
+    const fetchPage = useCallback(async (pageNum: number, term: string): Promise<IStorePost[]> => {
         return term
             ? searchComics({ search: term, page: pageNum, perPage: PAGE_SIZE })
             : getLatestComics({ page: pageNum, perPage: PAGE_SIZE });
-    }
+    }, []);
 
-    async function loadFirstPage(term: string) {
+    const loadFirstPage = useCallback(async (term: string) => {
         setIsLoading(true);
         setError('');
         try {
@@ -56,9 +56,9 @@ export function StorePage() {
         } finally {
             setIsLoading(false);
         }
-    }
+    }, [fetchPage, setStoreState]);
 
-    async function loadMore() {
+    const loadMore = useCallback(async () => {
         const cached = useStorePageStore.getState();
         const { isLoading, isLoadingMore } = loadingRef.current;
         if (!cached.hasMore || isLoading || isLoadingMore) return;
@@ -77,7 +77,7 @@ export function StorePage() {
         } finally {
             setIsLoadingMore(false);
         }
-    }
+    }, [fetchPage, setStoreState]);
 
     function runSearch() {
         const term = query.trim();
@@ -88,8 +88,8 @@ export function StorePage() {
     useEffect(() => {
         setTitle('Store');
         if (!useStorePageStore.getState().hasLoaded) loadFirstPage('');
-        
-    }, []);
+
+    }, [setTitle, loadFirstPage]);
 
     useLayoutEffect(() => {
         const savedScrollY = useStorePageStore.getState().scrollY;
@@ -108,8 +108,8 @@ export function StorePage() {
         }, { rootMargin: '600px' });
         observer.observe($sentinel);
         return () => observer.disconnect();
-        
-    }, []);
+
+    }, [loadMore]);
 
     const isEmpty = !isLoading && results.length === 0;
 

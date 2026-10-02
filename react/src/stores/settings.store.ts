@@ -16,7 +16,8 @@ export const useSettingsStore = create<ISettingsStore>((set) => ({
         outputDirs: [],
         apiUrl: '',
         downloadDir: '',
-        identifyFromMeta: false,
+        wikiSearch: false,
+        rescanOnStartup: true,
     },
 
     fetchSettings: async () => {

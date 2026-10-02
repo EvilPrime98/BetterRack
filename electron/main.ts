@@ -12,6 +12,7 @@ import { registerPickFolderHandler } from "./ipc/pick-folder.ipc";
 import { registerToggleFullscreenHandler } from "./ipc/toggle-fullscreen.ipc";
 import { registerWindowControlsHandlers } from "./ipc/window-controls.ipc";
 import { bindMaximizeChangeEvents } from "./events/maximize-change.event";
+import { bindCloseGuard, registerCloseGuardHandlers } from "./events/close-guard.event";
 import { APP_NAME } from "./app.config";
 import { createStartupLogger } from "./logger";
 
@@ -200,6 +201,8 @@ async function startDesktopApp() {
 
     bindMaximizeChangeEvents(win);
 
+    bindCloseGuard(win, () => serverUrl);
+
     win.webContents.setWindowOpenHandler(handleWindowOpen);
 
     const navigationGuard = createNavigationGuard({ appUrl: serverUrl });
@@ -215,6 +218,7 @@ async function startDesktopApp() {
   registerPickFolderHandler();
   registerToggleFullscreenHandler();
   registerWindowControlsHandlers();
+  registerCloseGuardHandlers();
 
   const { log, filePath: logFilePath } = createStartupLogger(app.getPath("userData"));
 

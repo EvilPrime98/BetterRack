@@ -1,41 +1,24 @@
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import { useState, useCallback, useMemo, type ReactNode } from 'react';
 import type { TReadTypes } from '../library.types';
-
-export function matchesReadFilter(readFilter: TReadTypes, readPer: number): boolean {
-    if (readFilter === 'all') return true;
-    if (readFilter === 'read') return readPer === 100;
-    if (readFilter === 'reading') return readPer > 0 && readPer < 100;
-    return readPer === 0;
-}
-
-interface IReadTypesContextValue {
-    type: TReadTypes;
-    next: () => void;
-}
-
-const ReadTypesContext = createContext<IReadTypesContextValue | null>(null);
+import { ReadTypesContext } from './ReadTypesContext.hooks';
 
 export function ReadTypesProvider({ children }: { children: ReactNode }) {
     const [type, setType] = useState<TReadTypes>('all');
 
-    const next = () => {
+    const next = useCallback(() => {
         setType((currType) => {
             if (currType === 'all') return 'read';
             if (currType === 'read') return 'reading';
             if (currType === 'reading') return 'unread';
             return 'all';
         });
-    };
+    }, []);
+
+    const value = useMemo(() => ({ type, next }), [type, next]);
 
     return (
-        <ReadTypesContext.Provider value={{ type, next }}>
+        <ReadTypesContext.Provider value={value}>
             {children}
         </ReadTypesContext.Provider>
     );
-}
-
-export function useReadTypesContext(): IReadTypesContextValue {
-    const ctx = useContext(ReadTypesContext);
-    if (!ctx) throw new Error('useReadTypesContext must be used within ReadTypesProvider');
-    return ctx;
 }

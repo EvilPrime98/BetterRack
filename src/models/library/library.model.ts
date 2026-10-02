@@ -20,8 +20,9 @@ import type {
 import fs from "node:fs";
 import { logger } from "#utils/logger";
 import { createConcurrencyLimiter } from "#utils/concurrencyLimiter";
-import { COMIC_EXTENSIONS, DEFAULT_LIBRARY_PAGE_SIZE, IDENTIFY_CONCURRENCY, MAX_LIBRARY_PAGE_SIZE, RECENT_WINDOW_HOURS, STAT_CONCURRENCY } from "./constants";
+import { COMIC_EXTENSIONS, DEFAULT_LIBRARY_PAGE_SIZE, IDENTIFY_BATCH_SIZE, IDENTIFY_CONCURRENCY, MAX_LIBRARY_PAGE_SIZE, RECENT_WINDOW_HOURS, STAT_CONCURRENCY } from "./constants";
 import { comiInfoToWikiComicDTO } from "#src/dtos/comicInfoToLibraryEntry.ts";
+import { seriesOf } from "./series";
 
 const log = logger.child({ module: 'LibraryModel' });
 
@@ -228,18 +229,18 @@ export class LibraryModel {
             const release = await this.identifyLimiter.acquire();
             try {
 
-                const identifyFromMeta = this.prefsModel.getAppSettings().identifyFromMeta;
-                const comicInfo = identifyFromMeta
-                    ? await this.zipModel.extractComicInfo({ filePath: entry.path })
-                    : null;
+                const wikiSearch = this.prefsModel.getAppSettings().wikiSearch;
+                const comicInfo = await this.zipModel.extractComicInfo({ filePath: entry.path });
 
-                if (identifyFromMeta && !comicInfo) {
+                if (!comicInfo && wikiSearch) {
                     log.debug({ uid }, 'No usable ComicInfo.xml found; falling back to wiki lookup');
                 }
 
                 const found = comicInfo
                     ? comiInfoToWikiComicDTO(comicInfo)
-                    : await this.wikiModel.getComic(entry.name);
+                    : wikiSearch
+                        ? await this.wikiModel.getComic(entry.name)
+                        : null;
 
                 const freshlyStored = this.comicDataModel.getByUid(uid);
                 if (freshlyStored?.identified !== undefined) {
@@ -275,6 +276,51 @@ export class LibraryModel {
         this.identifyInFlight.set(uid, job);
 
         return job;
+
+    };
+
+    identifyLibrary = async (
+        onProgress?: (done: number, total: number) => void
+    ): Promise<void> => {
+
+        const files = this.db.filter(entry => !entry.did);
+
+        onProgress?.(0, files.length);
+
+        let done = 0;
+
+        for (let start = 0; start < files.length; start += IDENTIFY_BATCH_SIZE) {
+            const batch = files.slice(start, start + IDENTIFY_BATCH_SIZE);
+
+            await Promise.all(batch.map(async file => {
+                await this.identify(file.uid);
+                onProgress?.(++done, files.length);
+            }));
+        }
+
+    };
+
+    reidentifyFile = async (
+        uid: string
+    ): Promise<TLibraryEntry> => {
+
+        const entry = this.entryByUid.get(uid);
+        if (!entry || entry.did) throw new Error('Comic not found.');
+
+        this.identifyInFlight.delete(uid);
+        this.comicDataModel.upsert(uid, {
+            identified: undefined,
+            comic: undefined,
+            sourceWiki: undefined,
+            metaSource: undefined,
+            prefId: undefined,
+        });
+        entry.identified = undefined;
+        entry.comic = undefined;
+        entry.metaSource = undefined;
+        this.inheritanceCache = null;
+
+        return this.identify(uid);
 
     };
 
@@ -326,17 +372,18 @@ export class LibraryModel {
         }));
     }
 
-    getLibraryPage = (
-        options: { limit?: number; offset?: number } = {},
+    private paginateGroups = (
+        groups: TLibraryGroup[],
+        options: { limit?: number; offset?: number },
     ): TLibraryPage => {
 
-        const groups = this.getByLibrary();
         const total = groups.reduce((sum, group) => sum + group.entries.length, 0);
 
         const limit = Math.min(
             Math.max(1, Math.trunc(options.limit ?? DEFAULT_LIBRARY_PAGE_SIZE)),
             MAX_LIBRARY_PAGE_SIZE,
         );
+
         const offset = Math.min(Math.max(0, Math.trunc(options.offset ?? 0)), total);
         const end = Math.min(offset + limit, total);
 
@@ -368,6 +415,47 @@ export class LibraryModel {
             offset,
             hasMore: end < total,
         };
+
+    }
+
+    getLibraryPageBySeries = (options: { 
+        limit?: number; 
+        offset?: number;
+    } = {}, ): TLibraryPage => {
+
+        const bySeries = new Map<string, TLibraryGroup>();
+
+        for (const entry of this.resolveInheritance()) {
+            if (entry.did) continue;
+            const { key, name } = seriesOf(entry);
+            const group = bySeries.get(key);
+            if (group) group.entries.push(entry);
+            else bySeries.set(key, {
+                uid: this.uidFromPath(`series:${key}`),
+                name,
+                path: '',
+                entries: [entry],
+            });
+        }
+
+        const byName = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+
+        const groups = [...bySeries.values()].sort((a, b) => byName(a.name, b.name));
+        for (const group of groups) {
+            group.entries.sort((a, b) => byName(a.comic?.issue || a.name, b.comic?.issue || b.name));
+        }
+
+        return this.paginateGroups(groups, options);
+
+    }
+
+    getLibraryPage = (options: { 
+        limit?: number; 
+        offset?: number;
+    } = {}, ): TLibraryPage => {
+
+        const groups = this.getByLibrary();
+        return this.paginateGroups(groups, options);
 
     }
 

@@ -16,7 +16,7 @@ function onEnterOrSpace(handler: () => void) {
 export function HeaderMenu() {
 
     const [isOpen, setOpen] = useState(false);
-    const refreshLibrary = useLibraryStore((s) => s.refreshLibrary);
+    const refreshLibrary = useLibraryStore((s) => s.refreshLibraryWithPrompt);
 
     const closeMenu = () => setOpen(false);
 
@@ -38,19 +38,18 @@ export function HeaderMenu() {
     return (
         <div
             className={[styles.menuWrap, headerStyles.noDrag, isOpen ? styles.open : ''].filter(Boolean).join(' ')}
-            onClick={toggleMenu}
         >
 
-            <div
+            <button
+                type="button"
                 className={headerStyles.iconBtn}
-                role="button"
-                tabIndex={0}
                 aria-haspopup="menu"
+                aria-expanded={isOpen}
                 aria-label="More options"
-                onKeyDown={onEnterOrSpace(() => setOpen(!isOpen))}
+                onClick={toggleMenu}
             >
                 <MenuIcon size={18} />
-            </div>
+            </button>
 
             {/* UltraActivity: always mounted, visibility toggled via display */}
             <ul className={styles.menu} role="menu" style={{ display: isOpen ? undefined : 'none' }}>

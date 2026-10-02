@@ -1,14 +1,5 @@
-import { createContext, useContext, useState, useCallback, useRef, type ReactNode } from 'react';
-
-interface IDownloadDirModalContextValue {
-    isVisible: boolean;
-    itemTitle: string;
-    openDownloadDirModal: (itemTitle: string) => Promise<string | null>;
-    confirmDownloadDir: (dir: string) => void;
-    closeDownloadDirModal: () => void;
-}
-
-const DownloadDirModalContext = createContext<IDownloadDirModalContextValue | null>(null);
+import { useState, useCallback, useMemo, useRef, type ReactNode } from 'react';
+import { DownloadDirModalContext } from './DownloadDirModalContext.hooks';
 
 export function DownloadDirModalProvider({ children }: { children: ReactNode }) {
     const [isVisible, setIsVisible] = useState(false);
@@ -40,18 +31,14 @@ export function DownloadDirModalProvider({ children }: { children: ReactNode }) 
         settle(null);
     }, [settle]);
 
+    const value = useMemo(() => ({
+        isVisible, itemTitle,
+        openDownloadDirModal, confirmDownloadDir, closeDownloadDirModal
+    }), [isVisible, itemTitle, openDownloadDirModal, confirmDownloadDir, closeDownloadDirModal]);
+
     return (
-        <DownloadDirModalContext.Provider value={{
-            isVisible, itemTitle,
-            openDownloadDirModal, confirmDownloadDir, closeDownloadDirModal
-        }}>
+        <DownloadDirModalContext.Provider value={value}>
             {children}
         </DownloadDirModalContext.Provider>
     );
-}
-
-export function useDownloadDirModalContext(): IDownloadDirModalContextValue {
-    const ctx = useContext(DownloadDirModalContext);
-    if (!ctx) throw new Error('useDownloadDirModalContext must be used within DownloadDirModalProvider');
-    return ctx;
 }

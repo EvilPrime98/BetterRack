@@ -23,10 +23,10 @@ export function ReaderPage() {
     const { pages, isLoading, hasError, bookmarks, isRefreshing, loadPages, refreshComic } = useComicPages(uid);
 
     //refs
-    const viewerRef = useRef<HTMLElement>(null);
+    const viewerRef = useRef<HTMLDivElement>(null);
     const pageRef = useRef<HTMLElement>(null);
 
-    const { currentPage, currentPageRef, goToPage } = useReaderPageTracking(uid, pages, viewerRef);
+    const { currentPage, goToPage } = useReaderPageTracking(uid, pages, viewerRef);
     const { onWheel } = useReaderZoom(pageRef, viewerRef);
     useReaderProgress(uid, pages, currentPage);
 
@@ -52,7 +52,7 @@ export function ReaderPage() {
     if (!uid) return null;
 
     const numPages = pages.length;
-    const range = getWindowRange(numPages, currentPageRef.current);
+    const range = getWindowRange(numPages, currentPage);
     const next = numPages > 0 && currentPage === numPages;
 
     return (
@@ -73,7 +73,20 @@ export function ReaderPage() {
                 <button type="button" className={styles.retry} onClick={loadPages}>Retry</button>
             </div>
 
-            <section className={styles.viewer} ref={viewerRef} onClick={toggleHeader} onDoubleClick={toggleFullscreen}>
+            <div
+                className={styles.viewer}
+                ref={viewerRef}
+                role="button"
+                tabIndex={0}
+                aria-label="Toggle reader header"
+                onClick={toggleHeader}
+                onDoubleClick={toggleFullscreen}
+                onKeyDown={(e) => {
+                    if (e.key !== 'Enter' && e.key !== ' ') return;
+                    e.preventDefault();
+                    toggleHeader();
+                }}
+            >
                 {Array.from({ length: Math.max(0, numPages - 1) }, (_, i) => i + 1).map(i => (
                     <ImageElement
                         key={i}
@@ -84,7 +97,7 @@ export function ReaderPage() {
                         eager={!!range && i >= range.start && i <= range.end}
                     />
                 ))}
-            </section>
+            </div>
 
             { next ? <ReaderNext uid={uid} navigate={navigate}/> : null }
 

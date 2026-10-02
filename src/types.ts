@@ -37,6 +37,11 @@ export type TProgressEvent =
     | { type: 'done'; filename: string }
     | { type: 'error'; message: string }
 
+export type TIdentifyProgress =
+    | { type: 'identifying'; done: number; total: number }
+    | { type: 'done'; total: number }
+    | { type: 'error'; message: string }
+
 export type TDownloadModel = {
     downloadComic: ({
         link,
@@ -135,6 +140,7 @@ export type TLibraryModel = {
     getLibraryIndex: () => TLibraryIndexGroup[],
     /** A slice of the flat entry list in group order, re-nested into its groups, with pagination metadata. `limit` and `offset` count entries, not groups. */
     getLibraryPage: (options?: { limit?: number; offset?: number }) => TLibraryPage,
+    getLibraryPageBySeries: (options?: { limit?: number; offset?: number }) => TLibraryPage,
     /** A flat list of file entries, newest first, whose `createdAt` is inside the look-back window. `windowHours` defaults to 24. */
     getRecentlyAdded: (options?: { windowHours?: number; nowMs?: number }) => TRecentlyAddedResponse,
     getReading: () => TReadingResponse,
@@ -150,6 +156,9 @@ export type TLibraryModel = {
     commitIdentify: (fileUid: string, comic: WikiComic) => Promise<void>,
     /** Resolves wiki metadata for a single comic on demand; cached results skip the wiki call. */
     identify: (uid: string) => Promise<TLibraryEntry>,
+    identifyLibrary: (onProgress?: (done: number, total: number) => void) => Promise<void>,
+    /** Clears a single entry's stored identification and immediately re-runs `identify()`, forcing a fresh lookup even if it was already identified. */
+    reidentifyFile: (uid: string) => Promise<TLibraryEntry>,
     reidentifyAll: () => Promise<void>,
     addLibraryPath: (dir: string) => Promise<void>,
     removeLibraryPath: (dir: string) => Promise<void>,
@@ -160,7 +169,8 @@ export type TAppSettings = {
     outputDirs: string[];
     apiUrl: string;
     downloadDir: string;
-    identifyFromMeta: boolean;
+    wikiSearch: boolean;
+    rescanOnStartup: boolean;
 }
 
 export type TPreferencesModel = {

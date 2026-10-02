@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Routes, Route, useParams } from 'react-router-dom';
-import { useAppContext } from '@/context/AppContext';
+import { useAppContext } from '@/context/AppContext.hooks';
 import { useLibraryStore } from '@/stores/library.store';
 import { useComicCacheStore } from '@/stores/comicCache.store';
 import { useComicsTypeStore } from '@/stores/comicsTypes.store';
@@ -19,9 +19,6 @@ import { RecentPage } from '@/pages/recent-page';
 import { ReadingPage } from '@/pages/reading-page';
 import { DetailsPage } from './pages/details-page';
 
-// Keying by uid forces ReaderPage to fully unmount/remount when navigating
-// between comics (e.g. the "next" button), so stale pages/scroll/zoom from
-// the previous comic never flash before the new one loads.
 function ReaderRoute() {
     const { uid } = useParams<{ uid: string }>();
     return <ReaderPage key={uid} />;
@@ -30,6 +27,11 @@ function ReaderRoute() {
 export function App() {
 
     const { isLoading, setIsLoading } = useAppContext();
+    const identifyProgress = useLibraryStore((s) => s.identifyProgress);
+
+    const loaderMessage = identifyProgress
+    ? `Identifying library${identifyProgress.total ? ` ${identifyProgress.done}/${identifyProgress.total}` : '…'}`
+    : undefined;
 
     useEffect(() => {
         (async () => {
@@ -46,17 +48,24 @@ export function App() {
                 ])
             ]);
 
+            if (
+                useSettingsStore.getState().settings.rescanOnStartup
+                && useLibraryStore.getState().groups.length > 0
+            ) {
+                await useLibraryStore.getState().identifyLibrary();
+            }
+
             useUserPrefStore.getState().init();
             useComicsTypeStore.getState().init();
             
             setIsLoading(false);
 
-        })();      
-    }, []);
+        })();
+    }, [setIsLoading]);
 
     return (
         <>
-            <AppLoader visible={isLoading} />
+            <AppLoader visible={isLoading} message={loaderMessage} />
 
             {!isLoading && (
                 <Routes>
