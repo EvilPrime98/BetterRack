@@ -14,6 +14,7 @@ const DEFAULT_SETTINGS: TAppSettings = {
     apiUrl: '',
     downloadDir: '',
     wikiSearch: false,
+    rescanOnStartup: true,
 };
 
 export class PreferencesModel implements TPreferencesModel {
@@ -128,6 +129,9 @@ export class PreferencesModel implements TPreferencesModel {
             wikiSearch: values.wikiSearch === undefined
                 ? DEFAULT_SETTINGS.wikiSearch
                 : values.wikiSearch === 'true',
+            rescanOnStartup: values.rescanOnStartup === undefined
+                ? DEFAULT_SETTINGS.rescanOnStartup
+                : values.rescanOnStartup === 'true',
         };
     }
 
