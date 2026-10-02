@@ -17,6 +17,7 @@ export const SETTINGS_CONTEXT: ISettingsCtx = ultraCompState({
         apiUrl: '',
         downloadDir: '',
         wikiSearch: false,
+        rescanOnStartup: true,
     } as IAppSettings,
 
     fetchSettings: async (comp: ISettingsCtx) => {

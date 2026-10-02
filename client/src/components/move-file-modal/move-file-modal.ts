@@ -1,7 +1,7 @@
 import { UltraActivity, UltraComponent } from "ultra-light-js";
 import styles from './move-file-modal.module.css';
 import { FolderIcon } from "@/icons/folder.icon";
-import { Checkbox } from "@/components/checkbox/checkbox";
+import { BRCheckbox } from "@/components/br-checkbox/br-checkbox";
 import { LIBRARY_CONTEXT } from "@/context/library.context";
 import { MOVE_FILE_MODAL_CTX } from "@/context/move-file-modal.context";
 import type { ILibraryGroup } from "@/library.types";
@@ -206,9 +206,9 @@ export function MoveFileModal() {
                                 }]
                             }),
 
-                            Checkbox({
+                            BRCheckbox({
                                 className: [styles.checkbox],
-                                label: 'Sub-folders',
+                                text: 'Sub-folders',
                                 checked: showSubfolders,
                                 onChange: (checked) => {
                                     showSubfolders = checked;

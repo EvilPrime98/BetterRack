@@ -1,6 +1,7 @@
 import { UltraActivity, UltraComponent, ultraState } from "ultra-light-js";
 import styles from './server-modal.module.css';
 import { BRButton } from "@/components/br-button/br-button";
+import { BRCheckbox } from "@/components/br-checkbox/br-checkbox";
 import { SERVER_MODAL_CTX } from "@/context/server-modal.context";
 import { getStoredServerUrl, isAndroidPlatform, isRemoteModeEnabled, getStoredApiKey } from "@/services/server-config.service";
 
@@ -107,15 +108,10 @@ export function ServerModal() {
 
                     ...(showRemoteModeOption ? [
 
-                        UltraComponent({
-                            component: `<label class="${styles.hint}"><input type="checkbox" /> Use this as my library server</label>`,
-                            onMount: [($label: HTMLElement) => {
-                                syncRemoteModeCheckbox($label);
-                                $label.querySelector('input')?.addEventListener(
-                                    'change',
-                                    (e) => setRemoteMode((e.currentTarget as HTMLInputElement).checked)
-                                );
-                            }],
+                        BRCheckbox({
+                            text: 'Use this as my library server',
+                            checked: remoteMode(),
+                            onChange: setRemoteMode,
                             trigger: [{
                                 subscriber: subscribeRemoteMode,
                                 triggerFunction: syncRemoteModeCheckbox

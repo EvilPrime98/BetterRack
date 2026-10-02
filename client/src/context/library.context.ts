@@ -238,6 +238,8 @@ export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
             cancelLabel: 'Just refresh'
         });
 
+        if (identify === null) return;
+
         if (!identify) {
             toast.success('Library refreshed');
             return;
