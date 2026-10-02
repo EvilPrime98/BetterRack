@@ -20,17 +20,20 @@ function ItemsGrid({ items }: { items: ILibraryResponseItem[] }) {
 
     const [count, setCount] = useState(PAGE_SIZE);
 
-    const sentinelRef = useCallback((node: HTMLDivElement | null) => {
-        if (!node) return;
+    const [sentinel, setSentinel] = useState<HTMLDivElement | null>(null);
+    const hasMore = count < items.length;
+
+    useEffect(() => {
+        if (!sentinel) return;
         const observer = new IntersectionObserver(
             (entries) => {
                 if (entries.some(e => e.isIntersecting)) setCount(c => c + PAGE_SIZE);
             },
             { rootMargin: '600px' }
         );
-        observer.observe(node);
+        observer.observe(sentinel);
         return () => observer.disconnect();
-    }, [count]);
+    }, [sentinel]);
 
     return (
         <>
@@ -38,7 +41,7 @@ function ItemsGrid({ items }: { items: ILibraryResponseItem[] }) {
                 ? <FolderCard key={item.uid} title={item.name} uid={item.uid} />
                 : <ComicCard key={item.uid} item={item} />
             )}
-            {count < items.length && <div ref={sentinelRef} style={{ gridColumn: '1 / -1', height: 1 }} />}
+            {hasMore && <div key={count} ref={setSentinel} style={{ gridColumn: '1 / -1', height: 1 }} />}
         </>
     );
 
