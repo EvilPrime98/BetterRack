@@ -1,7 +1,7 @@
 import { app, BrowserWindow, dialog, shell } from "electron";
 import fs from "node:fs";
 import path from "node:path";
-import { pipeline } from "node:stream/promises";
+import { once } from "node:events";
 import { APP_NAME } from "./app.config";
 
 const LATEST_RELEASE_URL = "https://api.github.com/repos/EvilPrime98/BetterRack/releases/latest";
@@ -65,7 +65,27 @@ export async function checkForUpdates(win: BrowserWindow, log: (line: string) =>
         if (!download.ok || !download.body) throw new Error(`Download failed (${download.status})`);
 
         const filePath = path.join(app.getPath("downloads"), asset.name);
-        await pipeline(download.body, fs.createWriteStream(filePath));
+        const out = fs.createWriteStream(filePath);
+        let received = 0;
+
+        try {
+
+            for await (const chunk of download.body) {
+                if (!out.write(chunk)) await once(out, "drain");
+                received += chunk.length;
+                if (asset.size > 0 && !win.isDestroyed()) win.setProgressBar(received / asset.size);
+            }
+
+            out.end();
+            await once(out, "finish");
+
+        } finally {
+
+            out.destroy();
+            if (!win.isDestroyed()) win.setProgressBar(-1);
+
+        }
+
         log(`Update ${version} downloaded to ${filePath}`);
 
         if (process.platform === "win32") await shell.openPath(filePath);
