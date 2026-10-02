@@ -1,7 +1,7 @@
 import { UltraActivity, UltraComponent } from "ultra-light-js";
 import styles from './download-dir-modal.module.css';
 import { FolderIcon } from "@/icons/folder.icon";
-import { Checkbox } from "@/components/checkbox/checkbox";
+import { BRCheckbox } from "@/components/br-checkbox/br-checkbox";
 import { SETTINGS_CONTEXT } from "@/context/settings.context";
 import { DOWNLOAD_DIR_MODAL_CTX } from "@/context/download-dir-modal.context";
 import { areDirectoryListsEqual, getCachedDirectories, refreshDirectories } from "@/services/fs.service";
@@ -179,9 +179,9 @@ export function DownloadDirModal() {
                                 }]
                             }),
 
-                            Checkbox({
+                            BRCheckbox({
                                 className: [styles.checkbox],
-                                label: 'Sub-folders',
+                                text: 'Sub-folders',
                                 checked: showSubfolders,
                                 onChange: (checked) => {
                                     showSubfolders = checked;

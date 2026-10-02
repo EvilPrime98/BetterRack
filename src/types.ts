@@ -170,6 +170,7 @@ export type TAppSettings = {
     apiUrl: string;
     downloadDir: string;
     wikiSearch: boolean;
+    rescanOnStartup: boolean;
 }
 
 export type TPreferencesModel = {

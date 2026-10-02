@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import styles from './download-dir-modal.module.css';
 import { FolderIcon } from '@/icons/folder.icon';
-import { Checkbox } from '@/components/checkbox/checkbox';
+import { BRCheckbox } from '@/components/br-checkbox/br-checkbox';
 import { useSettingsStore } from '@/stores/settings.store';
 import { useDownloadDirModalContext } from '@/context/DownloadDirModalContext.hooks';
 import { areDirectoryListsEqual, getCachedDirectories, refreshDirectories } from '@/services/fs.service';
@@ -110,9 +110,9 @@ function DownloadDirModalContent() {
                         onChange={(e) => setQuery(e.target.value)}
                     />
 
-                    <Checkbox
+                    <BRCheckbox
                         className={styles.checkbox}
-                        label="Sub-folders"
+                        text="Sub-folders"
                         checked={showSubfolders}
                         onChange={(e) => setShowSubfolders(e.target.checked)}
                     />

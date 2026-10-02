@@ -28,7 +28,10 @@ export function App() {
                 SETTINGS_CONTEXT.fetchSettings()
             ])
         ])
-        if (LIBRARY_CONTEXT.groups.get().length > 0) {
+        if (
+            SETTINGS_CONTEXT.settings.get().rescanOnStartup
+            && LIBRARY_CONTEXT.groups.get().length > 0
+        ) {
             await LIBRARY_CONTEXT.identifyLibrary();
         }
         USER_PREF.init();

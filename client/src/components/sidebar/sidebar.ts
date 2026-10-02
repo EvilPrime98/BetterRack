@@ -4,12 +4,11 @@ import { SIDEBAR_CONTEXT } from "../../context/sidebar.context";
 import { VIEWPORT_CONTEXT } from "../../context/viewport.context";
 import { LIBRARY_CONTEXT } from "../../context/library.context";
 import { SideBarGroup } from "./sidebar-group";
-import { SideBarElement } from "./sider-bar-element";
 import type { ILibraryGroup } from "../../library.types";
 import type { TLibraryStructure } from "../../services/library.service";
-import { BRButton } from "../br-button/br-button";
+import { BRDropdown, type IBRDropdownOption } from "../br-dropdown/br-dropdown";
+import { SeriesList } from "./series-list";
 import { RefreshLibraryButton } from "./refresh-button";
-import { SidebarCloseButton } from "./close-button";
 import { SidebarSearch } from "./sidebar-search";
 import { Footer } from "../footer/footer";
 import { GearIcon } from "../../icons/gear.icon";
@@ -18,68 +17,16 @@ import { DownloadIcon } from "../../icons/download.icon";
 import { BookmarkIcon } from "../../icons/bookmark.icon";
 import { BookOpenIcon } from "../../icons/book-open.icon";
 
-const SERIES_PAGE_SIZE = 50;
-
-const STRUCTURE_OPTIONS: { value: TLibraryStructure, text: string }[] = [
-    { value: 'folders', text: 'Folders' },
-    { value: 'series', text: 'By series' }
+const STRUCTURE_OPTIONS: IBRDropdownOption<TLibraryStructure>[] = [
+    { value: 'folders', label: 'Folders' },
+    { value: 'series', label: 'Series' }
 ];
 
 export function SideBar() {
 
     const [items, setItems, subsItems] = ultraState<ILibraryGroup[]>([]);
 
-    let seriesCount = SERIES_PAGE_SIZE;
-    let seriesObserver: IntersectionObserver | null = null;
-    const $seriesSentinel = document.createElement('div');
-    $seriesSentinel.style.height = '1px';
-
-    function appendSeries($nav: HTMLElement, from: number, to: number) {
-        const groups = items();
-        $seriesSentinel.remove();
-        $nav.append(
-            ...groups.slice(from, to).map(group => SideBarElement({
-                item: { uid: group.uid, did: true, name: group.name, path: group.path, parentId: '', createdAt: 0 }
-            }))
-        );
-        if (to < groups.length) $nav.appendChild($seriesSentinel);
-    }
-
-    function renderSeries($nav: HTMLElement) {
-        seriesObserver?.disconnect();
-        seriesObserver = null;
-        seriesCount = SERIES_PAGE_SIZE;
-        $nav.replaceChildren();
-        if (isHidden()) return;
-
-        appendSeries($nav, 0, seriesCount);
-
-        seriesObserver = new IntersectionObserver(
-            (entries) => {
-                if (!entries.some(e => e.isIntersecting)) return;
-                const from = seriesCount;
-                seriesCount += SERIES_PAGE_SIZE;
-                seriesObserver?.unobserve($seriesSentinel);
-                appendSeries($nav, from, seriesCount);
-                if ($seriesSentinel.isConnected) seriesObserver?.observe($seriesSentinel);
-            },
-            { rootMargin: '300px' }
-        );
-        seriesObserver.observe($seriesSentinel);
-    }
-
-    function renderStructureToggle($group: HTMLElement) {
-        const current = LIBRARY_CONTEXT.structure.get();
-        $group.replaceChildren(
-            ...STRUCTURE_OPTIONS.map(({ value, text }) => BRButton({
-                text,
-                variant: current === value ? 'secondary' : 'ghost',
-                className: [styles.toggleButton],
-                attributes: { 'aria-pressed': String(current === value) },
-                eventHandler: { click: () => { void LIBRARY_CONTEXT.setStructure(value) } }
-            }))
-        );
-    }
+    const series = SeriesList({ groups: items, isHidden });
 
     function fetchLibrary() {
         LIBRARY_CONTEXT.fetchLibrary();
@@ -135,10 +82,9 @@ export function SideBar() {
                 })
             );
         } else if (LIBRARY_CONTEXT.structure.get() === 'series') {
-            renderSeries($nav);
+            series.render($nav);
         } else {
-            seriesObserver?.disconnect();
-            seriesObserver = null;
+            series.disconnect();
             $nav.replaceChildren(
                 ...currItems.map(group => {
                     return SideBarGroup({ group })
@@ -194,15 +140,15 @@ export function SideBar() {
 
                     UltraComponent({
                         component: '<div></div>',
-                        className: [styles.header],
+                        className: [styles.section],
                         children: [
-                            `<span class="${styles.title}">Library</span>`,
-                            UltraComponent({
-                                component: '<div></div>',
-                                className: [styles.headerActions],
-                                children: [
-                                    SidebarCloseButton()
-                                ]
+                            `<span id="library-group-by-label" class="${styles.sectionTitle}">Group by</span>`,
+                            BRDropdown({
+                                ariaLabelledby: 'library-group-by-label',
+                                options: STRUCTURE_OPTIONS,
+                                value: LIBRARY_CONTEXT.structure.get,
+                                subscribe: LIBRARY_CONTEXT.structure.subscribe,
+                                onChange: (value) => { void LIBRARY_CONTEXT.setStructure(value) }
                             })
                         ]
                     }),
@@ -281,30 +227,9 @@ export function SideBar() {
                     RefreshLibraryButton(),
 
                     UltraComponent({
-                        component: '<div></div>',
-                        className: [styles.section],
-                        children: [
-                            `<span class="${styles.sectionTitle}">Structure</span>`,
-                            UltraComponent({
-                                component: '<div></div>',
-                                className: [styles.toggleGroup],
-                                attributes: {
-                                    role: 'group',
-                                    'aria-label': 'Library structure'
-                                },
-                                onMount: [renderStructureToggle],
-                                trigger: [{
-                                    subscriber: LIBRARY_CONTEXT.structure.subscribe,
-                                    triggerFunction: renderStructureToggle
-                                }]
-                            })
-                        ]
-                    }),
-
-                    UltraComponent({
                         onMount: [
                             onItemsChange,
-                            () => () => seriesObserver?.disconnect()
+                            () => series.disconnect
                         ],
                         component: '<nav></nav>',
                         className: [styles.list],
@@ -320,7 +245,7 @@ export function SideBar() {
                                     VIEWPORT_CONTEXT.isDesktop.subscribe
                                 ],
                                 triggerFunction: ($nav: HTMLElement) => {
-                                    if (items().length && LIBRARY_CONTEXT.structure.get() === 'series') renderSeries($nav);
+                                    if (items().length && LIBRARY_CONTEXT.structure.get() === 'series') series.render($nav);
                                 }
                             }
                         ]

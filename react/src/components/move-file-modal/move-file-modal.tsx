@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import styles from './move-file-modal.module.css';
 import { FolderIcon } from "@/icons/folder.icon";
-import { Checkbox } from "@/components/checkbox/checkbox";
+import { BRCheckbox } from "@/components/br-checkbox/br-checkbox";
 import { useLibraryStore } from "@/stores/library.store";
 import { useMoveFileModalContext } from "@/context/MoveFileModalContext.hooks";
 import type { ILibraryGroup } from "@/library.types";
@@ -126,9 +126,9 @@ function MoveFileModalContent() {
                         onChange={(e) => setQuery(e.target.value)}
                     />
 
-                    <Checkbox
+                    <BRCheckbox
                         className={styles.checkbox}
-                        label="Sub-folders"
+                        text="Sub-folders"
                         checked={showSubfolders}
                         onChange={(e) => setShowSubfolders(e.target.checked)}
                     />

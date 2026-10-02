@@ -93,6 +93,10 @@ export function LibraryPage({
 
     function getLibraryItems(){
         const items = LIBRARY_CONTEXT.getLibraryItems({ onlyDir: !uid, uid });
+        if (!uid && LIBRARY_CONTEXT.structure.get() === 'folders') {
+            const rootComics = LIBRARY_CONTEXT.groups.get().flatMap(g => g.entries).filter(e => !e.did && !e.parentId);
+            items.push(...rootComics);
+        }
         const query = LIBRARY_CONTEXT.searchQuery.get().trim().toLowerCase();
         if (!query) return items;
         return items.filter(item => item.name.toLowerCase().includes(query));

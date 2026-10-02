@@ -134,6 +134,8 @@ export const useLibraryStore = create<ILibraryStore>((set, get) => ({
             cancelLabel: 'Just refresh'
         });
 
+        if (identify === null) return;
+
         if (!identify) {
             toast.success('Library refreshed');
             return;

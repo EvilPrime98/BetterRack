@@ -1,15 +1,16 @@
-import type { InputHTMLAttributes, ReactNode } from 'react';
-import styles from './checkbox.module.css';
+import type { InputHTMLAttributes } from 'react';
+import styles from './br-checkbox.module.css';
 
-interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'children'> {
-    label: ReactNode;
+interface BRCheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
+    text: string;
 }
 
-export function Checkbox({
-    label,
+export function BRCheckbox({
+    text,
     className,
+    children,
     ...props
-}: CheckboxProps) {
+}: BRCheckboxProps) {
 
     return (
         <label className={[styles.root, className].filter(Boolean).join(' ')}>
@@ -22,7 +23,10 @@ export function Checkbox({
                 </svg>
             </span>
 
-            <span className={styles.label}>{label}</span>
+            <span className={styles.label}>
+                {text}
+                {children}
+            </span>
 
         </label>
     );

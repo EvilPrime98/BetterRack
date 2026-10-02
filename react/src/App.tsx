@@ -48,7 +48,10 @@ export function App() {
                 ])
             ]);
 
-            if (useLibraryStore.getState().groups.length > 0) {
+            if (
+                useSettingsStore.getState().settings.rescanOnStartup
+                && useLibraryStore.getState().groups.length > 0
+            ) {
                 await useLibraryStore.getState().identifyLibrary();
             }
 

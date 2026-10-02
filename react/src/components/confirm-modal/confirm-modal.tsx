@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import styles from './confirm-modal.module.css';
 import { BRButton } from '@/components/br-button/br-button';
+import { BRCheckbox } from '@/components/br-checkbox/br-checkbox';
 import { useConfirmModalStore } from '@/stores/confirmModal.store';
 
 export function ConfirmModal() {
@@ -13,12 +14,13 @@ export function ConfirmModal() {
     const hasDontAskAgain = useConfirmModalStore((s) => s.hasDontAskAgain);
     const dontAskAgain = useConfirmModalStore((s) => s.dontAskAgain);
 
+    const dismiss = () => useConfirmModalStore.getState().resolveConfirmDialog(null);
     const cancel = () => useConfirmModalStore.getState().resolveConfirmDialog(false);
     const confirm = () => useConfirmModalStore.getState().resolveConfirmDialog(true);
 
     useEffect(() => {
         const onKeydown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') useConfirmModalStore.getState().resolveConfirmDialog(false);
+            if (e.key === 'Escape') useConfirmModalStore.getState().resolveConfirmDialog(null);
         };
         document.addEventListener('keydown', onKeydown);
         return () => document.removeEventListener('keydown', onKeydown);
@@ -27,7 +29,7 @@ export function ConfirmModal() {
     return (
         <div className={styles.overlay} style={{ display: isVisible ? undefined : 'none' }}>
 
-            <button type="button" className={styles.backdrop} aria-label="Close dialog" onClick={cancel} />
+            <button type="button" className={styles.backdrop} aria-label="Close dialog" onClick={dismiss} />
 
             <div
                 className={styles.modal}
@@ -41,14 +43,11 @@ export function ConfirmModal() {
                 <p className={styles.message}>{message}</p>
 
                 {hasDontAskAgain && (
-                    <label className={styles.dontAskAgain}>
-                        <input
-                            type="checkbox"
-                            checked={dontAskAgain}
-                            onChange={(e) => useConfirmModalStore.getState().setDontAskAgain(e.currentTarget.checked)}
-                        />
-                        Don't ask again
-                    </label>
+                    <BRCheckbox
+                        text="Don't ask again"
+                        checked={dontAskAgain}
+                        onChange={(e) => useConfirmModalStore.getState().setDontAskAgain(e.currentTarget.checked)}
+                    />
                 )}
 
                 <div className={styles.actions}>

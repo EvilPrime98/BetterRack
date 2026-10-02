@@ -58,7 +58,12 @@ export function LibraryPage() {
     const { type: readFilter } = useReadTypesContext();
 
     const getLibraryItems = useCallback((): ILibraryResponseItem[] => {
-        const items = useLibraryStore.getState().getLibraryItems({ onlyDir: !uid, uid });
+        const state = useLibraryStore.getState();
+        const items = state.getLibraryItems({ onlyDir: !uid, uid });
+        if (!uid && state.structure === 'folders') {
+            const rootComics = state.groups.flatMap(g => g.entries).filter(e => !e.did && !e.parentId);
+            items.push(...rootComics);
+        }
         const query = useLibraryStore.getState().searchQuery.trim().toLowerCase();
         if (!query) return items;
         return items.filter(item => item.name.toLowerCase().includes(query));
