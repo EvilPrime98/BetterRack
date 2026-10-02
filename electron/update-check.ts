@@ -5,184 +5,71 @@ import { pipeline } from "node:stream/promises";
 import { APP_NAME } from "./app.config";
 
 const LATEST_RELEASE_URL = "https://api.github.com/repos/EvilPrime98/BetterRack/releases/latest";
-const REQUEST_TIMEOUT_MS = 10000;
 
-type TReleaseAsset = {
-    name: string;
-    browser_download_url: string;
-    size: number;
-};
+type TReleaseAsset = { name: string; browser_download_url: string; size: number };
+type TRelease = { tag_name: string; draft: boolean; prerelease: boolean; assets: TReleaseAsset[] };
 
-type TRelease = {
-    tag_name: string;
-    html_url: string;
-    draft: boolean;
-    prerelease: boolean;
-    assets: TReleaseAsset[];
-};
+function isNewer(candidate: string, current: string): boolean {
 
-type TUpdateChoice = "download" | "later" | "skip";
+    const a = candidate.replace(/^v/, "").split(".").map(Number);
+    const b = current.replace(/^v/, "").split(".").map(Number);
 
-type TLog = (line: string) => void;
-
-function parseVersion(version: string): number[] | null {
-
-    const match = /^v?(\d+)\.(\d+)\.(\d+)/.exec(version.trim());
-    return match ? [Number(match[1]), Number(match[2]), Number(match[3])] : null;
-
-}
-
-function isNewerVersion(candidate: string, current: string): boolean {
-
-    const next = parseVersion(candidate);
-    const installed = parseVersion(current);
-
-    if (!next || !installed) return false;
-
-    for (let i = 0; i < next.length; i++) {
-        if (next[i] !== installed[i]) return next[i] > installed[i];
+    for (let i = 0; i < 3; i++) {
+        if ((a[i] ?? 0) !== (b[i] ?? 0)) return (a[i] ?? 0) > (b[i] ?? 0);
     }
 
     return false;
 
 }
 
-function findInstallerAsset(release: TRelease): TReleaseAsset | undefined {
+export async function checkForUpdates(win: BrowserWindow, log: (line: string) => void): Promise<void> {
 
-    const extension = process.platform === "win32" ? ".exe" : process.platform === "linux" ? ".appimage" : null;
-    if (!extension) return undefined;
-
-    return release.assets.find((asset) => asset.name.toLowerCase().endsWith(extension));
-
-}
-
-function skippedVersionFile(): string {
-    return path.join(app.getPath("userData"), "skipped-update.json");
-}
-
-function readSkippedVersion(): string | null {
-
-    try {
-        const parsed = JSON.parse(fs.readFileSync(skippedVersionFile(), "utf8")) as { version?: string };
-        return parsed.version ?? null;
-    } catch {
-        return null;
-    }
-
-}
-
-function writeSkippedVersion(version: string): void {
-    fs.writeFileSync(skippedVersionFile(), JSON.stringify({ version }));
-}
-
-async function fetchLatestRelease(): Promise<TRelease | null> {
-
-    const response = await fetch(LATEST_RELEASE_URL, {
-        headers: { Accept: "application/vnd.github+json", "User-Agent": APP_NAME },
-        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-    });
-
-    if (!response.ok) return null;
-
-    const release = await response.json() as TRelease;
-
-    return release.draft || release.prerelease ? null : release;
-
-}
-
-async function askUpdateChoice(win: BrowserWindow, version: string): Promise<TUpdateChoice> {
-
-    const choices: TUpdateChoice[] = ["download", "later", "skip"];
-
-    const { response } = await dialog.showMessageBox(win, {
-        type: "info",
-        title: `${APP_NAME} update`,
-        message: `Version ${version} of ${APP_NAME} is available.`,
-        detail: `You are running version ${app.getVersion()}. Download the new version now?`,
-        buttons: ["Download", "Later", "Skip this version"],
-        defaultId: 0,
-        cancelId: 1,
-    });
-
-    return choices[response] ?? "later";
-
-}
-
-async function downloadAsset(win: BrowserWindow, asset: TReleaseAsset): Promise<string> {
-
-    const targetPath = path.join(app.getPath("downloads"), asset.name);
-
-    const response = await fetch(asset.browser_download_url);
-
-    if (!response.ok || !response.body) {
-        throw new Error(`Download failed with status ${response.status}`);
-    }
-
-    let received = 0;
-
-    const reportProgress = async function* (chunks: AsyncIterable<Uint8Array>) {
-        for await (const chunk of chunks) {
-            received += chunk.length;
-            if (asset.size > 0 && !win.isDestroyed()) win.setProgressBar(received / asset.size);
-            yield chunk;
-        }
-    };
-
-    try {
-        await pipeline(response.body, reportProgress, fs.createWriteStream(targetPath));
-    } finally {
-        if (!win.isDestroyed()) win.setProgressBar(-1);
-    }
-
-    return targetPath;
-
-}
-
-async function openDownloadedInstaller(filePath: string): Promise<void> {
-
-    if (process.platform === "win32") {
-        await shell.openPath(filePath);
-        return;
-    }
-
-    shell.showItemInFolder(filePath);
-
-}
-
-export async function checkForUpdates(win: BrowserWindow, log: TLog): Promise<void> {
+    const skipFile = path.join(app.getPath("userData"), "skipped-update.json");
 
     try {
 
-        const release = await fetchLatestRelease();
-        if (!release) return;
+        const response = await fetch(LATEST_RELEASE_URL, {
+            headers: { Accept: "application/vnd.github+json", "User-Agent": APP_NAME },
+            signal: AbortSignal.timeout(10000),
+        });
 
+        if (!response.ok) return;
+
+        const release = await response.json() as TRelease;
         const version = release.tag_name.replace(/^v/, "");
 
-        if (!isNewerVersion(version, app.getVersion())) return;
-        if (readSkippedVersion() === version) return;
+        if (release.draft || release.prerelease || !isNewer(version, app.getVersion())) return;
 
-        const asset = findInstallerAsset(release);
+        const skipped = fs.existsSync(skipFile) ? fs.readFileSync(skipFile, "utf8") : "";
+        if (skipped === version) return;
 
-        if (!asset) {
-            log(`Update ${version} found but no installer asset matches ${process.platform}`);
-            return;
-        }
+        const extension = process.platform === "win32" ? ".exe" : ".appimage";
+        const asset = release.assets.find((a) => a.name.toLowerCase().endsWith(extension));
 
-        log(`Update ${version} available (current ${app.getVersion()})`);
+        if (!asset) return;
 
-        const choice = await askUpdateChoice(win, version);
+        const { response: choice } = await dialog.showMessageBox(win, {
+            type: "info",
+            title: `${APP_NAME} update`,
+            message: `Version ${version} of ${APP_NAME} is available.`,
+            detail: `You are running version ${app.getVersion()}. Download the new version now?`,
+            buttons: ["Download", "Later", "Skip this version"],
+            defaultId: 0,
+            cancelId: 1,
+        });
 
-        if (choice === "skip") {
-            writeSkippedVersion(version);
-            return;
-        }
+        if (choice === 2) fs.writeFileSync(skipFile, version);
+        if (choice !== 0) return;
 
-        if (choice === "later") return;
+        const download = await fetch(asset.browser_download_url);
+        if (!download.ok || !download.body) throw new Error(`Download failed (${download.status})`);
 
-        const filePath = await downloadAsset(win, asset);
+        const filePath = path.join(app.getPath("downloads"), asset.name);
+        await pipeline(download.body, fs.createWriteStream(filePath));
         log(`Update ${version} downloaded to ${filePath}`);
 
-        await openDownloadedInstaller(filePath);
+        if (process.platform === "win32") await shell.openPath(filePath);
+        else shell.showItemInFolder(filePath);
 
     } catch (e) {
 
