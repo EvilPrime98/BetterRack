@@ -23,7 +23,7 @@ export function ReaderPage() {
     const { pages, isLoading, hasError, bookmarks, isRefreshing, loadPages, refreshComic } = useComicPages(uid);
 
     //refs
-    const viewerRef = useRef<HTMLDivElement>(null);
+    const viewerRef = useRef<HTMLButtonElement>(null);
     const pageRef = useRef<HTMLElement>(null);
 
     const { currentPage, goToPage } = useReaderPageTracking(uid, pages, viewerRef);
@@ -73,19 +73,13 @@ export function ReaderPage() {
                 <button type="button" className={styles.retry} onClick={loadPages}>Retry</button>
             </div>
 
-            <div
+            <button
                 className={styles.viewer}
                 ref={viewerRef}
-                role="button"
-                tabIndex={0}
+                type="button"
                 aria-label="Toggle reader header"
                 onClick={toggleHeader}
                 onDoubleClick={toggleFullscreen}
-                onKeyDown={(e) => {
-                    if (e.key !== 'Enter' && e.key !== ' ') return;
-                    e.preventDefault();
-                    toggleHeader();
-                }}
             >
                 {Array.from({ length: Math.max(0, numPages - 1) }, (_, i) => i + 1).map(i => (
                     <ImageElement
@@ -97,7 +91,7 @@ export function ReaderPage() {
                         eager={!!range && i >= range.start && i <= range.end}
                     />
                 ))}
-            </div>
+            </button>
 
             { next ? <ReaderNext uid={uid} navigate={navigate}/> : null }
 

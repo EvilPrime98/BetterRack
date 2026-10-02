@@ -32,33 +32,22 @@ export function Header() {
         if (searchParams.get('search')) navigate('/');
     }
 
-    function onEnterOrSpace(handler: () => void) {
-        return (e: React.KeyboardEvent) => {
-            const key = e.key;
-            if (key !== 'Enter' && key !== ' ') return;
-            e.preventDefault();
-            handler();
-        };
-    }
-
     return (
         <header className={styles.header}>
 
-            <div
+            <button
                 className={[
                     styles.iconBtn,
                     styles.noDrag,
                     styles.burger
                 ].filter(Boolean).join(' ')}
-                role="button"
-                tabIndex={0}
+                type="button"
                 aria-label="Toggle sidebar"
                 aria-hidden={false}
                 onClick={toggleSidebar}
-                onKeyDown={onEnterOrSpace(toggleSidebar)}
             >
                 <BurgerIcon size={iconSize * 1.5} />
-            </div>
+            </button>
 
             <div className={styles.inner}>
 

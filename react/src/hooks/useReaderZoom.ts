@@ -14,7 +14,7 @@ const clampZoom = (value: number, maxZoom: number) => Math.min(maxZoom, Math.max
 
 export function useReaderZoom(
     pageRef: RefObject<HTMLElement | null>,
-    viewerRef: RefObject<HTMLDivElement | null>
+    viewerRef: RefObject<HTMLElement | null>
 ) {
 
     const [zoom, setZoom] = useState(() => useUserPrefStore.getState().getPref('zoom'));
