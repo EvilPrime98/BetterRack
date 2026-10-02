@@ -1,4 +1,4 @@
-import { ultraCompState } from "ultra-light-js";
+import { ultraCompState, type IUltraCompStateStateful } from "ultra-light-js";
 
 const COLLAPSED_KEY = 'better-rack-sidebar-collapsed';
 
@@ -7,10 +7,36 @@ function readCollapsed(): boolean {
     return window.localStorage.getItem(COLLAPSED_KEY) === 'true';
 }
 
-export const SIDEBAR_CONTEXT = ultraCompState({
+const COMPACT_KEY = 'better-rack-sidebar-compact';
+
+function readCompact(): boolean {
+    if (typeof window === 'undefined') return false;
+    return window.localStorage.getItem(COMPACT_KEY) === 'true';
+}
+
+interface ISidebarCtx {
+    isCompact: IUltraCompStateStateful<boolean>;
+    isExpanded: IUltraCompStateStateful<boolean>;
+    isCollapsed: IUltraCompStateStateful<boolean>;
+    expandedGroups: IUltraCompStateStateful<Record<string, boolean>>;
+    toggleGroup: (uid: string) => void;
+}
+
+export const SIDEBAR_CONTEXT: ISidebarCtx = ultraCompState({
+    isCompact: readCompact(),
     isExpanded: false,
-    isCollapsed: readCollapsed()
+    isCollapsed: readCollapsed(),
+    expandedGroups: {} as Record<string, boolean>,
+    toggleGroup: (comp: ISidebarCtx, uid: string) => {
+        const current = comp.expandedGroups.get();
+        comp.expandedGroups.set({ ...current, [uid]: !current[uid] });
+    }
 })
+
+SIDEBAR_CONTEXT.isCompact.subscribe(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(COMPACT_KEY, String(SIDEBAR_CONTEXT.isCompact.get()));
+});
 
 SIDEBAR_CONTEXT.isCollapsed.subscribe(() => {
     if (typeof window === 'undefined') return;
