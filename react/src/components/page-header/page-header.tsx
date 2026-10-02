@@ -1,4 +1,4 @@
-import { DropdownOptions } from '@/components/dropdown/dropdown-options';
+import { BRDropdown, type BRDropdownOption } from '@/components/br-dropdown/br-dropdown';
 import { ItemCounter } from '@/components/item-counter/item-counter';
 import { StateFilter } from '@/components/state-filter/state-filter';
 import { LayoutSelector } from '@/components/layout/layout-selector';
@@ -6,10 +6,18 @@ import { LayoutSelector } from '@/components/layout/layout-selector';
 import { BRButton } from '@/components/br-button/br-button';
 import { FolderIcon } from '@/icons/folder.icon';
 import styles from './page-header.module.css';
-import type { ILibraryResponseItem, ILibraryFilters } from '@/library.types';
+import { FILTER_OPTIONS, type ILibraryResponseItem, type ILibraryFilters } from '@/library.types';
 import { useNewFolderModalContext } from '@/context/NewFolderModalContext.hooks';
 import { ArrowLeftIcon } from '@/icons/arrow-left.icon';
 import { useNavigate } from 'react-router-dom';
+import { useLibraryStore } from '@/stores/library.store';
+
+type TSortOption = 'alphabetical' | 'releaseDate';
+
+const SORT_OPTIONS: BRDropdownOption<TSortOption>[] = [
+    { value: 'alphabetical', label: FILTER_OPTIONS.nofilters },
+    { value: 'releaseDate', label: FILTER_OPTIONS.byReleaseDate }
+];
 
 export function PageHeader({
     uid,
@@ -29,6 +37,8 @@ export function PageHeader({
 
     const navigate = useNavigate();
     const { openNewFolderModal } = useNewFolderModalContext();
+    const title = useLibraryStore((s) => s.groups)
+        .flatMap(g => g.entries).find(e => e.uid === uid)?.name || 'Root';
 
     return (
         <header className={styles.pageHeader}>
@@ -50,11 +60,16 @@ export function PageHeader({
                         </BRButton>
                         : null
                     }
-                    <DropdownOptions
-                        filters={filters}
-                        uid={uid}
-                        setFilters={setFilters}
-                        resetFilters={resetFilters}
+                    <BRDropdown<TSortOption>
+                        className={styles.sortDropdown}
+                        options={SORT_OPTIONS}
+                        triggerLabel={title}
+                        value={filters.sortByReleaseDate ? 'releaseDate' : 'alphabetical'}
+                        onChange={(value) => {
+                            if (value === 'releaseDate') setFilters({ sortByReleaseDate: true });
+                            else resetFilters();
+                        }}
+                        aria-label={`Sort options, currently ${title}`}
                     />
                     <ItemCounter items={items} />
                 </div>

@@ -12,6 +12,7 @@ interface BRDropdownProps<T extends string> {
     value: T;
     onChange: (value: T) => void;
     id?: string;
+    triggerLabel?: string;
     className?: string;
     'aria-label'?: string;
     'aria-labelledby'?: string;
@@ -22,6 +23,7 @@ export function BRDropdown<T extends string>({
     value,
     onChange,
     id,
+    triggerLabel,
     className,
     ...aria
 }: BRDropdownProps<T>) {
@@ -109,7 +111,12 @@ export function BRDropdown<T extends string>({
                 onKeyDown={onKeyDown}
                 {...aria}
             >
-                <span>{selected?.label}</span>
+                <span className={styles.label}>
+                    {triggerLabel === undefined && options.map((o) => (
+                        <span key={o.value} className={styles.sizer} aria-hidden="true">{o.label}</span>
+                    ))}
+                    <span className={styles.current} title={triggerLabel}>{triggerLabel ?? selected?.label}</span>
+                </span>
                 <svg
                     className={[styles.chevron, isOpen ? styles.chevronOpen : ''].filter(Boolean).join(' ')}
                     viewBox="0 0 12 12"

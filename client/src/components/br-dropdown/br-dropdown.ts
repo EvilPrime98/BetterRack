@@ -14,6 +14,7 @@ export function BRDropdown<T extends string>({
     subscribe,
     onChange,
     id,
+    triggerLabel,
     ariaLabelledby,
     ariaLabel,
     ...props
@@ -23,8 +24,9 @@ export function BRDropdown<T extends string>({
     subscribe: (fn: (value: unknown) => void) => () => void;
     onChange: (value: T) => void;
     id?: string;
+    triggerLabel?: () => string;
     ariaLabelledby?: string;
-    ariaLabel?: string;
+    ariaLabel?: string | (() => string);
 } & UltraElementProps) {
 
     const listId = `br-dropdown-${++dropdownCount}`;
@@ -45,10 +47,10 @@ export function BRDropdown<T extends string>({
             'aria-expanded': 'false',
             'aria-controls': listId,
             ...(ariaLabelledby ? { 'aria-labelledby': ariaLabelledby } : {}),
-            ...(ariaLabel ? { 'aria-label': ariaLabel } : {})
+            ...(ariaLabel ? { 'aria-label': typeof ariaLabel === 'function' ? ariaLabel() : ariaLabel } : {})
         },
         children: [
-            '<span></span>',
+            `<span class="${styles.label}">${triggerLabel ? '' : options.map((o) => `<span class="${styles.sizer}" aria-hidden="true">${o.label}</span>`).join('')}<span class="${styles.current}"></span></span>`,
             `<svg class="${styles.chevron}" viewBox="0 0 12 12" fill="none" aria-hidden="true">
                 <path d="M3 4.5 6 7.5 9 4.5" />
             </svg>`
@@ -59,11 +61,17 @@ export function BRDropdown<T extends string>({
         }
     });
 
-    const $label = $trigger.querySelector('span') as HTMLElement;
+    const $label = $trigger.querySelector(`.${styles.current}`) as HTMLElement;
     const $chevron = $trigger.querySelector('svg') as SVGElement;
 
     function syncLabel() {
-        $label.textContent = options[selectedIndex()]?.label ?? '';
+        if (triggerLabel) {
+            $label.textContent = triggerLabel();
+            $label.title = triggerLabel();
+        } else {
+            $label.textContent = options[selectedIndex()]?.label ?? '';
+        }
+        if (typeof ariaLabel === 'function') $trigger.setAttribute('aria-label', ariaLabel());
     }
 
     function syncActive() {
