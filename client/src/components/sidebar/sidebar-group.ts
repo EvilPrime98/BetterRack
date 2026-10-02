@@ -1,4 +1,5 @@
-import { UltraComponent, ultraState } from "ultra-light-js";
+import { UltraComponent } from "ultra-light-js";
+import { SIDEBAR_CONTEXT } from "../../context/sidebar.context";
 import styles from './sidebar.module.css';
 import { LIBRARY_CONTEXT } from "../../context/library.context";
 import { NEW_FOLDER_MODAL_CTX } from "../../context/new-folder-modal.context";
@@ -14,10 +15,12 @@ export function SideBarGroup({
     group: ILibraryGroup
 }) {
 
-    const [isExpanded, setIsExpanded, subsExpanded] = ultraState(false);
+    const isExpanded = () => !!SIDEBAR_CONTEXT.expandedGroups.get()[group.uid];
+    const subsExpanded = SIDEBAR_CONTEXT.expandedGroups.subscribe;
+    let renderedExpanded: boolean | null = null;
 
     function toggle() {
-        setIsExpanded(!isExpanded());
+        SIDEBAR_CONTEXT.toggleGroup(group.uid);
     }
 
     function onNewFolder(e: Event) {
@@ -26,7 +29,9 @@ export function SideBarGroup({
     }
 
     function onExpandChange($nav: HTMLElement) {
-        if (isExpanded()) {
+        if (renderedExpanded === isExpanded()) return;
+        renderedExpanded = isExpanded();
+        if (renderedExpanded) {
             const entries = LIBRARY_CONTEXT.getLibraryItems({ onlyDir: true, uid: group.uid });
             $nav.replaceChildren(...entries.map(item => SideBarElement({ item })));
         } else {

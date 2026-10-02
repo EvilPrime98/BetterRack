@@ -9,7 +9,7 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(min(180px, 100%), 1fr));
     align-content: start;
-    gap: 28px 22px;
+    gap: 16px 12px;
     flex: 1;
     min-height: 0;
     overflow-x: hidden;
@@ -24,7 +24,7 @@
 
 .comicContainer.detailLayout {
     grid-template-columns: repeat(auto-fill, minmax(min(420px, 100%), 1fr));
-    gap: 24px;
+    gap: 14px;
 }
 
 .empty {

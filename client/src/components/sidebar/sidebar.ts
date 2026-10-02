@@ -6,6 +6,7 @@ import { LIBRARY_CONTEXT } from "../../context/library.context";
 import { SideBarGroup } from "./sidebar-group";
 import type { ILibraryGroup } from "../../library.types";
 import type { TLibraryStructure } from "../../services/library.service";
+import { BRButton } from "../br-button/br-button";
 import { BRDropdown, type IBRDropdownOption } from "../br-dropdown/br-dropdown";
 import { SeriesList } from "./series-list";
 import { RefreshLibraryButton } from "./refresh-button";
@@ -66,6 +67,39 @@ export function SideBar() {
             }
             $aside.setAttribute('inert', '');
         }
+    }
+
+    function onCompactChange($el: HTMLElement) {
+        const isCompact = SIDEBAR_CONTEXT.isCompact.get();
+        $el.classList.toggle(styles.folded, isCompact);
+        $el.toggleAttribute('inert', isCompact);
+    }
+
+    function onToggleChange($button: HTMLElement) {
+        const isCompact = SIDEBAR_CONTEXT.isCompact.get();
+        $button.textContent = isCompact ? 'Show more' : 'Show less';
+        $button.setAttribute('aria-expanded', String(!isCompact));
+    }
+
+    function Fold(...children: (string | HTMLElement)[]) {
+        const isCompact = SIDEBAR_CONTEXT.isCompact.get();
+        return UltraComponent({
+            component: '<div></div>',
+            className: isCompact ? [styles.fold, styles.folded] : [styles.fold],
+            attributes: isCompact ? { inert: '' } : {},
+            onMount: [onCompactChange],
+            trigger: [{
+                subscriber: SIDEBAR_CONTEXT.isCompact.subscribe,
+                triggerFunction: onCompactChange
+            }],
+            children: [
+                UltraComponent({
+                    component: '<div></div>',
+                    className: [styles.foldInner],
+                    children
+                })
+            ]
+        });
     }
 
     function onBackdropChange($backdrop: HTMLElement) {
@@ -138,6 +172,20 @@ export function SideBar() {
 
                 children: [
 
+                    BRButton({
+                        text: SIDEBAR_CONTEXT.isCompact.get() ? 'Show more' : 'Show less',
+                        variant: 'ghost',
+                        className: [styles.toggleButton],
+                        eventHandler: {
+                            click: () => SIDEBAR_CONTEXT.isCompact.set(!SIDEBAR_CONTEXT.isCompact.get())
+                        },
+                        onMount: [onToggleChange],
+                        trigger: [{
+                            subscriber: SIDEBAR_CONTEXT.isCompact.subscribe,
+                            triggerFunction: onToggleChange
+                        }]
+                    }),
+
                     UltraComponent({
                         component: '<div></div>',
                         className: [styles.section],
@@ -153,6 +201,7 @@ export function SideBar() {
                         ]
                     }),
 
+                    Fold(
                     UltraComponent({
                         component: '<div></div>',
                         className: [styles.section],
@@ -224,7 +273,8 @@ export function SideBar() {
 
                     SidebarSearch(),
 
-                    RefreshLibraryButton(),
+                    RefreshLibraryButton()
+                    ),
 
                     UltraComponent({
                         onMount: [
@@ -251,7 +301,7 @@ export function SideBar() {
                         ]
                     }),
 
-                    Footer()
+                    Fold(Footer())
 
                 ],
 

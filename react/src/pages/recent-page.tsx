@@ -7,9 +7,14 @@ import { useRecentlyAdded } from '@/hooks/useRecentlyAdded';
 import { ArrowLeftIcon } from '@/icons/arrow-left.icon';
 import { RECENT_WINDOW_OPTIONS, type TRecentWindow } from '@/library.types';
 import styles from './recent-page.module.css';
-import { WindowFilter } from '@/components/window-filter/window-filter';
+import { BRDropdown } from '@/components/br-dropdown/br-dropdown';
 import { LayoutSelector } from '@/components/layout/layout-selector';
 import { StateFilter } from '@/components/state-filter/state-filter';
+
+const WINDOW_DROPDOWN_OPTIONS = RECENT_WINDOW_OPTIONS.map(opt => ({
+    value: opt.label,
+    label: opt.label,
+}));
 
 export function RecentPage() {
 
@@ -28,7 +33,9 @@ export function RecentPage() {
     
     const comicsType = useComicsTypeStore((s) => s.type);
 
-    const onSelect = (option: TRecentWindow) => {
+    const onSelect = (label: TRecentWindow['label']) => {
+        const option = RECENT_WINDOW_OPTIONS.find(opt => opt.label === label);
+        if (!option) return;
         setSelectedWindow(option);
         navigate(`/new?filter=${option.label}`);
     }
@@ -60,9 +67,11 @@ export function RecentPage() {
                     <div className={styles.right}>
                         <StateFilter/>
                         <LayoutSelector/>
-                        <WindowFilter
-                            selected={selectedWindow}
-                            onSelect={onSelect}
+                        <BRDropdown
+                            options={WINDOW_DROPDOWN_OPTIONS}
+                            value={selectedWindow.label}
+                            onChange={onSelect}
+                            aria-label="Time window"
                         />
                     </div>
 

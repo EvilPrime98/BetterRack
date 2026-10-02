@@ -14,19 +14,128 @@ import { useLibraryStore } from '@/stores/library.store';
 import { useServerModalStore } from '@/stores/serverModal.store';
 import { useConfirmModalStore } from '@/stores/confirmModal.store';
 
-export function SettingsPage() {
+type SettingsDraft = Pick<IAppSettings, 'apiUrl' | 'downloadDir' | 'wikiSearch' | 'rescanOnStartup'>;
+type SetDraft = React.Dispatch<React.SetStateAction<SettingsDraft>>;
 
-    const settings = useSettingsStore((s) => s.settings);
-    const setTitle = useDocumentTitleStore((s) => s.setTitle);
+function ServerSection() {
+
+    async function onUnlinkServer() {
+        const confirmed = await useConfirmModalStore.getState().confirmDialog({
+            title: 'Unlink from remote server?',
+            message: 'The app will disconnect from the remote server and go back to your local library.',
+            confirmLabel: 'Unlink'
+        });
+        if (!confirmed) return;
+        clearRemoteServer();
+        window.location.reload();
+    }
+
+    return (
+            <section className={styles.section}>
+
+                <h2 className={styles.sectionTitle}>Server</h2>
+
+                <p className={styles.empty}>
+                    {getStoredServerUrl()
+                        || 'No server configured'}
+                </p>
+
+                <BRButton
+                    text="Change server"
+                    onClick={() => useServerModalStore.getState().openServerModal()}
+                />
+
+                {isRemoteModeEnabled() && (
+                    <BRButton
+                        text="Unlink server"
+                        variant="secondary"
+                        onClick={onUnlinkServer}
+                    />
+                )}
+
+            </section>
+    );
+}
+
+function DownloadsSection({ draft, setDraft }: { draft: SettingsDraft; setDraft: SetDraft }) {
+
+    async function onBrowseDownloadDir() {
+        const picker = window.desktop?.pickLibraryFolder;
+        if (!picker) return;
+        try {
+            const selected = await picker();
+            if (selected) setDraft((d) => ({ ...d, downloadDir: selected }));
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : 'Could not open the folder picker.');
+        }
+    }
+
+    return (
+            <section className={styles.section}>
+
+                <div className={styles.fieldGroup}>
+
+                    <h2 className={styles.sectionTitle}>Downloads</h2>
+
+                    <div className={styles.field}>
+
+                        <label className={styles.label} htmlFor="settings-downloadDir">Download folder</label>
+
+                        <div className={styles.addRow}>
+
+                            <input
+                                id="settings-downloadDir"
+                                type="text"
+                                className={styles.input}
+                                placeholder="/path/to/downloads"
+                                value={draft.downloadDir ?? ''}
+                                onChange={(e) => setDraft((d) => ({ ...d, downloadDir: e.target.value }))}
+                            />
+
+                            {hasNativeFolderPicker() && (
+                                <BRButton
+                                    text="Browse…"
+                                    variant="secondary"
+                                    className={styles.browseBtn}
+                                    onClick={onBrowseDownloadDir}
+                                />
+                            )}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+    );
+}
+
+function StoreSection({ setDraft }: { setDraft: SetDraft }) {
+    return (
+            <section className={styles.section}>
+
+                <div className={styles.fieldGroup}>
+
+                    <h2 className={styles.sectionTitle}>Store configuration</h2>
+
+                    <TextField
+                        fieldKey="apiUrl"
+                        label="API URL"
+                        placeholder="https://example.com/wp-json/wp/v2"
+                        onChange={(e) => setDraft((d) => ({ ...d, apiUrl: (e.target as HTMLInputElement).value }))}
+                    />
+
+                </div>
+
+            </section>
+    );
+}
+
+function LibraryFoldersSection({ outputDirs }: { outputDirs: string[] }) {
+
     const [folderError, setFolderError] = useState('');
-    const [settingsError, setSettingsError] = useState('');
     const [folderPath, setFolderPath] = useState('');
-    const [draft, setDraft] = useState({
-        apiUrl: settings.apiUrl,
-        downloadDir: settings.downloadDir,
-        wikiSearch: settings.wikiSearch,
-        rescanOnStartup: settings.rescanOnStartup,
-    });
 
     function clearFolderError() {
         setFolderError('');
@@ -72,16 +181,60 @@ export function SettingsPage() {
         if (selected) addFolder(selected);
     }
 
-    async function onBrowseDownloadDir() {
-        const picker = window.desktop?.pickLibraryFolder;
-        if (!picker) return;
-        try {
-            const selected = await picker();
-            if (selected) setDraft((d) => ({ ...d, downloadDir: selected }));
-        } catch (e) {
-            toast.error(e instanceof Error ? e.message : 'Could not open the folder picker.');
-        }
-    }
+    return (
+            <section className={`${styles.section}`}>
+
+                <h2 className={styles.sectionTitle}>Library folders</h2>
+
+                <ul className={styles.folderList}>
+                    {outputDirs.length === 0
+                        ? <li className={styles.empty}>No library folders configured yet.</li>
+                        : outputDirs.map(dir => (
+                            <LibraryFolderRow
+                                key={dir}
+                                dir={dir}
+                                clearFolderError={clearFolderError}
+                                setFolderError={setFolderError}
+                            />
+                        ))
+                    }
+                </ul>
+
+                <div className={styles.addRow}>
+
+                    <input
+                        type="text"
+                        className={styles.input}
+                        placeholder="Folder path"
+                        aria-label="Folder path"
+                        value={folderPath}
+                        onChange={(e) => setFolderPath(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') onAddFolder(); }}
+                    />
+
+                    {hasNativeFolderPicker() && (
+                        <BRButton
+                            text="Browse…"
+                            variant="secondary"
+                            className={styles.browseBtn}
+                            onClick={onBrowseFolder}
+                        />
+                    )}
+
+                    <BRButton
+                        text="Add Folder"
+                        onClick={onAddFolder}
+                    />
+
+                </div>
+
+                <p className={styles.errorText}>{folderError}</p>
+
+            </section>
+    );
+}
+
+function IdentificationSection({ draft, setDraft }: { draft: SettingsDraft; setDraft: SetDraft }) {
 
     async function onReidentifyAll() {
         const confirmed = await useConfirmModalStore.getState().confirmDialog({
@@ -93,16 +246,90 @@ export function SettingsPage() {
         useLibraryStore.getState().reidentifyAll();
     }
 
-    async function onUnlinkServer() {
-        const confirmed = await useConfirmModalStore.getState().confirmDialog({
-            title: 'Unlink from remote server?',
-            message: 'The app will disconnect from the remote server and go back to your local library.',
-            confirmLabel: 'Unlink'
-        });
-        if (!confirmed) return;
-        clearRemoteServer();
-        window.location.reload();
-    }
+    return (
+            <section className={styles.section}>
+
+                <div className={styles.fieldGroup}>
+
+                    <h2 className={styles.sectionTitle}>Identification</h2>
+
+                    <div className={styles.toggleRow}>
+
+                        <BRCheckbox
+                            text="Search the wiki for metadata"
+                            checked={draft.wikiSearch}
+                            onChange={(e) => {
+                                const checked = e.currentTarget.checked;
+                                setDraft((d) => ({ ...d, wikiSearch: checked }));
+                            }}
+                        />
+
+                        <button
+                            type="button"
+                            className={styles.infoIcon}
+                        >
+                            <svg
+                                width={16}
+                                height={16}
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="#fff"
+                                strokeWidth={1.5}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <circle cx={12} cy={12} r={10} />
+                                <line x1={12} y1={16} x2={12} y2={12} />
+                                <line x1={12} y1={8} x2={12.01} y2={8} />
+                            </svg>
+                            <span
+                                className={styles.infoTooltip}
+                                role="tooltip"
+                            >
+                                Comics are always identified from ComicInfo.xml. When enabled, comics without it are looked up on the wiki.
+                            </span>
+                        </button>
+
+                        <BRButton
+                            className={styles.reidentifyBtn}
+                            variant="secondary"
+                            text="Re-identify all"
+                            onClick={onReidentifyAll}
+                        />
+
+                    </div>
+
+                    <div className={styles.toggleRow}>
+
+                        <BRCheckbox
+                            text="Re-scan on start up"
+                            checked={draft.rescanOnStartup}
+                            onChange={(e) => {
+                                const checked = e.currentTarget.checked;
+                                setDraft((d) => ({ ...d, rescanOnStartup: checked }));
+                            }}
+                        />
+
+                    </div>
+
+                </div>
+
+            </section>
+    );
+}
+
+export function SettingsPage() {
+
+    const settings = useSettingsStore((s) => s.settings);
+    const setTitle = useDocumentTitleStore((s) => s.setTitle);
+    const [settingsError, setSettingsError] = useState('');
+    const [draft, setDraft] = useState<SettingsDraft>({
+        apiUrl: settings.apiUrl,
+        downloadDir: settings.downloadDir,
+        wikiSearch: settings.wikiSearch,
+        rescanOnStartup: settings.rescanOnStartup,
+    });
 
     async function onSave() {
 
@@ -159,208 +386,16 @@ export function SettingsPage() {
 
                     <div className={styles.column}>
 
-                        <section className={styles.section}>
-
-                            <h2 className={styles.sectionTitle}>Server</h2>
-
-                            <p className={styles.empty}>
-                                {getStoredServerUrl()
-                                    || 'No server configured'}
-                            </p>
-
-                            <BRButton
-                                text="Change server"
-                                onClick={() => useServerModalStore.getState().openServerModal()}
-                            />
-
-                            {isRemoteModeEnabled() && (
-                                <BRButton
-                                    text="Unlink server"
-                                    variant="secondary"
-                                    onClick={onUnlinkServer}
-                                />
-                            )}
-
-                        </section>
-
-                        <section className={styles.section}>
-
-                            <div className={styles.fieldGroup}>
-
-                                <h2 className={styles.sectionTitle}>Downloads</h2>
-
-                                <div className={styles.field}>
-
-                                    <label className={styles.label} htmlFor="settings-downloadDir">Download folder</label>
-
-                                    <div className={styles.addRow}>
-
-                                        <input
-                                            id="settings-downloadDir"
-                                            type="text"
-                                            className={styles.input}
-                                            placeholder="/path/to/downloads"
-                                            value={draft.downloadDir ?? ''}
-                                            onChange={(e) => setDraft((d) => ({ ...d, downloadDir: e.target.value }))}
-                                        />
-
-                                        {hasNativeFolderPicker() && (
-                                            <BRButton
-                                                text="Browse…"
-                                                variant="secondary"
-                                                className={styles.browseBtn}
-                                                onClick={onBrowseDownloadDir}
-                                            />
-                                        )}
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </section>
-
-                        <section className={styles.section}>
-
-                            <div className={styles.fieldGroup}>
-
-                                <h2 className={styles.sectionTitle}>Store configuration</h2>
-
-                                <TextField
-                                    fieldKey="apiUrl"
-                                    label="API URL"
-                                    placeholder="https://example.com/wp-json/wp/v2"
-                                    onChange={(e) => setDraft((d) => ({ ...d, apiUrl: (e.target as HTMLInputElement).value }))}
-                                />
-
-                            </div>
-
-                        </section>
+                        <ServerSection />
+                        <DownloadsSection draft={draft} setDraft={setDraft} />
+                        <StoreSection setDraft={setDraft} />
 
                     </div>
 
                     <div className={styles.column}>
 
-                        <section className={`${styles.section}`}>
-
-                            <h2 className={styles.sectionTitle}>Library folders</h2>
-
-                            <ul className={styles.folderList}>
-                                {settings.outputDirs.length === 0
-                                    ? <li className={styles.empty}>No library folders configured yet.</li>
-                                    : settings.outputDirs.map(dir => (
-                                        <LibraryFolderRow
-                                            key={dir}
-                                            dir={dir}
-                                            clearFolderError={clearFolderError}
-                                            setFolderError={setFolderError}
-                                        />
-                                    ))
-                                }
-                            </ul>
-
-                            <div className={styles.addRow}>
-
-                                <input
-                                    type="text"
-                                    className={styles.input}
-                                    placeholder="Folder path"
-                                    aria-label="Folder path"
-                                    value={folderPath}
-                                    onChange={(e) => setFolderPath(e.target.value)}
-                                    onKeyDown={(e) => { if (e.key === 'Enter') onAddFolder(); }}
-                                />
-
-                                {hasNativeFolderPicker() && (
-                                    <BRButton
-                                        text="Browse…"
-                                        variant="secondary"
-                                        className={styles.browseBtn}
-                                        onClick={onBrowseFolder}
-                                    />
-                                )}
-
-                                <BRButton
-                                    text="Add Folder"
-                                    onClick={onAddFolder}
-                                />
-
-                            </div>
-
-                            <p className={styles.errorText}>{folderError}</p>
-
-                        </section>
-
-                        <section className={styles.section}>
-
-                            <div className={styles.fieldGroup}>
-
-                                <h2 className={styles.sectionTitle}>Identification</h2>
-
-                                <div className={styles.toggleRow}>
-
-                                    <BRCheckbox
-                                        text="Search the wiki for metadata"
-                                        checked={draft.wikiSearch}
-                                        onChange={(e) => {
-                                            const checked = e.currentTarget.checked;
-                                            setDraft((d) => ({ ...d, wikiSearch: checked }));
-                                        }}
-                                    />
-
-                                    <span
-                                        className={styles.infoIcon}
-                                        tabIndex={0}
-                                    >
-                                        <svg
-                                            width={16}
-                                            height={16}
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="#fff"
-                                            strokeWidth={1.5}
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                        >
-                                            <circle cx={12} cy={12} r={10} />
-                                            <line x1={12} y1={16} x2={12} y2={12} />
-                                            <line x1={12} y1={8} x2={12.01} y2={8} />
-                                        </svg>
-                                        <span
-                                            className={styles.infoTooltip}
-                                            role="tooltip"
-                                        >
-                                            Comics are always identified from ComicInfo.xml. When enabled, comics without it are looked up on the wiki.
-                                        </span>
-                                    </span>
-
-                                    <BRButton
-                                        className={styles.reidentifyBtn}
-                                        variant="secondary"
-                                        text="Re-identify all"
-                                        onClick={onReidentifyAll}
-                                    />
-
-                                </div>
-
-                                <div className={styles.toggleRow}>
-
-                                    <BRCheckbox
-                                        text="Re-scan on start up"
-                                        checked={draft.rescanOnStartup}
-                                        onChange={(e) => {
-                                            const checked = e.currentTarget.checked;
-                                            setDraft((d) => ({ ...d, rescanOnStartup: checked }));
-                                        }}
-                                    />
-
-                                </div>
-
-                            </div>
-
-                        </section>
+                        <LibraryFoldersSection outputDirs={settings.outputDirs} />
+                        <IdentificationSection draft={draft} setDraft={setDraft} />
 
                     </div>
 

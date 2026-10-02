@@ -6,7 +6,7 @@ import { getWindowRange } from '@/utils/reader.page.utils';
 export function useReaderPageTracking(
     uid: string | undefined, 
     pages: string[], 
-    viewerRef: RefObject<HTMLDivElement | null>
+    viewerRef: RefObject<HTMLElement | null>
 ) {
 
     const [currentPage, setCurrentPage] = useState(1);

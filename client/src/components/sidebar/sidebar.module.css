@@ -159,7 +159,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
     height: 34px;
     padding: 0 12px;
     border: 1px solid rgba(255, 255, 255, 0.14);
@@ -172,6 +171,8 @@
     letter-spacing: 0.04em;
     text-transform: uppercase;
     white-space: nowrap;
+    box-sizing: border-box;
+    width: calc(100% - 32px);
     margin: 10px 16px;
     flex-shrink: 0;
     cursor: pointer;
@@ -202,7 +203,7 @@
     border-radius: 50%;
     border: 1.5px solid transparent;
     opacity: 0;
-    transition: width 0.2s ease-in-out, opacity 0.2s ease-in-out;
+    transition: width 0.2s ease-in-out, margin-right 0.2s ease-in-out, opacity 0.2s ease-in-out;
 }
 
 .refreshButton.spinning {
@@ -213,10 +214,43 @@
 
 .refreshButton.spinning .refreshSpinner {
     width: 10px;
+    margin-right: 6px;
     opacity: 1;
     border-color: rgba(52, 195, 209, 0.25);
     border-top-color: var(--accent);
     animation: spin 0.7s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+.fold {
+    display: grid;
+    grid-template-rows: 1fr;
+    flex-shrink: 0;
+    opacity: 1;
+    transform-origin: top;
+    transition: grid-template-rows 0.28s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.2s ease-in-out, transform 0.28s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.fold.folded {
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transform: scaleY(0.9);
+    pointer-events: none;
+}
+
+.foldInner {
+    min-height: 0;
+    overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fold {
+        transition: none;
+    }
+}
+
+.toggleButton {
+    margin: 6px 16px;
+    flex-shrink: 0;
 }
 
 @keyframes spin {

@@ -192,6 +192,12 @@
 
 .viewer {
     display: flex;
+    width: 100%;
+    border: none;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: default;
     flex-direction: column;
     align-items: center;
     gap: 6px;
