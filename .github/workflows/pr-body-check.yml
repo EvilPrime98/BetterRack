@@ -5,8 +5,8 @@ on:
     types: [opened, edited, reopened, synchronize]
 
 jobs:
-  no-claude-in-body:
-    name: PR body must not mention "claude"
+  pr-body:
+    name: PR body check
     runs-on: ubuntu-latest
     steps:
       - name: Check PR body
@@ -14,6 +14,6 @@ jobs:
           PR_BODY: ${{ github.event.pull_request.body }}
         run: |
           if printf '%s' "$PR_BODY" | grep -qi 'claude'; then
-            echo "::error::The PR description contains the word 'claude'. Remove it and edit the PR."
+            echo "::error::The PR description contains a forbidden word. Remove it and edit the PR."
             exit 1
           fi
