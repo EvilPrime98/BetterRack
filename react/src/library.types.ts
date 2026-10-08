@@ -78,6 +78,7 @@ export interface ILibraryFilters {
 export interface IReadResponse {
     error: boolean;
     message: string;
+    title: string;
     pages: string[];
 }
 

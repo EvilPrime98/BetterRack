@@ -6,6 +6,8 @@ import { WindowControls } from "../window-controls/window-controls";
 import styles from '../../pages/reader.page.module.css'
 
 export function ReaderPageHeader({
+    title,
+    subsTitle,
     currentPage,
     subsCurrentPage,
     pages,
@@ -18,6 +20,8 @@ export function ReaderPageHeader({
     goBack,
     onRefresh
 }:{
+    title: () => string;
+    subsTitle: (fn: (value: string) => void) => () => void;
     currentPage: () => number;
     subsCurrentPage: (fn: (value: number) => void) => () => void;
     pages: () => string[];
@@ -33,6 +37,11 @@ export function ReaderPageHeader({
 
     const onRefreshingChange = ($button: HTMLElement) => {
         $button.classList.toggle(styles.spinning, isRefreshing());
+    }
+
+    const onTitleChange = ($el: HTMLElement) => {
+        $el.textContent = title();
+        $el.title = title();
     }
 
     const onCounterChange = ($el: HTMLElement) => {
@@ -86,6 +95,14 @@ export function ReaderPageHeader({
                 onMount: [renderBookmarks],
                 trigger: [
                     { subscriber: subsBookmarks, triggerFunction: renderBookmarks }
+                ]
+            }),
+            UltraComponent({
+                component: '<span></span>',
+                className: [styles.title],
+                onMount: [onTitleChange],
+                trigger: [
+                    { subscriber: subsTitle, triggerFunction: onTitleChange }
                 ]
             }),
             UltraComponent({

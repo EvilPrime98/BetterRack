@@ -5,6 +5,7 @@ import type { IBookmark } from '../../library.types';
 import { WindowControls } from '../window-controls/window-controls';
 
 export function ReaderPageHeader({
+    title,
     currentPage,
     totalPages,
     bookmarks,
@@ -13,6 +14,7 @@ export function ReaderPageHeader({
     goBack,
     onRefresh
 }: {
+    title: string;
     currentPage: number;
     totalPages: number;
     bookmarks: IBookmark[];
@@ -43,6 +45,7 @@ export function ReaderPageHeader({
                     ))}
                 </select>
             )}
+            <span className={styles.title} title={title}>{title}</span>
             <span className={styles.counter}>{currentPage} / {totalPages}</span>
             <button
                 type="button"

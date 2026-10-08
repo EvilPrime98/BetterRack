@@ -33,6 +33,7 @@ export function ReaderPage({
 
     let comicCache = COMIC_CACHE_CONTEXT.getCacheById(uid);
     const [pages, setPages, subsPages] = ultraState<string[]>([]);
+    const [title, setTitle, subsTitle] = ultraState('');
     const [isLoading, setIsLoading, subsIsLoading] = ultraState(true);
     const [hasError, setHasError, subsHasError] = ultraState(false);
     const [currentPage, setCurrentPage, subsCurrentPage] = ultraState(comicCache?.currentPage || 1);
@@ -117,9 +118,10 @@ export function ReaderPage({
             comicCache = COMIC_CACHE_CONTEXT.getCacheById(uid);
             const data = await reader({ uid });
             const savedPage = comicCache?.currentPage || 1;
-            await preloadWindow(data.length, savedPage);
+            await preloadWindow(data.pages.length, savedPage);
             setCurrentPage(savedPage);
-            setPages(data);
+            setTitle(data.title);
+            setPages(data.pages);
             // Bookmarks are optional comic metadata. A failure here must not
             // stop the reader from opening.
             try {
@@ -401,6 +403,7 @@ export function ReaderPage({
                 children: [
 
                     ReaderPageHeader({
+                        title, subsTitle,
                         currentPage, subsCurrentPage,
                         pages, subsPages,
                         bookmarks, subsBookmarks,

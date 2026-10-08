@@ -20,7 +20,7 @@ export function ReaderPage() {
     const { uid } = useParams<{ uid: string }>();
     const setTitle = useDocumentTitleStore((s) => s.setTitle);
     const { navigate, goBack } = useReaderNavigation();
-    const { pages, isLoading, hasError, bookmarks, isRefreshing, loadPages, refreshComic } = useComicPages(uid);
+    const { pages, title, isLoading, hasError, bookmarks, isRefreshing, loadPages, refreshComic } = useComicPages(uid);
 
     //refs
     const viewerRef = useRef<HTMLButtonElement>(null);
@@ -59,7 +59,7 @@ export function ReaderPage() {
         <section className={styles.page} onWheel={onWheel} ref={pageRef}>
 
             <div className={`${styles.headerOverlay} ${isHeaderVisible ? '' : styles.hidden}`}>
-                <ReaderPageHeader currentPage={currentPage} totalPages={pages.length} bookmarks={bookmarks} isRefreshing={isRefreshing} goToPage={goToPage} goBack={goBack} onRefresh={refreshComic} />
+                <ReaderPageHeader title={title} currentPage={currentPage} totalPages={pages.length} bookmarks={bookmarks} isRefreshing={isRefreshing} goToPage={goToPage} goBack={goBack} onRefresh={refreshComic} />
                 <ReaderPageProgressBar currentPage={currentPage} totalPages={pages.length} />
             </div>
 
