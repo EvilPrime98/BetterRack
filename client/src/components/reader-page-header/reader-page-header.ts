@@ -83,22 +83,28 @@ export function ReaderPageHeader({
         className: [styles.toolbar],
         children: [
             UltraComponent({
-                component: '<button type="button"></button>',
-                className: [styles.back],
-                eventHandler: { click: goBack },
-                children: [ArrowLeftIcon({ size: 16 }), '<span>Library</span>']
-            }),
-            UltraComponent({
-                component: '<select hidden></select>',
-                className: [styles.bookmarks],
-                eventHandler: { change: onBookmarkSelect },
-                onMount: [renderBookmarks],
-                trigger: [
-                    { subscriber: subsBookmarks, triggerFunction: renderBookmarks }
+                component: '<div></div>',
+                className: [styles.toolbarStart],
+                children: [
+                    UltraComponent({
+                        component: '<button type="button"></button>',
+                        className: [styles.back],
+                        eventHandler: { click: goBack },
+                        children: [ArrowLeftIcon({ size: 16 }), '<span>Library</span>']
+                    }),
+                    UltraComponent({
+                        component: '<select hidden></select>',
+                        className: [styles.bookmarks],
+                        eventHandler: { change: onBookmarkSelect },
+                        onMount: [renderBookmarks],
+                        trigger: [
+                            { subscriber: subsBookmarks, triggerFunction: renderBookmarks }
+                        ]
+                    })
                 ]
             }),
             UltraComponent({
-                component: '<span></span>',
+                component: '<h1></h1>',
                 className: [styles.title],
                 onMount: [onTitleChange],
                 trigger: [
@@ -106,22 +112,28 @@ export function ReaderPageHeader({
                 ]
             }),
             UltraComponent({
-                component: `<span>${currentPage()} / ${pages().length}</span>`,
-                className: [styles.counter],
-                trigger: [
-                    { subscriber: subsCurrentPage, triggerFunction: onCounterChange },
-                    { subscriber: subsPages, triggerFunction: onCounterChange }
-                ]
-            }),
-            UltraComponent({
-                component: '<button type="button"></button>',
-                className: [styles.refresh],
-                attributes: { 'aria-label': 'Refresh scan' },
-                eventHandler: { click: onRefresh },
-                onMount: [onRefreshingChange],
-                children: [RefreshIcon({ size: 16 })],
-                trigger: [
-                    { subscriber: subsIsRefreshing, triggerFunction: onRefreshingChange }
+                component: '<div></div>',
+                className: [styles.toolbarEnd],
+                children: [
+                    UltraComponent({
+                        component: `<span>${currentPage()} / ${pages().length}</span>`,
+                        className: [styles.counter],
+                        trigger: [
+                            { subscriber: subsCurrentPage, triggerFunction: onCounterChange },
+                            { subscriber: subsPages, triggerFunction: onCounterChange }
+                        ]
+                    }),
+                    UltraComponent({
+                        component: '<button type="button"></button>',
+                        className: [styles.refresh],
+                        attributes: { 'aria-label': 'Refresh scan' },
+                        eventHandler: { click: onRefresh },
+                        onMount: [onRefreshingChange],
+                        children: [RefreshIcon({ size: 16 })],
+                        trigger: [
+                            { subscriber: subsIsRefreshing, triggerFunction: onRefreshingChange }
+                        ]
+                    })
                 ]
             }),
             UltraComponent({

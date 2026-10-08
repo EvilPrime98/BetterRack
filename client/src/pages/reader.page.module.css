@@ -33,7 +33,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: space-between;
+    gap: 16px;
     box-sizing: border-box;
     height: var(--header-height);
     background-color: rgba(10, 10, 10, 0.94);
@@ -47,6 +47,19 @@
 :root[data-platform="win32"] .toolbar,
 :root[data-platform="linux"] .toolbar {
     padding-right: 154px;
+}
+
+.toolbarStart,
+.toolbarEnd {
+    display: flex;
+    align-items: center;
+    flex: 1 1 0;
+    min-width: 0;
+    gap: 12px;
+}
+
+.toolbarEnd {
+    justify-content: flex-end;
 }
 
 .windowControls {
@@ -66,11 +79,12 @@
     gap: 8px;
     background: none;
     border: none;
+    flex-shrink: 0;
     padding: 4px 2px;
-    color: #fff;
+    color: #c4c4c4;
     font-family: var(--font-sans);
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
     -webkit-app-region: no-drag;
 }
@@ -95,12 +109,13 @@
 
 .bookmarks {
     -webkit-app-region: no-drag;
-    max-width: 240px;
-    padding: 5px 10px;
-    border: 1px solid rgba(255, 255, 255, 0.16);
+    min-width: 0;
+    max-width: 200px;
+    padding: 4px 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 4px;
-    background-color: #1b1b1b;
-    color: #e6e6e6;
+    background-color: transparent;
+    color: #a8a8a8;
     font-family: var(--font-sans);
     font-size: 12px;
     font-weight: 500;
@@ -129,17 +144,19 @@
 }
 
 .title {
-    flex: 1;
+    flex: 0 1 auto;
     min-width: 0;
-    margin: 0 16px;
+    max-width: 50%;
+    margin: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     text-align: center;
     font-family: var(--font-sans);
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 600;
-    color: #e6e6e6;
+    letter-spacing: -0.01em;
+    color: #f5f5f5;
 }
 
 .counter {
@@ -147,7 +164,7 @@
     font-size: 12px;
     font-weight: 500;
     letter-spacing: 0;
-    color: #a8a8a8;
+    color: #8a8a8a;
     font-variant-numeric: tabular-nums;
 }
 
@@ -157,7 +174,7 @@
     background: none;
     border: none;
     padding: 4px;
-    color: #fff;
+    color: #a8a8a8;
     cursor: pointer;
     -webkit-app-region: no-drag;
 }
