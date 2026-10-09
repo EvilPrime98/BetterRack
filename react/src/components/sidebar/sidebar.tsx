@@ -101,6 +101,7 @@ export function SideBar() {
                 <div className={styles.section}>
                     <span id="library-group-by-label" className={styles.sectionTitle}>Group by</span>
                     <BRDropdown
+                        className={styles.groupByDropdown}
                         aria-labelledby="library-group-by-label"
                         value={structure}
                         onChange={setStructure}

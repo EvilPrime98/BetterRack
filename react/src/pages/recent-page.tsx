@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ComicCard } from '@/components/comic-card/comic-card';
+import { ItemsGrid } from '@/components/items-grid/items-grid';
 import { Layout } from '@/layout';
 import { useComicsTypeStore } from '@/stores/comicsTypes.store';
 import { useRecentlyAdded } from '@/hooks/useRecentlyAdded';
@@ -85,12 +85,7 @@ export function RecentPage() {
                     <p className={styles.empty}>Nothing added in the {selectedWindow.label.toLowerCase()}.</p>
                 ) : (
                     <section className={[styles.comicContainer, comicsType === 'detail' ? styles.detailLayout : ''].filter(Boolean).join(' ')}>
-                        {items.map(item =>
-                            <ComicCard
-                                item={item}
-                                key={item.uid}
-                            />
-                        )}
+                        <ItemsGrid key={selectedWindow.label} items={items} />
                     </section>
                 )}
 

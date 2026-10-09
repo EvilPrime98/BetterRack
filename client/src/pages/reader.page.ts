@@ -43,6 +43,7 @@ export function ReaderPage({
     const [isHeaderVisible, setIsHeaderVisible, subsIsHeaderVisible] = ultraState(true);
     let observer: IntersectionObserver | null = null;
     let viewer: HTMLElement | null = null;
+    let zoomFrame = 0;
 
     const activePointers = new Map<number, { x: number; y: number }>();
     let pinchStartDistance = 0;
@@ -267,7 +268,18 @@ export function ReaderPage({
 
     const onZoomChange = ($viewer: HTMLElement) => {
         viewer = $viewer;
+        const $scroller = $viewer.closest<HTMLElement>(`.${styles.page}`);
+        const oldHeight = $scroller?.scrollHeight ?? 0;
         $viewer.style.setProperty('--reader-zoom', String(zoom()));
+        if (!$scroller || oldHeight <= 0) return;
+        const fraction = ($scroller.scrollTop + $scroller.clientHeight / 2) / oldHeight;
+        const start = performance.now();
+        cancelAnimationFrame(zoomFrame);
+        const tick = (now: number) => {
+            $scroller.scrollTop = fraction * $scroller.scrollHeight - $scroller.clientHeight / 2;
+            if (now - start < 200) zoomFrame = requestAnimationFrame(tick);
+        };
+        zoomFrame = requestAnimationFrame(tick);
     }
 
     const onWheel = (evt: Event) => {
