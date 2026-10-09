@@ -71,7 +71,7 @@ export function PageHeader({
                         }}
                         aria-label={`Sort options, currently ${title}`}
                     />
-                    <ItemCounter items={items} />
+                    <ItemCounter className={styles.counter} items={items} />
                 </div>
 
                 <div className={styles.right}>
