@@ -6,6 +6,7 @@ const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 3;
 const ZOOM_STEP = 0.1;
 const PAGE_BASE_WIDTH = 900;
+const ZOOM_SETTLE_MS = 200;
 
 const maxZoomFor = (viewerWidth: number) =>
     Math.max(1, Math.floor(Math.min(MAX_ZOOM, viewerWidth / PAGE_BASE_WIDTH) * 100) / 100);
@@ -79,9 +80,21 @@ export function useReaderZoom(
         return () => window.removeEventListener('keydown', onKeydown);
     }, [zoomIn, zoomOut, zoomReset]);
 
-    useEffect(() => {
-        if (viewerRef.current) viewerRef.current.style.setProperty('--reader-zoom', String(zoom));
-    }, [zoom, viewerRef]);
+    useLayoutEffect(() => {
+        const $viewer = viewerRef.current;
+        if (!$viewer) return;
+        const $scroller = pageRef.current;
+        const oldHeight = $scroller?.scrollHeight ?? 0;
+        $viewer.style.setProperty('--reader-zoom', String(zoom));
+        if (!$scroller || oldHeight <= 0) return;
+        const fraction = ($scroller.scrollTop + $scroller.clientHeight / 2) / oldHeight;
+        const start = performance.now();
+        let frame = requestAnimationFrame(function tick(now) {
+            $scroller.scrollTop = fraction * $scroller.scrollHeight - $scroller.clientHeight / 2;
+            if (now - start < ZOOM_SETTLE_MS) frame = requestAnimationFrame(tick);
+        });
+        return () => cancelAnimationFrame(frame);
+    }, [zoom, viewerRef, pageRef]);
 
     useEffect(() => {
         const fitZoom = () => {
