@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { isDesktopApp } from '@/services/server-config.service';
 import styles from './reader.page.module.css';
-import { getWindowRange } from '../utils/reader.page.utils';
+import { RENDER_AHEAD, RENDER_BEHIND } from '../utils/reader.page.utils';
 import { ImageElement } from '@/components/reader-page-image/reader-page-image';
 import { ReaderPageHeader } from '@/components/reader-page-header/reader-page-header';
 import { ReaderPageProgressBar } from '@/components/reader-page-progress-bar/reader-page-progress-bar';
@@ -13,6 +13,9 @@ import { useComicPages } from '@/hooks/useComicPages';
 import { useReaderPageTracking } from '@/hooks/useReaderPageTracking';
 import { useReaderProgress } from '@/hooks/useReaderProgress';
 import { useReaderZoom } from '@/hooks/useReaderZoom';
+import { useSettledValue } from '@/hooks/useSettledValue';
+
+const ACTIVE_PAGE_SETTLE_MS = 150;
 
 export function ReaderPage() {
 
@@ -26,7 +29,15 @@ export function ReaderPage() {
     const viewerRef = useRef<HTMLButtonElement>(null);
     const pageRef = useRef<HTMLElement>(null);
 
-    const { currentPage, goToPage } = useReaderPageTracking(uid, pages, viewerRef);
+    const { currentPage, isReady, goToPage } = useReaderPageTracking(uid, pages, viewerRef);
+    const activePage = useSettledValue(isReady ? currentPage : null, ACTIVE_PAGE_SETTLE_MS);
+
+    const onPageRatio = useCallback((ratio: number) => {
+        const $viewer = viewerRef.current;
+        if ($viewer && !$viewer.style.getPropertyValue('--page-ratio')) {
+            $viewer.style.setProperty('--page-ratio', String(ratio));
+        }
+    }, []);
     const { onWheel } = useReaderZoom(pageRef, viewerRef);
     useReaderProgress(uid, pages, currentPage);
 
@@ -52,7 +63,6 @@ export function ReaderPage() {
     if (!uid) return null;
 
     const numPages = pages.length;
-    const range = getWindowRange(numPages, currentPage);
     const next = numPages > 0 && currentPage === numPages;
 
     return (
@@ -88,7 +98,8 @@ export function ReaderPage() {
                         ind={i}
                         index={i + 1}
                         total={numPages}
-                        eager={!!range && i >= range.start && i <= range.end}
+                        active={activePage !== null && i + 1 >= activePage - RENDER_BEHIND && i + 1 <= activePage + RENDER_AHEAD}
+                        onRatio={onPageRatio}
                     />
                 ))}
             </button>

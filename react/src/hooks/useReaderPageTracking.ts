@@ -10,6 +10,7 @@ export function useReaderPageTracking(
 ) {
 
     const [currentPage, setCurrentPage] = useState(1);
+    const [isReady, setIsReady] = useState(false);
     const observerRef = useRef<IntersectionObserver | null>(null);
 
     const goToPage = useCallback((page: number) => {
@@ -28,6 +29,7 @@ export function useReaderPageTracking(
         const range = getWindowRange(numPages, savedPage);
 
         setCurrentPage(savedPage);
+        setIsReady(true);
 
         const elements = Array.from($section.children) as HTMLElement[];
         const pageOf = new Map<HTMLElement, number>();
@@ -52,6 +54,6 @@ export function useReaderPageTracking(
 
     }, [pages, uid, viewerRef]);
 
-    return { currentPage, goToPage };
+    return { currentPage, isReady, goToPage };
 
 }
