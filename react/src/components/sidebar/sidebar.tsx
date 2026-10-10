@@ -14,6 +14,7 @@ import { DownloadIcon } from '@/icons/download.icon';
 import { BookmarkIcon } from '@/icons/bookmark.icon';
 import { BookOpenIcon } from '@/icons/book-open.icon';
 import { SeriesList } from './series-list';
+import { BRButton } from '@/components/br-button/br-button';
 import { BRDropdown, type BRDropdownOption } from '@/components/br-dropdown/br-dropdown';
 import type { TLibraryStructure } from '@/services/library.service';
 
@@ -28,6 +29,8 @@ export function SideBar() {
     const isExpanded = useSidebarStore((s) => s.isExpanded);
     const setIsExpanded = useSidebarStore((s) => s.setIsExpanded);
     const isCollapsed = useSidebarStore((s) => s.isCollapsed);
+    const isCompact = useSidebarStore((s) => s.isCompact);
+    const setIsCompact = useSidebarStore((s) => s.setIsCompact);
     const groups = useLibraryStore((s) => s.groups);
     const fetchLibrary = useLibraryStore((s) => s.fetchLibrary);
     const structure = useLibraryStore((s) => s.structure);
@@ -73,6 +76,7 @@ export function SideBar() {
             <div
                 className={[styles.backdrop, isExpanded ? styles.visible : ''].filter(Boolean).join(' ')}
                 onClick={closeSidebar}
+                aria-hidden="true"
             />
 
             <aside
@@ -86,9 +90,18 @@ export function SideBar() {
                 ].filter(Boolean).join(' ')}
             >
 
+                <BRButton
+                    text={isCompact ? 'Show more' : 'Show less'}
+                    variant="ghost"
+                    className={styles.toggleButton}
+                    aria-expanded={!isCompact}
+                    onClick={() => setIsCompact(!isCompact)}
+                />
+
                 <div className={styles.section}>
                     <span id="library-group-by-label" className={styles.sectionTitle}>Group by</span>
                     <BRDropdown
+                        className={styles.groupByDropdown}
                         aria-labelledby="library-group-by-label"
                         value={structure}
                         onChange={setStructure}
@@ -96,41 +109,45 @@ export function SideBar() {
                     />
                 </div>
 
-                <div className={styles.section}>
-                    <span className={styles.sectionTitle}>User</span>
-                    <Link to="/settings" className={styles.item} onClick={closeSidebar}>
-                        <GearIcon size={16} />
-                        <span>Settings</span>
-                    </Link>
+                <div className={[styles.fold, isCompact ? styles.folded : ''].filter(Boolean).join(' ')} inert={isCompact}>
+                    <div className={styles.foldInner}>
+                        <div className={styles.section}>
+                            <span className={styles.sectionTitle}>User</span>
+                            <Link to="/settings" className={styles.item} onClick={closeSidebar}>
+                                <GearIcon size={16} />
+                                <span>Settings</span>
+                            </Link>
+                        </div>
+
+                        <div className={styles.section}>
+                            <span className={styles.sectionTitle}>Store</span>
+                            <Link to="/store" className={styles.item} onClick={closeSidebar}>
+                                <ShopIcon size={16} />
+                                <span>Store</span>
+                            </Link>
+                            <Link to="/store/downloads" className={styles.item} onClick={closeSidebar}>
+                                <DownloadIcon size={16} />
+                                <span>Downloads</span>
+                            </Link>
+                        </div>
+
+                        <div className={styles.section}>
+                            <span className={styles.sectionTitle}>Browse</span>
+                            <Link to="/new" className={styles.item} onClick={closeSidebar}>
+                                <BookmarkIcon size={16} />
+                                <span>Recently added</span>
+                            </Link>
+                            <Link to="/reading" className={styles.item} onClick={closeSidebar}>
+                                <BookOpenIcon size={16} />
+                                <span>Keep reading</span>
+                            </Link>
+                        </div>
+
+                        <SidebarSearch />
+
+                        <RefreshLibraryButton />
+                    </div>
                 </div>
-
-                <div className={styles.section}>
-                    <span className={styles.sectionTitle}>Store</span>
-                    <Link to="/store" className={styles.item} onClick={closeSidebar}>
-                        <ShopIcon size={16} />
-                        <span>Store</span>
-                    </Link>
-                    <Link to="/store/downloads" className={styles.item} onClick={closeSidebar}>
-                        <DownloadIcon size={16} />
-                        <span>Downloads</span>
-                    </Link>
-                </div>
-
-                <div className={styles.section}>
-                    <span className={styles.sectionTitle}>Browse</span>
-                    <Link to="/new" className={styles.item} onClick={closeSidebar}>
-                        <BookmarkIcon size={16} />
-                        <span>Recently added</span>
-                    </Link>
-                    <Link to="/reading" className={styles.item} onClick={closeSidebar}>
-                        <BookOpenIcon size={16} />
-                        <span>Keep reading</span>
-                    </Link>
-                </div>
-
-                <SidebarSearch />
-
-                <RefreshLibraryButton />
 
                 <nav className={styles.list}>
                     {!groups.length ? (
@@ -146,7 +163,11 @@ export function SideBar() {
                     )}
                 </nav>
 
-                <Footer />
+                <div className={[styles.fold, isCompact ? styles.folded : ''].filter(Boolean).join(' ')} inert={isCompact}>
+                    <div className={styles.foldInner}>
+                        <Footer />
+                    </div>
+                </div>
 
             </aside>
 

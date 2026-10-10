@@ -25,7 +25,7 @@ export const ComicCard = memo(function ComicCard({
 }) {
 
     const navigate = useNavigate();
-    const { comic, metaSource, identified, isLoadingInfo, articleRef } = useComicIdentification(item, filters);
+    const { comic, metaSource, isLoadingInfo, articleRef } = useComicIdentification(item, filters);
     const [coverVersion, setCoverVersion] = useState(0);
     const readerHref = `/${item.uid}/reader`;
     const comicsType = useComicsTypeStore((s) => s.type);
@@ -66,13 +66,6 @@ export const ComicCard = memo(function ComicCard({
                 <ComicCardCover key={coverVersion} coverVersion={coverVersion} comic={comic} item={item} />
 
                 <div className={styles.bagOverlay} />
-
-                <div
-                    className={styles.identifyOverlay}
-                    style={{ display: (comicsType !== 'detail' && !identified) ? undefined : 'none' }}
-                >
-                    <IdentifyButton uid={item.uid} />
-                </div>
 
                 <ReadBar readPercentage={readPer} />
 

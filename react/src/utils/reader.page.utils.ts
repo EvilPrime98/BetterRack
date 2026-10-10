@@ -2,6 +2,8 @@ import { API_URL } from '@/services/library.service';
 import { withAuthQuery } from '@/services/server-config.service';
 
 export const PRELOAD_WINDOW = 2;
+export const RENDER_BEHIND = 3;
+export const RENDER_AHEAD = 6;
 
 export function getWindowRange(numPages: number, savedPage: number) {
     if (numPages < 2) return null;

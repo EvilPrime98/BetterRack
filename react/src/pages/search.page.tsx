@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import styles from './search-page.module.css';
 import { PageHeader } from '@/components/page-header/page-header';
 import { useLibraryStore } from '@/stores/library.store';
-import { ComicCard } from '@/components/comic-card/comic-card';
+import { ItemsGrid } from '@/components/items-grid/items-grid';
 import { Layout } from '@/layout';
 import { useComicsTypeStore } from '@/stores/comicsTypes.store';
 import type { ILibraryResponseItem } from '@/library.types';
@@ -10,8 +10,6 @@ import { applyFilters, useFilters } from '@/hooks/useFilters';
 import { useDocumentTitleStore } from '@/stores/documentTitle.store';
 import { matchesReadFilter, useReadTypesContext } from '@/context/ReadTypesContext.hooks';
 import { useComicCacheStore } from '@/stores/comicCache.store';
-
-const PAGE_SIZE = 60; //max chunk for pages
 
 export function SearchPage({
     search
@@ -24,7 +22,6 @@ export function SearchPage({
     const comicsType = useComicsTypeStore((s) => s.type);
     const setTitle = useDocumentTitleStore((s) => s.setTitle);
 
-    const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
     const { type: readFilter } = useReadTypesContext();
     const comicCache = useComicCacheStore((s) => s.cache);
 
@@ -53,24 +50,6 @@ export function SearchPage({
         useLibraryStore.getState().fetchLibrary();
     }, []);
 
-    useEffect(() => {
-        setVisibleCount(PAGE_SIZE);
-    }, [items]);
-
-    const sentinelRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const $sentinel = sentinelRef.current;
-        if (!$sentinel) return;
-        const observer = new IntersectionObserver((entries) => {
-            if (!entries.some(e => e.isIntersecting)) return;
-            setVisibleCount((count) => Math.min(count + PAGE_SIZE, items.length));
-        }, { rootMargin: '600px' });
-        observer.observe($sentinel);
-        return () => observer.disconnect();
-    }, [items.length]);
-
-    const visibleItems = items.slice(0, visibleCount);
     const hasVisibleItems = items.some(item => matchesReadFilter(readFilter, comicCache[item.uid]?.readPer || 0));
 
     return (
@@ -88,8 +67,7 @@ export function SearchPage({
                     <p className={styles.empty}>No items to show.</p>
                 ) : (
                     <section className={[styles.comicContainer, comicsType === 'detail' ? styles.detailLayout : ''].filter(Boolean).join(' ')}>
-                        {visibleItems.map(item => <ComicCard key={item.uid} item={item} />)}
-                        <div className={styles.sentinel} ref={sentinelRef} />
+                        <ItemsGrid key={search} items={items} />
                     </section>
                 )}
 

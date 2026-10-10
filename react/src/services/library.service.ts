@@ -71,7 +71,7 @@ export async function reader({
     const response = await fetch(`${API_URL}/read/${uid}`, { headers: authHeaders() });
     const data: IReadResponse = await response.json();
     if (!response.ok) throw new Error(data.message)
-    return data.pages
+    return { pages: data.pages, title: data.title }
 }
 
 export async function readerBookmarks({
