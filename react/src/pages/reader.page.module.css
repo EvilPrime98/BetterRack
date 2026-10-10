@@ -224,6 +224,8 @@
 .viewer {
     display: flex;
     width: 100%;
+    max-width: calc(900px * var(--reader-zoom, 1));
+    margin-inline: auto;
     border: none;
     background: transparent;
     color: inherit;
@@ -238,12 +240,12 @@
 .pageWrapper {
     position: relative;
     width: 100%;
-    max-width: calc(900px * var(--reader-zoom, 1));
     margin: 0;
     overflow: hidden;
+    aspect-ratio: var(--page-ratio, 0.667);
+    contain: layout paint;
     background: #1d1d1d;
     scroll-margin-top: calc(var(--header-height) + 2px);
-    transition: max-width 0.12s ease;
     touch-action: pan-y;
 }
 
@@ -253,6 +255,10 @@
     inset: 0;
     background: linear-gradient(100deg, transparent 30%, #262626 50%, transparent 70%);
     animation: shimmer 1.4s ease-in-out infinite;
+}
+
+.pageWrapper.idle::after {
+    content: none;
 }
 
 .pageWrapper.loaded {

@@ -6,7 +6,7 @@ const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 3;
 const ZOOM_STEP = 0.1;
 const PAGE_BASE_WIDTH = 900;
-const ZOOM_SETTLE_MS = 200;
+const ZOOM_PERSIST_MS = 300;
 
 const maxZoomFor = (viewerWidth: number) =>
     Math.max(1, Math.floor(Math.min(MAX_ZOOM, viewerWidth / PAGE_BASE_WIDTH) * 100) / 100);
@@ -18,39 +18,74 @@ export function useReaderZoom(
     viewerRef: RefObject<HTMLElement | null>
 ) {
 
-    const [zoom, setZoom] = useState(() => useUserPrefStore.getState().getPref('zoom'));
-    const zoomRef = useRef(zoom);
-    useLayoutEffect(() => {
-        zoomRef.current = zoom;
-    }, [zoom]);
+    const [initialZoom] = useState(() => useUserPrefStore.getState().getPref('zoom'));
+    const zoomRef = useRef(initialZoom);
+    const frameRef = useRef(0);
+    const persistTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-    const persistZoom = useCallback((value: number) => {
-        useUserPrefStore.getState().setPref({ zoom: value });
+    const flushZoom = useCallback(() => {
+        frameRef.current = 0;
+        const $viewer = viewerRef.current;
+        if (!$viewer) return;
+        const $scroller = pageRef.current;
+        const oldHeight = $scroller?.scrollHeight ?? 0;
+        const fraction = $scroller && oldHeight > 0
+            ? ($scroller.scrollTop + $scroller.clientHeight / 2) / oldHeight
+            : null;
+        $viewer.style.setProperty('--reader-zoom', String(zoomRef.current));
+        if ($scroller && fraction !== null) {
+            $scroller.scrollTop = fraction * $scroller.scrollHeight - $scroller.clientHeight / 2;
+        }
+    }, [viewerRef, pageRef]);
+
+    const applyZoom = useCallback((value: number) => {
+        if (value === zoomRef.current) return;
+        zoomRef.current = value;
+        if (!frameRef.current) frameRef.current = requestAnimationFrame(flushZoom);
+    }, [flushZoom]);
+
+    const schedulePersistZoom = useCallback((value: number) => {
+        clearTimeout(persistTimerRef.current);
+        persistTimerRef.current = setTimeout(() => {
+            persistTimerRef.current = undefined;
+            useUserPrefStore.getState().setPref({ zoom: value });
+        }, ZOOM_PERSIST_MS);
     }, []);
 
-    const currentMaxZoom = useCallback(() => {
-        const width = viewerRef.current?.clientWidth ?? 0;
-        return width > 0 ? maxZoomFor(width) : MAX_ZOOM;
+    useLayoutEffect(() => {
+        viewerRef.current?.style.setProperty('--reader-zoom', String(zoomRef.current));
+        return () => {
+            cancelAnimationFrame(frameRef.current);
+            if (persistTimerRef.current) {
+                clearTimeout(persistTimerRef.current);
+                useUserPrefStore.getState().setPref({ zoom: zoomRef.current });
+            }
+        };
     }, [viewerRef]);
+
+    const currentMaxZoom = useCallback(() => {
+        const width = pageRef.current?.clientWidth ?? 0;
+        return width > 0 ? maxZoomFor(width) : MAX_ZOOM;
+    }, [pageRef]);
 
     const clamp = useCallback((value: number) => clampZoom(value, currentMaxZoom()), [currentMaxZoom]);
 
     const zoomIn = useCallback(() => {
         const next = clamp(zoomRef.current + ZOOM_STEP);
-        setZoom(next);
-        persistZoom(next);
-    }, [clamp, persistZoom]);
+        applyZoom(next);
+        schedulePersistZoom(next);
+    }, [clamp, applyZoom, schedulePersistZoom]);
 
     const zoomOut = useCallback(() => {
         const next = clamp(zoomRef.current - ZOOM_STEP);
-        setZoom(next);
-        persistZoom(next);
-    }, [clamp, persistZoom]);
+        applyZoom(next);
+        schedulePersistZoom(next);
+    }, [clamp, applyZoom, schedulePersistZoom]);
 
     const zoomReset = useCallback(() => {
-        setZoom(1);
-        persistZoom(1);
-    }, [persistZoom]);
+        applyZoom(1);
+        schedulePersistZoom(1);
+    }, [applyZoom, schedulePersistZoom]);
 
     const onWheel = useCallback((e: React.WheelEvent) => {
         if (!e.ctrlKey) return;
@@ -80,33 +115,17 @@ export function useReaderZoom(
         return () => window.removeEventListener('keydown', onKeydown);
     }, [zoomIn, zoomOut, zoomReset]);
 
-    useLayoutEffect(() => {
-        const $viewer = viewerRef.current;
-        if (!$viewer) return;
-        const $scroller = pageRef.current;
-        const oldHeight = $scroller?.scrollHeight ?? 0;
-        $viewer.style.setProperty('--reader-zoom', String(zoom));
-        if (!$scroller || oldHeight <= 0) return;
-        const fraction = ($scroller.scrollTop + $scroller.clientHeight / 2) / oldHeight;
-        const start = performance.now();
-        let frame = requestAnimationFrame(function tick(now) {
-            $scroller.scrollTop = fraction * $scroller.scrollHeight - $scroller.clientHeight / 2;
-            if (now - start < ZOOM_SETTLE_MS) frame = requestAnimationFrame(tick);
-        });
-        return () => cancelAnimationFrame(frame);
-    }, [zoom, viewerRef, pageRef]);
-
     useEffect(() => {
         const fitZoom = () => {
             const limit = currentMaxZoom();
             if (zoomRef.current <= limit) return;
-            setZoom(limit);
-            persistZoom(limit);
+            applyZoom(limit);
+            schedulePersistZoom(limit);
         };
         fitZoom();
         window.addEventListener('resize', fitZoom);
         return () => window.removeEventListener('resize', fitZoom);
-    }, [currentMaxZoom, persistZoom]);
+    }, [currentMaxZoom, applyZoom, schedulePersistZoom]);
 
     useEffect(() => {
         const $page = pageRef.current;
@@ -129,7 +148,7 @@ export function useReaderZoom(
 
         const settle = () => {
             if (pointers.size >= 2) return;
-            if (pinching) persistZoom(zoomRef.current);
+            if (pinching) schedulePersistZoom(zoomRef.current);
             pinching = false;
             startDistance = 0;
         };
@@ -152,7 +171,7 @@ export function useReaderZoom(
             const current = gap();
             if (startDistance <= 0 || current <= 0) return;
             e.preventDefault();
-            setZoom(clamp(startZoom * (current / startDistance)));
+            applyZoom(clamp(startZoom * (current / startDistance)));
         };
 
         const onPointerUp = (e: PointerEvent) => {
@@ -163,8 +182,8 @@ export function useReaderZoom(
                 const quick = now - lastTapTime < 300;
                 const close = Math.hypot(e.clientX - lastTapX, e.clientY - lastTapY) < 24;
                 if (quick && close) {
-                    setZoom(1);
-                    persistZoom(1);
+                    applyZoom(1);
+                    schedulePersistZoom(1);
                     lastTapTime = 0;
                 } else {
                     lastTapTime = now;
@@ -191,7 +210,7 @@ export function useReaderZoom(
             $page.removeEventListener('pointerup', onPointerUp);
             $page.removeEventListener('pointercancel', onPointerCancel);
         };
-    }, [pageRef, clamp, persistZoom]);
+    }, [pageRef, clamp, applyZoom, schedulePersistZoom]);
 
     return { onWheel };
 
