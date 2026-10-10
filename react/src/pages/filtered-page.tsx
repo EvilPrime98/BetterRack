@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ComicCard } from '@/components/comic-card/comic-card';
+import { ItemsGrid } from '@/components/items-grid/items-grid';
 import { Layout } from '@/layout';
 import { useLibraryStore } from '@/stores/library.store';
 import { useComicsTypeStore } from '@/stores/comicsTypes.store';
@@ -55,13 +55,7 @@ export function FilterPage() {
                     <p className={styles.empty}>No comics in your library yet.</p>
                 ) : (
                     <section className={[styles.comicContainer, comicsType === 'detail' ? styles.detailLayout : ''].filter(Boolean).join(' ')}>
-                        {items.map(item =>
-                            <ComicCard
-                                item={item}
-                                filters={filters}
-                                key={item.uid}
-                            />
-                        )}
+                        <ItemsGrid key={writer ?? 'all'} items={items} filters={filters} />
                     </section>
                 )}
 

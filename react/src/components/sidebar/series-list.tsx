@@ -1,5 +1,5 @@
 import type { ILibraryGroup } from "@/library.types";
-import { useCallback, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SideBarElement } from "./sider-bar-element";
 
 const SERIES_PAGE_SIZE = 50;
@@ -14,20 +14,21 @@ export function SeriesList({
 
     const [count, setCount] = useState(SERIES_PAGE_SIZE);
 
-    const sentinelRef = useCallback((node: HTMLDivElement | null) => {
-        if (!node) return;
+    const sentinelRef = useRef<HTMLDivElement>(null);
+    const hasMore = !isHidden && count < groups.length;
+
+    useEffect(() => {
+        const node = sentinelRef.current;
+        if (!hasMore || !node) return;
         const observer = new IntersectionObserver(
             (entries) => {
-                if (!entries.some(e => e.isIntersecting)) return;
-                setCount(c => c + SERIES_PAGE_SIZE);
-                observer.unobserve(node);
-                observer.observe(node);
+                if (entries.some(e => e.isIntersecting)) setCount(c => c + SERIES_PAGE_SIZE);
             },
             { rootMargin: '300px' }
         );
         observer.observe(node);
         return () => observer.disconnect();
-    }, []);
+    }, [hasMore, count]);
 
     return (
         <>
@@ -37,7 +38,7 @@ export function SeriesList({
                     item={{ uid: group.uid, did: true, name: group.name, path: group.path, parentId: '', createdAt: 0 }}
                 />
             ))}
-            {!isHidden && count < groups.length && <div ref={sentinelRef} style={{ height: 1 }} />}
+            {hasMore && <div ref={sentinelRef} style={{ height: 1 }} />}
         </>
     );
 

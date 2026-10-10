@@ -384,6 +384,35 @@
 
     }
 
+    @media (min-width: 481px) and (max-width: 1024px) {
+        max-width: 170px;
+        padding: 8px;
+        contain-intrinsic-size: auto 270px;
+
+        .details {
+            width: 94%;
+            margin-top: 6px;
+        }
+
+        .title {
+            font-size: 12px;
+        }
+
+        .infoRow {
+            font-size: 10px;
+        }
+
+        .infoLabel {
+            width: 48px;
+            font-size: 8px;
+        }
+
+        .rating {
+            margin-top: 6px;
+            margin-bottom: 6px;
+        }
+    }
+
 }
 
 .isRead {

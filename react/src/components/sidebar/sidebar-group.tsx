@@ -1,6 +1,7 @@
-import { useState, type MouseEvent } from 'react';
+import type { MouseEvent } from 'react';
 import styles from './sidebar.module.css';
 import { useLibraryStore } from '@/stores/library.store';
+import { useSidebarStore } from '@/stores/sidebar.store';
 import { useNewFolderModalContext } from '@/context/NewFolderModalContext.hooks';
 import { SideBarElement } from './sider-bar-element';
 import { FolderIcon } from '@/icons/folder.icon';
@@ -14,12 +15,13 @@ export function SideBarGroup({
     group: ILibraryGroup
 }) {
 
-    const [isExpanded, setIsExpanded] = useState(false);
+    const isExpanded = useSidebarStore((s) => !!s.expandedGroups[group.uid]);
+    const toggleGroup = useSidebarStore((s) => s.toggleGroup);
     const getLibraryItems = useLibraryStore((s) => s.getLibraryItems);
     const { openNewFolderModal } = useNewFolderModalContext();
 
     function toggle() {
-        setIsExpanded(!isExpanded);
+        toggleGroup(group.uid);
     }
 
     function onNewFolder(e: MouseEvent) {

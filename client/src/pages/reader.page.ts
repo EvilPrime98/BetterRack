@@ -11,6 +11,9 @@ import { DOCUMENT_TITLE_CONTEXT } from "../context/document-title.context";
 import { USER_PREF } from "../context/user-pref-cache.context";
 
 const PRELOAD_WINDOW = 2;
+const RENDER_BEHIND = 3;
+const RENDER_AHEAD = 6;
+const ACTIVE_PAGE_SETTLE_MS = 150;
 
 // Rolling prefetch band around the active page. It is forward-biased so a
 // continuous read keeps landing on pages that are already in the browser cache.
@@ -21,6 +24,7 @@ const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 3;
 const ZOOM_STEP = 0.1;
 const PAGE_BASE_WIDTH = 900;
+const ZOOM_PERSIST_MS = 300;
 
 const maxZoomFor = (viewerWidth: number) =>
     Math.max(1, Math.floor(Math.min(MAX_ZOOM, viewerWidth / PAGE_BASE_WIDTH) * 100) / 100);
@@ -33,15 +37,22 @@ export function ReaderPage({
 
     let comicCache = COMIC_CACHE_CONTEXT.getCacheById(uid);
     const [pages, setPages, subsPages] = ultraState<string[]>([]);
+    const [title, setTitle, subsTitle] = ultraState('');
     const [isLoading, setIsLoading, subsIsLoading] = ultraState(true);
     const [hasError, setHasError, subsHasError] = ultraState(false);
     const [currentPage, setCurrentPage, subsCurrentPage] = ultraState(comicCache?.currentPage || 1);
-    const [zoom, setZoom, subsZoom] = ultraState(USER_PREF.getPref('zoom'));
     const [bookmarks, setBookmarks, subsBookmarks] = ultraState<IBookmark[]>([]);
     const [isRefreshing, setIsRefreshing, subsIsRefreshing] = ultraState(false);
     const [isHeaderVisible, setIsHeaderVisible, subsIsHeaderVisible] = ultraState(true);
     let observer: IntersectionObserver | null = null;
     let viewer: HTMLElement | null = null;
+    let scroller: HTMLElement | null = null;
+    let zoomValue = USER_PREF.getPref('zoom');
+    let zoomFrame = 0;
+    let persistTimer: ReturnType<typeof setTimeout> | undefined;
+    let activePage: number | null = null;
+    let activeTimer: ReturnType<typeof setTimeout> | undefined;
+    let setters: ((active: boolean) => void)[] = [];
 
     const activePointers = new Map<number, { x: number; y: number }>();
     let pinchStartDistance = 0;
@@ -117,9 +128,10 @@ export function ReaderPage({
             comicCache = COMIC_CACHE_CONTEXT.getCacheById(uid);
             const data = await reader({ uid });
             const savedPage = comicCache?.currentPage || 1;
-            await preloadWindow(data.length, savedPage);
+            await preloadWindow(data.pages.length, savedPage);
             setCurrentPage(savedPage);
-            setPages(data);
+            setTitle(data.title);
+            setPages(data.pages);
             // Bookmarks are optional comic metadata. A failure here must not
             // stop the reader from opening.
             try {
@@ -154,8 +166,35 @@ export function ReaderPage({
         }
     }
 
+    const flushZoom = () => {
+        zoomFrame = 0;
+        if (!viewer) return;
+        const oldHeight = scroller?.scrollHeight ?? 0;
+        const fraction = scroller && oldHeight > 0
+            ? (scroller.scrollTop + scroller.clientHeight / 2) / oldHeight
+            : null;
+        viewer.style.setProperty('--reader-zoom', String(zoomValue));
+        if (scroller && fraction !== null) {
+            scroller.scrollTop = fraction * scroller.scrollHeight - scroller.clientHeight / 2;
+        }
+    }
+
+    const applyZoom = (value: number) => {
+        if (value === zoomValue) return;
+        zoomValue = value;
+        if (!zoomFrame) zoomFrame = requestAnimationFrame(flushZoom);
+    }
+
+    const schedulePersistZoom = (value: number) => {
+        clearTimeout(persistTimer);
+        persistTimer = setTimeout(() => {
+            persistTimer = undefined;
+            USER_PREF.setPref({ zoom: value });
+        }, ZOOM_PERSIST_MS);
+    }
+
     const currentMaxZoom = () => {
-        const width = viewer?.clientWidth ?? 0;
+        const width = scroller?.clientWidth ?? 0;
         return width > 0 ? maxZoomFor(width) : MAX_ZOOM;
     };
 
@@ -163,26 +202,24 @@ export function ReaderPage({
 
     const fitZoom = () => {
         const limit = currentMaxZoom();
-        if (zoom() <= limit) return;
-        setZoom(limit);
-        persistZoom(limit);
+        if (zoomValue <= limit) return;
+        applyZoom(limit);
+        schedulePersistZoom(limit);
     };
-
-    const persistZoom = (value: number) => USER_PREF.setPref({ zoom: value });
 
     const zoomIn = () => {
-        const next = clampZoom(zoom() + ZOOM_STEP);
-        setZoom(next);
-        persistZoom(next);
+        const next = clampZoom(zoomValue + ZOOM_STEP);
+        applyZoom(next);
+        schedulePersistZoom(next);
     };
     const zoomOut = () => {
-        const next = clampZoom(zoom() - ZOOM_STEP);
-        setZoom(next);
-        persistZoom(next);
+        const next = clampZoom(zoomValue - ZOOM_STEP);
+        applyZoom(next);
+        schedulePersistZoom(next);
     };
     const zoomReset = () => {
-        setZoom(1);
-        persistZoom(1);
+        applyZoom(1);
+        schedulePersistZoom(1);
     };
 
     const toggleHeader = () => setIsHeaderVisible(!isHeaderVisible());
@@ -208,7 +245,7 @@ export function ReaderPage({
 
     const settlePinch = () => {
         if (activePointers.size >= 2) return;
-        if (isPinching) persistZoom(zoom());
+        if (isPinching) schedulePersistZoom(zoomValue);
         isPinching = false;
         pinchStartDistance = 0;
     }
@@ -221,7 +258,7 @@ export function ReaderPage({
             gestureUsedTwoPointers = true;
             isPinching = true;
             pinchStartDistance = pointerGap();
-            pinchStartZoom = zoom();
+            pinchStartZoom = zoomValue;
         }
     }
 
@@ -233,7 +270,7 @@ export function ReaderPage({
         const gap = pointerGap();
         if (pinchStartDistance <= 0 || gap <= 0) return;
         e.preventDefault();
-        setZoom(clampZoom(pinchStartZoom * (gap / pinchStartDistance)));
+        applyZoom(clampZoom(pinchStartZoom * (gap / pinchStartDistance)));
     }
 
     const onPointerUp = (evt: Event) => {
@@ -263,9 +300,39 @@ export function ReaderPage({
         if (activePointers.size === 0) gestureUsedTwoPointers = false;
     }
 
-    const onZoomChange = ($viewer: HTMLElement) => {
+    const onViewerMount = ($viewer: HTMLElement) => {
         viewer = $viewer;
-        $viewer.style.setProperty('--reader-zoom', String(zoom()));
+        scroller = $viewer.closest<HTMLElement>(`.${styles.page}`);
+        $viewer.style.setProperty('--reader-zoom', String(zoomValue));
+    }
+
+    const onPageRatio = (ratio: number) => {
+        if (viewer && !viewer.style.getPropertyValue('--page-ratio')) {
+            viewer.style.setProperty('--page-ratio', String(ratio));
+        }
+    }
+
+    const applyActive = () => {
+        if (activePage === null) return;
+        const page = activePage;
+        setters.forEach((setActive, i) => {
+            const n = i + 1;
+            setActive(n >= page - RENDER_BEHIND && n <= page + RENDER_AHEAD);
+        });
+    }
+
+    const requestActivePage = (page: number) => {
+        clearTimeout(activeTimer);
+        if (activePage === null) {
+            activePage = page;
+            applyActive();
+            return;
+        }
+        if (page === activePage) return;
+        activeTimer = setTimeout(() => {
+            activePage = page;
+            applyActive();
+        }, ACTIVE_PAGE_SETTLE_MS);
     }
 
     const onWheel = (evt: Event) => {
@@ -300,26 +367,36 @@ export function ReaderPage({
 
         observer?.disconnect();
         viewer = $section;
+        setters = [];
         fitZoom();
 
         const numPages = pages().length;
         const savedPage = comicCache?.currentPage || 1;
         const range = getWindowRange(numPages, savedPage);
         const pageOf = new Map<HTMLElement, number>();
-        const elements = [];
+        const elements: HTMLElement[] = [];
         let $target: HTMLElement | null = null;
 
         for (let i = 0; i < numPages; ++i) {
-            const $page = ImageElement({
+            const { element: $page, setActive } = ImageElement({
                 uid, ind: i + 1, index: i + 1, total: numPages,
-                eager: !!range && i >= range.start && i <= range.end
+                onRatio: onPageRatio
             });
             pageOf.set($page, i + 1);
             if (range && i === range.targetInd) $target = $page;
             elements.push($page);
+            setters.push(setActive);
         }
 
         $section.replaceChildren(...elements);
+
+        if (numPages) {
+            if (activePage === null) requestActivePage(savedPage);
+            else {
+                applyActive();
+                requestActivePage(savedPage);
+            }
+        }
 
         $target?.scrollIntoView({ block: 'start' });
 
@@ -334,6 +411,7 @@ export function ReaderPage({
             if (page) {
                 setCurrentPage(page);
                 prefetchAround(page);
+                requestActivePage(page);
             }
         }, { threshold: [0.25, 0.5, 0.75] });
 
@@ -363,6 +441,12 @@ export function ReaderPage({
                     window.removeEventListener('keydown', onKeydown);
                     window.removeEventListener('resize', fitZoom);
                     observer?.disconnect();
+                    cancelAnimationFrame(zoomFrame);
+                    clearTimeout(activeTimer);
+                    if (persistTimer) {
+                        clearTimeout(persistTimer);
+                        USER_PREF.setPref({ zoom: zoomValue });
+                    }
                 }
             },
             ($page: HTMLElement) => {
@@ -401,6 +485,7 @@ export function ReaderPage({
                 children: [
 
                     ReaderPageHeader({
+                        title, subsTitle,
                         currentPage, subsCurrentPage,
                         pages, subsPages,
                         bookmarks, subsBookmarks,
@@ -445,7 +530,7 @@ export function ReaderPage({
             UltraComponent({
                 component: '<section></section>',
                 className: [styles.viewer],
-                onMount: [onZoomChange],
+                onMount: [onViewerMount],
                 eventHandler: {
                     click: toggleHeader,
                     dblclick: toggleFullscreen
@@ -454,10 +539,6 @@ export function ReaderPage({
                     {
                         subscriber: subsPages,
                         triggerFunction: onPagesChange
-                    },
-                    {
-                        subscriber: subsZoom,
-                        triggerFunction: onZoomChange
                     }
                 ]
             })

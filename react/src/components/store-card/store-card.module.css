@@ -178,3 +178,27 @@
         transform: rotate(360deg);
     }
 }
+
+@media (min-width: 481px) and (max-width: 1024px) {
+    .storeCard {
+        padding: 6px;
+        border-radius: 10px;
+    }
+
+    .details {
+        margin-top: 6px;
+        gap: 2px;
+    }
+
+    .title {
+        font-size: 11px;
+    }
+
+    .date {
+        font-size: 9px;
+    }
+
+    .action {
+        margin-top: 4px;
+    }
+}

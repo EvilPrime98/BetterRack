@@ -7,6 +7,7 @@ import { preloadWindow } from '@/utils/reader.page.utils';
 export function useComicPages(uid: string | undefined) {
 
     const [pages, setPages] = useState<string[]>([]);
+    const [title, setTitle] = useState('');
     const [isLoading, setIsLoading] = useState(true);
     const [hasError, setHasError] = useState(false);
     const [bookmarks, setBookmarks] = useState<IBookmark[]>([]);
@@ -21,8 +22,9 @@ export function useComicPages(uid: string | undefined) {
             const comicCache = useComicCacheStore.getState().getCacheById(uid);
             const data = await reader({ uid });
             const savedPage = comicCache?.currentPage || 1;
-            await preloadWindow(uid, data.length, savedPage);
-            setPages(data);
+            await preloadWindow(uid, data.pages.length, savedPage);
+            setTitle(data.title);
+            setPages(data.pages);
             // Bookmarks are optional comic metadata. A failure here must not
             // stop the reader from opening.
             try {
@@ -60,6 +62,6 @@ export function useComicPages(uid: string | undefined) {
         loadPages();
     }, [loadPages]);
 
-    return { pages, isLoading, hasError, bookmarks, isRefreshing, loadPages, refreshComic };
+    return { pages, title, isLoading, hasError, bookmarks, isRefreshing, loadPages, refreshComic };
 
 }

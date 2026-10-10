@@ -15,6 +15,7 @@ import { bindMaximizeChangeEvents } from "./events/maximize-change.event";
 import { bindCloseGuard, registerCloseGuardHandlers } from "./events/close-guard.event";
 import { APP_NAME } from "./app.config";
 import { createStartupLogger } from "./logger";
+import { checkForUpdates } from "./update-check";
 
 function waitForServerPort(
   serverProcess: ChildProcess,
@@ -211,6 +212,7 @@ async function startDesktopApp() {
 
     win.once("ready-to-show", () => {
       win.show();
+      if (app.isPackaged) void checkForUpdates(win, log);
     });
 
   }

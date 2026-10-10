@@ -21,7 +21,7 @@ export class comicReaderController {
 
     private async getPages(
         uuid?: string
-    ): Promise<{ pages: string[]; archivePath: string }> {
+    ): Promise<{ pages: string[]; archivePath: string; title: string }> {
 
         const entry = this.libModel.get(uuid) as TLibraryEntry;
 
@@ -40,7 +40,7 @@ export class comicReaderController {
             throw new Error('No pages found in comic');
         }
 
-        return { pages, archivePath: entry.path };
+        return { pages, archivePath: entry.path, title: entry.name };
 
     }
 
@@ -54,12 +54,13 @@ export class comicReaderController {
             c.header('Cache-Control', 'no-store');
 
             const uuid = c.req.param('uuid');
-            const { pages } = await this.getPages(uuid);
+            const { pages, title } = await this.getPages(uuid);
 
             return c.json({
                 error: false,
                 message: 'Comic pages listed successfully',
                 totalPages: pages.length,
+                title,
                 pages
             }, 200)
 
@@ -160,12 +161,13 @@ export class comicReaderController {
 
             this.zipModel.evictArchiveCache(entry.path);
 
-            const { pages } = await this.getPages(uuid);
+            const { pages, title } = await this.getPages(uuid);
 
             return c.json({
                 error: false,
                 message: 'Comic re-scanned successfully',
                 totalPages: pages.length,
+                title,
                 pages
             }, 200)
 

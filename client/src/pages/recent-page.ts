@@ -1,10 +1,10 @@
-import { UltraActivity, UltraComponent, ultraCompState, ultraState, type IUltraCompStateStateful, type UltraLightElement } from "ultra-light-js";
+import { UltraActivity, UltraComponent, ultraCompState, type IUltraCompStateStateful, type UltraLightElement } from "ultra-light-js";
 import styles from './recent-page.module.css';
 import { Layout } from "../layout";
 import { ComicCard } from "@/components/comic-card/comic-card";
 import { getRecentlyAdded } from "../services/library.service";
 import { toast } from "../services/toast.service";
-import { ChevronDownIcon } from "../icons/chevron.icon";
+import { BRDropdown } from "../components/br-dropdown/br-dropdown";
 import { RECENT_WINDOW_OPTIONS, type ILibraryResponseItem } from "../library.types";
 import { DOCUMENT_TITLE_CONTEXT } from "../context/document-title.context";
 import { LIBRARY_CONTEXT } from "../context/library.context";
@@ -18,91 +18,14 @@ interface IRecentPageState {
     dropDeleted: (uid: string) => void;
 }
 
+const WINDOW_DROPDOWN_OPTIONS = RECENT_WINDOW_OPTIONS.map(option => ({
+    value: option.label,
+    label: option.label
+}));
+
 function labelForWindow(hours: number): string {
     return RECENT_WINDOW_OPTIONS.find(option => option.hours === hours)?.label
         ?? `Last ${hours} hours`;
-}
-
-function WindowFilter(store: IRecentPageState) {
-
-    const [isOpen, setOpen, subsOpen] = ultraState(false);
-
-    const closeMenu = () => setOpen(false);
-
-    const onOpenChange = ($root: HTMLElement) => {
-        $root.classList.toggle(styles.filterOpen, isOpen());
-    };
-
-    return UltraComponent({
-
-        component: '<div></div>',
-
-        className: [styles.filter],
-
-        eventHandler: {
-            click: (e: Event) => {
-                e.stopPropagation();
-                setOpen(!isOpen());
-            }
-        },
-
-        onMount: [
-            onOpenChange,
-            () => {
-                document.addEventListener('click', closeMenu);
-                return () => document.removeEventListener('click', closeMenu);
-            }
-        ],
-
-        trigger: [{
-            subscriber: subsOpen,
-            triggerFunction: onOpenChange
-        }],
-
-        children: [
-
-            UltraComponent({
-                component: `<span class="${styles.filterLabel}"></span>`,
-                trigger: [{
-                    subscriber: store.windowHours.subscribe,
-                    triggerFunction: ($span: HTMLElement) => {
-                        $span.textContent = labelForWindow(store.windowHours.get());
-                    }
-                }]
-            }),
-
-            ChevronDownIcon({ size: 14 }),
-
-            UltraActivity({
-
-                component: `<ul class="${styles.filterMenu}"></ul>`,
-
-                mode: {
-                    state: isOpen,
-                    subscriber: subsOpen
-                },
-
-                children: RECENT_WINDOW_OPTIONS.map(option =>
-                    UltraComponent({
-                        component: `<li class="${styles.filterOption}">${option.label}</li>`,
-                        eventHandler: {
-                            click: (e: Event) => {
-                                e.stopPropagation();
-                                setOpen(false);
-                                if (store.windowHours.get() === option.hours) return;
-                                store.windowHours.set(option.hours);
-                                store.load();
-                            }
-                        }
-                    })
-                )
-
-            })
-
-        ]
-
-    });
-
 }
 
 export function RecentPage() {
@@ -195,7 +118,19 @@ export function RecentPage() {
                                 }
                             }]
                         }),
-                        WindowFilter(store)
+                        BRDropdown({
+                            className: [styles.filter],
+                            options: WINDOW_DROPDOWN_OPTIONS,
+                            value: () => labelForWindow(store.windowHours.get()),
+                            subscribe: store.windowHours.subscribe,
+                            onChange: (label) => {
+                                const option = RECENT_WINDOW_OPTIONS.find(opt => opt.label === label);
+                                if (!option || store.windowHours.get() === option.hours) return;
+                                store.windowHours.set(option.hours);
+                                store.load();
+                            },
+                            ariaLabel: 'Time window'
+                        })
                     ]
                 }),
 
