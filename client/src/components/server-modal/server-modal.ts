@@ -15,7 +15,7 @@ export function ServerModal() {
 
     const buildRemoteOpts = () => showRemoteModeOption
         ? { enabled: remoteMode(), apiKey: apiKey() }
-        : undefined;
+        : { enabled: false, apiKey: apiKey() };
 
     const cancel = () => SERVER_MODAL_CTX.closeServerModal();
 
@@ -116,30 +116,30 @@ export function ServerModal() {
                                 subscriber: subscribeRemoteMode,
                                 triggerFunction: syncRemoteModeCheckbox
                             }]
-                        }),
-
-                        UltraActivity({
-                            mode: { state: remoteMode, subscriber: subscribeRemoteMode },
-                            component: '<input/>',
-                            className: [styles.field],
-                            attributes: {
-                                type: 'text',
-                                placeholder: 'API key (optional)'
-                            },
-                            eventHandler: {
-                                input: (e: Event) => setApiKey((e.currentTarget as HTMLInputElement).value)
-                            },
-                            trigger: [{
-                                subscriber: SERVER_MODAL_CTX.isVisible.subscribe,
-                                triggerFunction: ($input: HTMLElement) => {
-                                    if (!SERVER_MODAL_CTX.isVisible.get()) return;
-                                    ($input as HTMLInputElement).value = apiKey();
-                                },
-                                defer: true
-                            }]
                         })
 
                     ] : []),
+
+                    UltraActivity({
+                        mode: { state: () => !showRemoteModeOption || remoteMode(), subscriber: subscribeRemoteMode },
+                        component: '<input/>',
+                        className: [styles.field],
+                        attributes: {
+                            type: 'text',
+                            placeholder: 'API key (optional)'
+                        },
+                        eventHandler: {
+                            input: (e: Event) => setApiKey((e.currentTarget as HTMLInputElement).value)
+                        },
+                        trigger: [{
+                            subscriber: SERVER_MODAL_CTX.isVisible.subscribe,
+                            triggerFunction: ($input: HTMLElement) => {
+                                if (!SERVER_MODAL_CTX.isVisible.get()) return;
+                                ($input as HTMLInputElement).value = apiKey();
+                            },
+                            defer: true
+                        }]
+                    }),
 
                     UltraComponent({
                         component: `<p class="${styles.errorText}"></p>`,

@@ -1,5 +1,5 @@
 import { ultraCompState, type IUltraCompStateStateful } from "ultra-light-js";
-import { getStoredServerUrl, isRemoteModeEnabled, needsServerSetup, setServerUrl, setRemoteServer } from "../services/server-config.service";
+import { getStoredServerUrl, isRemoteModeEnabled, needsServerSetup, setServerUrl, setRemoteServer, setStoredApiKey, isAndroidPlatform } from "../services/server-config.service";
 
 let resolver: (() => void) | null = null;
 
@@ -50,7 +50,10 @@ export const SERVER_MODAL_CTX: IServerModalCtx = ultraCompState({
         const urlBefore = getStoredServerUrl();
         const remoteBefore = isRemoteModeEnabled();
         if (remote?.enabled) setRemoteServer(trimmed, remote.apiKey.trim());
-        else setServerUrl(trimmed);
+        else {
+            setServerUrl(trimmed);
+            if (isAndroidPlatform()) setStoredApiKey(remote?.apiKey.trim() ?? '');
+        }
         comp.isVisible.set(false);
         comp.isMandatory.set(false);
         resolver?.();
