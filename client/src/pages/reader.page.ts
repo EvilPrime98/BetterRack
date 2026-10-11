@@ -1,6 +1,7 @@
 import { UltraActivity, UltraComponent, ultraNavigate, ultraState } from "ultra-light-js"
 import { API_URL, reader, readerBookmarks, readerRefresh } from "../services/library.service"
 import { withAuthQuery } from "../services/server-config.service"
+import { setImmersiveMode } from "../services/immersive.service"
 import type { IBookmark } from "../library.types"
 import styles from './reader.page.module.css'
 import { ImageElement } from "../components/reader-page-image/reader-page-image";
@@ -8,7 +9,7 @@ import { ReaderPageHeader } from "../components/reader-page-header/reader-page-h
 import { ReaderPageProgressBar } from "../components/reader-page-progress-bar/reader-page-progress-bar";
 import { COMIC_CACHE_CONTEXT } from "../context/comic-cache.context";
 import { DOCUMENT_TITLE_CONTEXT } from "../context/document-title.context";
-import { USER_PREF } from "../context/user-pref-cache.context";
+import { USER_PREF, type TReadingMode } from "../context/user-pref-cache.context";
 
 const PRELOAD_WINDOW = 2;
 const RENDER_BEHIND = 3;
@@ -44,6 +45,7 @@ export function ReaderPage({
     const [bookmarks, setBookmarks, subsBookmarks] = ultraState<IBookmark[]>([]);
     const [isRefreshing, setIsRefreshing, subsIsRefreshing] = ultraState(false);
     const [isHeaderVisible, setIsHeaderVisible, subsIsHeaderVisible] = ultraState(true);
+    const [readingMode, setReadingMode, subsReadingMode] = ultraState<TReadingMode>(USER_PREF.getPref('readingMode'));
     let observer: IntersectionObserver | null = null;
     let viewer: HTMLElement | null = null;
     let scroller: HTMLElement | null = null;
@@ -94,7 +96,7 @@ export function ReaderPage({
 
     const goToPage = (page: number) => {
         const $page = viewer?.children[page - 1] as HTMLElement | undefined;
-        $page?.scrollIntoView({ block: 'start' });
+        $page?.scrollIntoView({ block: 'start', inline: 'start' });
         prefetchAround(page);
     }
 
@@ -228,6 +230,30 @@ export function ReaderPage({
         $header.classList.toggle(styles.hidden, !isHeaderVisible());
     }
 
+    const onReadingModeChange = (mode: TReadingMode) => {
+        setReadingMode(mode);
+        USER_PREF.setPref({ readingMode: mode });
+    }
+
+    const onReadingModeApply = ($page: HTMLElement) => {
+        $page.dataset.mode = readingMode();
+        const $current = viewer?.children[currentPage() - 1] as HTMLElement | undefined;
+        $current?.scrollIntoView({ block: 'start', inline: 'start' });
+    }
+
+    const realign = () => {
+        if (readingMode() !== 'horizontal') return;
+        const $current = viewer?.children[currentPage() - 1] as HTMLElement | undefined;
+        $current?.scrollIntoView({ block: 'nearest', inline: 'start' });
+    }
+
+    const onHeaderPaddingChange = ($page: HTMLElement) => {
+        const before = parseFloat(getComputedStyle($page).paddingTop);
+        $page.dataset.header = isHeaderVisible() ? 'visible' : 'hidden';
+        if (readingMode() === 'horizontal') return;
+        $page.scrollTop += parseFloat(getComputedStyle($page).paddingTop) - before;
+    }
+
     const toggleFullscreen = () => {
         if (window.desktop?.toggleFullscreen) {
             window.desktop.toggleFullscreen();
@@ -335,9 +361,29 @@ export function ReaderPage({
         }, ACTIVE_PAGE_SETTLE_MS);
     }
 
+    const onHorizontalWheel = (e: WheelEvent) => {
+        if (readingMode() !== 'horizontal' || Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+        const $figure = (e.target as HTMLElement).closest('figure');
+        if ($figure?.hasAttribute('data-splash')) {
+            const canScrollX = e.deltaY < 0 ? $figure.scrollLeft > 0
+                : $figure.scrollLeft + $figure.clientWidth < $figure.scrollWidth - 1;
+            if (canScrollX) {
+                $figure.scrollLeft += e.deltaY;
+                return;
+            }
+        }
+        const canScrollY = $figure && !$figure.hasAttribute('data-splash')
+            && (e.deltaY < 0 ? $figure.scrollTop > 0
+                : $figure.scrollTop + $figure.clientHeight < $figure.scrollHeight - 1);
+        if (!canScrollY && scroller) scroller.scrollLeft += e.deltaY;
+    }
+
     const onWheel = (evt: Event) => {
         const e = evt as WheelEvent;
-        if (!e.ctrlKey) return;
+        if (!e.ctrlKey) {
+            onHorizontalWheel(e);
+            return;
+        }
         // hijack the browser/Electron ctrl+wheel pinch-zoom and drive our own page zoom instead
         e.preventDefault();
         if (e.deltaY < 0) zoomIn();
@@ -398,7 +444,7 @@ export function ReaderPage({
             }
         }
 
-        $target?.scrollIntoView({ block: 'start' });
+        $target?.scrollIntoView({ block: 'start', inline: 'start' });
 
         if (!numPages) return;
 
@@ -437,9 +483,11 @@ export function ReaderPage({
             () => {
                 window.addEventListener('keydown', onKeydown);
                 window.addEventListener('resize', fitZoom);
+                window.addEventListener('resize', realign);
                 return () => {
                     window.removeEventListener('keydown', onKeydown);
                     window.removeEventListener('resize', fitZoom);
+                    window.removeEventListener('resize', realign);
                     observer?.disconnect();
                     cancelAnimationFrame(zoomFrame);
                     clearTimeout(activeTimer);
@@ -448,6 +496,14 @@ export function ReaderPage({
                         USER_PREF.setPref({ zoom: zoomValue });
                     }
                 }
+            },
+            () => {
+                setImmersiveMode(true);
+                return () => setImmersiveMode(false);
+            },
+            ($page: HTMLElement) => {
+                $page.dataset.mode = readingMode();
+                $page.dataset.header = 'visible';
             },
             ($page: HTMLElement) => {
                 $page.addEventListener('pointerdown', onPointerDown);
@@ -490,6 +546,8 @@ export function ReaderPage({
                         pages, subsPages,
                         bookmarks, subsBookmarks,
                         isRefreshing, subsIsRefreshing,
+                        readingMode,
+                        onReadingModeChange,
                         goToPage,
                         goBack,
                         onRefresh: refreshComic
@@ -546,6 +604,14 @@ export function ReaderPage({
         ],
 
         trigger: [
+            {
+                subscriber: subsReadingMode,
+                triggerFunction: onReadingModeApply
+            },
+            {
+                subscriber: subsIsHeaderVisible,
+                triggerFunction: onHeaderPaddingChange
+            },
             {
                 subscriber: [subsPages, subsCurrentPage],
                 triggerFunction: onProgressChange,
