@@ -2,6 +2,7 @@ import { UltraComponent } from "ultra-light-js";
 import { ArrowLeftIcon } from "../../icons/arrow-left.icon";
 import { RefreshIcon } from "../../icons/refresh-icon";
 import type { IBookmark } from "../../library.types";
+import type { TReadingMode } from "../../context/user-pref-cache.context";
 import { WindowControls } from "../window-controls/window-controls";
 import styles from '../../pages/reader.page.module.css'
 
@@ -16,6 +17,8 @@ export function ReaderPageHeader({
     subsBookmarks,
     isRefreshing,
     subsIsRefreshing,
+    readingMode,
+    onReadingModeChange,
     goToPage,
     goBack,
     onRefresh
@@ -30,6 +33,8 @@ export function ReaderPageHeader({
     subsBookmarks: (fn: (value: IBookmark[]) => void) => () => void;
     isRefreshing: () => boolean;
     subsIsRefreshing: (fn: (value: boolean) => void) => () => void;
+    readingMode: () => TReadingMode;
+    onReadingModeChange: (mode: TReadingMode) => void;
     goToPage: (page: number) => void;
     goBack: () => void;
     onRefresh: () => void;
@@ -78,6 +83,14 @@ export function ReaderPageHeader({
         $select.value = '';
     }
 
+    const onReadingModeMount = ($el: HTMLElement) => {
+        ($el as HTMLSelectElement).value = readingMode();
+    }
+
+    const onReadingModeSelect = (evt: Event) => {
+        onReadingModeChange((evt.target as HTMLSelectElement).value as TReadingMode);
+    }
+
     return UltraComponent({
         component: '<header></header>',
         className: [styles.toolbar],
@@ -115,6 +128,13 @@ export function ReaderPageHeader({
                 component: '<div></div>',
                 className: [styles.toolbarEnd],
                 children: [
+                    UltraComponent({
+                        component: '<select><option value="vertical">Vertical</option><option value="horizontal">Horizontal</option></select>',
+                        className: [styles.bookmarks],
+                        attributes: { 'aria-label': 'Reading mode' },
+                        eventHandler: { change: onReadingModeSelect },
+                        onMount: [onReadingModeMount]
+                    }),
                     UltraComponent({
                         component: `<span>${currentPage()} / ${pages().length}</span>`,
                         className: [styles.counter],

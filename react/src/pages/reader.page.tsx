@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { isDesktopApp } from '@/services/server-config.service';
+import { setImmersiveMode } from '@/services/immersive.service';
 import styles from './reader.page.module.css';
 import { RENDER_AHEAD, RENDER_BEHIND } from '../utils/reader.page.utils';
 import { ImageElement } from '@/components/reader-page-image/reader-page-image';
@@ -13,6 +14,8 @@ import { useComicPages } from '@/hooks/useComicPages';
 import { useReaderPageTracking } from '@/hooks/useReaderPageTracking';
 import { useReaderProgress } from '@/hooks/useReaderProgress';
 import { useReaderZoom } from '@/hooks/useReaderZoom';
+import { useUserPrefStore } from '@/stores/userPref.store';
+import type { TReadingMode } from '@/stores/userPref.store';
 import { useSettledValue } from '@/hooks/useSettledValue';
 
 const ACTIVE_PAGE_SETTLE_MS = 150;
@@ -41,7 +44,60 @@ export function ReaderPage() {
     const { onWheel } = useReaderZoom(pageRef, viewerRef);
     useReaderProgress(uid, pages, currentPage);
 
+    const readingMode = useUserPrefStore((s) => s.pref.readingMode);
+    const isHorizontal = readingMode === 'horizontal';
+
+    const onReadingModeChange = useCallback((mode: TReadingMode) => {
+        useUserPrefStore.getState().setPref({ readingMode: mode });
+    }, []);
+
+    const currentPageRef = useRef(currentPage);
+    currentPageRef.current = currentPage;
+    useLayoutEffect(() => {
+        const $page = viewerRef.current?.children[currentPageRef.current - 2] as HTMLElement | undefined;
+        $page?.scrollIntoView({ block: 'start', inline: 'start' });
+    }, [readingMode]);
+
+    useEffect(() => {
+        if (!isHorizontal) return;
+        const realign = () => {
+            const $page = viewerRef.current?.children[currentPageRef.current - 2] as HTMLElement | undefined;
+            $page?.scrollIntoView({ block: 'nearest', inline: 'start' });
+        };
+        window.addEventListener('resize', realign);
+        return () => window.removeEventListener('resize', realign);
+    }, [isHorizontal]);
+
+    const onPageWheel = useCallback((e: React.WheelEvent) => {
+        onWheel(e);
+        if (!isHorizontal || e.ctrlKey || Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+        const $figure = (e.target as HTMLElement).closest('figure');
+        if ($figure?.hasAttribute('data-splash')) {
+            const canScrollX = e.deltaY < 0 ? $figure.scrollLeft > 0
+                : $figure.scrollLeft + $figure.clientWidth < $figure.scrollWidth - 1;
+            if (canScrollX) {
+                $figure.scrollLeft += e.deltaY;
+                return;
+            }
+        }
+        const canScrollY = $figure && !$figure.hasAttribute('data-splash')
+            && (e.deltaY < 0 ? $figure.scrollTop > 0
+                : $figure.scrollTop + $figure.clientHeight < $figure.scrollHeight - 1);
+        if (!canScrollY && pageRef.current) pageRef.current.scrollLeft += e.deltaY;
+    }, [onWheel, isHorizontal]);
+
     const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+
+    const prevPaddingTop = useRef<number | null>(null);
+    useLayoutEffect(() => {
+        const $page = pageRef.current;
+        if (!$page) return;
+        const paddingTop = parseFloat(getComputedStyle($page).paddingTop);
+        if (prevPaddingTop.current !== null && !isHorizontal) {
+            $page.scrollTop += paddingTop - prevPaddingTop.current;
+        }
+        prevPaddingTop.current = paddingTop;
+    }, [isHeaderVisible, isHorizontal]);
 
     const toggleHeader = useCallback(() => {
         setIsHeaderVisible(visible => !visible);
@@ -57,6 +113,11 @@ export function ReaderPage() {
     }, []);
 
     useEffect(() => {
+        setImmersiveMode(true);
+        return () => setImmersiveMode(false);
+    }, []);
+
+    useEffect(() => {
         setTitle('Reader');
     }, [setTitle]);
 
@@ -66,10 +127,10 @@ export function ReaderPage() {
     const next = numPages > 0 && currentPage === numPages;
 
     return (
-        <section className={styles.page} onWheel={onWheel} ref={pageRef}>
+        <section className={styles.page} data-mode={readingMode} data-header={isHeaderVisible ? 'visible' : 'hidden'} onWheel={onPageWheel} ref={pageRef}>
 
             <div className={`${styles.headerOverlay} ${isHeaderVisible ? '' : styles.hidden}`}>
-                <ReaderPageHeader title={title} currentPage={currentPage} totalPages={pages.length} bookmarks={bookmarks} isRefreshing={isRefreshing} goToPage={goToPage} goBack={goBack} onRefresh={refreshComic} />
+                <ReaderPageHeader title={title} currentPage={currentPage} totalPages={pages.length} bookmarks={bookmarks} isRefreshing={isRefreshing} readingMode={readingMode} onReadingModeChange={onReadingModeChange} goToPage={goToPage} goBack={goBack} onRefresh={refreshComic} />
                 <ReaderPageProgressBar currentPage={currentPage} totalPages={pages.length} />
             </div>
 

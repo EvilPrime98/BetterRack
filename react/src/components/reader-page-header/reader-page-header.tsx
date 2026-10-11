@@ -2,6 +2,7 @@ import styles from '../../pages/reader.page.module.css';
 import { ArrowLeftIcon } from '../../icons/arrow-left.icon';
 import { RefreshIcon } from '../../icons/refresh-icon';
 import type { IBookmark } from '../../library.types';
+import type { TReadingMode } from '../../stores/userPref.store';
 import { WindowControls } from '../window-controls/window-controls';
 
 export function ReaderPageHeader({
@@ -10,6 +11,8 @@ export function ReaderPageHeader({
     totalPages,
     bookmarks,
     isRefreshing,
+    readingMode,
+    onReadingModeChange,
     goToPage,
     goBack,
     onRefresh
@@ -19,6 +22,8 @@ export function ReaderPageHeader({
     totalPages: number;
     bookmarks: IBookmark[];
     isRefreshing: boolean;
+    readingMode: TReadingMode;
+    onReadingModeChange: (mode: TReadingMode) => void;
     goToPage: (page: number) => void;
     goBack: () => void;
     onRefresh: () => void;
@@ -49,6 +54,15 @@ export function ReaderPageHeader({
             </div>
             <h1 className={styles.title} title={title}>{title}</h1>
             <div className={styles.toolbarEnd}>
+                <select
+                    className={styles.bookmarks}
+                    aria-label="Reading mode"
+                    value={readingMode}
+                    onChange={(e) => onReadingModeChange(e.target.value as TReadingMode)}
+                >
+                    <option value="vertical">Vertical</option>
+                    <option value="horizontal">Horizontal</option>
+                </select>
                 <span className={styles.counter}>{currentPage} / {totalPages}</span>
                 <button
                     type="button"
