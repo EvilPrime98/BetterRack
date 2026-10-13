@@ -8,6 +8,7 @@ import { SideBarGroup } from './sidebar-group';
 import { RefreshLibraryButton } from './refresh-button';
 import { SidebarSearch } from './sidebar-search';
 import { Footer } from '@/components/footer/footer';
+import { PinIcon } from '@/icons/pin.icon';
 import { GearIcon } from '@/icons/gear.icon';
 import { ShopIcon } from '@/icons/shop.icon';
 import { DownloadIcon } from '@/icons/download.icon';
@@ -29,6 +30,8 @@ export function SideBar() {
     const isExpanded = useSidebarStore((s) => s.isExpanded);
     const setIsExpanded = useSidebarStore((s) => s.setIsExpanded);
     const isCollapsed = useSidebarStore((s) => s.isCollapsed);
+    const isPinned = useSidebarStore((s) => s.isPinned);
+    const setIsPinned = useSidebarStore((s) => s.setIsPinned);
     const isCompact = useSidebarStore((s) => s.isCompact);
     const setIsCompact = useSidebarStore((s) => s.setIsCompact);
     const groups = useLibraryStore((s) => s.groups);
@@ -38,7 +41,8 @@ export function SideBar() {
     const [isLoading, setIsLoading] = useState(false);
     const isDesktop = useIsDesktop();
 
-    const isHidden = isDesktop ? isCollapsed : !isExpanded;
+    const isDocked = isDesktop && isPinned;
+    const isHidden = isDocked ? isCollapsed : !isExpanded;
 
     function closeSidebar() {
         setIsExpanded(false);
@@ -74,7 +78,7 @@ export function SideBar() {
         <div>
 
             <div
-                className={[styles.backdrop, isExpanded ? styles.visible : ''].filter(Boolean).join(' ')}
+                className={[styles.backdrop, !isDocked && isExpanded ? styles.visible : ''].filter(Boolean).join(' ')}
                 onClick={closeSidebar}
                 aria-hidden="true"
             />
@@ -86,31 +90,56 @@ export function SideBar() {
                 className={[
                     styles.sideBar,
                     isExpanded ? styles.expanded : '',
+                    isDocked ? styles.pinned : '',
                     isCollapsed ? styles.collapsed : ''
                 ].filter(Boolean).join(' ')}
             >
 
-                <BRButton
-                    text={isCompact ? 'Show more' : 'Show less'}
-                    variant="ghost"
-                    className={styles.toggleButton}
-                    aria-expanded={!isCompact}
-                    onClick={() => setIsCompact(!isCompact)}
-                />
-
-                <div className={styles.section}>
-                    <span id="library-group-by-label" className={styles.sectionTitle}>Group by</span>
-                    <BRDropdown
-                        className={styles.groupByDropdown}
-                        aria-labelledby="library-group-by-label"
-                        value={structure}
-                        onChange={setStructure}
-                        options={STRUCTURE_OPTIONS}
+                <div className={styles.topBar}>
+                    <BRButton
+                        text={isCompact ? 'Show more' : 'Show less'}
+                        variant="ghost"
+                        className={styles.toggleButton}
+                        aria-expanded={!isCompact}
+                        onClick={() => setIsCompact(!isCompact)}
                     />
+                    {isDesktop && (
+                        <button
+                            type="button"
+                            className={styles.button}
+                            aria-label={isPinned ? 'Unpin sidebar' : 'Pin sidebar'}
+                            aria-pressed={isPinned}
+                            title={isPinned ? 'Unpin sidebar' : 'Pin sidebar'}
+                            onClick={() => setIsPinned(!isPinned)}
+                        >
+                            <PinIcon
+                                size={18}
+                                filled={isPinned}
+                                color={isPinned ? '#fff' : '#c7c7c7'}
+                                rotate={90}
+                            />
+                        </button>
+                    )}
                 </div>
 
-                <div className={[styles.fold, isCompact ? styles.folded : ''].filter(Boolean).join(' ')} inert={isCompact}>
+                <div
+                    className={[styles.fold, isCompact ? styles.folded : ''].filter(Boolean).join(' ')}
+                    inert={isCompact}
+                >
+
                     <div className={styles.foldInner}>
+
+                        <div className={styles.section}>
+                            <span id="library-group-by-label" className={styles.sectionTitle}>Group by</span>
+                            <BRDropdown
+                                className={styles.groupByDropdown}
+                                aria-labelledby="library-group-by-label"
+                                value={structure}
+                                onChange={setStructure}
+                                options={STRUCTURE_OPTIONS}
+                            />
+                        </div>
+
                         <div className={styles.section}>
                             <span className={styles.sectionTitle}>User</span>
                             <Link to="/settings" className={styles.item} onClick={closeSidebar}>
@@ -146,7 +175,9 @@ export function SideBar() {
                         <SidebarSearch />
 
                         <RefreshLibraryButton />
+
                     </div>
+
                 </div>
 
                 <nav className={styles.list}>
