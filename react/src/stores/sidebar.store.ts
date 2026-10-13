@@ -7,6 +7,13 @@ function readCollapsed(): boolean {
     return window.localStorage.getItem(COLLAPSED_KEY) === 'true';
 }
 
+const PINNED_KEY = 'better-rack-sidebar-pinned';
+
+function readPinned(): boolean {
+    if (typeof window === 'undefined') return false;
+    return window.localStorage.getItem(PINNED_KEY) === 'true';
+}
+
 const COMPACT_KEY = 'better-rack-sidebar-compact';
 
 function readCompact(): boolean {
@@ -23,6 +30,8 @@ interface ISidebarStore {
     /** Collapsed-to-zero-width state, used at/above the 800px breakpoint. */
     isCollapsed: boolean;
     setIsCollapsed: (isCollapsed: boolean) => void;
+    isPinned: boolean;
+    setIsPinned: (isPinned: boolean) => void;
     expandedGroups: Record<string, boolean>;
     toggleGroup: (uid: string) => void;
 }
@@ -43,6 +52,14 @@ export const useSidebarStore = create<ISidebarStore>((set) => ({
             window.localStorage.setItem(COLLAPSED_KEY, String(isCollapsed));
         }
         set({ isCollapsed });
+    },
+    isPinned: readPinned(),
+    setIsPinned: (isPinned) => {
+        if (typeof window !== 'undefined') {
+            window.localStorage.setItem(PINNED_KEY, String(isPinned));
+            window.localStorage.setItem(COLLAPSED_KEY, 'false');
+        }
+        set({ isPinned, isCollapsed: false, isExpanded: !isPinned });
     },
     expandedGroups: {},
     toggleGroup: (uid) => set((s) => ({

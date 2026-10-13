@@ -33,20 +33,34 @@
 }
 
 @media (min-width: 801px) {
-    .sideBar,
-    .sideBar.expanded {
+    .sideBar.pinned,
+    .sideBar.pinned.expanded {
         width: var(--sidebar-width);
         transform: none;
         box-shadow: none;
         border-right: 1px solid var(--border-subtle);
     }
 
-    .sideBar.collapsed,
-    .sideBar.collapsed.expanded {
+    .sideBar.pinned.collapsed,
+    .sideBar.pinned.collapsed.expanded {
         width: 0;
         border-right: none;
         overflow: hidden;
     }
+}
+
+.topBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-shrink: 0;
+    padding: 8px 16px;
+}
+
+.topBar .button {
+    width: 32px;
+    height: 32px;
 }
 
 .header {
@@ -256,8 +270,8 @@
 }
 
 .toggleButton {
-    margin: 6px 16px;
-    flex-shrink: 0;
+    margin: 0;
+    flex: 1;
 }
 
 @keyframes spin {

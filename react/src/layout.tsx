@@ -17,11 +17,12 @@ export function Layout({
 }) {
 
     const isCollapsed = useSidebarStore((s) => s.isCollapsed);
+    const isPinned = useSidebarStore((s) => s.isPinned);
 
     return (
         <main className={[
             styles.layout,
-            isCollapsed ? styles.sidebarCollapsed : ''
+            (isCollapsed || !isPinned) ? styles.sidebarCollapsed : ''
         ].filter(Boolean).join(' ')}>
 
             <Header />
