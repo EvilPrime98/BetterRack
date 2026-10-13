@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { FolderIcon } from '@/icons/folder.icon';
 import { useSidebarStore } from '@/stores/sidebar.store';
 import type { ILibraryResponseItem } from '@/library.types';
@@ -20,10 +20,15 @@ export function SideBarElement({
     };
 
     return (
-        <Link to={`/${item.uid}`} className={styles.item} onClick={onClick}>
+        <NavLink
+            to={`/${item.uid}`}
+            end
+            className={({ isActive }) => [styles.item, isActive ? styles.itemActive : ''].filter(Boolean).join(' ')}
+            onClick={onClick}
+        >
             <FolderIcon size={16} />
             <span>{item.name}</span>
-        </Link>
+        </NavLink>
     );
 
 }
