@@ -4,6 +4,7 @@ import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { DownloadModel } from './download.model';
+import type { RotatingFetchModel } from '../rotating-fetch/rotating-fetch.model';
 import type { TProgressEvent } from './types';
 
 function fakeResponse({
@@ -369,6 +370,30 @@ describe('DownloadModel.downloadComic — in-flight file naming', () => {
         expect(dest).toBe(path.join(workDir, 'inflight.cbz'));
         expect(await readFile(dest!, 'utf8')).toBe('ABCD');
         expect(await readdir(workDir)).toEqual(['inflight.cbz']);
+    });
+
+});
+
+describe('DownloadModel — rotating fetch setting', () => {
+
+    const run = async (enabled: boolean) => {
+        const url = 'https://example.test/files/comic.cbz';
+        stubFetch([fakeResponse({ url, chunks: [bytes('data')] })]);
+        const rotated: string[] = [];
+        const rotating = {
+            fetch: async (u: string) => {
+                rotated.push(u);
+                return fakeResponse({ url: u, chunks: [bytes('data')] });
+            },
+        } as unknown as RotatingFetchModel;
+        const model = new DownloadModel(undefined, undefined, { maxRetries: 0, backoffMs: 0, backoffCapMs: 0 }, rotating, () => enabled);
+        await model.downloadComic({ link: { title: 'Comic', downloadLink: url }, outputDir: workDir, onProgress: () => {}, quiet: true });
+        return rotated;
+    };
+
+    test('uses rotating fetch for regular hosts only when enabled', async () => {
+        expect(await run(true)).toHaveLength(1);
+        expect(await run(false)).toHaveLength(0);
     });
 
 });

@@ -55,7 +55,10 @@ async function startApp() {
     
     const dwnModel = new DownloadModel(
         logger.child({ module: 'DownloadModel' }),
-        new PackExtractor(zipModel)
+        new PackExtractor(zipModel),
+        {},
+        undefined,
+        () => prefsModel.getAppSettings().rotatingFetch
     );
     
     const jobModel = new JobModel<TProgressEvent | TIdentifyProgress>();

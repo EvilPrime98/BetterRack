@@ -14,7 +14,7 @@ import { useLibraryStore } from '@/stores/library.store';
 import { useServerModalStore } from '@/stores/serverModal.store';
 import { useConfirmModalStore } from '@/stores/confirmModal.store';
 
-type SettingsDraft = Pick<IAppSettings, 'apiUrl' | 'downloadDir' | 'wikiSearch' | 'rescanOnStartup'>;
+type SettingsDraft = Pick<IAppSettings, 'apiUrl' | 'downloadDir' | 'wikiSearch' | 'rescanOnStartup' | 'rotatingFetch'>;
 type SetDraft = React.Dispatch<React.SetStateAction<SettingsDraft>>;
 
 function ServerSection() {
@@ -313,6 +313,19 @@ function IdentificationSection({ draft, setDraft }: { draft: SettingsDraft; setD
 
                     </div>
 
+                    <div className={styles.toggleRow}>
+
+                        <BRCheckbox
+                            text="Rotate identity"
+                            checked={draft.rotatingFetch}
+                            onChange={(e) => {
+                                const checked = e.currentTarget.checked;
+                                setDraft((d) => ({ ...d, rotatingFetch: checked }));
+                            }}
+                        />
+
+                    </div>
+
                 </div>
 
             </section>
@@ -329,6 +342,7 @@ export function SettingsPage() {
         downloadDir: settings.downloadDir,
         wikiSearch: settings.wikiSearch,
         rescanOnStartup: settings.rescanOnStartup,
+        rotatingFetch: settings.rotatingFetch,
     });
 
     async function onSave() {
@@ -358,6 +372,7 @@ export function SettingsPage() {
             downloadDir: settings.downloadDir,
             wikiSearch: settings.wikiSearch,
             rescanOnStartup: settings.rescanOnStartup,
+            rotatingFetch: settings.rotatingFetch,
         });
     }, [settings]);
 
