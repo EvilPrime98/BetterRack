@@ -15,6 +15,7 @@ import { settingsRouter } from './routers/settingsRouter';
 import { CacheModel } from './models/cache/cacheModel';
 import { GetComicsApiModel } from './models/gcw/getComicsApiModel';
 import { DownloadModel } from './models/download/download.model';
+import { RotatingFetchModel } from './models/rotating-fetch/rotating-fetch.model';
 import { PackExtractor } from './models/download/pack-extractor.model';
 import { JobModel } from './models/jobs/jobs.model';
 import { FileSystemModel } from './models/directory/directoryModel';
@@ -53,11 +54,19 @@ async function startApp() {
     
     const gcwModel = new GetComicsApiModel(cacheModel, prefsModel);
     
+    const rotatingFetchProxies = (process.env.ROTATING_FETCH_PROXIES ?? '')
+        .split(',')
+        .map(proxy => proxy.trim())
+        .filter(Boolean);
+
     const dwnModel = new DownloadModel(
         logger.child({ module: 'DownloadModel' }),
         new PackExtractor(zipModel),
         {},
-        undefined,
+        new RotatingFetchModel({
+            proxies: rotatingFetchProxies,
+            logger: logger.child({ module: 'RotatingFetchModel' }),
+        }),
         () => prefsModel.getAppSettings().rotatingFetch
     );
     
