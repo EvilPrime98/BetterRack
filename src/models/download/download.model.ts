@@ -56,12 +56,14 @@ export class DownloadModel {
     private packExtractor: PackExtractor|undefined;
     private retry: { maxRetries: number; backoffMs: number; backoffCapMs: number };
     private rotatingFetch: RotatingFetchModel;
+    private isRotatingFetchEnabled: () => boolean;
 
     constructor(
         log?: TLogger,
         packExtractor?: PackExtractor,
         retryOpts: { maxRetries?: number; backoffMs?: number; backoffCapMs?: number } = {},
-        rotatingFetch?: RotatingFetchModel
+        rotatingFetch?: RotatingFetchModel,
+        isRotatingFetchEnabled: () => boolean = () => false
     ){
         this.log = log
         this.packExtractor = packExtractor
@@ -71,6 +73,7 @@ export class DownloadModel {
             backoffCapMs: retryOpts.backoffCapMs ?? RETRY_BACKOFF_CAP_MS,
         }
         this.rotatingFetch = rotatingFetch ?? new RotatingFetchModel({ logger: log })
+        this.isRotatingFetchEnabled = isRotatingFetchEnabled
     }
 
     private isPixelDrainUrl(
@@ -88,7 +91,7 @@ export class DownloadModel {
         url: string,
         signal?: AbortSignal
     ): Promise<Response> => {
-        if (this.isPixelDrainUrl(url)) {
+        if (this.isPixelDrainUrl(url) || this.isRotatingFetchEnabled()) {
             return this.rotatingFetch.fetch(url, {
                 method: 'GET',
                 headers: { 'content-type': 'application/octet-stream' },
