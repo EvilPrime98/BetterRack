@@ -22,6 +22,7 @@ export type TRotatingFetchOptions = {
     profiles?: TBrowserProfile[];
     /** The model merges these header overrides into every request it sends. */
     baseHeaders?: Record<string, string>;
+    proxies?: string[];
     logger?: TLogger;
 };
 
@@ -29,6 +30,7 @@ export type TRotatingFetchOptions = {
 export type TRotationIdentity = {
     profile: TBrowserProfile;
     headers: Record<string, string>;
+    proxy?: string;
 };
 
 export type TRotatedFetchOptions = {
