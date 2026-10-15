@@ -133,6 +133,7 @@ export function BRDropdown<T extends string>({
                         <li
                             key={option.value}
                             id={`${listId}-${index}`}
+                            ref={index === activeIndex ? (el) => el?.scrollIntoView({ block: 'nearest' }) : undefined}
                             role="option"
                             aria-selected={option.value === value}
                             className={[

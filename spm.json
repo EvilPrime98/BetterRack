@@ -1,0 +1,13 @@
+{
+  "skills": [
+    "git-commit-doctor",
+    "github-issue-doctor",
+    "github-issue-resolver",
+    "pr-doctor",
+    "reenforcement",
+    "silencer",
+    "ultra-light-js"
+  ],
+  "repo": "https://github.com/EvilPrime98/mySkills",
+  "isolate": true
+}

@@ -6,6 +6,7 @@ import styles from './reader.page.module.css';
 import { RENDER_AHEAD, RENDER_BEHIND } from '../utils/reader.page.utils';
 import { ImageElement } from '@/components/reader-page-image/reader-page-image';
 import { ReaderPageHeader } from '@/components/reader-page-header/reader-page-header';
+import { ReaderContextMenu } from '@/components/reader-context-menu/reader-context-menu';
 import { ReaderPageProgressBar } from '@/components/reader-page-progress-bar/reader-page-progress-bar';
 import { useDocumentTitleStore } from '@/stores/documentTitle.store';
 import { ReaderNext } from '@/components/reader-next/reader-next';
@@ -52,7 +53,9 @@ export function ReaderPage() {
     }, []);
 
     const currentPageRef = useRef(currentPage);
-    currentPageRef.current = currentPage;
+    useLayoutEffect(() => {
+        currentPageRef.current = currentPage;
+    }, [currentPage]);
     useLayoutEffect(() => {
         const $page = viewerRef.current?.children[currentPageRef.current - 2] as HTMLElement | undefined;
         $page?.scrollIntoView({ block: 'start', inline: 'start' });
@@ -166,6 +169,8 @@ export function ReaderPage() {
             </button>
 
             { next ? <ReaderNext uid={uid} navigate={navigate}/> : null }
+
+            <ReaderContextMenu currentPage={currentPage} bookmarks={bookmarks} isRefreshing={isRefreshing} readingMode={readingMode} onReadingModeChange={onReadingModeChange} goToPage={goToPage} onRefresh={refreshComic} />
 
         </section>
     );
