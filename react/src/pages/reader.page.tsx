@@ -53,7 +53,9 @@ export function ReaderPage() {
     }, []);
 
     const currentPageRef = useRef(currentPage);
-    currentPageRef.current = currentPage;
+    useLayoutEffect(() => {
+        currentPageRef.current = currentPage;
+    }, [currentPage]);
     useLayoutEffect(() => {
         const $page = viewerRef.current?.children[currentPageRef.current - 2] as HTMLElement | undefined;
         $page?.scrollIntoView({ block: 'start', inline: 'start' });
