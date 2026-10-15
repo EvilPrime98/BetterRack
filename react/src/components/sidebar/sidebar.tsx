@@ -24,23 +24,64 @@ const STRUCTURE_OPTIONS: BRDropdownOption<TLibraryStructure>[] = [
     { value: 'series', label: 'Series' }
 ];
 
+function PinButton() {
+
+    const isPinned = useSidebarStore((s) => s.isPinned);
+    const setIsPinned = useSidebarStore((s) => s.setIsPinned);
+    const label = isPinned ? 'Unpin sidebar' : 'Pin sidebar';
+
+    return (
+        <button
+            type="button"
+            className={styles.button}
+            aria-label={label}
+            aria-pressed={isPinned}
+            title={label}
+            onClick={() => setIsPinned(!isPinned)}
+        >
+            <PinIcon
+                size={18}
+                filled={isPinned}
+                color={isPinned ? '#fff' : '#c7c7c7'}
+                rotate={90}
+            />
+        </button>
+    );
+
+}
+
+function LibraryList({ isHidden, isLoading }: { isHidden: boolean; isLoading: boolean }) {
+
+    const groups = useLibraryStore((s) => s.groups);
+    const structure = useLibraryStore((s) => s.structure);
+
+    if (!groups.length) {
+        return (
+            <p className={styles.emptyState}>
+                {isLoading ? 'Loading library…' : 'No folders found'}
+            </p>
+        );
+    }
+    if (structure === 'series') return <SeriesList groups={groups} isHidden={isHidden} />;
+    return groups.map(group => <SideBarGroup key={group.uid} group={group} />);
+
+}
+
 export function SideBar() {
 
     const asideRef = useRef<HTMLElement>(null);
     const isExpanded = useSidebarStore((s) => s.isExpanded);
     const setIsExpanded = useSidebarStore((s) => s.setIsExpanded);
     const isCollapsed = useSidebarStore((s) => s.isCollapsed);
-    const isPinned = useSidebarStore((s) => s.isPinned);
-    const setIsPinned = useSidebarStore((s) => s.setIsPinned);
     const isCompact = useSidebarStore((s) => s.isCompact);
     const setIsCompact = useSidebarStore((s) => s.setIsCompact);
-    const groups = useLibraryStore((s) => s.groups);
     const fetchLibrary = useLibraryStore((s) => s.fetchLibrary);
     const structure = useLibraryStore((s) => s.structure);
     const setStructure = useLibraryStore((s) => s.setStructure);
     const [isLoading, setIsLoading] = useState(false);
     const isDesktop = useIsDesktop();
 
+    const isPinned = useSidebarStore((s) => s.isPinned);
     const isDocked = isDesktop && isPinned;
     const isHidden = isDocked ? isCollapsed : !isExpanded;
 
@@ -103,23 +144,7 @@ export function SideBar() {
                         aria-expanded={!isCompact}
                         onClick={() => setIsCompact(!isCompact)}
                     />
-                    {isDesktop && (
-                        <button
-                            type="button"
-                            className={styles.button}
-                            aria-label={isPinned ? 'Unpin sidebar' : 'Pin sidebar'}
-                            aria-pressed={isPinned}
-                            title={isPinned ? 'Unpin sidebar' : 'Pin sidebar'}
-                            onClick={() => setIsPinned(!isPinned)}
-                        >
-                            <PinIcon
-                                size={18}
-                                filled={isPinned}
-                                color={isPinned ? '#fff' : '#c7c7c7'}
-                                rotate={90}
-                            />
-                        </button>
-                    )}
+                    {isDesktop && <PinButton />}
                 </div>
 
                 <div
@@ -181,17 +206,7 @@ export function SideBar() {
                 </div>
 
                 <nav className={styles.list}>
-                    {!groups.length ? (
-                        <p className={styles.emptyState}>
-                            {isLoading ? 'Loading library…' : 'No folders found'}
-                        </p>
-                    ) : structure === 'series' ? (
-                        <SeriesList groups={groups} isHidden={isHidden} />
-                    ) : (
-                        groups.map(group => (
-                            <SideBarGroup key={group.uid} group={group} />
-                        ))
-                    )}
+                    <LibraryList isHidden={isHidden} isLoading={isLoading} />
                 </nav>
 
                 <div className={[styles.fold, isCompact ? styles.folded : ''].filter(Boolean).join(' ')} inert={isCompact}>
