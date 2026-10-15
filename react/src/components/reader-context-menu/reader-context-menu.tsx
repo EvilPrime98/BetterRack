@@ -29,6 +29,7 @@ export function ReaderContextMenu({
 
     const groups: BRMenuGroup[] = [
         {
+            id: 'reading-mode',
             heading: 'Reading mode',
             items: READING_MODES.map((mode) => ({
                 kind: 'radio',
@@ -38,6 +39,7 @@ export function ReaderContextMenu({
             }))
         },
         ...(bookmarks.length > 0 ? [{
+            id: 'bookmarks',
             heading: 'Jump to bookmark',
             scrollable: true,
             items: bookmarks.map((bookmark): BRMenuGroup['items'][number] => ({
@@ -49,6 +51,7 @@ export function ReaderContextMenu({
             }))
         }] : []),
         {
+            id: 'actions',
             items: [{
                 kind: 'action',
                 label: 'Refresh scan',

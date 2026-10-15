@@ -11,6 +11,7 @@ export type BRMenuItem =
     | { kind: 'radio'; label: string; checked: boolean; onSelect: () => void; title?: string };
 
 export interface BRMenuGroup {
+    id: string;
     items: BRMenuItem[];
     heading?: string;
     scrollable?: boolean;
@@ -135,8 +136,8 @@ export function BRContextMenu({ groups, targetRef, className, ...aria }: BRConte
             onWheel={(event) => event.stopPropagation()}
             onContextMenu={(event) => event.stopPropagation()}
         >
-            {groups.map((group, index) => (
-                <div key={group.heading ?? index} className={styles.group} role="group" aria-label={group.heading}>
+            {groups.map((group) => (
+                <div key={group.id} className={styles.group} role="group" aria-label={group.heading}>
                     {group.heading && <span className={styles.heading}>{group.heading}</span>}
                     {group.scrollable
                         ? <div className={styles.scroll}>{group.items.map(renderItem)}</div>
