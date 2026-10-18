@@ -157,6 +157,31 @@
     color: #f2a1a1;
 }
 
+.detailRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.detailRow .detail {
+    min-width: 0;
+}
+
+.pageLink {
+    flex-shrink: 0;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 600;
+    color: #ededed;
+    text-decoration: underline;
+    white-space: nowrap;
+}
+
+.pageLink:hover {
+    color: #fff;
+}
+
 .retry,
 .stop {
     align-self: flex-start;
