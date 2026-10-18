@@ -4,6 +4,7 @@ export interface IAppSettings {
     downloadDir: string;
     wikiSearch: boolean;
     rescanOnStartup: boolean;
+    rotatingFetch: boolean;
 }
 
 export type TFieldKey = 'apiUrl'

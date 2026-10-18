@@ -80,3 +80,16 @@ jobs:
 
       - name: Build
         run: pnpm run build
+
+      - name: React Doctor (score >= 75)
+        run: |
+          score=$(npx --yes react-doctor@latest --yes --score | tail -n 1 | tr -d '[:space:]')
+          echo "React Doctor score: $score"
+          if ! [[ "$score" =~ ^[0-9]+$ ]]; then
+            echo "::error::Could not read a numeric score (got '$score')"
+            exit 1
+          fi
+          if [ "$score" -lt 75 ]; then
+            echo "::error::React Doctor score $score is below the required 75"
+            exit 1
+          fi

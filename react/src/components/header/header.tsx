@@ -17,10 +17,11 @@ export function Header() {
     const setIsExpanded = useSidebarStore((s) => s.setIsExpanded);
     const isSideBarCollapsed = useSidebarStore((s) => s.isCollapsed);
     const setIsCollapsed = useSidebarStore((s) => s.setIsCollapsed);
+    const isPinned = useSidebarStore((s) => s.isPinned);
     const setSearchQuery = useLibraryStore((s) => s.setSearchQuery);
 
     function toggleSidebar() {
-        if (isDesktop) {
+        if (isDesktop && isPinned) {
             setIsCollapsed(!isSideBarCollapsed);
         } else {
             setIsExpanded(!isExpanded);

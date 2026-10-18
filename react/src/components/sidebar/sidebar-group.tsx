@@ -1,4 +1,4 @@
-import type { MouseEvent } from 'react';
+import { useId, type MouseEvent } from 'react';
 import styles from './sidebar.module.css';
 import { useLibraryStore } from '@/stores/library.store';
 import { useSidebarStore } from '@/stores/sidebar.store';
@@ -15,6 +15,7 @@ export function SideBarGroup({
     group: ILibraryGroup
 }) {
 
+    const listId = useId();
     const isExpanded = useSidebarStore((s) => !!s.expandedGroups[group.uid]);
     const toggleGroup = useSidebarStore((s) => s.toggleGroup);
     const getLibraryItems = useLibraryStore((s) => s.getLibraryItems);
@@ -41,30 +42,45 @@ export function SideBarGroup({
                     type="button"
                     className={styles.groupHeaderToggle}
                     aria-expanded={isExpanded}
-                    aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${group.name}`}
+                    aria-controls={listId}
+                    title={group.name}
                     onClick={toggle}
                 >
-                    <FolderIcon size={16} />
-                    <span>{group.name}</span>
-                    <div className={[styles.chevron, isExpanded ? styles.chevronExpanded : ''].filter(Boolean).join(' ')}>
+                    <span className={styles.groupHeaderIcon} aria-hidden="true">
+                        <FolderIcon size={16} />
+                    </span>
+                    <span className={styles.groupHeaderLabel}>{group.name}</span>
+                    <span
+                        className={[styles.chevron, isExpanded ? styles.chevronExpanded : ''].filter(Boolean).join(' ')}
+                        aria-hidden="true"
+                    >
                         <ChevronDownIcon size={14} />
-                    </div>
+                    </span>
                 </button>
                 <button
                     type="button"
                     className={styles.groupHeaderAction}
                     aria-label={`New folder in ${group.name}`}
+                    title={`New folder in ${group.name}`}
                     onClick={onNewFolder}
                 >
-                    <FolderPlusIcon size={14} />
+                    <span aria-hidden="true">
+                        <FolderPlusIcon size={14} />
+                    </span>
                 </button>
             </div>
 
-            <nav className={styles.groupList}>
+            <div
+                id={listId}
+                role="group"
+                aria-label={group.name}
+                className={styles.groupList}
+                hidden={!isExpanded}
+            >
                 {entries.map(item => (
                     <SideBarElement key={item.uid} item={item} />
                 ))}
-            </nav>
+            </div>
 
         </div>
     );

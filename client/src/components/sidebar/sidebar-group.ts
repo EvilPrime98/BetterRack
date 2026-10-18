@@ -18,6 +18,7 @@ export function SideBarGroup({
     const isExpanded = () => !!SIDEBAR_CONTEXT.expandedGroups.get()[group.uid];
     const subsExpanded = SIDEBAR_CONTEXT.expandedGroups.subscribe;
     let renderedExpanded: boolean | null = null;
+    const listId = `sidebar-group-${group.uid}`;
 
     function toggle() {
         SIDEBAR_CONTEXT.toggleGroup(group.uid);
@@ -39,6 +40,10 @@ export function SideBarGroup({
         }
     }
 
+    function onAriaExpandedChange($toggle: HTMLElement) {
+        $toggle.setAttribute('aria-expanded', String(isExpanded()));
+    }
+
     function onChevronChange($chevron: HTMLElement) {
         $chevron.classList.toggle(styles.chevronExpanded, isExpanded());
     }
@@ -51,32 +56,49 @@ export function SideBarGroup({
             UltraComponent({
                 component: '<div></div>',
                 className: [styles.groupHeader],
-                eventHandler: { click: toggle },
                 children: [
-                    FolderIcon({ size: 16 }),
-                    `<span>${group.name}</span>`,
+                    UltraComponent({
+                        component: '<button type="button"></button>',
+                        className: [styles.groupHeaderToggle],
+                        attributes: { 'aria-controls': listId, title: group.name },
+                        eventHandler: { click: toggle },
+                        onMount: [onAriaExpandedChange],
+                        trigger: [{
+                            subscriber: subsExpanded,
+                            triggerFunction: onAriaExpandedChange
+                        }],
+                        children: [
+                            `<span class="${styles.groupHeaderIcon}" aria-hidden="true">${FolderIcon({ size: 16 })}</span>`,
+                            `<span class="${styles.groupHeaderLabel}">${group.name}</span>`,
+                            UltraComponent({
+                                component: '<span aria-hidden="true"></span>',
+                                className: [styles.chevron],
+                                children: [ChevronDownIcon({ size: 14 })],
+                                onMount: [onChevronChange],
+                                trigger: [{
+                                    subscriber: subsExpanded,
+                                    triggerFunction: onChevronChange
+                                }]
+                            })
+                        ]
+                    }),
                     UltraComponent({
                         component: '<button type="button"></button>',
                         className: [styles.groupHeaderAction],
-                        attributes: { 'aria-label': `New folder in ${group.name}` },
+                        attributes: {
+                            'aria-label': `New folder in ${group.name}`,
+                            title: `New folder in ${group.name}`
+                        },
                         eventHandler: { click: onNewFolder },
-                        children: [FolderPlusIcon({ size: 14 })]
-                    }),
-                    UltraComponent({
-                        component: ChevronDownIcon({ size: 14 }),
-                        className: [styles.chevron],
-                        onMount: [onChevronChange],
-                        trigger: [{
-                            subscriber: subsExpanded,
-                            triggerFunction: onChevronChange
-                        }]
+                        children: [`<span aria-hidden="true">${FolderPlusIcon({ size: 14 })}</span>`]
                     })
                 ]
             }),
 
             UltraComponent({
-                component: '<nav></nav>',
+                component: '<div role="group"></div>',
                 className: [styles.groupList],
+                attributes: { id: listId, 'aria-label': group.name },
                 onMount: [onExpandChange],
                 trigger: [{
                     subscriber: subsExpanded,

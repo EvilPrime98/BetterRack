@@ -14,15 +14,19 @@ export function Layout(
     ...components: UltraRenderableElement[]
 ){
 
+    function isSidebarCollapsed() {
+        return SIDEBAR_CONTEXT.isCollapsed.get() || !SIDEBAR_CONTEXT.isPinned.get();
+    }
+
     function onCollapsedChange($main: HTMLElement) {
-        $main.classList.toggle(styles.sidebarCollapsed, SIDEBAR_CONTEXT.isCollapsed.get());
+        $main.classList.toggle(styles.sidebarCollapsed, isSidebarCollapsed());
     }
 
     // Seed the class before insertion. onCollapsedChange runs one frame later
     // (ultra-light-js defers onMount with requestAnimationFrame), and a route
     // change rebuilds this element. Without the class, .content keeps its full
     // padding-left for one frame and then animates to zero.
-    const initialClasses = SIDEBAR_CONTEXT.isCollapsed.get()
+    const initialClasses = isSidebarCollapsed()
         ? [styles.sidebarCollapsed]
         : [];
 
@@ -35,7 +39,10 @@ export function Layout(
         onMount: [onCollapsedChange],
 
         trigger: [{
-            subscriber: SIDEBAR_CONTEXT.isCollapsed.subscribe,
+            subscriber: [
+                SIDEBAR_CONTEXT.isCollapsed.subscribe,
+                SIDEBAR_CONTEXT.isPinned.subscribe
+            ],
             triggerFunction: onCollapsedChange
         }],
 

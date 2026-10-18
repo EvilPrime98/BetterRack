@@ -15,6 +15,7 @@ const DEFAULT_SETTINGS: TAppSettings = {
     downloadDir: '',
     wikiSearch: false,
     rescanOnStartup: true,
+    rotatingFetch: false,
 };
 
 export class PreferencesModel implements TPreferencesModel {
@@ -132,6 +133,9 @@ export class PreferencesModel implements TPreferencesModel {
             rescanOnStartup: values.rescanOnStartup === undefined
                 ? DEFAULT_SETTINGS.rescanOnStartup
                 : values.rescanOnStartup === 'true',
+            rotatingFetch: values.rotatingFetch === undefined
+                ? DEFAULT_SETTINGS.rotatingFetch
+                : values.rotatingFetch === 'true',
         };
     }
 

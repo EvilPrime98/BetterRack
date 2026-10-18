@@ -1,12 +1,15 @@
 import { create } from 'zustand';
 import type { TComicsTypes, TFilterOptions } from '../library.types';
 
+export type TReadingMode = 'vertical' | 'horizontal';
+
 export interface IUserPref {
     filter: TFilterOptions;
     comicType: TComicsTypes;
     /** Whether or not to show a confirmation modal when stopping a download job. */
     askStopDownloads: boolean;
     zoom: number;
+    readingMode: TReadingMode;
 }
 
 interface IUserPrefStore {
@@ -22,7 +25,8 @@ const DEFAULT_PREF: IUserPref = {
     filter: 'Alphabetically',
     comicType: 'detail',
     askStopDownloads: true,
-    zoom: 1
+    zoom: 1,
+    readingMode: 'vertical'
 }
 
 export const useUserPrefStore = create<IUserPrefStore>((set, get) => ({

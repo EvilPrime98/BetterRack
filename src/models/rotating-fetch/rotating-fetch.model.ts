@@ -18,6 +18,7 @@ export class RotatingFetchModel {
 
     private profiles: TBrowserProfile[];
     private baseHeaders: Record<string, string>;
+    private proxies: string[];
     private log: TLogger | undefined;
 
     constructor(
@@ -25,6 +26,7 @@ export class RotatingFetchModel {
     ) {
         this.profiles = options.profiles?.length ? options.profiles : DEFAULT_PROFILES;
         this.baseHeaders = options.baseHeaders ?? {};
+        this.proxies = options.proxies ?? [];
         this.log = options.logger;
     }
 
@@ -68,6 +70,7 @@ export class RotatingFetchModel {
         return {
             profile,
             headers: this.buildHeaders(profile, headerOverrides),
+            proxy: this.proxies.length ? this.pick(this.proxies) : undefined,
         };
     }
 
@@ -91,9 +94,10 @@ export class RotatingFetchModel {
             }
 
             const identity = this.nextIdentity();
-            const requestInit: RequestInit = {
+            const requestInit: RequestInit & { proxy?: string } = {
                 ...init,
                 headers: { ...identity.headers, ...(init.headers as Record<string, string>) },
+                ...(identity.proxy ? { proxy: identity.proxy } : {}),
             };
 
             try {

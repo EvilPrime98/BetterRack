@@ -12,7 +12,7 @@ export function Header() {
     const iconSize = 30;
 
     function toggleSidebar() {
-        if (VIEWPORT_CONTEXT.isDesktop.get()) {
+        if (VIEWPORT_CONTEXT.isDesktop.get() && SIDEBAR_CONTEXT.isPinned.get()) {
             SIDEBAR_CONTEXT.isCollapsed.set(!SIDEBAR_CONTEXT.isCollapsed.get());
         } else {
             SIDEBAR_CONTEXT.isExpanded.set(!SIDEBAR_CONTEXT.isExpanded.get());
