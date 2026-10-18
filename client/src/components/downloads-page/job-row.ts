@@ -71,7 +71,10 @@ export function JobRow(job: TJobStatus, retryingIds: Set<string>, stoppingIds: S
             <span class="${styles.badge}" data-state="${state}">${STATE_LABEL[state]}</span>
         </div>
         ${bar}
-        ${detail ? `<span class="${styles.detail}">${detail}</span>` : ''}
+        ${detail || job.pageUrl ? `<div class="${styles.detailRow}">
+            ${detail ? `<span class="${styles.detail}">${detail}</span>` : ''}
+            ${job.pageUrl ? `<a class="${styles.pageLink}" data-external-url="${job.pageUrl}" href="${job.pageUrl}" target="_blank" rel="noopener noreferrer">Open comic page</a>` : ''}
+        </div>` : ''}
         ${retry}
         ${stop}
     </li>`;

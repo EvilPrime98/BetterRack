@@ -22,6 +22,7 @@ export type TDownloadableObject = {
 export type TGetComicsApiModel = {
     getPostLinks: (params: { search: string; page?: number | number[]; perPage?: number }) => Promise<TPostLink[]>,
     getDownloadLinkFromPost: (postId: number, strat: TStrat, uuid?: string) => Promise<string | null>,
+    getPostPageUrl: (postId: number) => string,
     //getDownloadLinksFromPosts: (postLinks: TPostLink[], limit?: number) => Promise<TDownloadLink[]>,
     getWeeklyListPosts: (group?: string) => Promise<TPostLink[]>,
     getDownloadLinks: (postId: number, strat: TStrat) => Promise<TDownloadableObject[]>,

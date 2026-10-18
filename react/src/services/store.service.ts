@@ -102,6 +102,7 @@ export type TJobStatus = {
     state: 'queued' | 'running' | 'done' | 'error';
     label: string;
     progress?: TStoreProgressEvent;
+    pageUrl?: string;
 };
 
 export async function getDownloadJobs(): Promise<TJobStatus[]> {
