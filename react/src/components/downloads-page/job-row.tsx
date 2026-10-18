@@ -1,5 +1,6 @@
 import type { TJobStatus } from "@/services/store.service";
 import type { TStoreProgressEvent } from "@/store.types";
+import { ExternalLink } from "@/components/external-link/external-link";
 import styles from '@/pages/store-downloads.page.module.css';
 
 function percentFor(progress?: TStoreProgressEvent): number | null {
@@ -73,7 +74,16 @@ export function JobRow({ job, onRetry, retrying, onStop, stopping }: {
                 </>
             )}
 
-            {detail && <span className={styles.detail}>{detail}</span>}
+            {(detail || job.pageUrl) && (
+                <div className={styles.detailRow}>
+                    {detail && <span className={styles.detail}>{detail}</span>}
+                    {job.pageUrl && (
+                        <ExternalLink className={styles.pageLink} href={job.pageUrl}>
+                            Open comic page
+                        </ExternalLink>
+                    )}
+                </div>
+            )}
 
             {job.state === 'error' && (
                 <button
