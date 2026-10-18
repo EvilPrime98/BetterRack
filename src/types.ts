@@ -171,6 +171,7 @@ export type TAppSettings = {
     downloadDir: string;
     wikiSearch: boolean;
     rescanOnStartup: boolean;
+    rotatingFetch: boolean;
 }
 
 export type TPreferencesModel = {

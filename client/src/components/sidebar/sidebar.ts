@@ -12,6 +12,7 @@ import { SeriesList } from "./series-list";
 import { RefreshLibraryButton } from "./refresh-button";
 import { SidebarSearch } from "./sidebar-search";
 import { Footer } from "../footer/footer";
+import { PinIcon } from "../../icons/pin.icon";
 import { GearIcon } from "../../icons/gear.icon";
 import { ShopIcon } from "../../icons/shop.icon";
 import { DownloadIcon } from "../../icons/download.icon";
@@ -38,8 +39,12 @@ export function SideBar() {
 
     function closeSidebar() { SIDEBAR_CONTEXT.isExpanded.set(false) };
 
+    function isDocked() {
+        return VIEWPORT_CONTEXT.isDesktop.get() && SIDEBAR_CONTEXT.isPinned.get();
+    }
+
     function isHidden() {
-        return VIEWPORT_CONTEXT.isDesktop.get()
+        return isDocked()
             ? SIDEBAR_CONTEXT.isCollapsed.get()
             : !SIDEBAR_CONTEXT.isExpanded.get();
     }
@@ -52,12 +57,14 @@ export function SideBar() {
     function initialSidebarClasses() {
         const classes = [styles.sideBar];
         if (SIDEBAR_CONTEXT.isExpanded.get()) classes.push(styles.expanded);
+        if (isDocked()) classes.push(styles.pinned);
         if (SIDEBAR_CONTEXT.isCollapsed.get()) classes.push(styles.collapsed);
         return classes;
     }
 
     function onSidebarStateChange($aside: HTMLElement) {
         $aside.classList.toggle(styles.expanded, SIDEBAR_CONTEXT.isExpanded.get());
+        $aside.classList.toggle(styles.pinned, isDocked());
         $aside.classList.toggle(styles.collapsed, SIDEBAR_CONTEXT.isCollapsed.get());
         if (!isHidden()) {
             $aside.removeAttribute('inert');
@@ -79,6 +86,21 @@ export function SideBar() {
         const isCompact = SIDEBAR_CONTEXT.isCompact.get();
         $button.textContent = isCompact ? 'Show more' : 'Show less';
         $button.setAttribute('aria-expanded', String(!isCompact));
+    }
+
+    function onPinChange($button: HTMLElement) {
+        const isPinned = SIDEBAR_CONTEXT.isPinned.get();
+        const label = isPinned ? 'Unpin sidebar' : 'Pin sidebar';
+        $button.style.display = VIEWPORT_CONTEXT.isDesktop.get() ? '' : 'none';
+        $button.innerHTML = PinIcon({
+            size: 18,
+            filled: isPinned,
+            color: isPinned ? '#fff' : '#c7c7c7',
+            rotate: 90
+        });
+        $button.setAttribute('aria-label', label);
+        $button.setAttribute('aria-pressed', String(isPinned));
+        $button.title = label;
     }
 
     function Fold(...children: (string | HTMLElement)[]) {
@@ -103,7 +125,7 @@ export function SideBar() {
     }
 
     function onBackdropChange($backdrop: HTMLElement) {
-        $backdrop.classList.toggle(styles.visible, SIDEBAR_CONTEXT.isExpanded.get());
+        $backdrop.classList.toggle(styles.visible, !isDocked() && SIDEBAR_CONTEXT.isExpanded.get());
     }
 
     function onItemsChange($nav: HTMLElement) {
@@ -139,12 +161,16 @@ export function SideBar() {
 
             UltraComponent({
                 component: '<div></div>',
-                className: SIDEBAR_CONTEXT.isExpanded.get()
+                className: !isDocked() && SIDEBAR_CONTEXT.isExpanded.get()
                     ? [styles.backdrop, styles.visible]
                     : [styles.backdrop],
                 eventHandler: { click: closeSidebar },
                 trigger: [{
-                    subscriber: SIDEBAR_CONTEXT.isExpanded.subscribe,
+                    subscriber: [
+                        SIDEBAR_CONTEXT.isExpanded.subscribe,
+                        SIDEBAR_CONTEXT.isPinned.subscribe,
+                        VIEWPORT_CONTEXT.isDesktop.subscribe
+                    ],
                     triggerFunction: onBackdropChange
                 }]
             }),
@@ -172,36 +198,59 @@ export function SideBar() {
 
                 children: [
 
-                    BRButton({
-                        text: SIDEBAR_CONTEXT.isCompact.get() ? 'Show more' : 'Show less',
-                        variant: 'ghost',
-                        className: [styles.toggleButton],
-                        eventHandler: {
-                            click: () => SIDEBAR_CONTEXT.isCompact.set(!SIDEBAR_CONTEXT.isCompact.get())
-                        },
-                        onMount: [onToggleChange],
-                        trigger: [{
-                            subscriber: SIDEBAR_CONTEXT.isCompact.subscribe,
-                            triggerFunction: onToggleChange
-                        }]
-                    }),
-
                     UltraComponent({
                         component: '<div></div>',
-                        className: [styles.section],
+                        className: [styles.topBar],
                         children: [
-                            `<span id="library-group-by-label" class="${styles.sectionTitle}">Group by</span>`,
-                            BRDropdown({
-                                ariaLabelledby: 'library-group-by-label',
-                                options: STRUCTURE_OPTIONS,
-                                value: LIBRARY_CONTEXT.structure.get,
-                                subscribe: LIBRARY_CONTEXT.structure.subscribe,
-                                onChange: (value) => { void LIBRARY_CONTEXT.setStructure(value) }
+                            BRButton({
+                                text: SIDEBAR_CONTEXT.isCompact.get() ? 'Show more' : 'Show less',
+                                variant: 'ghost',
+                                className: [styles.toggleButton],
+                                eventHandler: {
+                                    click: () => SIDEBAR_CONTEXT.isCompact.set(!SIDEBAR_CONTEXT.isCompact.get())
+                                },
+                                onMount: [onToggleChange],
+                                trigger: [{
+                                    subscriber: SIDEBAR_CONTEXT.isCompact.subscribe,
+                                    triggerFunction: onToggleChange
+                                }]
+                            }),
+
+                            UltraComponent({
+                                component: '<div></div>',
+                                className: [styles.button],
+                                attributes: { role: 'button' },
+                                eventHandler: {
+                                    click: () => SIDEBAR_CONTEXT.setIsPinned(!SIDEBAR_CONTEXT.isPinned.get())
+                                },
+                                onMount: [onPinChange],
+                                trigger: [{
+                                    subscriber: [
+                                        SIDEBAR_CONTEXT.isPinned.subscribe,
+                                        VIEWPORT_CONTEXT.isDesktop.subscribe
+                                    ],
+                                    triggerFunction: onPinChange
+                                }]
                             })
                         ]
                     }),
 
                     Fold(
+                        UltraComponent({
+                            component: '<div></div>',
+                            className: [styles.section],
+                            children: [
+                                `<span id="library-group-by-label" class="${styles.sectionTitle}">Group by</span>`,
+                                BRDropdown({
+                                    ariaLabelledby: 'library-group-by-label',
+                                    options: STRUCTURE_OPTIONS,
+                                    value: LIBRARY_CONTEXT.structure.get,
+                                    subscribe: LIBRARY_CONTEXT.structure.subscribe,
+                                    onChange: (value) => { void LIBRARY_CONTEXT.setStructure(value) }
+                                })
+                            ]
+                        }),
+
                     UltraComponent({
                         component: '<div></div>',
                         className: [styles.section],
@@ -292,6 +341,7 @@ export function SideBar() {
                                 subscriber: [
                                     SIDEBAR_CONTEXT.isExpanded.subscribe,
                                     SIDEBAR_CONTEXT.isCollapsed.subscribe,
+                                    SIDEBAR_CONTEXT.isPinned.subscribe,
                                     VIEWPORT_CONTEXT.isDesktop.subscribe
                                 ],
                                 triggerFunction: ($nav: HTMLElement) => {
@@ -310,6 +360,7 @@ export function SideBar() {
                         subscriber: [
                             SIDEBAR_CONTEXT.isExpanded.subscribe,
                             SIDEBAR_CONTEXT.isCollapsed.subscribe,
+                            SIDEBAR_CONTEXT.isPinned.subscribe,
                             VIEWPORT_CONTEXT.isDesktop.subscribe
                         ],
                         triggerFunction: onSidebarStateChange

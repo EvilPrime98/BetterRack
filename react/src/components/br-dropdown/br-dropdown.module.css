@@ -74,6 +74,9 @@
     left: 0;
     width: max-content;
     max-width: calc(100vw - 32px);
+    max-height: min(320px, 50vh);
+    overflow-y: auto;
+    overscroll-behavior: contain;
     z-index: 20;
     margin: 0;
     padding: 4px;
@@ -103,4 +106,9 @@
 .selected {
     color: var(--accent);
     font-weight: 600;
+    background-color: color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.selected.active {
+    background-color: color-mix(in srgb, var(--accent) 24%, transparent);
 }

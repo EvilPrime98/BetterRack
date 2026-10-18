@@ -15,7 +15,7 @@ export function useReaderPageTracking(
 
     const goToPage = useCallback((page: number) => {
         const $page = viewerRef.current?.children[page - 1] as HTMLElement | undefined;
-        $page?.scrollIntoView({ block: 'start' });
+        $page?.scrollIntoView({ block: 'start', inline: 'start' });
     }, [viewerRef]);
 
     useEffect(() => {
@@ -36,7 +36,7 @@ export function useReaderPageTracking(
         elements.forEach((el, i) => pageOf.set(el, i + 2));
 
         const targetEl = range ? elements[range.targetInd - 1] : undefined;
-        targetEl?.scrollIntoView({ block: 'start' });
+        targetEl?.scrollIntoView({ block: 'start', inline: 'start' });
 
         const observer = new IntersectionObserver((entries) => {
             const mostVisible = entries

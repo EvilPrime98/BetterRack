@@ -16,9 +16,23 @@ export function SideBarElement({
         SIDEBAR_CONTEXT.isExpanded.set(false)
     }
 
+    const href = `/${item.uid}`;
+
+    function syncActive($a: HTMLElement) {
+        $a.classList.toggle(styles.itemActive, window.location.pathname === href);
+    }
+
+    function onActiveMount($a: HTMLElement) {
+        const onPop = () => syncActive($a);
+        syncActive($a);
+        window.addEventListener('popstate', onPop);
+        return () => window.removeEventListener('popstate', onPop);
+    }
+
     return UltraLink({
-        href: `/${item.uid}`,
+        href,
         className: [styles.item],
+        onMount: [onActiveMount],
         children: [
             FolderIcon({ size: 16 }),
             `<span>${item.name}</span>`

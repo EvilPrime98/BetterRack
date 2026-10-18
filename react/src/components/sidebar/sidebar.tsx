@@ -8,6 +8,7 @@ import { SideBarGroup } from './sidebar-group';
 import { RefreshLibraryButton } from './refresh-button';
 import { SidebarSearch } from './sidebar-search';
 import { Footer } from '@/components/footer/footer';
+import { PinIcon } from '@/icons/pin.icon';
 import { GearIcon } from '@/icons/gear.icon';
 import { ShopIcon } from '@/icons/shop.icon';
 import { DownloadIcon } from '@/icons/download.icon';
@@ -23,6 +24,49 @@ const STRUCTURE_OPTIONS: BRDropdownOption<TLibraryStructure>[] = [
     { value: 'series', label: 'Series' }
 ];
 
+function PinButton() {
+
+    const isPinned = useSidebarStore((s) => s.isPinned);
+    const setIsPinned = useSidebarStore((s) => s.setIsPinned);
+    const label = isPinned ? 'Unpin sidebar' : 'Pin sidebar';
+
+    return (
+        <button
+            type="button"
+            className={styles.button}
+            aria-label={label}
+            aria-pressed={isPinned}
+            title={label}
+            onClick={() => setIsPinned(!isPinned)}
+        >
+            <PinIcon
+                size={18}
+                filled={isPinned}
+                color={isPinned ? '#fff' : '#c7c7c7'}
+                rotate={90}
+            />
+        </button>
+    );
+
+}
+
+function LibraryList({ isHidden, isLoading }: { isHidden: boolean; isLoading: boolean }) {
+
+    const groups = useLibraryStore((s) => s.groups);
+    const structure = useLibraryStore((s) => s.structure);
+
+    if (!groups.length) {
+        return (
+            <p className={styles.emptyState}>
+                {isLoading ? 'Loading library…' : 'No folders found'}
+            </p>
+        );
+    }
+    if (structure === 'series') return <SeriesList groups={groups} isHidden={isHidden} />;
+    return groups.map(group => <SideBarGroup key={group.uid} group={group} />);
+
+}
+
 export function SideBar() {
 
     const asideRef = useRef<HTMLElement>(null);
@@ -31,14 +75,15 @@ export function SideBar() {
     const isCollapsed = useSidebarStore((s) => s.isCollapsed);
     const isCompact = useSidebarStore((s) => s.isCompact);
     const setIsCompact = useSidebarStore((s) => s.setIsCompact);
-    const groups = useLibraryStore((s) => s.groups);
     const fetchLibrary = useLibraryStore((s) => s.fetchLibrary);
     const structure = useLibraryStore((s) => s.structure);
     const setStructure = useLibraryStore((s) => s.setStructure);
     const [isLoading, setIsLoading] = useState(false);
     const isDesktop = useIsDesktop();
 
-    const isHidden = isDesktop ? isCollapsed : !isExpanded;
+    const isPinned = useSidebarStore((s) => s.isPinned);
+    const isDocked = isDesktop && isPinned;
+    const isHidden = isDocked ? isCollapsed : !isExpanded;
 
     function closeSidebar() {
         setIsExpanded(false);
@@ -74,7 +119,7 @@ export function SideBar() {
         <div>
 
             <div
-                className={[styles.backdrop, isExpanded ? styles.visible : ''].filter(Boolean).join(' ')}
+                className={[styles.backdrop, !isDocked && isExpanded ? styles.visible : ''].filter(Boolean).join(' ')}
                 onClick={closeSidebar}
                 aria-hidden="true"
             />
@@ -86,31 +131,40 @@ export function SideBar() {
                 className={[
                     styles.sideBar,
                     isExpanded ? styles.expanded : '',
+                    isDocked ? styles.pinned : '',
                     isCollapsed ? styles.collapsed : ''
                 ].filter(Boolean).join(' ')}
             >
 
-                <BRButton
-                    text={isCompact ? 'Show more' : 'Show less'}
-                    variant="ghost"
-                    className={styles.toggleButton}
-                    aria-expanded={!isCompact}
-                    onClick={() => setIsCompact(!isCompact)}
-                />
-
-                <div className={styles.section}>
-                    <span id="library-group-by-label" className={styles.sectionTitle}>Group by</span>
-                    <BRDropdown
-                        className={styles.groupByDropdown}
-                        aria-labelledby="library-group-by-label"
-                        value={structure}
-                        onChange={setStructure}
-                        options={STRUCTURE_OPTIONS}
+                <div className={styles.topBar}>
+                    <BRButton
+                        text={isCompact ? 'Show more' : 'Show less'}
+                        variant="ghost"
+                        className={styles.toggleButton}
+                        aria-expanded={!isCompact}
+                        onClick={() => setIsCompact(!isCompact)}
                     />
+                    {isDesktop && <PinButton />}
                 </div>
 
-                <div className={[styles.fold, isCompact ? styles.folded : ''].filter(Boolean).join(' ')} inert={isCompact}>
+                <div
+                    className={[styles.fold, isCompact ? styles.folded : ''].filter(Boolean).join(' ')}
+                    inert={isCompact}
+                >
+
                     <div className={styles.foldInner}>
+
+                        <div className={styles.section}>
+                            <span id="library-group-by-label" className={styles.sectionTitle}>Group by</span>
+                            <BRDropdown
+                                className={styles.groupByDropdown}
+                                aria-labelledby="library-group-by-label"
+                                value={structure}
+                                onChange={setStructure}
+                                options={STRUCTURE_OPTIONS}
+                            />
+                        </div>
+
                         <div className={styles.section}>
                             <span className={styles.sectionTitle}>User</span>
                             <Link to="/settings" className={styles.item} onClick={closeSidebar}>
@@ -146,21 +200,13 @@ export function SideBar() {
                         <SidebarSearch />
 
                         <RefreshLibraryButton />
+
                     </div>
+
                 </div>
 
                 <nav className={styles.list}>
-                    {!groups.length ? (
-                        <p className={styles.emptyState}>
-                            {isLoading ? 'Loading library…' : 'No folders found'}
-                        </p>
-                    ) : structure === 'series' ? (
-                        <SeriesList groups={groups} isHidden={isHidden} />
-                    ) : (
-                        groups.map(group => (
-                            <SideBarGroup key={group.uid} group={group} />
-                        ))
-                    )}
+                    <LibraryList isHidden={isHidden} isLoading={isLoading} />
                 </nav>
 
                 <div className={[styles.fold, isCompact ? styles.folded : ''].filter(Boolean).join(' ')} inert={isCompact}>

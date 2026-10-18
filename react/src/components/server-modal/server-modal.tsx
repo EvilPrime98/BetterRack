@@ -18,9 +18,9 @@ export function ServerModal() {
 
     const showRemoteModeOption = !isAndroidPlatform();
 
-    const buildRemoteOpts = () => showRemoteModeOption
-        ? { enabled: remoteMode, apiKey }
-        : undefined;
+    const showApiKeyField = !showRemoteModeOption || remoteMode;
+
+    const buildRemoteOpts = () => ({ enabled: showRemoteModeOption && remoteMode, apiKey });
 
     const cancel = () => useServerModalStore.getState().closeServerModal();
     const submit = () => useServerModalStore.getState().submitServer(text, buildRemoteOpts());
@@ -82,18 +82,18 @@ export function ServerModal() {
                             checked={remoteMode}
                             onChange={(e) => setRemoteMode(e.currentTarget.checked)}
                         />
-
-                        {remoteMode && (
-                            <input
-                                className={styles.field}
-                                type="text"
-                                placeholder="API key (optional)"
-                                aria-label="API key (optional)"
-                                value={apiKey}
-                                onChange={(e) => setApiKey(e.currentTarget.value)}
-                            />
-                        )}
                     </>
+                )}
+
+                {showApiKeyField && (
+                    <input
+                        className={styles.field}
+                        type="text"
+                        placeholder="API key (optional)"
+                        aria-label="API key (optional)"
+                        value={apiKey}
+                        onChange={(e) => setApiKey(e.currentTarget.value)}
+                    />
                 )}
 
                 <p className={styles.errorText}>{error}</p>

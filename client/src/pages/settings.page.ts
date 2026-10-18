@@ -24,7 +24,8 @@ export function SettingsPage() {
         downloadDir: '',
         folderPath: '',
         wikiSearch: false,
-        rescanOnStartup: true
+        rescanOnStartup: true,
+        rotatingFetch: false
     })
 
     function onFolderError($p: HTMLElement) {
@@ -45,6 +46,7 @@ export function SettingsPage() {
         fieldsState.downloadDir.set(settings.downloadDir);
         fieldsState.wikiSearch.set(settings.wikiSearch);
         fieldsState.rescanOnStartup.set(settings.rescanOnStartup);
+        fieldsState.rotatingFetch.set(settings.rotatingFetch);
     }
 
     function syncWikiSearchCheckbox($el: HTMLElement) {
@@ -55,6 +57,11 @@ export function SettingsPage() {
     function syncRescanCheckbox($el: HTMLElement) {
         const $checkbox = $el.querySelector('input') as HTMLInputElement;
         $checkbox.checked = fieldsState.rescanOnStartup.get();
+    }
+
+    function syncRotatingFetchCheckbox($el: HTMLElement) {
+        const $checkbox = $el.querySelector('input') as HTMLInputElement;
+        $checkbox.checked = fieldsState.rotatingFetch.get();
     }
 
     function syncDownloadDirInput($el: HTMLElement) {
@@ -162,6 +169,7 @@ export function SettingsPage() {
             downloadDir: fieldsState.downloadDir.get(),
             wikiSearch: fieldsState.wikiSearch.get(),
             rescanOnStartup: fieldsState.rescanOnStartup.get(),
+            rotatingFetch: fieldsState.rotatingFetch.get(),
         };
 
         setSettingsError('');
@@ -568,6 +576,28 @@ export function SettingsPage() {
                                                                 triggerFunction: syncRescanCheckbox
                                                             }],
                                                             onMount: [syncRescanCheckbox]
+                                                        })
+
+                                                    ]
+
+                                                }),
+
+                                                UltraComponent({
+
+                                                    component: '<div></div>',
+
+                                                    className: [styles.toggleRow],
+
+                                                    children: [
+
+                                                        BRCheckbox({
+                                                            text: 'Rotate identity',
+                                                            onChange: (checked) => fieldsState.rotatingFetch.set(checked),
+                                                            trigger: [{
+                                                                subscriber: fieldsState.rotatingFetch.subscribe,
+                                                                triggerFunction: syncRotatingFetchCheckbox
+                                                            }],
+                                                            onMount: [syncRotatingFetchCheckbox]
                                                         })
 
                                                     ]

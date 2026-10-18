@@ -18,6 +18,7 @@ export const SETTINGS_CONTEXT: ISettingsCtx = ultraCompState({
         downloadDir: '',
         wikiSearch: false,
         rescanOnStartup: true,
+        rotatingFetch: false,
     } as IAppSettings,
 
     fetchSettings: async (comp: ISettingsCtx) => {
