@@ -6,6 +6,8 @@ import {
 } from "ultra-light-js";
 import styles from './store-downloads.page.module.css';
 import { Layout } from "../layout";
+import { Browser } from "@capacitor/browser";
+import { isAndroidPlatform } from "@/services/server-config.service";
 import { cancelDownloadJob, getDownloadJobs, retryDownloadJob, type TJobStatus } from "@/services/store.service";
 import { DOCUMENT_TITLE_CONTEXT } from "../context/document-title.context";
 import { LIBRARY_CONTEXT } from "../context/library.context";
@@ -118,6 +120,12 @@ export function StoreDownloadsPage() {
 
     function onListClick(event: Event) {
         const $target = event.target as HTMLElement;
+        const externalUrl = $target.closest<HTMLAnchorElement>('[data-external-url]')?.dataset.externalUrl;
+        if (externalUrl && isAndroidPlatform()) {
+            event.preventDefault();
+            void Browser.open({ url: externalUrl });
+            return;
+        }
         const retryJobId = $target.closest<HTMLButtonElement>('[data-retry-job-id]')?.dataset.retryJobId;
         if (retryJobId) {
             store.retry(retryJobId);
