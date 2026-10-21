@@ -28,13 +28,24 @@ export function useReaderZoom(
         const $viewer = viewerRef.current;
         if (!$viewer) return;
         const $scroller = pageRef.current;
-        const oldHeight = $scroller?.scrollHeight ?? 0;
-        const fraction = $scroller && oldHeight > 0
-            ? ($scroller.scrollTop + $scroller.clientHeight / 2) / oldHeight
+        const $activePage = $scroller?.dataset.mode === 'horizontal' && $scroller.clientWidth > 0
+            ? $viewer.children[Math.round($scroller.scrollLeft / $scroller.clientWidth)] as HTMLElement | undefined
+            : undefined;
+        const $target = $activePage ?? $scroller;
+        const oldHeight = $target?.scrollHeight ?? 0;
+        const oldWidth = $target?.scrollWidth ?? 0;
+        const fractionY = $target && oldHeight > 0
+            ? ($target.scrollTop + $target.clientHeight / 2) / oldHeight
+            : null;
+        const fractionX = $activePage && oldWidth > 0
+            ? ($activePage.scrollLeft + $activePage.clientWidth / 2) / oldWidth
             : null;
         $viewer.style.setProperty('--reader-zoom', String(zoomRef.current));
-        if ($scroller && fraction !== null) {
-            $scroller.scrollTop = fraction * $scroller.scrollHeight - $scroller.clientHeight / 2;
+        if ($target && fractionY !== null) {
+            $target.scrollTop = fractionY * $target.scrollHeight - $target.clientHeight / 2;
+        }
+        if ($activePage && fractionX !== null) {
+            $activePage.scrollLeft = fractionX * $activePage.scrollWidth - $activePage.clientWidth / 2;
         }
     }, [viewerRef, pageRef]);
 

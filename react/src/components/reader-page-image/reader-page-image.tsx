@@ -35,7 +35,6 @@ export const ImageElement = memo(function ImageElement({
         <figure
             className={className}
             style={ratio ? { aspectRatio: ratio } : undefined}
-            data-splash={ratio !== null && ratio > 1 ? '' : undefined}
         >
             {active ? (
                 <ImageGen

@@ -75,15 +75,7 @@ export function ReaderPage() {
         onWheel(e);
         if (!isHorizontal || e.ctrlKey || Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
         const $figure = (e.target as HTMLElement).closest('figure');
-        if ($figure?.hasAttribute('data-splash')) {
-            const canScrollX = e.deltaY < 0 ? $figure.scrollLeft > 0
-                : $figure.scrollLeft + $figure.clientWidth < $figure.scrollWidth - 1;
-            if (canScrollX) {
-                $figure.scrollLeft += e.deltaY;
-                return;
-            }
-        }
-        const canScrollY = $figure && !$figure.hasAttribute('data-splash')
+        const canScrollY = $figure
             && (e.deltaY < 0 ? $figure.scrollTop > 0
                 : $figure.scrollTop + $figure.clientHeight < $figure.scrollHeight - 1);
         if (!canScrollY && pageRef.current) pageRef.current.scrollLeft += e.deltaY;
