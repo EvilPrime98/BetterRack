@@ -30,8 +30,6 @@ export function ImageElement({
         if (naturalWidth > 0 && naturalHeight > 0) {
             const measured = naturalWidth / naturalHeight;
             $figure.style.aspectRatio = String(measured);
-            if (measured > 1) $figure.setAttribute('data-splash', '');
-            else $figure.removeAttribute('data-splash');
             onRatio(measured);
         }
         $figure.classList.add(styles.loaded);

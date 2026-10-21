@@ -372,25 +372,23 @@
     width: 100%;
     height: 100%;
     aspect-ratio: auto;
-    overflow-x: hidden;
-    overflow-y: auto;
-    overscroll-behavior: contain;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    overscroll-behavior-x: auto;
+    overscroll-behavior-y: contain;
     scrollbar-width: none;
     scroll-snap-align: start;
     scroll-snap-stop: always;
     touch-action: pan-x pan-y;
 }
 
-.page[data-mode="horizontal"] .pageWrapper[data-splash] {
-    overflow-x: auto;
-    overflow-y: hidden;
-    overscroll-behavior-x: auto;
-}
-
-.page[data-mode="horizontal"] .pageWrapper[data-splash] img {
-    width: auto;
-    height: 100%;
+.page[data-mode="horizontal"] .pageWrapper img {
+    flex: none;
+    width: calc(100% * var(--reader-zoom, 1));
     max-width: none;
+    height: auto;
+    margin: auto;
 }
 
 .page[data-mode="horizontal"] .pageWrapper::-webkit-scrollbar {
