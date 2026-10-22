@@ -12,7 +12,9 @@
     "android:apk": "pnpm android:sync && cd android && gradlew assembleDebug",
     "android:apk:release": "pnpm android:sync && cd android && gradlew assembleRelease",
     "android:open": "cap open android",
-    "doctor": "npx react-doctor@latest"
+    "doctor": "npx react-doctor@latest",
+    "format": "prettier --write src",
+    "format:check": "prettier --check src"
   },
   "dependencies": {
     "@capacitor/browser": "^8.0.0",
@@ -34,6 +36,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",
     "oxlint": "^1.75.0",
+    "prettier": "^3.9.10",
     "typescript": "~6.0.2",
     "vite": "^8.2.0"
   }
