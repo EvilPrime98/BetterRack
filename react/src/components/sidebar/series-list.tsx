@@ -26,21 +26,19 @@ export function SeriesList({ groups, isHidden }: { groups: ILibraryGroup[]; isHi
     return (
         <>
             {!isHidden &&
-                groups
-                    .slice(0, count)
-                    .map((group) => (
-                        <SideBarElement
-                            key={group.uid}
-                            item={{
-                                uid: group.uid,
-                                did: true,
-                                name: group.name,
-                                path: group.path,
-                                parentId: '',
-                                createdAt: 0,
-                            }}
-                        />
-                    ))}
+                groups.slice(0, count).map((group) => (
+                    <SideBarElement
+                        key={group.uid}
+                        item={{
+                            uid: group.uid,
+                            did: true,
+                            name: group.name,
+                            path: group.path,
+                            parentId: '',
+                            createdAt: 0,
+                        }}
+                    />
+                ))}
             {hasMore && <div ref={sentinelRef} style={{ height: 1 }} />}
         </>
     );
