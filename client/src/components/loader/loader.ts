@@ -1,11 +1,11 @@
-import { UltraActivity } from "ultra-light-js";
+import { UltraActivity } from 'ultra-light-js';
 import styles from './loader.module.css';
 
 export function Loader({
     mode,
     label,
     size = 28,
-    className
+    className,
 }: {
     mode: {
         state: () => boolean;
@@ -15,11 +15,9 @@ export function Loader({
     size?: number;
     className?: string;
 }) {
-
     const borderWidth = Math.max(2, Math.round(size * 0.11));
 
     return UltraActivity({
-
         mode,
 
         component: '<div></div>',
@@ -28,9 +26,7 @@ export function Loader({
 
         children: [
             `<div class="${styles.spinner}" style="width:${size}px;height:${size}px;border-width:${borderWidth}px"></div>`,
-            ...(label ? [`<p class="${styles.label}">${label}</p>`] : [])
-        ]
-
-    })
-
+            ...(label ? [`<p class="${styles.label}">${label}</p>`] : []),
+        ],
+    });
 }

@@ -56,7 +56,9 @@
 }
 
 .filter svg {
-    transition: transform 0.15s ease-in-out, opacity 0.15s ease-in-out;
+    transition:
+        transform 0.15s ease-in-out,
+        opacity 0.15s ease-in-out;
 }
 
 .filterOpen svg {
@@ -95,7 +97,9 @@
     font-size: 13px;
     color: #d8d8d8;
     cursor: pointer;
-    transition: background 0.15s ease-in-out, color 0.15s ease-in-out;
+    transition:
+        background 0.15s ease-in-out,
+        color 0.15s ease-in-out;
 }
 
 .filterOption:hover {

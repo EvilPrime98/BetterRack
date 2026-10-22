@@ -1,11 +1,10 @@
 export function CloseIcon({
     size = 16,
-    color = '#c7c7c7'
+    color = '#c7c7c7',
 }: {
     size?: number;
     color?: string;
 } = {}) {
-
     return `<svg
         width="${size}"
         height="${size}"
@@ -15,5 +14,4 @@ export function CloseIcon({
     >
         <path d="M6 6l12 12M18 6L6 18" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
     </svg>`;
-
 }

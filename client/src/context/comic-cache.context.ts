@@ -1,6 +1,6 @@
-import { ultraCompState, type IUltraCompStateStateful } from "ultra-light-js";
-import type { IComicLSCache } from "../library.types";
-import { getComicData, updateComicData } from "../services/comic-data.service";
+import { ultraCompState, type IUltraCompStateStateful } from 'ultra-light-js';
+import type { IComicLSCache } from '../library.types';
+import { getComicData, updateComicData } from '../services/comic-data.service';
 
 const PERSIST_DEBOUNCE_MS = 400;
 const persistTimers = new Map<string, ReturnType<typeof setTimeout>>();
@@ -18,7 +18,6 @@ export interface IComicCacheCtx {
 }
 
 export const COMIC_CACHE_CONTEXT: IComicCacheCtx = ultraCompState({
-
     cache: {} as Record<string, IComicLSCache>,
 
     init: (comp: IComicCacheCtx) => {
@@ -42,10 +41,13 @@ export const COMIC_CACHE_CONTEXT: IComicCacheCtx = ultraCompState({
 
         const existingTimer = persistTimers.get(uid);
         if (existingTimer) clearTimeout(existingTimer);
-        persistTimers.set(uid, setTimeout(() => {
-            persistTimers.delete(uid);
-            updateComicData(uid, currCache[uid]).catch(console.error);
-        }, PERSIST_DEBOUNCE_MS));
+        persistTimers.set(
+            uid,
+            setTimeout(() => {
+                persistTimers.delete(uid);
+                updateComicData(uid, currCache[uid]).catch(console.error);
+            }, PERSIST_DEBOUNCE_MS),
+        );
     },
 
     flushPending: async (comp: IComicCacheCtx) => {
@@ -53,12 +55,16 @@ export const COMIC_CACHE_CONTEXT: IComicCacheCtx = ultraCompState({
         for (const timer of persistTimers.values()) clearTimeout(timer);
         persistTimers.clear();
         const cache = comp.cache.get();
-        await Promise.all(pendingUids.map(uid =>
-            updateComicData(uid, cache[uid]).catch(console.error)
-        ));
+        await Promise.all(
+            pendingUids.map((uid) => updateComicData(uid, cache[uid]).catch(console.error)),
+        );
     },
 
-    subscribeById: (comp: IComicCacheCtx, uid: string, fn: (entry: IComicLSCache | undefined) => void) => {
+    subscribeById: (
+        comp: IComicCacheCtx,
+        uid: string,
+        fn: (entry: IComicLSCache | undefined) => void,
+    ) => {
         let lastEntry = comp.cache.get()[uid];
         return comp.cache.subscribe((cache) => {
             const entry = cache[uid];
@@ -66,6 +72,5 @@ export const COMIC_CACHE_CONTEXT: IComicCacheCtx = ultraCompState({
             lastEntry = entry;
             fn(entry);
         });
-    }
-
+    },
 });

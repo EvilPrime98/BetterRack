@@ -1,22 +1,20 @@
-import { UltraComponent } from "ultra-light-js";
+import { UltraComponent } from 'ultra-light-js';
 import styles from './read-bard.module.css';
 
 export function ReadBar({
     getReadPercentage,
-    subsReadPercentage
-}:{
+    subsReadPercentage,
+}: {
     getReadPercentage: () => number; //1-100
     subsReadPercentage: (fn: (value: unknown) => void) => () => void;
-}){
-
+}) {
     const onReadPercentageChange = ($fill: HTMLElement) => {
         const per = getReadPercentage();
         $fill.style.width = `${per}%`;
-        $fill.style.backgroundColor = (per === 100) ? '#13a629' : '#34c3d1';
-    }
+        $fill.style.backgroundColor = per === 100 ? '#13a629' : '#34c3d1';
+    };
 
     return UltraComponent({
-
         component: '<div></div>',
 
         className: [styles.readBar],
@@ -26,13 +24,13 @@ export function ReadBar({
                 component: '<div></div>',
                 className: [styles.fillIn],
                 onMount: [onReadPercentageChange],
-                trigger: [{
-                    subscriber: subsReadPercentage,
-                    triggerFunction: onReadPercentageChange
-                }]
-            })
-        ]
-
-    })
-
+                trigger: [
+                    {
+                        subscriber: subsReadPercentage,
+                        triggerFunction: onReadPercentageChange,
+                    },
+                ],
+            }),
+        ],
+    });
 }

@@ -1,5 +1,5 @@
-import { UltraComponent } from "ultra-light-js";
-import { StarIcon } from "../../icons/star.icon";
+import { UltraComponent } from 'ultra-light-js';
+import { StarIcon } from '../../icons/star.icon';
 
 export function getStarFraction(e: Event): number {
     const rect = (e.currentTarget as Element).getBoundingClientRect();
@@ -11,23 +11,21 @@ export function StarComponent({
     weight,
     initialFill,
     changeRating,
-    onHover
+    onHover,
 }: {
-    weight: number,
-    initialFill: number,
-    changeRating: (newRating: number) => void
-    onHover: (previewRating: number) => void
+    weight: number;
+    initialFill: number;
+    changeRating: (newRating: number) => void;
+    onHover: (previewRating: number) => void;
 }) {
-
     return UltraComponent({
         component: StarIcon({
             size: 18,
-            fill: initialFill
+            fill: initialFill,
         }),
         eventHandler: {
             mousemove: (e) => onHover(weight - 1 + getStarFraction(e)),
-            click: (e) => changeRating(weight - 1 + getStarFraction(e))
-        }
-    })
-
+            click: (e) => changeRating(weight - 1 + getStarFraction(e)),
+        },
+    });
 }

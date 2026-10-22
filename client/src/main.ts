@@ -1,6 +1,6 @@
-import { UltraErrorBoundary } from "ultra-light-js";
-import { App } from "./App";
-import { AppLoader } from "./components/app-loader/app-loader";
+import { UltraErrorBoundary } from 'ultra-light-js';
+import { App } from './App';
+import { AppLoader } from './components/app-loader/app-loader';
 import { registerDesktopCloseGuard } from './services/close-guard.service';
 
 declare global {
@@ -36,10 +36,9 @@ const $app = document.getElementById('root');
 $app?.appendChild(
     UltraErrorBoundary({
         factories: App,
-        fallback: (e) => AppLoader({
-           message: e instanceof Error 
-           ? `${e.stack}`
-           : 'There was an error'
-        })
-    })
-)
+        fallback: (e) =>
+            AppLoader({
+                message: e instanceof Error ? `${e.stack}` : 'There was an error',
+            }),
+    }),
+);

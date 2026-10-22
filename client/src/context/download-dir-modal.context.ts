@@ -1,4 +1,4 @@
-import { ultraCompState, type IUltraCompStateStateful } from "ultra-light-js";
+import { ultraCompState, type IUltraCompStateStateful } from 'ultra-light-js';
 
 export interface IDownloadDirModalCtx {
     isVisible: IUltraCompStateStateful<boolean>;
@@ -17,11 +17,13 @@ function settle(dir: string | null) {
 }
 
 export const DOWNLOAD_DIR_MODAL_CTX: IDownloadDirModalCtx = ultraCompState({
-
     isVisible: false,
     itemTitle: '' as string,
 
-    openDownloadDirModal: (comp: IDownloadDirModalCtx, itemTitle: string): Promise<string | null> => {
+    openDownloadDirModal: (
+        comp: IDownloadDirModalCtx,
+        itemTitle: string,
+    ): Promise<string | null> => {
         settle(null);
         comp.itemTitle.set(itemTitle);
         comp.isVisible.set(true);
@@ -38,6 +40,5 @@ export const DOWNLOAD_DIR_MODAL_CTX: IDownloadDirModalCtx = ultraCompState({
     closeDownloadDirModal: (comp: IDownloadDirModalCtx) => {
         comp.isVisible.set(false);
         settle(null);
-    }
-
+    },
 });
