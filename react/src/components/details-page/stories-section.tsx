@@ -6,7 +6,9 @@ export function StoriesSection({ storyTitles }: { storyTitles?: string[] }) {
     return (
         <SectionBlock title="Stories">
             <ul className={styles.plainList}>
-                {storyTitles.map((storyTitle) => <li key={storyTitle}>{storyTitle}</li>)}
+                {storyTitles.map((storyTitle) => (
+                    <li key={storyTitle}>{storyTitle}</li>
+                ))}
             </ul>
         </SectionBlock>
     );

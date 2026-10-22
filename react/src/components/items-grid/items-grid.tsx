@@ -7,12 +7,11 @@ const PAGE_SIZE = 60;
 
 export function ItemsGrid({
     items,
-    filters
+    filters,
 }: {
     items: ILibraryResponseItem[];
     filters?: IComicFilters;
 }) {
-
     const [count, setCount] = useState(PAGE_SIZE);
 
     const [sentinel, setSentinel] = useState<HTMLDivElement | null>(null);
@@ -22,9 +21,9 @@ export function ItemsGrid({
         if (!sentinel) return;
         const observer = new IntersectionObserver(
             (entries) => {
-                if (entries.some(e => e.isIntersecting)) setCount(c => c + PAGE_SIZE);
+                if (entries.some((e) => e.isIntersecting)) setCount((c) => c + PAGE_SIZE);
             },
-            { rootMargin: '600px' }
+            { rootMargin: '600px' },
         );
         observer.observe(sentinel);
         return () => observer.disconnect();
@@ -32,12 +31,18 @@ export function ItemsGrid({
 
     return (
         <>
-            {items.slice(0, count).map(item => item.did
-                ? <FolderCard key={item.uid} title={item.name} uid={item.uid} />
-                : <ComicCard key={item.uid} item={item} filters={filters} />
+            {items
+                .slice(0, count)
+                .map((item) =>
+                    item.did ? (
+                        <FolderCard key={item.uid} title={item.name} uid={item.uid} />
+                    ) : (
+                        <ComicCard key={item.uid} item={item} filters={filters} />
+                    ),
+                )}
+            {hasMore && (
+                <div key={count} ref={setSentinel} style={{ gridColumn: '1 / -1', height: 1 }} />
             )}
-            {hasMore && <div key={count} ref={setSentinel} style={{ gridColumn: '1 / -1', height: 1 }} />}
         </>
     );
-
 }

@@ -16,9 +16,5 @@ export function ReadTypesProvider({ children }: { children: ReactNode }) {
 
     const value = useMemo(() => ({ type, next }), [type, next]);
 
-    return (
-        <ReadTypesContext.Provider value={value}>
-            {children}
-        </ReadTypesContext.Provider>
-    );
+    return <ReadTypesContext.Provider value={value}>{children}</ReadTypesContext.Provider>;
 }

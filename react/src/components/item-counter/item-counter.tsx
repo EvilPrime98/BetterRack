@@ -3,12 +3,14 @@ import type { ILibraryResponseItem } from '@/library.types';
 
 export function ItemCounter({
     items,
-    className
+    className,
 }: {
     items: ILibraryResponseItem[];
     className?: string;
 }) {
-
-    return <span className={[styles.counter, className].filter(Boolean).join(' ')}>{items.length} comics</span>;
-
+    return (
+        <span className={[styles.counter, className].filter(Boolean).join(' ')}>
+            {items.length} comics
+        </span>
+    );
 }

@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Layout } from '@/layout';
-import { cancelDownloadJob, getDownloadJobs, retryDownloadJob, type TJobStatus } from '@/services/store.service';
+import {
+    cancelDownloadJob,
+    getDownloadJobs,
+    retryDownloadJob,
+    type TJobStatus,
+} from '@/services/store.service';
 import { useDocumentTitleStore } from '@/stores/documentTitle.store';
 import { useLibraryStore } from '@/stores/library.store';
 import { useConfirmModalStore } from '@/stores/confirmModal.store';
@@ -12,7 +17,6 @@ import type { TJobStates } from '@/store.types';
 import { useUserPrefStore } from '@/stores/userPref.store';
 
 export function StoreDownloadsPage() {
-
     const setTitle = useDocumentTitleStore((s) => s.setTitle);
     const [jobs, setJobs] = useState<TJobStatus[]>([]);
     const [error, setError] = useState('');
@@ -52,12 +56,13 @@ export function StoreDownloadsPage() {
     }
 
     async function handleStop(job: TJobStatus) {
-        if (useUserPrefStore.getState().pref.askStopDownloads === true){
+        if (useUserPrefStore.getState().pref.askStopDownloads === true) {
             const confirmed = await useConfirmModalStore.getState().confirmDialog({
                 title: 'Stop this download?',
                 message: `"${job.label}" will be stopped and removed from the list.`,
                 confirmLabel: 'Stop download',
-                onDontAskAgain: () => useUserPrefStore.getState().setPref({ askStopDownloads: false })
+                onDontAskAgain: () =>
+                    useUserPrefStore.getState().setPref({ askStopDownloads: false }),
             });
             if (!confirmed) return;
         }
@@ -81,7 +86,6 @@ export function StoreDownloadsPage() {
     }, [setTitle]);
 
     useEffect(() => {
-
         let active = true;
         let previousStates: TJobStates = new Map();
 
@@ -109,13 +113,11 @@ export function StoreDownloadsPage() {
             active = false;
             clearInterval(timer);
         };
-
     }, []);
 
     return (
         <Layout>
             <section className={styles.page}>
-
                 <header className={styles.header}>
                     <span className={styles.eyebrow}>Store</span>
                     <h1 className={styles.title}>Downloads</h1>
@@ -127,7 +129,7 @@ export function StoreDownloadsPage() {
                     </p>
                 ) : (
                     <ul className={styles.list}>
-                        {jobs.map(job => (
+                        {jobs.map((job) => (
                             <JobRow
                                 key={job.jobId}
                                 job={job}
@@ -139,9 +141,7 @@ export function StoreDownloadsPage() {
                         ))}
                     </ul>
                 )}
-
             </section>
         </Layout>
     );
-
 }

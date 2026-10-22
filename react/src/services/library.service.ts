@@ -1,22 +1,36 @@
-import type { WikiComic } from "better-wiki";
-import type { IReadResponse, IBookmarksResponse, ILibraryGroup, ILibraryPage, ILibraryRefreshResponse, ILibraryResponseItem, TIdentifyLibraryStatus, IReadingResponse, IRecentlyAddedResponse } from "../library.types";
-import { API_URL, authHeaders } from "./server-config.service";
-import { invalidateDirectories } from "./fs.service";
+import type { WikiComic } from 'better-wiki';
+import type {
+    IReadResponse,
+    IBookmarksResponse,
+    ILibraryGroup,
+    ILibraryPage,
+    ILibraryRefreshResponse,
+    ILibraryResponseItem,
+    TIdentifyLibraryStatus,
+    IReadingResponse,
+    IRecentlyAddedResponse,
+} from '../library.types';
+import { API_URL, authHeaders } from './server-config.service';
+import { invalidateDirectories } from './fs.service';
 
 export { API_URL };
 
 export type TLibraryStructure = 'folders' | 'series';
 
-export async function getLibrary(structure: TLibraryStructure = 'folders'): Promise<ILibraryGroup[]> {
-
+export async function getLibrary(
+    structure: TLibraryStructure = 'folders',
+): Promise<ILibraryGroup[]> {
     const endpoint = structure === 'series' ? '/api/library/by-series' : '/api/library';
     const merged = new Map<string, ILibraryGroup>();
     let offset = 0;
 
     for (;;) {
-        const response = await fetch(`${API_URL}${endpoint}?offset=${offset}`, { headers: authHeaders() });
+        const response = await fetch(`${API_URL}${endpoint}?offset=${offset}`, {
+            headers: authHeaders(),
+        });
         const page = await response.json();
-        if (!response.ok) throw new Error((page as { message?: string })?.message || 'Failed to load library.');
+        if (!response.ok)
+            throw new Error((page as { message?: string })?.message || 'Failed to load library.');
 
         const { groups, hasMore, limit } = page as ILibraryPage;
 
@@ -26,7 +40,7 @@ export async function getLibrary(structure: TLibraryStructure = 'folders'): Prom
                 merged.set(group.uid, { ...group, entries: [...group.entries] });
                 continue;
             }
-            const seen = new Set(existing.entries.map(entry => entry.uid));
+            const seen = new Set(existing.entries.map((entry) => entry.uid));
             for (const entry of group.entries) {
                 if (!seen.has(entry.uid)) existing.entries.push(entry);
             }
@@ -40,19 +54,28 @@ export async function getLibrary(structure: TLibraryStructure = 'folders'): Prom
 }
 
 export async function getRecentlyAdded(windowHours?: number): Promise<IRecentlyAddedResponse> {
-    const query = typeof windowHours === 'number' && windowHours > 0
-        ? `?${new URLSearchParams({ windowHours: String(windowHours) })}`
-        : '';
-    const response = await fetch(`${API_URL}/api/library/recent${query}`, { headers: authHeaders() });
+    const query =
+        typeof windowHours === 'number' && windowHours > 0
+            ? `?${new URLSearchParams({ windowHours: String(windowHours) })}`
+            : '';
+    const response = await fetch(`${API_URL}/api/library/recent${query}`, {
+        headers: authHeaders(),
+    });
     const data = await response.json();
-    if (!response.ok) throw new Error((data as { message?: string })?.message || 'Failed to load recently added comics.');
+    if (!response.ok)
+        throw new Error(
+            (data as { message?: string })?.message || 'Failed to load recently added comics.',
+        );
     return data as IRecentlyAddedResponse;
 }
 
 export async function getReading(): Promise<IReadingResponse> {
     const response = await fetch(`${API_URL}/api/library/reading`, { headers: authHeaders() });
     const data = await response.json();
-    if (!response.ok) throw new Error((data as { message?: string })?.message || 'Failed to load comics in progress.');
+    if (!response.ok)
+        throw new Error(
+            (data as { message?: string })?.message || 'Failed to load comics in progress.',
+        );
     return data as IReadingResponse;
 }
 
@@ -63,59 +86,49 @@ export async function refreshLibrary(): Promise<ILibraryRefreshResponse> {
     return data;
 }
 
-export async function reader({
-    uid
-}:{
-    uid: string
-}){
+export async function reader({ uid }: { uid: string }) {
     const response = await fetch(`${API_URL}/read/${uid}`, { headers: authHeaders() });
     const data: IReadResponse = await response.json();
-    if (!response.ok) throw new Error(data.message)
-    return { pages: data.pages, title: data.title }
+    if (!response.ok) throw new Error(data.message);
+    return { pages: data.pages, title: data.title };
 }
 
-export async function readerBookmarks({
-    uid
-}:{
-    uid: string
-}){
-    const response = await fetch(`${API_URL}/read/${uid}/bookmarks`, { cache: 'no-store', headers: authHeaders() });
+export async function readerBookmarks({ uid }: { uid: string }) {
+    const response = await fetch(`${API_URL}/read/${uid}/bookmarks`, {
+        cache: 'no-store',
+        headers: authHeaders(),
+    });
     const data: IBookmarksResponse = await response.json();
-    if (!response.ok) throw new Error(data.message)
-    return data.bookmarks
+    if (!response.ok) throw new Error(data.message);
+    return data.bookmarks;
 }
 
-export async function readerRefresh({
-    uid
-}:{
-    uid: string
-}){
-    const response = await fetch(`${API_URL}/read/${uid}/refresh`, { cache: 'no-store', headers: authHeaders() });
+export async function readerRefresh({ uid }: { uid: string }) {
+    const response = await fetch(`${API_URL}/read/${uid}/refresh`, {
+        cache: 'no-store',
+        headers: authHeaders(),
+    });
     const data: IReadResponse = await response.json();
-    if (!response.ok) throw new Error(data.message)
-    return data.pages
+    if (!response.ok) throw new Error(data.message);
+    return data.pages;
 }
 
-export async function deleteFile(
-    fileUid: string
-): Promise<ILibraryRefreshResponse> {
+export async function deleteFile(fileUid: string): Promise<ILibraryRefreshResponse> {
     const response = await fetch(`${API_URL}/api/library/file`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
-        body: JSON.stringify({ fileUid })
+        body: JSON.stringify({ fileUid }),
     });
     const data: ILibraryRefreshResponse = await response.json();
     if (!response.ok) throw new Error(data.message);
     return data;
 }
 
-export async function deleteFolder(
-    folderUid: string
-): Promise<ILibraryRefreshResponse> {
+export async function deleteFolder(folderUid: string): Promise<ILibraryRefreshResponse> {
     const response = await fetch(`${API_URL}/api/library/folder`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
-        body: JSON.stringify({ folderUid })
+        body: JSON.stringify({ folderUid }),
     });
     const data: ILibraryRefreshResponse = await response.json();
     if (!response.ok) throw new Error(data.message);
@@ -125,12 +138,12 @@ export async function deleteFolder(
 
 export async function createFolder(
     folderName: string,
-    parentFolderUid?: string
+    parentFolderUid?: string,
 ): Promise<ILibraryRefreshResponse> {
     const response = await fetch(`${API_URL}/api/library/folder`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
-        body: JSON.stringify({ folderName, parentFolderUid })
+        body: JSON.stringify({ folderName, parentFolderUid }),
     });
     const data: ILibraryRefreshResponse = await response.json();
     if (!response.ok) throw new Error(data.message);
@@ -139,33 +152,33 @@ export async function createFolder(
 }
 
 export async function identifyLibraryEntry(
-    uid: string
+    uid: string,
 ): Promise<Pick<ILibraryResponseItem, 'identified' | 'comic' | 'metaSource'>> {
-    const response = await fetch(`${API_URL}/api/library/${uid}/identify`, { headers: authHeaders() });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message);
-    return data;
-}
-
-export async function reidentifyFile(
-    uid: string
-): Promise<Pick<ILibraryResponseItem, 'identified' | 'comic' | 'metaSource'>> {
-    const response = await fetch(`${API_URL}/api/library/${uid}/identify/reset`, {
-        method: 'POST',
-        headers: authHeaders()
+    const response = await fetch(`${API_URL}/api/library/${uid}/identify`, {
+        headers: authHeaders(),
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.message);
     return data;
 }
 
-export async function unidentifyFile(
-    fileUid: string
-): Promise<ILibraryRefreshResponse> {
+export async function reidentifyFile(
+    uid: string,
+): Promise<Pick<ILibraryResponseItem, 'identified' | 'comic' | 'metaSource'>> {
+    const response = await fetch(`${API_URL}/api/library/${uid}/identify/reset`, {
+        method: 'POST',
+        headers: authHeaders(),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message);
+    return data;
+}
+
+export async function unidentifyFile(fileUid: string): Promise<ILibraryRefreshResponse> {
     const response = await fetch(`${API_URL}/api/library/file/unidentify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
-        body: JSON.stringify({ fileUid })
+        body: JSON.stringify({ fileUid }),
     });
     const data: ILibraryRefreshResponse = await response.json();
     if (!response.ok) throw new Error(data.message);
@@ -174,12 +187,12 @@ export async function unidentifyFile(
 
 export async function commitIdentifyFile(
     fileUid: string,
-    comic: WikiComic
+    comic: WikiComic,
 ): Promise<ILibraryRefreshResponse> {
     const response = await fetch(`${API_URL}/api/library/file/identify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
-        body: JSON.stringify({ fileUid, comic })
+        body: JSON.stringify({ fileUid, comic }),
     });
     const data: ILibraryRefreshResponse = await response.json();
     if (!response.ok) throw new Error(data.message);
@@ -189,7 +202,7 @@ export async function commitIdentifyFile(
 export async function reidentifyAllLibrary(): Promise<{ error: boolean; message: string }> {
     const response = await fetch(`${API_URL}/api/library/identify/reset-all`, {
         method: 'POST',
-        headers: authHeaders()
+        headers: authHeaders(),
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.message);
@@ -199,7 +212,7 @@ export async function reidentifyAllLibrary(): Promise<{ error: boolean; message:
 export async function startIdentifyLibrary(): Promise<TIdentifyLibraryStatus> {
     const response = await fetch(`${API_URL}/api/library/identify/all`, {
         method: 'POST',
-        headers: authHeaders()
+        headers: authHeaders(),
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.message ?? 'Failed to start library identification.');
@@ -209,7 +222,7 @@ export async function startIdentifyLibrary(): Promise<TIdentifyLibraryStatus> {
 export async function getIdentifyLibraryStatus(): Promise<TIdentifyLibraryStatus> {
     const response = await fetch(`${API_URL}/api/library/identify/all`, {
         cache: 'no-store',
-        headers: authHeaders()
+        headers: authHeaders(),
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.message ?? 'Failed to read identification status.');
@@ -218,12 +231,12 @@ export async function getIdentifyLibraryStatus(): Promise<TIdentifyLibraryStatus
 
 export async function moveFile(
     fileUid: string,
-    targetFolderUid?: string
+    targetFolderUid?: string,
 ): Promise<ILibraryRefreshResponse> {
     const response = await fetch(`${API_URL}/api/library/file/move`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
-        body: JSON.stringify({ fileUid, targetFolderUid })
+        body: JSON.stringify({ fileUid, targetFolderUid }),
     });
     const data: ILibraryRefreshResponse = await response.json();
     if (!response.ok) throw new Error(data.message);
@@ -231,12 +244,10 @@ export async function moveFile(
     return data;
 }
 
-export async function retryThumbnail(
-    uid: string
-): Promise<void> {
+export async function retryThumbnail(uid: string): Promise<void> {
     const response = await fetch(`${API_URL}/api/thumbnail/${uid}/retry`, {
         method: 'POST',
-        headers: authHeaders()
+        headers: authHeaders(),
     });
     if (!response.ok) {
         const data: { message?: string } = await response.json().catch(() => ({}));

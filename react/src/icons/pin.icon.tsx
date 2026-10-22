@@ -2,21 +2,20 @@ export function PinIcon({
     size = 16,
     color = '#c7c7c7',
     filled = false,
-    rotate = 0
+    rotate = 0,
 }: {
     size?: number;
     color?: string;
     filled?: boolean;
     rotate?: number;
 } = {}) {
-
     return (
         <svg
-            style={{ transform: `rotate(${rotate}deg)` }} 
-            width={size} 
-            height={size} 
-            viewBox="0 0 24 24" 
-            fill="none" 
+            style={{ transform: `rotate(${rotate}deg)` }}
+            width={size}
+            height={size}
+            viewBox="0 0 24 24"
+            fill="none"
             xmlns="http://www.w3.org/2000/svg"
         >
             <path
@@ -29,5 +28,4 @@ export function PinIcon({
             />
         </svg>
     );
-
 }

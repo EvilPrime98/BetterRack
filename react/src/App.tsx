@@ -25,41 +25,38 @@ function ReaderRoute() {
 }
 
 export function App() {
-
     const { isLoading, setIsLoading } = useAppContext();
     const identifyProgress = useLibraryStore((s) => s.identifyProgress);
 
     const loaderMessage = identifyProgress
-    ? `Identifying library${identifyProgress.total ? ` ${identifyProgress.done}/${identifyProgress.total}` : '…'}`
-    : undefined;
+        ? `Identifying library${identifyProgress.total ? ` ${identifyProgress.done}/${identifyProgress.total}` : '…'}`
+        : undefined;
 
     useEffect(() => {
         (async () => {
-            
             await useServerModalStore.getState().ensureServerConfigured();
-            
+
             setIsLoading(true);
 
             await Promise.all([
                 Promise.allSettled([
                     useLibraryStore.getState().fetchLibrary(),
                     useComicCacheStore.getState().init(),
-                    useSettingsStore.getState().fetchSettings()
-                ])
+                    useSettingsStore.getState().fetchSettings(),
+                ]),
             ]);
 
             if (
-                useSettingsStore.getState().settings.rescanOnStartup
-                && useLibraryStore.getState().groups.length > 0
+                useSettingsStore.getState().settings.rescanOnStartup &&
+                useLibraryStore.getState().groups.length > 0
             ) {
                 await useLibraryStore.getState().identifyLibrary();
             }
 
             useUserPrefStore.getState().init();
             useComicsTypeStore.getState().init();
-            
-            setIsLoading(false);
 
+            setIsLoading(false);
         })();
     }, [setIsLoading]);
 
@@ -85,5 +82,4 @@ export function App() {
             <ServerModal />
         </>
     );
-
 }

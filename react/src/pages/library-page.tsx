@@ -14,7 +14,6 @@ import { matchesReadFilter, useReadTypesContext } from '@/context/ReadTypesConte
 import { useComicCacheStore } from '@/stores/comicCache.store';
 
 export function LibraryPage() {
-
     const { uid } = useParams<{ uid?: string }>();
     const [searchParams] = useSearchParams();
     const search = searchParams.get('search');
@@ -30,19 +29,23 @@ export function LibraryPage() {
         const state = useLibraryStore.getState();
         const items = state.getLibraryItems({ onlyDir: !uid, uid });
         if (!uid && state.structure === 'folders') {
-            const rootComics = state.groups.flatMap(g => g.entries).filter(e => !e.did && !e.parentId);
+            const rootComics = state.groups
+                .flatMap((g) => g.entries)
+                .filter((e) => !e.did && !e.parentId);
             items.push(...rootComics);
         }
         const query = useLibraryStore.getState().searchQuery.trim().toLowerCase();
         if (!query) return items;
-        return items.filter(item => item.name.toLowerCase().includes(query));
+        return items.filter((item) => item.name.toLowerCase().includes(query));
     }, [uid]);
 
     const rawItems = useMemo(() => getLibraryItems(), [groups, searchQuery, uid, getLibraryItems]);
     const items = useMemo(() => applyFilters(rawItems, filters), [rawItems, filters]);
 
-    const hasVisibleItems = useComicCacheStore((s) => items.some(item => item.did
-        || matchesReadFilter(readFilter, s.cache[item.uid]?.readPer || 0))
+    const hasVisibleItems = useComicCacheStore((s) =>
+        items.some(
+            (item) => item.did || matchesReadFilter(readFilter, s.cache[item.uid]?.readPer || 0),
+        ),
     );
 
     useEffect(() => {
@@ -61,7 +64,6 @@ export function LibraryPage() {
     return (
         <Layout>
             <section className={styles.page}>
-
                 <PageHeader
                     filters={filters}
                     uid={uid}
@@ -76,14 +78,17 @@ export function LibraryPage() {
                 ) : (
                     <section
                         ref={comicContainerRef}
-                        className={[styles.comicContainer, comicsType === 'detail' ? styles.detailLayout : ''].filter(Boolean).join(' ')}
+                        className={[
+                            styles.comicContainer,
+                            comicsType === 'detail' ? styles.detailLayout : '',
+                        ]
+                            .filter(Boolean)
+                            .join(' ')}
                     >
                         <ItemsGrid key={uid ?? 'root'} items={items} />
                     </section>
                 )}
-
             </section>
         </Layout>
     );
-
 }

@@ -11,7 +11,6 @@ import { formatReleaseDate, getCreditRows, getAppearingGroups } from './details-
 import type { Navigate } from './details-page.types';
 
 export function ComicContent({ comic, navigate }: { comic: WikiComic; navigate: Navigate }) {
-
     const released = formatReleaseDate(comic.releaseDate);
     const creditRows = getCreditRows(comic.credits);
     const firstWriter = comic.credits?.writers?.[0];
@@ -19,7 +18,6 @@ export function ComicContent({ comic, navigate }: { comic: WikiComic; navigate: 
 
     return (
         <div className={styles.content}>
-
             <ComicHero
                 comic={comic}
                 released={released}
@@ -43,8 +41,6 @@ export function ComicContent({ comic, navigate }: { comic: WikiComic; navigate: 
             <NotesSection notes={comic.notes} />
 
             <TriviaSection trivia={comic.trivia} />
-
         </div>
     );
-
 }

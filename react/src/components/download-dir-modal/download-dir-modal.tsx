@@ -4,7 +4,11 @@ import { FolderIcon } from '@/icons/folder.icon';
 import { BRCheckbox } from '@/components/br-checkbox/br-checkbox';
 import { useSettingsStore } from '@/stores/settings.store';
 import { useDownloadDirModalContext } from '@/context/DownloadDirModalContext.hooks';
-import { areDirectoryListsEqual, getCachedDirectories, refreshDirectories } from '@/services/fs.service';
+import {
+    areDirectoryListsEqual,
+    getCachedDirectories,
+    refreshDirectories,
+} from '@/services/fs.service';
 
 type TListState =
     | { status: 'loading' }
@@ -17,19 +21,18 @@ function normalizePath(dir: string): string {
 
 function getTopLevelDirs(dirs: string[]): string[] {
     const normalized = dirs.map(normalizePath);
-    return dirs.filter((_, i) => !normalized.some((other, j) => j !== i && normalized[i].startsWith(`${other}/`)));
+    return dirs.filter(
+        (_, i) => !normalized.some((other, j) => j !== i && normalized[i].startsWith(`${other}/`)),
+    );
 }
 
 export function DownloadDirModal() {
-
     const { isVisible } = useDownloadDirModalContext();
 
     return isVisible ? <DownloadDirModalContent /> : null;
-
 }
 
 function DownloadDirModalContent() {
-
     const { closeDownloadDirModal, confirmDownloadDir } = useDownloadDirModalContext();
     const currentDefault = useSettingsStore((s) => s.settings.downloadDir);
 
@@ -56,21 +59,27 @@ function DownloadDirModalContent() {
             try {
                 const dirs = await refreshDirectories();
                 if (cancelled) return;
-                setListState((prev) => (
+                setListState((prev) =>
                     prev.status === 'ready' && areDirectoryListsEqual(prev.dirs, dirs)
                         ? prev
-                        : { status: 'ready', dirs }
-                ));
+                        : { status: 'ready', dirs },
+                );
             } catch (e) {
                 if (cancelled) return;
-                setListState((prev) => (
+                setListState((prev) =>
                     prev.status === 'ready'
                         ? prev
-                        : { status: 'error', message: e instanceof Error ? e.message : 'Failed to load directories.' }
-                ));
+                        : {
+                              status: 'error',
+                              message:
+                                  e instanceof Error ? e.message : 'Failed to load directories.',
+                          },
+                );
             }
         })();
-        return () => { cancelled = true; };
+        return () => {
+            cancelled = true;
+        };
     }, []);
 
     const allDirs = listState.status === 'ready' ? listState.dirs : null;
@@ -86,8 +95,12 @@ function DownloadDirModalContent() {
 
     return (
         <div className={styles.overlay}>
-
-            <button type="button" className={styles.backdrop} aria-label="Close dialog" onClick={cancel} />
+            <button
+                type="button"
+                className={styles.backdrop}
+                aria-label="Close dialog"
+                onClick={cancel}
+            />
 
             <div
                 role="dialog"
@@ -95,11 +108,9 @@ function DownloadDirModalContent() {
                 aria-label="Choose download directory"
                 className={styles.modal}
             >
-
                 <p className={styles.title}>Download to: </p>
 
                 <div className={styles.searchRow}>
-
                     <input
                         type="text"
                         autoFocus
@@ -116,17 +127,19 @@ function DownloadDirModalContent() {
                         checked={showSubfolders}
                         onChange={(e) => setShowSubfolders(e.target.checked)}
                     />
-
                 </div>
 
                 <ul className={styles.list}>
-
                     {listState.status === 'loading' && <li className={styles.empty}>Loading…</li>}
 
-                    {listState.status === 'error' && <li className={styles.empty}>{listState.message}</li>}
+                    {listState.status === 'error' && (
+                        <li className={styles.empty}>{listState.message}</li>
+                    )}
 
                     {allDirs && allDirs.length === 0 && (
-                        <li className={styles.empty}>No directories available. Set a download or library folder in Settings.</li>
+                        <li className={styles.empty}>
+                            No directories available. Set a download or library folder in Settings.
+                        </li>
                     )}
 
                     {allDirs && allDirs.length > 0 && visibleDirs.length === 0 && (
@@ -139,23 +152,24 @@ function DownloadDirModalContent() {
                             <li key={dir}>
                                 <button
                                     type="button"
-                                    className={[styles.item, isDefault ? styles.default : ''].filter(Boolean).join(' ')}
+                                    className={[styles.item, isDefault ? styles.default : '']
+                                        .filter(Boolean)
+                                        .join(' ')}
                                     title={dir}
                                     onClick={() => confirmDownloadDir(dir)}
                                 >
-                                    <FolderIcon size={14} color={isDefault ? '#34c3d1' : '#c7c7c7'} />
+                                    <FolderIcon
+                                        size={14}
+                                        color={isDefault ? '#34c3d1' : '#c7c7c7'}
+                                    />
                                     <span>{dir}</span>
                                     {isDefault && <span className={styles.badge}>default</span>}
                                 </button>
                             </li>
                         );
                     })}
-
                 </ul>
-
             </div>
-
         </div>
     );
-
 }

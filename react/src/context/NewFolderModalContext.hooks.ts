@@ -12,6 +12,7 @@ export const NewFolderModalContext = createContext<INewFolderModalContextValue |
 
 export function useNewFolderModalContext(): INewFolderModalContextValue {
     const ctx = useContext(NewFolderModalContext);
-    if (!ctx) throw new Error('useNewFolderModalContext must be used within NewFolderModalProvider');
+    if (!ctx)
+        throw new Error('useNewFolderModalContext must be used within NewFolderModalProvider');
     return ctx;
 }

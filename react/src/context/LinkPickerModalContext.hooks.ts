@@ -14,6 +14,7 @@ export const LinkPickerModalContext = createContext<ILinkPickerModalContextValue
 
 export function useLinkPickerModalContext(): ILinkPickerModalContextValue {
     const ctx = useContext(LinkPickerModalContext);
-    if (!ctx) throw new Error('useLinkPickerModalContext must be used within LinkPickerModalProvider');
+    if (!ctx)
+        throw new Error('useLinkPickerModalContext must be used within LinkPickerModalProvider');
     return ctx;
 }

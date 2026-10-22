@@ -17,7 +17,6 @@ interface IComicCacheStore {
 }
 
 export const useComicCacheStore = create<IComicCacheStore>((set, get, api) => ({
-
     cache: {},
 
     init: () => {
@@ -39,19 +38,22 @@ export const useComicCacheStore = create<IComicCacheStore>((set, get, api) => ({
 
         const existingTimer = persistTimers.get(uid);
         if (existingTimer) clearTimeout(existingTimer);
-        persistTimers.set(uid, setTimeout(() => {
-            persistTimers.delete(uid);
-            updateComicData(uid, currCache[uid]).catch(console.error);
-        }, PERSIST_DEBOUNCE_MS));
+        persistTimers.set(
+            uid,
+            setTimeout(() => {
+                persistTimers.delete(uid);
+                updateComicData(uid, currCache[uid]).catch(console.error);
+            }, PERSIST_DEBOUNCE_MS),
+        );
     },
 
     flushPending: async () => {
         const pendingUids = [...persistTimers.keys()];
         for (const timer of persistTimers.values()) clearTimeout(timer);
         persistTimers.clear();
-        await Promise.all(pendingUids.map(uid =>
-            updateComicData(uid, get().cache[uid]).catch(console.error)
-        ));
+        await Promise.all(
+            pendingUids.map((uid) => updateComicData(uid, get().cache[uid]).catch(console.error)),
+        );
     },
 
     subscribeById: (uid, fn) => {
@@ -62,6 +64,5 @@ export const useComicCacheStore = create<IComicCacheStore>((set, get, api) => ({
             lastEntry = entry;
             fn(entry);
         });
-    }
-
+    },
 }));

@@ -15,9 +15,7 @@ export function Providers({ children }: { children: ReactNode }) {
                     <MoveFileModalProvider>
                         <NewFolderModalProvider>
                             <DownloadDirModalProvider>
-                                <LinkPickerModalProvider>
-                                    {children}
-                                </LinkPickerModalProvider>
+                                <LinkPickerModalProvider>{children}</LinkPickerModalProvider>
                             </DownloadDirModalProvider>
                         </NewFolderModalProvider>
                     </MoveFileModalProvider>

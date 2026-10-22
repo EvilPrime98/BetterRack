@@ -12,29 +12,41 @@ export function DownloadDirModalProvider({ children }: { children: ReactNode }) 
         resolve?.(dir);
     }, []);
 
-    const openDownloadDirModal = useCallback((title: string) => {
-        settle(null);
-        setItemTitle(title);
-        setIsVisible(true);
-        return new Promise<string | null>((resolve) => {
-            pendingResolve.current = resolve;
-        });
-    }, [settle]);
+    const openDownloadDirModal = useCallback(
+        (title: string) => {
+            settle(null);
+            setItemTitle(title);
+            setIsVisible(true);
+            return new Promise<string | null>((resolve) => {
+                pendingResolve.current = resolve;
+            });
+        },
+        [settle],
+    );
 
-    const confirmDownloadDir = useCallback((dir: string) => {
-        setIsVisible(false);
-        settle(dir);
-    }, [settle]);
+    const confirmDownloadDir = useCallback(
+        (dir: string) => {
+            setIsVisible(false);
+            settle(dir);
+        },
+        [settle],
+    );
 
     const closeDownloadDirModal = useCallback(() => {
         setIsVisible(false);
         settle(null);
     }, [settle]);
 
-    const value = useMemo(() => ({
-        isVisible, itemTitle,
-        openDownloadDirModal, confirmDownloadDir, closeDownloadDirModal
-    }), [isVisible, itemTitle, openDownloadDirModal, confirmDownloadDir, closeDownloadDirModal]);
+    const value = useMemo(
+        () => ({
+            isVisible,
+            itemTitle,
+            openDownloadDirModal,
+            confirmDownloadDir,
+            closeDownloadDirModal,
+        }),
+        [isVisible, itemTitle, openDownloadDirModal, confirmDownloadDir, closeDownloadDirModal],
+    );
 
     return (
         <DownloadDirModalContext.Provider value={value}>

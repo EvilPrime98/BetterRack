@@ -18,11 +18,13 @@ export async function preloadWindow(uid: string, numPages: number, savedPage: nu
     if (!range) return;
     const loads: Promise<void>[] = [];
     for (let ind = range.start; ind <= range.end; ++ind) {
-        loads.push(new Promise<void>(resolve => {
-            const img = new Image();
-            img.onload = img.onerror = () => resolve();
-            img.src = withAuthQuery(`${API_URL}/read/${uid}/pages/${ind}`);
-        }));
+        loads.push(
+            new Promise<void>((resolve) => {
+                const img = new Image();
+                img.onload = img.onerror = () => resolve();
+                img.src = withAuthQuery(`${API_URL}/read/${uid}/pages/${ind}`);
+            }),
+        );
     }
     await Promise.all(loads);
 }

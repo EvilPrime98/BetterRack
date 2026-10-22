@@ -12,6 +12,7 @@ export const DownloadDirModalContext = createContext<IDownloadDirModalContextVal
 
 export function useDownloadDirModalContext(): IDownloadDirModalContextValue {
     const ctx = useContext(DownloadDirModalContext);
-    if (!ctx) throw new Error('useDownloadDirModalContext must be used within DownloadDirModalProvider');
+    if (!ctx)
+        throw new Error('useDownloadDirModalContext must be used within DownloadDirModalProvider');
     return ctx;
 }

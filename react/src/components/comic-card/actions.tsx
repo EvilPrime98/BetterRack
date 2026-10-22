@@ -7,13 +7,12 @@ import { RefreshComicButton } from './refresh-comic-button';
 export function ComicCardActions({
     uid,
     name,
-    onComicRefreshed
+    onComicRefreshed,
 }: {
     uid: string;
     name: string;
     onComicRefreshed: () => void;
 }) {
-
     return (
         <div className={styles.actions}>
             <MarkAsReadButton uid={uid} />
@@ -22,5 +21,4 @@ export function ComicCardActions({
             <DeleteFileButton uid={uid} />
         </div>
     );
-
 }

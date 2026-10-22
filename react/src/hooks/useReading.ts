@@ -6,7 +6,6 @@ import { matchesReadFilter } from '@/context/ReadTypesContext.hooks';
 import type { ILibraryResponseItem } from '@/library.types';
 
 export function useReading() {
-
     const [items, setItems] = useState<ILibraryResponseItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -14,12 +13,13 @@ export function useReading() {
     const comicCache = useComicCacheStore((s) => s.cache);
 
     useEffect(() => {
-
         let isCurrent = true;
 
-        useComicCacheStore.getState().flushPending()
+        useComicCacheStore
+            .getState()
+            .flushPending()
             .then(() => getReading())
-            .then(data => {
+            .then((data) => {
                 if (isCurrent) setItems(data.items);
             })
             .catch(() => {
@@ -29,20 +29,23 @@ export function useReading() {
                 if (isCurrent) setIsLoading(false);
             });
 
-        return () => { isCurrent = false; };
-
+        return () => {
+            isCurrent = false;
+        };
     }, []);
 
     useEffect(() => {
         if (!lastDeleted) return;
-        setItems(prev => prev.filter(item => item.uid !== lastDeleted.uid));
+        setItems((prev) => prev.filter((item) => item.uid !== lastDeleted.uid));
     }, [lastDeleted]);
 
     const inProgress = useMemo(
-        () => items.filter(item => matchesReadFilter('reading', comicCache[item.uid]?.readPer ?? 0)),
-        [items, comicCache]
+        () =>
+            items.filter((item) =>
+                matchesReadFilter('reading', comicCache[item.uid]?.readPer ?? 0),
+            ),
+        [items, comicCache],
     );
 
     return { items: inProgress, isLoading, error };
-
 }

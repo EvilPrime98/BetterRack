@@ -8,7 +8,6 @@ import { LayoutSelector } from '@/components/layout/layout-selector';
 import styles from './reading-page.module.css';
 
 export function ReadingPage() {
-
     const navigate = useNavigate();
     const { items, isLoading, error } = useReading();
     const comicsType = useComicsTypeStore((s) => s.type);
@@ -16,11 +15,8 @@ export function ReadingPage() {
     return (
         <Layout>
             <section className={styles.page}>
-
                 <header className={styles.header}>
-
                     <div className={styles.left}>
-
                         <button
                             type="button"
                             className={styles.backButton}
@@ -34,13 +30,11 @@ export function ReadingPage() {
                             <span className={styles.eyebrow}>Keep reading</span>
                             <h1 className={styles.title}>Currently reading</h1>
                         </div>
-
                     </div>
 
                     <div className={styles.right}>
                         <LayoutSelector />
                     </div>
-
                 </header>
 
                 {isLoading ? (
@@ -50,13 +44,18 @@ export function ReadingPage() {
                 ) : items.length === 0 ? (
                     <p className={styles.empty}>Nothing in progress.</p>
                 ) : (
-                    <section className={[styles.comicContainer, comicsType === 'detail' ? styles.detailLayout : ''].filter(Boolean).join(' ')}>
+                    <section
+                        className={[
+                            styles.comicContainer,
+                            comicsType === 'detail' ? styles.detailLayout : '',
+                        ]
+                            .filter(Boolean)
+                            .join(' ')}
+                    >
                         <ItemsGrid items={items} />
                     </section>
                 )}
-
             </section>
         </Layout>
     );
-
 }

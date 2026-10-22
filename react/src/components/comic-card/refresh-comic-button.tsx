@@ -4,23 +4,13 @@ import { RefreshIcon } from '@/icons/refresh-icon';
 import { retryThumbnail, reidentifyFile } from '@/services/library.service';
 import { useComicIdentStore } from '@/stores/comicIdent.store';
 
-export function RefreshComicButton({
-    uid,
-    onRefreshed
-}: {
-    uid: string;
-    onRefreshed: () => void;
-}) {
-
+export function RefreshComicButton({ uid, onRefreshed }: { uid: string; onRefreshed: () => void }) {
     const [isRefreshing, setIsRefreshing] = useState(false);
 
     const refresh = () => {
         if (isRefreshing) return;
         setIsRefreshing(true);
-        Promise.allSettled([
-            retryThumbnail(uid),
-            reidentifyFile(uid)
-        ])
+        Promise.allSettled([retryThumbnail(uid), reidentifyFile(uid)])
             .then(([, identifyResult]) => {
                 if (identifyResult.status !== 'fulfilled') return;
                 const { identified, comic, metaSource } = identifyResult.value;
@@ -54,5 +44,4 @@ export function RefreshComicButton({
             <RefreshIcon size={16} />
         </button>
     );
-
 }
