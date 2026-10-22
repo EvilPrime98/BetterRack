@@ -48,8 +48,35 @@ export function ReaderPageHeader({
         $el.title = title();
     };
 
-    const onCounterChange = ($el: HTMLElement) => {
-        $el.textContent = `${currentPage()} / ${pages().length}`;
+    const onCounterInputChange = ($el: HTMLElement) => {
+        const $input = $el as HTMLInputElement;
+        $input.value = String(currentPage());
+        $input.style.width = `${String(pages().length).length + 3}ch`;
+    };
+
+    const onCounterTotalChange = ($el: HTMLElement) => {
+        $el.textContent = ` / ${pages().length}`;
+    };
+
+    const onCounterKeyDown = (evt: Event) => {
+        const $input = evt.target as HTMLInputElement;
+        const key = (evt as KeyboardEvent).key;
+        if (key === 'Enter') {
+            $input.blur();
+        } else if (key === 'Escape') {
+            $input.value = String(currentPage());
+            $input.blur();
+        }
+    };
+
+    const onCounterBlur = (evt: Event) => {
+        const $input = evt.target as HTMLInputElement;
+        const page = Number($input.value.trim());
+        if (Number.isInteger(page) && page >= 1) {
+            const target = Math.min(page, pages().length);
+            if (target !== currentPage()) goToPage(target);
+        }
+        $input.value = String(currentPage());
     };
 
     const renderBookmarks = ($el: HTMLElement) => {
@@ -130,11 +157,42 @@ export function ReaderPageHeader({
                         onMount: [onReadingModeMount],
                     }),
                     UltraComponent({
-                        component: `<span>${currentPage()} / ${pages().length}</span>`,
+                        component: '<span></span>',
                         className: [styles.counter],
-                        trigger: [
-                            { subscriber: subsCurrentPage, triggerFunction: onCounterChange },
-                            { subscriber: subsPages, triggerFunction: onCounterChange },
+                        children: [
+                            UltraComponent({
+                                component:
+                                    '<input type="text" inputmode="numeric" pattern="[0-9]*" spellcheck="false" />',
+                                className: [styles.counterInput],
+                                attributes: { 'aria-label': 'Current page' },
+                                eventHandler: {
+                                    focus: (evt: Event) =>
+                                        (evt.target as HTMLInputElement).select(),
+                                    keydown: onCounterKeyDown,
+                                    blur: onCounterBlur,
+                                },
+                                onMount: [onCounterInputChange],
+                                trigger: [
+                                    {
+                                        subscriber: subsCurrentPage,
+                                        triggerFunction: onCounterInputChange,
+                                    },
+                                    {
+                                        subscriber: subsPages,
+                                        triggerFunction: onCounterInputChange,
+                                    },
+                                ],
+                            }),
+                            UltraComponent({
+                                component: '<span></span>',
+                                onMount: [onCounterTotalChange],
+                                trigger: [
+                                    {
+                                        subscriber: subsPages,
+                                        triggerFunction: onCounterTotalChange,
+                                    },
+                                ],
+                            }),
                         ],
                     }),
                     UltraComponent({
