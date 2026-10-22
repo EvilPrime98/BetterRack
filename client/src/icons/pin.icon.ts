@@ -2,14 +2,13 @@ export function PinIcon({
     size = 16,
     color = '#c7c7c7',
     filled = false,
-    rotate = 0
+    rotate = 0,
 }: {
     size?: number;
     color?: string;
     filled?: boolean;
     rotate?: number;
 } = {}) {
-
     return `<svg
         style="transform: rotate(${rotate}deg)"
         width="${size}"
@@ -27,5 +26,4 @@ export function PinIcon({
             fill="${filled ? color : 'none'}"
         />
     </svg>`;
-
 }

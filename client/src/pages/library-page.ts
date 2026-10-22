@@ -1,31 +1,32 @@
-import { UltraActivity, UltraComponent, ultraQueryParams, ultraState, type UltraLightElement } from "ultra-light-js";
+import {
+    UltraActivity,
+    UltraComponent,
+    ultraQueryParams,
+    ultraState,
+    type UltraLightElement,
+} from 'ultra-light-js';
 import styles from './library-page.module.css';
-import { PageHeader } from "@/components/page-header/page-header";
-import { LIBRARY_CONTEXT } from "../context/library.context";
-import { FolderCard } from "@/components/folder-card/folder-card";
-import { ComicCard } from "@/components/comic-card/comic-card";
-import { Layout } from "@/layout";
-import { COMICS_TYPE_CTX } from "../context/comics-types.context";
-import type { ILibraryResponseItem } from "../library.types";
-import { ultraFilters } from "../hooks/ultraFilters";
-import { SearchPage } from "./search.page";
-import { DOCUMENT_TITLE_CONTEXT } from "../context/document-title.context";
-import { matchesReadFilter, READ_TYPES_CTX } from "../context/read-types.context";
-import { COMIC_CACHE_CONTEXT } from "../context/comic-cache.context";
+import { PageHeader } from '@/components/page-header/page-header';
+import { LIBRARY_CONTEXT } from '../context/library.context';
+import { FolderCard } from '@/components/folder-card/folder-card';
+import { ComicCard } from '@/components/comic-card/comic-card';
+import { Layout } from '@/layout';
+import { COMICS_TYPE_CTX } from '../context/comics-types.context';
+import type { ILibraryResponseItem } from '../library.types';
+import { ultraFilters } from '../hooks/ultraFilters';
+import { SearchPage } from './search.page';
+import { DOCUMENT_TITLE_CONTEXT } from '../context/document-title.context';
+import { matchesReadFilter, READ_TYPES_CTX } from '../context/read-types.context';
+import { COMIC_CACHE_CONTEXT } from '../context/comic-cache.context';
 
 const PAGE_SIZE = 60;
 
-export function LibraryPage({
-    uid
-}: {
-    uid?: string
-}) {
-
+export function LibraryPage({ uid }: { uid?: string }) {
     const { search } = ultraQueryParams();
     if (search) {
         return SearchPage({ search });
     }
-    
+
     const itemsMap = new Map<string, UltraLightElement>();
 
     let renderCount = PAGE_SIZE;
@@ -35,28 +36,20 @@ export function LibraryPage({
     $sentinel.style.height = '1px';
 
     const [items, setItems, subsItems] = ultraState<ILibraryResponseItem[]>([]);
-    
-    const { filters, resetFilters, applyFilters } = ultraFilters({ 
-        rawItems: getLibraryItems, 
-        setItems 
+
+    const { filters, resetFilters, applyFilters } = ultraFilters({
+        rawItems: getLibraryItems,
+        setItems,
     });
-    
-    function onLayoutChange(
-        $section: HTMLElement
-    ){
-        $section.classList.toggle(
-            styles.detailLayout,
-            COMICS_TYPE_CTX.type.get() === 'detail'
-        );
+
+    function onLayoutChange($section: HTMLElement) {
+        $section.classList.toggle(styles.detailLayout, COMICS_TYPE_CTX.type.get() === 'detail');
     }
 
-    function onItemsChange(
-        $section: HTMLElement
-    ){
-
+    function onItemsChange($section: HTMLElement) {
         const allComics = [...items()];
         const currComics = allComics.slice(0, renderCount);
-        const currIds = new Set(currComics.map(c => c.uid));
+        const currIds = new Set(currComics.map((c) => c.uid));
 
         for (const [uid, node] of itemsMap) {
             if (currIds.has(uid)) continue;
@@ -65,53 +58,61 @@ export function LibraryPage({
             itemsMap.delete(uid);
         }
 
-        currComics.map(item => {
+        currComics.map((item) => {
             if (itemsMap.has(item.uid)) return;
-            itemsMap.set(item.uid, (item.did)
-                ? FolderCard({
-                    title: item.name,
-                    uid: item.uid
-                })
-                : ComicCard({
-                    item: item
-                })
-            )
-        })
+            itemsMap.set(
+                item.uid,
+                item.did
+                    ? FolderCard({
+                          title: item.name,
+                          uid: item.uid,
+                      })
+                    : ComicCard({
+                          item: item,
+                      }),
+            );
+        });
 
-        currComics.map(c => {
+        currComics.map((c) => {
             const $item = itemsMap.get(c.uid);
             if ($item) $section.appendChild($item);
-        })
+        });
 
         if (renderCount < allComics.length) {
             $section.appendChild($sentinel);
         } else {
             $sentinel.remove();
         }
-
     }
 
-    function getLibraryItems(){
+    function getLibraryItems() {
         const items = LIBRARY_CONTEXT.getLibraryItems({ onlyDir: !uid, uid });
         if (!uid && LIBRARY_CONTEXT.structure.get() === 'folders') {
-            const rootComics = LIBRARY_CONTEXT.groups.get().flatMap(g => g.entries).filter(e => !e.did && !e.parentId);
+            const rootComics = LIBRARY_CONTEXT.groups
+                .get()
+                .flatMap((g) => g.entries)
+                .filter((e) => !e.did && !e.parentId);
             items.push(...rootComics);
         }
         const query = LIBRARY_CONTEXT.searchQuery.get().trim().toLowerCase();
         if (!query) return items;
-        return items.filter(item => item.name.toLowerCase().includes(query));
+        return items.filter((item) => item.name.toLowerCase().includes(query));
     }
 
-    function hasVisibleItems(){
+    function hasVisibleItems() {
         const readFilter = READ_TYPES_CTX.type.get();
-        return items().some(item => item.did
-            || matchesReadFilter(readFilter, COMIC_CACHE_CONTEXT.getCacheById(item.uid)?.readPer || 0));
+        return items().some(
+            (item) =>
+                item.did ||
+                matchesReadFilter(
+                    readFilter,
+                    COMIC_CACHE_CONTEXT.getCacheById(item.uid)?.readPer || 0,
+                ),
+        );
     }
 
     return Layout(
-
         UltraComponent({
-
             component: '<section></section>',
 
             className: [styles.page],
@@ -119,14 +120,13 @@ export function LibraryPage({
             onMount: [() => DOCUMENT_TITLE_CONTEXT.setTitle('Library')],
 
             children: [
-
                 PageHeader({
                     uid,
                     items,
                     subsItems,
                     filters,
                     resetFilters,
-                    showNewFolder: true
+                    showNewFolder: true,
                 }),
 
                 UltraActivity({
@@ -135,34 +135,35 @@ export function LibraryPage({
                             subsItems,
                             LIBRARY_CONTEXT.libraryLoaded.subscribe,
                             READ_TYPES_CTX.type.subscribe,
-                            COMIC_CACHE_CONTEXT.cache.subscribe
+                            COMIC_CACHE_CONTEXT.cache.subscribe,
                         ],
-                        state: () => LIBRARY_CONTEXT.libraryLoaded.get() && !hasVisibleItems()
+                        state: () => LIBRARY_CONTEXT.libraryLoaded.get() && !hasVisibleItems(),
                     },
-                    component: `<p class="${styles.empty}">No items to show.</p>`
+                    component: `<p class="${styles.empty}">No items to show.</p>`,
                 }),
 
                 UltraComponent({
-                   
-                    onMount: [($el: HTMLElement) => {
-                        LIBRARY_CONTEXT.fetchLibrary();
-                        if (LIBRARY_CONTEXT.groups.get().length) applyFilters();
-                        $el.scrollTo(0, 0);
+                    onMount: [
+                        ($el: HTMLElement) => {
+                            LIBRARY_CONTEXT.fetchLibrary();
+                            if (LIBRARY_CONTEXT.groups.get().length) applyFilters();
+                            $el.scrollTo(0, 0);
 
-                        sentinelObserver = new IntersectionObserver(
-                            (entries) => {
-                                if (!entries.some(e => e.isIntersecting)) return;
-                                renderCount += PAGE_SIZE;
-                                sentinelObserver?.unobserve($sentinel);
-                                onItemsChange($el);
-                                if ($sentinel.isConnected) sentinelObserver?.observe($sentinel);
-                            },
-                            { rootMargin: '600px' }
-                        );
-                        sentinelObserver.observe($sentinel);
+                            sentinelObserver = new IntersectionObserver(
+                                (entries) => {
+                                    if (!entries.some((e) => e.isIntersecting)) return;
+                                    renderCount += PAGE_SIZE;
+                                    sentinelObserver?.unobserve($sentinel);
+                                    onItemsChange($el);
+                                    if ($sentinel.isConnected) sentinelObserver?.observe($sentinel);
+                                },
+                                { rootMargin: '600px' },
+                            );
+                            sentinelObserver.observe($sentinel);
 
-                        return () => sentinelObserver?.disconnect();
-                    }],
+                            return () => sentinelObserver?.disconnect();
+                        },
+                    ],
 
                     component: '<section></section>',
                     className: [styles.comicContainer],
@@ -170,30 +171,26 @@ export function LibraryPage({
                         {
                             subscriber: subsItems,
                             triggerFunction: onItemsChange,
-                            defer: true
+                            defer: true,
                         },
                         {
-                            subscriber: [
-                                COMICS_TYPE_CTX.type.subscribe,
-                                subsItems
-                            ],
+                            subscriber: [COMICS_TYPE_CTX.type.subscribe, subsItems],
                             triggerFunction: onLayoutChange,
-                            defer: true
-                        }
-                    ]
-                })
+                            defer: true,
+                        },
+                    ],
+                }),
             ],
 
-            trigger: [{
-                subscriber: [
-                    LIBRARY_CONTEXT.groups.subscribe,
-                    LIBRARY_CONTEXT.searchQuery.subscribe
-                ],
-                triggerFunction: () => applyFilters()
-            }]
-
-        })
-
-    )
-
+            trigger: [
+                {
+                    subscriber: [
+                        LIBRARY_CONTEXT.groups.subscribe,
+                        LIBRARY_CONTEXT.searchQuery.subscribe,
+                    ],
+                    triggerFunction: () => applyFilters(),
+                },
+            ],
+        }),
+    );
 }

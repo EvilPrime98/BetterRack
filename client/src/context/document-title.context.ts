@@ -1,5 +1,5 @@
-import { ultraCompState, type IUltraCompStateStateful } from "ultra-light-js";
-import { APP_NAME } from "../data";
+import { ultraCompState, type IUltraCompStateStateful } from 'ultra-light-js';
+import { APP_NAME } from '../data';
 
 export interface IDocumentTitleCtx {
     title: IUltraCompStateStateful<string>;
@@ -8,7 +8,6 @@ export interface IDocumentTitleCtx {
 }
 
 export const DOCUMENT_TITLE_CONTEXT: IDocumentTitleCtx = ultraCompState({
-
     title: APP_NAME,
 
     setTitle: (comp: IDocumentTitleCtx, title?: string) => {
@@ -21,5 +20,4 @@ export const DOCUMENT_TITLE_CONTEXT: IDocumentTitleCtx = ultraCompState({
         comp.title.set(APP_NAME);
         document.title = APP_NAME;
     },
-
 });

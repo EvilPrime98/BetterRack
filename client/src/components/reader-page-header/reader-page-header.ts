@@ -1,10 +1,10 @@
-import { UltraComponent } from "ultra-light-js";
-import { ArrowLeftIcon } from "../../icons/arrow-left.icon";
-import { RefreshIcon } from "../../icons/refresh-icon";
-import type { IBookmark } from "../../library.types";
-import type { TReadingMode } from "../../context/user-pref-cache.context";
-import { WindowControls } from "../window-controls/window-controls";
-import styles from '../../pages/reader.page.module.css'
+import { UltraComponent } from 'ultra-light-js';
+import { ArrowLeftIcon } from '../../icons/arrow-left.icon';
+import { RefreshIcon } from '../../icons/refresh-icon';
+import type { IBookmark } from '../../library.types';
+import type { TReadingMode } from '../../context/user-pref-cache.context';
+import { WindowControls } from '../window-controls/window-controls';
+import styles from '../../pages/reader.page.module.css';
 
 export function ReaderPageHeader({
     title,
@@ -21,8 +21,8 @@ export function ReaderPageHeader({
     onReadingModeChange,
     goToPage,
     goBack,
-    onRefresh
-}:{
+    onRefresh,
+}: {
     title: () => string;
     subsTitle: (fn: (value: string) => void) => () => void;
     currentPage: () => number;
@@ -39,22 +39,20 @@ export function ReaderPageHeader({
     goBack: () => void;
     onRefresh: () => void;
 }) {
-
     const onRefreshingChange = ($button: HTMLElement) => {
         $button.classList.toggle(styles.spinning, isRefreshing());
-    }
+    };
 
     const onTitleChange = ($el: HTMLElement) => {
         $el.textContent = title();
         $el.title = title();
-    }
+    };
 
     const onCounterChange = ($el: HTMLElement) => {
         $el.textContent = `${currentPage()} / ${pages().length}`;
-    }
+    };
 
     const renderBookmarks = ($el: HTMLElement) => {
-
         const $select = $el as HTMLSelectElement;
         const items = bookmarks();
 
@@ -73,23 +71,22 @@ export function ReaderPageHeader({
             $option.textContent = `${bookmark.label} · p.${bookmark.page}`;
             $select.appendChild($option);
         }
-
-    }
+    };
 
     const onBookmarkSelect = (evt: Event) => {
         const $select = evt.target as HTMLSelectElement;
         const page = Number($select.value);
         if (Number.isInteger(page) && page >= 1) goToPage(page);
         $select.value = '';
-    }
+    };
 
     const onReadingModeMount = ($el: HTMLElement) => {
         ($el as HTMLSelectElement).value = readingMode();
-    }
+    };
 
     const onReadingModeSelect = (evt: Event) => {
         onReadingModeChange((evt.target as HTMLSelectElement).value as TReadingMode);
-    }
+    };
 
     return UltraComponent({
         component: '<header></header>',
@@ -103,45 +100,42 @@ export function ReaderPageHeader({
                         component: '<button type="button"></button>',
                         className: [styles.back],
                         eventHandler: { click: goBack },
-                        children: [ArrowLeftIcon({ size: 16 }), '<span>Library</span>']
+                        children: [ArrowLeftIcon({ size: 16 }), '<span>Library</span>'],
                     }),
                     UltraComponent({
                         component: '<select hidden></select>',
                         className: [styles.bookmarks],
                         eventHandler: { change: onBookmarkSelect },
                         onMount: [renderBookmarks],
-                        trigger: [
-                            { subscriber: subsBookmarks, triggerFunction: renderBookmarks }
-                        ]
-                    })
-                ]
+                        trigger: [{ subscriber: subsBookmarks, triggerFunction: renderBookmarks }],
+                    }),
+                ],
             }),
             UltraComponent({
                 component: '<h1></h1>',
                 className: [styles.title],
                 onMount: [onTitleChange],
-                trigger: [
-                    { subscriber: subsTitle, triggerFunction: onTitleChange }
-                ]
+                trigger: [{ subscriber: subsTitle, triggerFunction: onTitleChange }],
             }),
             UltraComponent({
                 component: '<div></div>',
                 className: [styles.toolbarEnd],
                 children: [
                     UltraComponent({
-                        component: '<select><option value="vertical">Vertical</option><option value="horizontal">Horizontal</option></select>',
+                        component:
+                            '<select><option value="vertical">Vertical</option><option value="horizontal">Horizontal</option></select>',
                         className: [styles.bookmarks],
                         attributes: { 'aria-label': 'Reading mode' },
                         eventHandler: { change: onReadingModeSelect },
-                        onMount: [onReadingModeMount]
+                        onMount: [onReadingModeMount],
                     }),
                     UltraComponent({
                         component: `<span>${currentPage()} / ${pages().length}</span>`,
                         className: [styles.counter],
                         trigger: [
                             { subscriber: subsCurrentPage, triggerFunction: onCounterChange },
-                            { subscriber: subsPages, triggerFunction: onCounterChange }
-                        ]
+                            { subscriber: subsPages, triggerFunction: onCounterChange },
+                        ],
                     }),
                     UltraComponent({
                         component: '<button type="button"></button>',
@@ -151,17 +145,16 @@ export function ReaderPageHeader({
                         onMount: [onRefreshingChange],
                         children: [RefreshIcon({ size: 16 })],
                         trigger: [
-                            { subscriber: subsIsRefreshing, triggerFunction: onRefreshingChange }
-                        ]
-                    })
-                ]
+                            { subscriber: subsIsRefreshing, triggerFunction: onRefreshingChange },
+                        ],
+                    }),
+                ],
             }),
             UltraComponent({
                 component: '<div></div>',
                 className: [styles.windowControls],
-                children: [WindowControls()]
+                children: [WindowControls()],
             }),
-        ]
-    })
-
+        ],
+    });
 }

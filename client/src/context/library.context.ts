@@ -1,4 +1,4 @@
-import { ultraCompState, ultraQuery, type IUltraCompStateStateful } from "ultra-light-js";
+import { ultraCompState, ultraQuery, type IUltraCompStateStateful } from 'ultra-light-js';
 import {
     getLibraryIndex,
     getLibraryPage,
@@ -12,11 +12,18 @@ import {
     reidentifyAllLibrary as requestReidentifyAllLibrary,
     startIdentifyLibrary,
     getIdentifyLibraryStatus,
-    type TLibraryStructure
-} from "../services/library.service";
-import type { ILibraryGroup, ILibraryIndexGroup, ILibraryPage, ILibraryResponseItem, TIdentifyLibraryStatus, TIdentifyProgress } from "../library.types";
-import { toast } from "../services/toast.service";
-import { CONFIRM_MODAL_CTX } from "./confirm-modal.context";
+    type TLibraryStructure,
+} from '../services/library.service';
+import type {
+    ILibraryGroup,
+    ILibraryIndexGroup,
+    ILibraryPage,
+    ILibraryResponseItem,
+    TIdentifyLibraryStatus,
+    TIdentifyProgress,
+} from '../library.types';
+import { toast } from '../services/toast.service';
+import { CONFIRM_MODAL_CTX } from './confirm-modal.context';
 
 const queryClient = ultraQuery();
 
@@ -45,7 +52,7 @@ function readStoredStructure(): TLibraryStructure {
 /** Merge a page of entries into the groups in the store. Keep group order. Do not add an entry twice. */
 function mergeLibraryPage(existing: ILibraryGroup[], page: ILibraryPage): ILibraryGroup[] {
     const byUid = new Map<string, ILibraryGroup>(
-        existing.map(group => [group.uid, { ...group, entries: [...group.entries] }])
+        existing.map((group) => [group.uid, { ...group, entries: [...group.entries] }]),
     );
     for (const incoming of page.groups) {
         const current = byUid.get(incoming.uid);
@@ -55,7 +62,7 @@ function mergeLibraryPage(existing: ILibraryGroup[], page: ILibraryPage): ILibra
         }
         current.name = incoming.name;
         current.path = incoming.path;
-        const seen = new Set(current.entries.map(entry => entry.uid));
+        const seen = new Set(current.entries.map((entry) => entry.uid));
         for (const entry of incoming.entries) {
             if (!seen.has(entry.uid)) current.entries.push(entry);
         }
@@ -82,7 +89,10 @@ export interface ILibraryCtx {
     searchQuery: IUltraCompStateStateful<string>;
     structure: IUltraCompStateStateful<TLibraryStructure>;
     lastDeleted: IUltraCompStateStateful<{ uid: string } | null>;
-    identifyProgress: IUltraCompStateStateful<Extract<TIdentifyProgress, { type: 'identifying' }> | null>;
+    identifyProgress: IUltraCompStateStateful<Extract<
+        TIdentifyProgress,
+        { type: 'identifying' }
+    > | null>;
     setStructure: (structure: TLibraryStructure) => Promise<void>;
     fetchLibrary: (options?: { force?: boolean }) => Promise<void>;
     refreshLibrary: (options?: { silent?: boolean }) => Promise<void>;
@@ -94,12 +104,11 @@ export interface ILibraryCtx {
     moveFile: (fileUid: string, targetFolderUid?: string) => Promise<void>;
     unidentifyFile: (uid: string) => Promise<void>;
     reidentifyAll: () => Promise<void>;
-    getLibraryItems: (args: { onlyDir: boolean, uid?: string }) => ILibraryResponseItem[];
+    getLibraryItems: (args: { onlyDir: boolean; uid?: string }) => ILibraryResponseItem[];
     findUidByPath: (absPath: string) => string | undefined;
 }
 
 export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
-
     groups: [] as ILibraryGroup[],
 
     indexGroups: [] as ILibraryIndexGroup[],
@@ -120,7 +129,11 @@ export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
         const current = comp.structure.get();
         if (current === structure) return;
 
-        try { localStorage.setItem(STRUCTURE_STORAGE_KEY, structure); } catch { /* storage unavailable */ }
+        try {
+            localStorage.setItem(STRUCTURE_STORAGE_KEY, structure);
+        } catch {
+            /* storage unavailable */
+        }
 
         if (comp.libraryLoaded.get()) structureCache[current] = comp.groups.get();
         const cached = structureCache[structure];
@@ -138,7 +151,6 @@ export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
     },
 
     fetchLibrary: async (comp: ILibraryCtx, options?: { force?: boolean }) => {
-
         if (options?.force) {
             libraryLoadInFlight = null;
             comp.libraryLoaded.set(false);
@@ -157,29 +169,29 @@ export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
                 let merged: ILibraryGroup[] = [];
 
                 if (structure === 'folders') {
-                    const { data: index } = await queryClient.fetch(
+                    const { data: index } = (await queryClient.fetch(
                         'library-index',
                         getLibraryIndex,
-                        LIBRARY_STALE_TIME
-                    ) as { data: ILibraryIndexGroup[] };
+                        LIBRARY_STALE_TIME,
+                    )) as { data: ILibraryIndexGroup[] };
                     if (!isCurrent()) return;
 
                     comp.indexGroups.set(index);
 
-                    merged = index.map(group => ({
+                    merged = index.map((group) => ({
                         uid: group.uid,
                         name: group.name,
                         path: '',
-                        entries: []
+                        entries: [],
                     }));
                     comp.groups.set([...merged]);
                 }
 
-                const { data: firstPage } = await queryClient.fetch(
+                const { data: firstPage } = (await queryClient.fetch(
                     structure === 'series' ? 'library-series' : 'library',
                     () => getLibraryPage({ offset: 0, structure }),
-                    LIBRARY_STALE_TIME
-                ) as { data: ILibraryPage };
+                    LIBRARY_STALE_TIME,
+                )) as { data: ILibraryPage };
                 if (!isCurrent()) return;
 
                 merged = mergeLibraryPage(merged, firstPage);
@@ -210,11 +222,7 @@ export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
 
     refreshLibrary: async (comp: ILibraryCtx, options?: { silent?: boolean }) => {
         try {
-            await queryClient.fetch(
-                'library-refresh',
-                requestLibraryRefresh,
-                0
-            );
+            await queryClient.fetch('library-refresh', requestLibraryRefresh, 0);
             queryClient.invalidateCache('library-refresh');
             await reloadLibrary(comp);
             if (!options?.silent) toast.success('Library refreshed');
@@ -226,16 +234,17 @@ export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
     refreshLibraryWithPrompt: async (comp: ILibraryCtx) => {
         await comp.refreshLibrary({ silent: true });
 
-        if (comp.groups.get().every(g => g.entries.length === 0)) {
+        if (comp.groups.get().every((g) => g.entries.length === 0)) {
             toast.success('Library refreshed');
             return;
         }
 
         const identify = await CONFIRM_MODAL_CTX.confirmDialog({
             title: 'Identify library?',
-            message: 'Do you also want to identify every comic in your library after refreshing? This can take a while and runs in the background.',
+            message:
+                'Do you also want to identify every comic in your library after refreshing? This can take a while and runs in the background.',
             confirmLabel: 'Refresh & identify',
-            cancelLabel: 'Just refresh'
+            cancelLabel: 'Just refresh',
         });
 
         if (identify === null) return;
@@ -260,7 +269,11 @@ export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
                 const progress = status.progress;
 
                 if (status.state === 'error' || progress?.type === 'error') {
-                    toast.error(progress?.type === 'error' ? progress.message : 'Library identification failed.');
+                    toast.error(
+                        progress?.type === 'error'
+                            ? progress.message
+                            : 'Library identification failed.',
+                    );
                     return;
                 }
                 if (status.state === 'done' || progress?.type === 'done') {
@@ -269,8 +282,12 @@ export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
                     return;
                 }
 
-                comp.identifyProgress.set(progress?.type === 'identifying' ? progress : { type: 'identifying', done: 0, total: 0 });
-                await new Promise(resolve => setTimeout(resolve, IDENTIFY_POLL_INTERVAL_MS));
+                comp.identifyProgress.set(
+                    progress?.type === 'identifying'
+                        ? progress
+                        : { type: 'identifying', done: 0, total: 0 },
+                );
+                await new Promise((resolve) => setTimeout(resolve, IDENTIFY_POLL_INTERVAL_MS));
                 status = await getIdentifyLibraryStatus();
             }
         } catch (e) {
@@ -339,65 +356,63 @@ export const LIBRARY_CONTEXT: ILibraryCtx = ultraCompState({
             await reloadLibrary(comp);
             toast.success(data.message || 'Library flagged for re-identification');
         } catch (e) {
-            toast.error(e instanceof Error ? e.message : 'Failed to flag library for re-identification.');
+            toast.error(
+                e instanceof Error ? e.message : 'Failed to flag library for re-identification.',
+            );
         }
     },
 
     getLibraryItems: (
         comp: ILibraryCtx,
-        { onlyDir, uid }: { onlyDir: boolean, uid?: string }
+        { onlyDir, uid }: { onlyDir: boolean; uid?: string },
     ): ILibraryResponseItem[] => {
-
         const groups = comp.groups.get();
 
         if (comp.structure.get() === 'series') {
             if (!uid) {
                 return onlyDir
-                    ? groups.map(g => ({ uid: g.uid, did: true, name: g.name, path: g.path, parentId: '', createdAt: 0 }))
-                    : groups.flatMap(g => g.entries);
+                    ? groups.map((g) => ({
+                          uid: g.uid,
+                          did: true,
+                          name: g.name,
+                          path: g.path,
+                          parentId: '',
+                          createdAt: 0,
+                      }))
+                    : groups.flatMap((g) => g.entries);
             }
-            const series = groups.find(g => g.uid === uid);
+            const series = groups.find((g) => g.uid === uid);
             if (series) return onlyDir ? [] : series.entries;
         }
 
         let data: ILibraryResponseItem[];
 
-        const library = uid
-            ? groups.find(g => g.uid === uid)
-            : undefined;
+        const library = uid ? groups.find((g) => g.uid === uid) : undefined;
 
         if (!uid) {
-            data = groups.map(g => g.entries).flat();
+            data = groups.map((g) => g.entries).flat();
         } else if (library) {
-            data = library.entries.filter(e => !e.parentId);
+            data = library.entries.filter((e) => !e.parentId);
         } else {
-            data = groups.flatMap(g => g.entries)
-            .filter(e => e.parentId === uid);
+            data = groups.flatMap((g) => g.entries).filter((e) => e.parentId === uid);
         }
 
-        if (onlyDir) data = data.filter(i => i.did !== false);
+        if (onlyDir) data = data.filter((i) => i.did !== false);
 
         return data;
-
     },
 
-    findUidByPath: (
-        comp: ILibraryCtx,
-        absPath: string
-    ): string | undefined => {
-
+    findUidByPath: (comp: ILibraryCtx, absPath: string): string | undefined => {
         const groups = comp.groups.get();
 
-        const group = groups.find(g => g.path === absPath);
+        const group = groups.find((g) => g.path === absPath);
         if (group) return group.uid;
 
         for (const g of groups) {
-            const entry = g.entries.find(e => e.did && e.path === absPath);
+            const entry = g.entries.find((e) => e.did && e.path === absPath);
             if (entry) return entry.uid;
         }
 
         return undefined;
-
-    }
-
+    },
 });

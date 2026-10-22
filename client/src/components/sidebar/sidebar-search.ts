@@ -1,11 +1,10 @@
-import { UltraComponent, ultraNavigate, ultraQueryParams } from "ultra-light-js";
+import { UltraComponent, ultraNavigate, ultraQueryParams } from 'ultra-light-js';
 import styles from './sidebar.module.css';
-import { LIBRARY_CONTEXT } from "../../context/library.context";
-import { SearchIcon } from "../../icons/search.icon";
-import { SIDEBAR_CONTEXT } from "../../context/sidebar.context";
+import { LIBRARY_CONTEXT } from '../../context/library.context';
+import { SearchIcon } from '../../icons/search.icon';
+import { SIDEBAR_CONTEXT } from '../../context/sidebar.context';
 
 export function SidebarSearch() {
-
     function leaveSearchResults() {
         if (ultraQueryParams().search) ultraNavigate({ href: '/' });
     }
@@ -48,20 +47,17 @@ export function SidebarSearch() {
         } else if (onSearchPage) {
             ultraNavigate({ href: '/' });
         }
-
     }
 
     return UltraComponent({
-
         component: '<div></div>',
 
         className: [styles.searchBox],
 
         children: [
-
             UltraComponent({
                 component: SearchIcon({ size: 16, color: '#8a8a8a' }),
-                className: [styles.searchIcon]
+                className: [styles.searchIcon],
             }),
 
             UltraComponent({
@@ -70,15 +66,12 @@ export function SidebarSearch() {
                 className: [styles.searchInput],
                 attributes: {
                     placeholder: 'Search library…',
-                    'aria-label': 'Search library'
+                    'aria-label': 'Search library',
                 },
                 eventHandler: {
-                    keydown: onSearchKeydown
-                }
-            })
-
-        ]
-
-    })
-
+                    keydown: onSearchKeydown,
+                },
+            }),
+        ],
+    });
 }

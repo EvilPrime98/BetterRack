@@ -1,6 +1,11 @@
-import { ultraCompState, type IUltraCompStateStateful } from "ultra-light-js";
-import { FILTER_OPTIONS, isIUltraCompStateStateful, type ILibraryFilters, type ILibraryResponseItem } from "../library.types";
-import { USER_PREF } from "../context/user-pref-cache.context";
+import { ultraCompState, type IUltraCompStateStateful } from 'ultra-light-js';
+import {
+    FILTER_OPTIONS,
+    isIUltraCompStateStateful,
+    type ILibraryFilters,
+    type ILibraryResponseItem,
+} from '../library.types';
+import { USER_PREF } from '../context/user-pref-cache.context';
 
 export function ultraFilters({
     rawItems,
@@ -9,17 +14,13 @@ export function ultraFilters({
     rawItems: () => ILibraryResponseItem[];
     setItems: (value: ILibraryResponseItem[]) => void;
 }) {
-
     const filters: ILibraryFilters = ultraCompState({
         sortByCreation: false,
-        sortByReleaseDate: false
-    })
+        sortByReleaseDate: false,
+    });
 
-    function sortByReleaseDate(
-        data: ILibraryResponseItem[]
-    ): ILibraryResponseItem[]{
-       return data
-       .sort((a, b) => {
+    function sortByReleaseDate(data: ILibraryResponseItem[]): ILibraryResponseItem[] {
+        return data.sort((a, b) => {
             const aDate = a.comic?.releaseDate;
             const bDate = b.comic?.releaseDate;
             if (!aDate || !bDate) return -1;
@@ -27,8 +28,8 @@ export function ultraFilters({
             if (r1 !== 0) return r1;
             const r2 = Number(aDate.releaseMonth) - Number(bDate.releaseMonth);
             if (r2 !== 0) return r2;
-            return Number(aDate.releaseDay) - Number(bDate.releaseDay)
-        }) 
+            return Number(aDate.releaseDay) - Number(bDate.releaseDay);
+        });
     }
 
     function applyFilters() {
@@ -47,20 +48,15 @@ export function ultraFilters({
         setItems(rawItems());
     }
 
-    Object
-    .values(filters)
-    .forEach(
-        (f: IUltraCompStateStateful<boolean>) => f.subscribe(applyFilters)
+    Object.values(filters).forEach((f: IUltraCompStateStateful<boolean>) =>
+        f.subscribe(applyFilters),
     );
 
-    filters.sortByReleaseDate.set(
-        USER_PREF.getPref('filter') === FILTER_OPTIONS.byReleaseDate
-    );
+    filters.sortByReleaseDate.set(USER_PREF.getPref('filter') === FILTER_OPTIONS.byReleaseDate);
 
     return {
         filters,
         resetFilters,
         applyFilters,
-    }
-
+    };
 }

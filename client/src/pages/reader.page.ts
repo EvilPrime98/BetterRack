@@ -1,15 +1,15 @@
-import { UltraActivity, UltraComponent, ultraNavigate, ultraState } from "ultra-light-js"
-import { API_URL, reader, readerBookmarks, readerRefresh } from "../services/library.service"
-import { withAuthQuery } from "../services/server-config.service"
-import { setImmersiveMode } from "../services/immersive.service"
-import type { IBookmark } from "../library.types"
-import styles from './reader.page.module.css'
-import { ImageElement } from "../components/reader-page-image/reader-page-image";
-import { ReaderPageHeader } from "../components/reader-page-header/reader-page-header";
-import { ReaderPageProgressBar } from "../components/reader-page-progress-bar/reader-page-progress-bar";
-import { COMIC_CACHE_CONTEXT } from "../context/comic-cache.context";
-import { DOCUMENT_TITLE_CONTEXT } from "../context/document-title.context";
-import { USER_PREF, type TReadingMode } from "../context/user-pref-cache.context";
+import { UltraActivity, UltraComponent, ultraNavigate, ultraState } from 'ultra-light-js';
+import { API_URL, reader, readerBookmarks, readerRefresh } from '../services/library.service';
+import { withAuthQuery } from '../services/server-config.service';
+import { setImmersiveMode } from '../services/immersive.service';
+import type { IBookmark } from '../library.types';
+import styles from './reader.page.module.css';
+import { ImageElement } from '../components/reader-page-image/reader-page-image';
+import { ReaderPageHeader } from '../components/reader-page-header/reader-page-header';
+import { ReaderPageProgressBar } from '../components/reader-page-progress-bar/reader-page-progress-bar';
+import { COMIC_CACHE_CONTEXT } from '../context/comic-cache.context';
+import { DOCUMENT_TITLE_CONTEXT } from '../context/document-title.context';
+import { USER_PREF, type TReadingMode } from '../context/user-pref-cache.context';
 
 const PRELOAD_WINDOW = 2;
 const RENDER_BEHIND = 3;
@@ -30,12 +30,7 @@ const ZOOM_PERSIST_MS = 300;
 const maxZoomFor = (viewerWidth: number) =>
     Math.max(1, Math.floor(Math.min(MAX_ZOOM, viewerWidth / PAGE_BASE_WIDTH) * 100) / 100);
 
-export function ReaderPage({
-    uid
-}: {
-    uid: string
-}) {
-
+export function ReaderPage({ uid }: { uid: string }) {
     let comicCache = COMIC_CACHE_CONTEXT.getCacheById(uid);
     const [pages, setPages, subsPages] = ultraState<string[]>([]);
     const [title, setTitle, subsTitle] = ultraState('');
@@ -45,7 +40,9 @@ export function ReaderPage({
     const [bookmarks, setBookmarks, subsBookmarks] = ultraState<IBookmark[]>([]);
     const [isRefreshing, setIsRefreshing, subsIsRefreshing] = ultraState(false);
     const [isHeaderVisible, setIsHeaderVisible, subsIsHeaderVisible] = ultraState(true);
-    const [readingMode, setReadingMode, subsReadingMode] = ultraState<TReadingMode>(USER_PREF.getPref('readingMode'));
+    const [readingMode, setReadingMode, subsReadingMode] = ultraState<TReadingMode>(
+        USER_PREF.getPref('readingMode'),
+    );
     let observer: IntersectionObserver | null = null;
     let viewer: HTMLElement | null = null;
     let scroller: HTMLElement | null = null;
@@ -73,17 +70,20 @@ export function ReaderPage({
     // settles when they all load or fail. Fire-and-forget callers ignore it.
     const warmPages = (numPages: number, pageNumbers: number[]): Promise<void> => {
         const fresh = pageNumbers.filter(
-            page => page >= 1 && page <= numPages && !requested.has(page)
+            (page) => page >= 1 && page <= numPages && !requested.has(page),
         );
         if (!fresh.length) return Promise.resolve();
-        const loads = fresh.map(page => new Promise<void>(resolve => {
-            requested.add(page);
-            const img = new Image();
-            img.onload = img.onerror = () => resolve();
-            img.src = withAuthQuery(`${API_URL}/read/${uid}/pages/${page}`);
-        }));
+        const loads = fresh.map(
+            (page) =>
+                new Promise<void>((resolve) => {
+                    requested.add(page);
+                    const img = new Image();
+                    img.onload = img.onerror = () => resolve();
+                    img.src = withAuthQuery(`${API_URL}/read/${uid}/pages/${page}`);
+                }),
+        );
         return Promise.all(loads).then(() => undefined);
-    }
+    };
 
     const prefetchAround = (page: number) => {
         const numPages = pages().length;
@@ -92,18 +92,18 @@ export function ReaderPage({
         for (let p = page + 1; p <= page + PREFETCH_AHEAD; ++p) targets.push(p);
         for (let p = page - PREFETCH_BEHIND; p < page; ++p) targets.push(p);
         void warmPages(numPages, targets);
-    }
+    };
 
     const goToPage = (page: number) => {
         const $page = viewer?.children[page - 1] as HTMLElement | undefined;
         $page?.scrollIntoView({ block: 'start', inline: 'start' });
         prefetchAround(page);
-    }
+    };
 
     const goBack = () => {
         if (window.history.length > 1) window.history.back();
         else ultraNavigate({ href: '/' });
-    }
+    };
 
     const getWindowRange = (numPages: number, savedPage: number) => {
         if (numPages < 1) return null;
@@ -111,7 +111,7 @@ export function ReaderPage({
         const start = Math.max(0, targetInd - PRELOAD_WINDOW);
         const end = Math.min(numPages - 1, targetInd + PRELOAD_WINDOW);
         return { targetInd, start, end };
-    }
+    };
 
     const preloadWindow = (numPages: number, savedPage: number): Promise<void> => {
         const range = getWindowRange(numPages, savedPage);
@@ -119,7 +119,7 @@ export function ReaderPage({
         const pageNumbers: number[] = [];
         for (let ind = range.start; ind <= range.end; ++ind) pageNumbers.push(ind + 1);
         return warmPages(numPages, pageNumbers);
-    }
+    };
 
     const loadPages = async () => {
         setHasError(false);
@@ -146,7 +146,7 @@ export function ReaderPage({
         } finally {
             setIsLoading(false);
         }
-    }
+    };
 
     const refreshComic = async () => {
         if (isRefreshing()) return;
@@ -166,23 +166,27 @@ export function ReaderPage({
         } finally {
             setIsRefreshing(false);
         }
-    }
+    };
 
     const flushZoom = () => {
         zoomFrame = 0;
         if (!viewer) return;
-        const activePage = scroller?.dataset.mode === 'horizontal' && scroller.clientWidth > 0
-            ? viewer.children[Math.round(scroller.scrollLeft / scroller.clientWidth)] as HTMLElement | undefined
-            : undefined;
+        const activePage =
+            scroller?.dataset.mode === 'horizontal' && scroller.clientWidth > 0
+                ? (viewer.children[Math.round(scroller.scrollLeft / scroller.clientWidth)] as
+                      HTMLElement | undefined)
+                : undefined;
         const target = activePage ?? scroller;
         const oldHeight = target?.scrollHeight ?? 0;
         const oldWidth = target?.scrollWidth ?? 0;
-        const fractionY = target && oldHeight > 0
-            ? (target.scrollTop + target.clientHeight / 2) / oldHeight
-            : null;
-        const fractionX = activePage && oldWidth > 0
-            ? (activePage.scrollLeft + activePage.clientWidth / 2) / oldWidth
-            : null;
+        const fractionY =
+            target && oldHeight > 0
+                ? (target.scrollTop + target.clientHeight / 2) / oldHeight
+                : null;
+        const fractionX =
+            activePage && oldWidth > 0
+                ? (activePage.scrollLeft + activePage.clientWidth / 2) / oldWidth
+                : null;
         viewer.style.setProperty('--reader-zoom', String(zoomValue));
         if (target && fractionY !== null) {
             target.scrollTop = fractionY * target.scrollHeight - target.clientHeight / 2;
@@ -190,13 +194,13 @@ export function ReaderPage({
         if (activePage && fractionX !== null) {
             activePage.scrollLeft = fractionX * activePage.scrollWidth - activePage.clientWidth / 2;
         }
-    }
+    };
 
     const applyZoom = (value: number) => {
         if (value === zoomValue) return;
         zoomValue = value;
         if (!zoomFrame) zoomFrame = requestAnimationFrame(flushZoom);
-    }
+    };
 
     const schedulePersistZoom = (value: number) => {
         clearTimeout(persistTimer);
@@ -204,14 +208,15 @@ export function ReaderPage({
             persistTimer = undefined;
             USER_PREF.setPref({ zoom: value });
         }, ZOOM_PERSIST_MS);
-    }
+    };
 
     const currentMaxZoom = () => {
         const width = scroller?.clientWidth ?? 0;
         return width > 0 ? maxZoomFor(width) : MAX_ZOOM;
     };
 
-    const clampZoom = (value: number) => Math.min(currentMaxZoom(), Math.max(MIN_ZOOM, +value.toFixed(2)));
+    const clampZoom = (value: number) =>
+        Math.min(currentMaxZoom(), Math.max(MIN_ZOOM, +value.toFixed(2)));
 
     const fitZoom = () => {
         const limit = currentMaxZoom();
@@ -239,31 +244,31 @@ export function ReaderPage({
 
     const onHeaderVisibilityChange = ($header: HTMLElement) => {
         $header.classList.toggle(styles.hidden, !isHeaderVisible());
-    }
+    };
 
     const onReadingModeChange = (mode: TReadingMode) => {
         setReadingMode(mode);
         USER_PREF.setPref({ readingMode: mode });
-    }
+    };
 
     const onReadingModeApply = ($page: HTMLElement) => {
         $page.dataset.mode = readingMode();
         const $current = viewer?.children[currentPage() - 1] as HTMLElement | undefined;
         $current?.scrollIntoView({ block: 'start', inline: 'start' });
-    }
+    };
 
     const realign = () => {
         if (readingMode() !== 'horizontal') return;
         const $current = viewer?.children[currentPage() - 1] as HTMLElement | undefined;
         $current?.scrollIntoView({ block: 'nearest', inline: 'start' });
-    }
+    };
 
     const onHeaderPaddingChange = ($page: HTMLElement) => {
         const before = parseFloat(getComputedStyle($page).paddingTop);
         $page.dataset.header = isHeaderVisible() ? 'visible' : 'hidden';
         if (readingMode() === 'horizontal') return;
         $page.scrollTop += parseFloat(getComputedStyle($page).paddingTop) - before;
-    }
+    };
 
     const toggleFullscreen = () => {
         if (window.desktop?.toggleFullscreen) {
@@ -272,20 +277,20 @@ export function ReaderPage({
         }
         if (document.fullscreenElement) document.exitFullscreen();
         else document.documentElement.requestFullscreen();
-    }
+    };
 
     const pointerGap = () => {
         const points = [...activePointers.values()];
         if (points.length < 2) return 0;
         return Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
-    }
+    };
 
     const settlePinch = () => {
         if (activePointers.size >= 2) return;
         if (isPinching) schedulePersistZoom(zoomValue);
         isPinching = false;
         pinchStartDistance = 0;
-    }
+    };
 
     const onPointerDown = (evt: Event) => {
         const e = evt as PointerEvent;
@@ -297,7 +302,7 @@ export function ReaderPage({
             pinchStartDistance = pointerGap();
             pinchStartZoom = zoomValue;
         }
-    }
+    };
 
     const onPointerMove = (evt: Event) => {
         const e = evt as PointerEvent;
@@ -308,7 +313,7 @@ export function ReaderPage({
         if (pinchStartDistance <= 0 || gap <= 0) return;
         e.preventDefault();
         applyZoom(clampZoom(pinchStartZoom * (gap / pinchStartDistance)));
-    }
+    };
 
     const onPointerUp = (evt: Event) => {
         const e = evt as PointerEvent;
@@ -328,26 +333,26 @@ export function ReaderPage({
             }
         }
         if (activePointers.size === 0) gestureUsedTwoPointers = false;
-    }
+    };
 
     const onPointerCancel = (evt: Event) => {
         const e = evt as PointerEvent;
         activePointers.delete(e.pointerId);
         settlePinch();
         if (activePointers.size === 0) gestureUsedTwoPointers = false;
-    }
+    };
 
     const onViewerMount = ($viewer: HTMLElement) => {
         viewer = $viewer;
         scroller = $viewer.closest<HTMLElement>(`.${styles.page}`);
         $viewer.style.setProperty('--reader-zoom', String(zoomValue));
-    }
+    };
 
     const onPageRatio = (ratio: number) => {
         if (viewer && !viewer.style.getPropertyValue('--page-ratio')) {
             viewer.style.setProperty('--page-ratio', String(ratio));
         }
-    }
+    };
 
     const applyActive = () => {
         if (activePage === null) return;
@@ -356,7 +361,7 @@ export function ReaderPage({
             const n = i + 1;
             setActive(n >= page - RENDER_BEHIND && n <= page + RENDER_AHEAD);
         });
-    }
+    };
 
     const requestActivePage = (page: number) => {
         clearTimeout(activeTimer);
@@ -370,16 +375,18 @@ export function ReaderPage({
             activePage = page;
             applyActive();
         }, ACTIVE_PAGE_SETTLE_MS);
-    }
+    };
 
     const onHorizontalWheel = (e: WheelEvent) => {
         if (readingMode() !== 'horizontal' || Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
         const $figure = (e.target as HTMLElement).closest('figure');
-        const canScrollY = $figure
-            && (e.deltaY < 0 ? $figure.scrollTop > 0
+        const canScrollY =
+            $figure &&
+            (e.deltaY < 0
+                ? $figure.scrollTop > 0
                 : $figure.scrollTop + $figure.clientHeight < $figure.scrollHeight - 1);
         if (!canScrollY && scroller) scroller.scrollLeft += e.deltaY;
-    }
+    };
 
     const onWheel = (evt: Event) => {
         const e = evt as WheelEvent;
@@ -391,7 +398,7 @@ export function ReaderPage({
         e.preventDefault();
         if (e.deltaY < 0) zoomIn();
         else if (e.deltaY > 0) zoomOut();
-    }
+    };
 
     const onKeydown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
@@ -410,10 +417,9 @@ export function ReaderPage({
             e.preventDefault();
             zoomReset();
         }
-    }
+    };
 
     const onPagesChange = ($section: HTMLElement) => {
-
         observer?.disconnect();
         viewer = $section;
         setters = [];
@@ -428,8 +434,11 @@ export function ReaderPage({
 
         for (let i = 0; i < numPages; ++i) {
             const { element: $page, setActive } = ImageElement({
-                uid, ind: i + 1, index: i + 1, total: numPages,
-                onRatio: onPageRatio
+                uid,
+                ind: i + 1,
+                index: i + 1,
+                total: numPages,
+                onRatio: onPageRatio,
             });
             pageOf.set($page, i + 1);
             if (range && i === range.targetInd) $target = $page;
@@ -451,22 +460,24 @@ export function ReaderPage({
 
         if (!numPages) return;
 
-        observer = new IntersectionObserver((entries) => {
-            const mostVisible = entries
-                .filter(entry => entry.isIntersecting)
-                .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-            if (!mostVisible) return;
-            const page = pageOf.get(mostVisible.target as HTMLElement);
-            if (page) {
-                setCurrentPage(page);
-                prefetchAround(page);
-                requestActivePage(page);
-            }
-        }, { threshold: [0.25, 0.5, 0.75] });
+        observer = new IntersectionObserver(
+            (entries) => {
+                const mostVisible = entries
+                    .filter((entry) => entry.isIntersecting)
+                    .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+                if (!mostVisible) return;
+                const page = pageOf.get(mostVisible.target as HTMLElement);
+                if (page) {
+                    setCurrentPage(page);
+                    prefetchAround(page);
+                    requestActivePage(page);
+                }
+            },
+            { threshold: [0.25, 0.5, 0.75] },
+        );
 
-        elements.forEach($page => observer!.observe($page));
-
-    }
+        elements.forEach(($page) => observer!.observe($page));
+    };
 
     const onProgressChange = () => {
         const total = pages().length || 1;
@@ -474,12 +485,11 @@ export function ReaderPage({
         COMIC_CACHE_CONTEXT.setCacheById(uid, {
             readPer: Number(per.toFixed(2)),
             currentPage: currentPage(),
-            read: per === 100
+            read: per === 100,
         });
-    }
+    };
 
     return UltraComponent({
-
         onMount: [
             loadPages,
             () => DOCUMENT_TITLE_CONTEXT.setTitle('Reader'),
@@ -498,7 +508,7 @@ export function ReaderPage({
                         clearTimeout(persistTimer);
                         USER_PREF.setPref({ zoom: zoomValue });
                     }
-                }
+                };
             },
             () => {
                 setImmersiveMode(true);
@@ -518,8 +528,8 @@ export function ReaderPage({
                     $page.removeEventListener('pointermove', onPointerMove);
                     $page.removeEventListener('pointerup', onPointerUp);
                     $page.removeEventListener('pointercancel', onPointerCancel);
-                }
-            }
+                };
+            },
         ],
 
         component: '<section></section>',
@@ -527,51 +537,52 @@ export function ReaderPage({
         className: [styles.page],
 
         eventHandler: {
-            wheel: onWheel
+            wheel: onWheel,
         },
 
         children: [
-
             UltraComponent({
                 component: '<div></div>',
                 className: [styles.headerOverlay],
                 trigger: [
                     {
                         subscriber: subsIsHeaderVisible,
-                        triggerFunction: onHeaderVisibilityChange
-                    }
+                        triggerFunction: onHeaderVisibilityChange,
+                    },
                 ],
                 children: [
-
                     ReaderPageHeader({
-                        title, subsTitle,
-                        currentPage, subsCurrentPage,
-                        pages, subsPages,
-                        bookmarks, subsBookmarks,
-                        isRefreshing, subsIsRefreshing,
+                        title,
+                        subsTitle,
+                        currentPage,
+                        subsCurrentPage,
+                        pages,
+                        subsPages,
+                        bookmarks,
+                        subsBookmarks,
+                        isRefreshing,
+                        subsIsRefreshing,
                         readingMode,
                         onReadingModeChange,
                         goToPage,
                         goBack,
-                        onRefresh: refreshComic
+                        onRefresh: refreshComic,
                     }),
 
                     ReaderPageProgressBar({
-                        currentPage, subsCurrentPage,
-                        pages, subsPages
-                    })
-
-                ]
+                        currentPage,
+                        subsCurrentPage,
+                        pages,
+                        subsPages,
+                    }),
+                ],
             }),
 
             UltraActivity({
                 mode: { state: isLoading, subscriber: subsIsLoading },
                 component: '<div></div>',
                 className: [styles.state],
-                children: [
-                    '<div class="' + styles.spinner + '"></div>',
-                    '<p>Loading pages…</p>'
-                ]
+                children: ['<div class="' + styles.spinner + '"></div>', '<p>Loading pages…</p>'],
             }),
 
             UltraActivity({
@@ -583,9 +594,9 @@ export function ReaderPage({
                     UltraComponent({
                         component: '<button type="button">Retry</button>',
                         className: [styles.retry],
-                        eventHandler: { click: loadPages }
-                    })
-                ]
+                        eventHandler: { click: loadPages },
+                    }),
+                ],
             }),
 
             UltraComponent({
@@ -594,34 +605,31 @@ export function ReaderPage({
                 onMount: [onViewerMount],
                 eventHandler: {
                     click: toggleHeader,
-                    dblclick: toggleFullscreen
+                    dblclick: toggleFullscreen,
                 },
                 trigger: [
                     {
                         subscriber: subsPages,
-                        triggerFunction: onPagesChange
-                    }
-                ]
-            })
-
+                        triggerFunction: onPagesChange,
+                    },
+                ],
+            }),
         ],
 
         trigger: [
             {
                 subscriber: subsReadingMode,
-                triggerFunction: onReadingModeApply
+                triggerFunction: onReadingModeApply,
             },
             {
                 subscriber: subsIsHeaderVisible,
-                triggerFunction: onHeaderPaddingChange
+                triggerFunction: onHeaderPaddingChange,
             },
             {
                 subscriber: [subsPages, subsCurrentPage],
                 triggerFunction: onProgressChange,
-                defer: true
-            }
-        ]
-
-    })
-
+                defer: true,
+            },
+        ],
+    });
 }

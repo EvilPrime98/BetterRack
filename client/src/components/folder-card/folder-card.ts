@@ -1,50 +1,38 @@
-import { UltraComponent, UltraLink } from "ultra-light-js";
+import { UltraComponent, UltraLink } from 'ultra-light-js';
 import styles from './folder-card.module.css';
-import { ChevronDownIcon } from "@/icons/chevron.icon";
-import { COMICS_TYPE_CTX } from "@/context/comics-types.context";
+import { ChevronDownIcon } from '@/icons/chevron.icon';
+import { COMICS_TYPE_CTX } from '@/context/comics-types.context';
 //import { FolderCardStack } from "./folder-card-stack";
-import { FolderCardBasic } from "./folder-card-basic";
-import { FolderCardActions } from "./folder-card-actions";
+import { FolderCardBasic } from './folder-card-basic';
+import { FolderCardActions } from './folder-card-actions';
 
-export function FolderCard({
-    title,
-    uid
-}:{
-    title: string,
-    uid: string
-}) {
-
+export function FolderCard({ title, uid }: { title: string; uid: string }) {
     const onCardTypeChange = ($article: HTMLElement) => {
-        $article.classList.toggle(
-            styles.detailMode,
-            COMICS_TYPE_CTX.type.get() === 'detail'
-        );
-    }
+        $article.classList.toggle(styles.detailMode, COMICS_TYPE_CTX.type.get() === 'detail');
+    };
 
     return UltraComponent({
-
         component: '<article></article>',
 
         className: [
             styles.folderCard,
-            ...(COMICS_TYPE_CTX.type.get() === 'detail' ? [styles.detailMode] : [])
+            ...(COMICS_TYPE_CTX.type.get() === 'detail' ? [styles.detailMode] : []),
         ],
 
-        trigger: [{
-            subscriber: COMICS_TYPE_CTX.type.subscribe,
-            triggerFunction: onCardTypeChange
-        }],
+        trigger: [
+            {
+                subscriber: COMICS_TYPE_CTX.type.subscribe,
+                triggerFunction: onCardTypeChange,
+            },
+        ],
 
         children: [
-
             UltraLink({
-
                 href: `/${uid}`,
 
                 className: [styles.cardLink],
 
                 children: [
-
                     /* (stackCovers.length)
                     ? FolderCardStack({ title, stackCovers })
                     : FolderCardBasic({ title }), */
@@ -56,31 +44,25 @@ export function FolderCard({
                         className: [styles.body],
                         children: [
                             `<span class="${styles.kind}">Folder</span>`,
-                            `<p class="${styles.title}">${title}</p>`
-                        ]
+                            `<p class="${styles.title}">${title}</p>`,
+                        ],
                     }),
 
                     UltraComponent({
                         component: '<span></span>',
                         className: [styles.chevron],
                         attributes: {
-                            'aria-hidden': 'true'
+                            'aria-hidden': 'true',
                         },
-                        children: [
-                            ChevronDownIcon({ size: 14, color: 'currentColor' })
-                        ]
+                        children: [ChevronDownIcon({ size: 14, color: 'currentColor' })],
                     }),
 
                     FolderCardActions({
                         title,
-                        uid
-                    })
-
-                ]
-            })
-
-        ]
-
-    })
-
+                        uid,
+                    }),
+                ],
+            }),
+        ],
+    });
 }

@@ -1,11 +1,10 @@
 export function DownloadIcon({
     size = 16,
-    color = 'currentColor'
+    color = 'currentColor',
 }: {
     size?: number;
     color?: string;
 } = {}) {
-
     return `<svg
         width="${size}"
         height="${size}"
@@ -16,5 +15,4 @@ export function DownloadIcon({
         <path d="M12 3v12m0 0 4-4m-4 4-4-4" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>`;
-
 }

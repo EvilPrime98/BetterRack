@@ -1,20 +1,15 @@
-import { UltraLink } from "ultra-light-js";
-import { FolderIcon } from "../../icons/folder.icon";
-import { SIDEBAR_CONTEXT } from "../../context/sidebar.context";
-import type { ILibraryResponseItem } from "../../library.types";
+import { UltraLink } from 'ultra-light-js';
+import { FolderIcon } from '../../icons/folder.icon';
+import { SIDEBAR_CONTEXT } from '../../context/sidebar.context';
+import type { ILibraryResponseItem } from '../../library.types';
 import styles from './sidebar.module.css';
-import { LIBRARY_CONTEXT } from "@/context/library.context";
+import { LIBRARY_CONTEXT } from '@/context/library.context';
 
-export function SideBarElement({
-    item
-}: {
-    item: ILibraryResponseItem
-}) {
-
+export function SideBarElement({ item }: { item: ILibraryResponseItem }) {
     const onClick = () => {
         LIBRARY_CONTEXT.searchQuery.set(''); //reset search when selecting a comic folder
-        SIDEBAR_CONTEXT.isExpanded.set(false)
-    }
+        SIDEBAR_CONTEXT.isExpanded.set(false);
+    };
 
     const href = `/${item.uid}`;
 
@@ -33,13 +28,9 @@ export function SideBarElement({
         href,
         className: [styles.item],
         onMount: [onActiveMount],
-        children: [
-            FolderIcon({ size: 16 }),
-            `<span>${item.name}</span>`
-        ],
+        children: [FolderIcon({ size: 16 }), `<span>${item.name}</span>`],
         eventHandler: {
-            click: onClick
-        }
-    })
-
+            click: onClick,
+        },
+    });
 }

@@ -1,5 +1,5 @@
-import { ultraCompState } from "ultra-light-js";
-import type { IStorePost } from "../store.types";
+import { ultraCompState } from 'ultra-light-js';
+import type { IStorePost } from '../store.types';
 
 export const STORE_PAGE_CONTEXT = ultraCompState({
     query: '',
@@ -8,5 +8,5 @@ export const STORE_PAGE_CONTEXT = ultraCompState({
     page: 1,
     hasMore: true,
     hasLoaded: false,
-    scrollY: 0
+    scrollY: 0,
 });

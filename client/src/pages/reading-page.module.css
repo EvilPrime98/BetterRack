@@ -20,7 +20,8 @@
     background-color: var(--bg-app);
 }
 
-.right, .left {
+.right,
+.left {
     display: flex;
     align-items: center;
     gap: 10px;

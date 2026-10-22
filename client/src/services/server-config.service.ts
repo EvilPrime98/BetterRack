@@ -1,4 +1,4 @@
-import { Capacitor } from "@capacitor/core";
+import { Capacitor } from '@capacitor/core';
 
 const STORAGE_KEY = 'br_server_url';
 const REMOTE_MODE_KEY = 'br_remote_mode';
