@@ -1,22 +1,21 @@
 import styles from './folder-card.module.css';
-import { FolderStackCard } from "./folder-stack-card";
-import type { ILibraryResponseItem } from "@/library.types";
-import { useComicCacheStore } from "@/stores/comicCache.store";
-import { API_URL } from "@/services/library.service";
-import { withAuthQuery } from "@/services/server-config.service";
+import { FolderStackCard } from './folder-stack-card';
+import type { ILibraryResponseItem } from '@/library.types';
+import { useComicCacheStore } from '@/stores/comicCache.store';
+import { API_URL } from '@/services/library.service';
+import { withAuthQuery } from '@/services/server-config.service';
 
 export function FolderCardStack({
-    stackCovers
+    stackCovers,
 }: {
     title: string;
-    stackCovers: ILibraryResponseItem[]
+    stackCovers: ILibraryResponseItem[];
 }) {
-
     const cache = useComicCacheStore((s) => s.cache);
 
     return (
         <span className={[styles.cover, styles.stack].join(' ')}>
-            {stackCovers.map(item => {
+            {stackCovers.map((item) => {
                 const comicCache = cache[item.uid];
                 return (
                     <FolderStackCard
@@ -28,5 +27,4 @@ export function FolderCardStack({
             })}
         </span>
     );
-
 }

@@ -4,19 +4,14 @@ import { TrashIcon } from '@/icons/trash.icon';
 import { useLibraryStore } from '@/stores/library.store';
 import { useConfirmModalStore } from '@/stores/confirmModal.store';
 
-export function DeleteFileButton({
-    uid
-}: {
-    uid: string;
-}) {
-
+export function DeleteFileButton({ uid }: { uid: string }) {
     const onClick = async (e: MouseEvent) => {
         e.stopPropagation();
         e.preventDefault();
         const confirmed = await useConfirmModalStore.getState().confirmDialog({
             title: 'Delete comic?',
             message: 'This will remove the comic from your library. This cannot be undone.',
-            confirmLabel: 'Delete'
+            confirmLabel: 'Delete',
         });
         if (!confirmed) return;
         useLibraryStore.getState().deleteFile(uid);
@@ -33,5 +28,4 @@ export function DeleteFileButton({
             <TrashIcon size={20} />
         </button>
     );
-
 }

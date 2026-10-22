@@ -8,7 +8,6 @@ interface IDocumentTitleStore {
 }
 
 export const useDocumentTitleStore = create<IDocumentTitleStore>((set) => ({
-
     title: APP_NAME,
 
     setTitle: (title) => {
@@ -21,5 +20,4 @@ export const useDocumentTitleStore = create<IDocumentTitleStore>((set) => ({
         set({ title: APP_NAME });
         document.title = APP_NAME;
     },
-
 }));

@@ -26,20 +26,16 @@ const DEFAULT_PREF: IUserPref = {
     comicType: 'detail',
     askStopDownloads: true,
     zoom: 1,
-    readingMode: 'vertical'
-}
+    readingMode: 'vertical',
+};
 
 export const useUserPrefStore = create<IUserPrefStore>((set, get) => ({
-
     keyName: 'better-rack-user-pref',
 
     pref: DEFAULT_PREF,
 
     compile: () => {
-        window.localStorage.setItem(
-            get().keyName,
-            JSON.stringify(get().pref)
-        );
+        window.localStorage.setItem(get().keyName, JSON.stringify(get().pref));
     },
 
     init: () => {
@@ -58,6 +54,5 @@ export const useUserPrefStore = create<IUserPrefStore>((set, get) => ({
         Object.assign(currPref, pref);
         set({ pref: currPref });
         get().compile();
-    }
-
+    },
 }));

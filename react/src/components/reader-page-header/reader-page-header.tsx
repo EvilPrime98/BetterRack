@@ -17,7 +17,7 @@ export function ReaderPageHeader({
     onReadingModeChange,
     goToPage,
     goBack,
-    onRefresh
+    onRefresh,
 }: {
     title: string;
     currentPage: number;
@@ -30,7 +30,6 @@ export function ReaderPageHeader({
     goBack: () => void;
     onRefresh: () => void;
 }) {
-
     const showControls = !isDesktopApp();
 
     const onBookmarkSelect = (value: string) => {
@@ -53,13 +52,15 @@ export function ReaderPageHeader({
                         value={String(currentPage)}
                         options={bookmarks.map((bookmark) => ({
                             value: String(bookmark.page),
-                            label: `${bookmark.label} · p.${bookmark.page}`
+                            label: `${bookmark.label} · p.${bookmark.page}`,
                         }))}
                         onChange={onBookmarkSelect}
                     />
                 )}
             </div>
-            <h1 className={styles.title} title={title}>{title}</h1>
+            <h1 className={styles.title} title={title}>
+                {title}
+            </h1>
             <div className={styles.toolbarEnd}>
                 {showControls && (
                     <BRDropdown<TReadingMode>
@@ -68,16 +69,20 @@ export function ReaderPageHeader({
                         value={readingMode}
                         options={[
                             { value: 'vertical', label: 'Vertical' },
-                            { value: 'horizontal', label: 'Horizontal' }
+                            { value: 'horizontal', label: 'Horizontal' },
                         ]}
                         onChange={onReadingModeChange}
                     />
                 )}
-                <span className={styles.counter}>{currentPage} / {totalPages}</span>
+                <span className={styles.counter}>
+                    {currentPage} / {totalPages}
+                </span>
                 {showControls && (
                     <button
                         type="button"
-                        className={[styles.refresh, isRefreshing ? styles.spinning : ''].filter(Boolean).join(' ')}
+                        className={[styles.refresh, isRefreshing ? styles.spinning : '']
+                            .filter(Boolean)
+                            .join(' ')}
                         aria-label="Refresh scan"
                         onClick={onRefresh}
                     >
@@ -90,5 +95,4 @@ export function ReaderPageHeader({
             </div>
         </header>
     );
-
 }

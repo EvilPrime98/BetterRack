@@ -6,7 +6,9 @@ export function NotesSection({ notes }: { notes?: string[] }) {
     return (
         <SectionBlock title="Notes">
             <ul className={styles.plainList}>
-                {notes.map((note) => <li key={note}>{note}</li>)}
+                {notes.map((note) => (
+                    <li key={note}>{note}</li>
+                ))}
             </ul>
         </SectionBlock>
     );

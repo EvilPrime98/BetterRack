@@ -14,9 +14,9 @@
 
 input,
 textarea,
-[contenteditable="true"],
+[contenteditable='true'],
 .selectable {
-  user-select: text;
+    user-select: text;
 }
 
 :root {

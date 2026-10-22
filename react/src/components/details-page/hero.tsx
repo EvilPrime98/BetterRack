@@ -5,7 +5,13 @@ import { MetaItem } from './meta-item';
 import { CreditsList } from './credits-list';
 import type { CreditRow, Navigate } from './details-page.types';
 
-export function ComicHero({ comic, released, creditRows, firstWriter, navigate }: {
+export function ComicHero({
+    comic,
+    released,
+    creditRows,
+    firstWriter,
+    navigate,
+}: {
     comic: WikiComic;
     released: string;
     creditRows: CreditRow[];
@@ -14,14 +20,12 @@ export function ComicHero({ comic, released, creditRows, firstWriter, navigate }
 }) {
     return (
         <div className={styles.hero}>
-
             <div className={styles.coverWrap}>
                 <ImageGen className={styles.cover} src={comic.cover} alt={comic.title} />
                 {comic.event ? <span className={styles.eventTag}>{comic.event}</span> : null}
             </div>
 
             <div className={styles.heroInfo}>
-
                 <div className={styles.metaGrid}>
                     {comic.volume ? <MetaItem label="Volume" value={comic.volume} /> : null}
                     {comic.issue ? <MetaItem label="Issue" value={`#${comic.issue}`} /> : null}
@@ -29,7 +33,11 @@ export function ComicHero({ comic, released, creditRows, firstWriter, navigate }
                     {comic.rating ? <MetaItem label="Rating" value={comic.rating} /> : null}
                 </div>
 
-                <CreditsList creditRows={creditRows} firstWriter={firstWriter} navigate={navigate} />
+                <CreditsList
+                    creditRows={creditRows}
+                    firstWriter={firstWriter}
+                    navigate={navigate}
+                />
 
                 {comic.quotation?.quote ? (
                     <blockquote className={styles.quotation}>
@@ -37,9 +45,7 @@ export function ComicHero({ comic, released, creditRows, firstWriter, navigate }
                         {comic.quotation.speaker ? <cite>{comic.quotation.speaker}</cite> : null}
                     </blockquote>
                 ) : null}
-
             </div>
-
         </div>
     );
 }

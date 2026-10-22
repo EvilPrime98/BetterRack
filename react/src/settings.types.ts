@@ -7,5 +7,4 @@ export interface IAppSettings {
     rotatingFetch: boolean;
 }
 
-export type TFieldKey = 'apiUrl'
-| 'downloadDir';
+export type TFieldKey = 'apiUrl' | 'downloadDir';

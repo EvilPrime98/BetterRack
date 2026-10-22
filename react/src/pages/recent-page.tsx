@@ -11,43 +11,38 @@ import { BRDropdown } from '@/components/br-dropdown/br-dropdown';
 import { LayoutSelector } from '@/components/layout/layout-selector';
 import { StateFilter } from '@/components/state-filter/state-filter';
 
-const WINDOW_DROPDOWN_OPTIONS = RECENT_WINDOW_OPTIONS.map(opt => ({
+const WINDOW_DROPDOWN_OPTIONS = RECENT_WINDOW_OPTIONS.map((opt) => ({
     value: opt.label,
     label: opt.label,
 }));
 
 export function RecentPage() {
-
     const [searchParams] = useSearchParams();
-    
+
     const filter = searchParams.get('filter');
-    
+
     const navigate = useNavigate();
-    
+
     const [selectedWindow, setSelectedWindow] = useState<TRecentWindow>(
-        () => RECENT_WINDOW_OPTIONS.find(opt => opt.label === filter) ||
-            RECENT_WINDOW_OPTIONS[0]
+        () => RECENT_WINDOW_OPTIONS.find((opt) => opt.label === filter) || RECENT_WINDOW_OPTIONS[0],
     );
-    
+
     const { items, isLoading, error } = useRecentlyAdded(selectedWindow.hours);
-    
+
     const comicsType = useComicsTypeStore((s) => s.type);
 
     const onSelect = (label: TRecentWindow['label']) => {
-        const option = RECENT_WINDOW_OPTIONS.find(opt => opt.label === label);
+        const option = RECENT_WINDOW_OPTIONS.find((opt) => opt.label === label);
         if (!option) return;
         setSelectedWindow(option);
         navigate(`/new?filter=${option.label}`);
-    }
+    };
 
     return (
         <Layout>
             <section className={styles.page}>
-
                 <header className={styles.header}>
-
                     <div className={styles.left}>
-                        
                         <button
                             type="button"
                             className={styles.backButton}
@@ -61,12 +56,11 @@ export function RecentPage() {
                             <span className={styles.eyebrow}>Recently added</span>
                             <h1 className={styles.title}>{selectedWindow.label}</h1>
                         </div>
-
                     </div>
 
                     <div className={styles.right}>
-                        <StateFilter/>
-                        <LayoutSelector/>
+                        <StateFilter />
+                        <LayoutSelector />
                         <BRDropdown
                             options={WINDOW_DROPDOWN_OPTIONS}
                             value={selectedWindow.label}
@@ -74,7 +68,6 @@ export function RecentPage() {
                             aria-label="Time window"
                         />
                     </div>
-
                 </header>
 
                 {isLoading ? (
@@ -82,15 +75,22 @@ export function RecentPage() {
                 ) : error ? (
                     <p className={styles.empty}>{error}</p>
                 ) : items.length === 0 ? (
-                    <p className={styles.empty}>Nothing added in the {selectedWindow.label.toLowerCase()}.</p>
+                    <p className={styles.empty}>
+                        Nothing added in the {selectedWindow.label.toLowerCase()}.
+                    </p>
                 ) : (
-                    <section className={[styles.comicContainer, comicsType === 'detail' ? styles.detailLayout : ''].filter(Boolean).join(' ')}>
+                    <section
+                        className={[
+                            styles.comicContainer,
+                            comicsType === 'detail' ? styles.detailLayout : '',
+                        ]
+                            .filter(Boolean)
+                            .join(' ')}
+                    >
                         <ItemsGrid key={selectedWindow.label} items={items} />
                     </section>
                 )}
-
             </section>
         </Layout>
     );
-
 }

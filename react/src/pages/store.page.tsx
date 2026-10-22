@@ -16,7 +16,6 @@ function keyFor(item: IStorePost) {
 }
 
 export function StorePage() {
-
     const setTitle = useDocumentTitleStore((s) => s.setTitle);
 
     const query = useStorePageStore((s) => s.query);
@@ -38,25 +37,28 @@ export function StorePage() {
             : getLatestComics({ page: pageNum, perPage: PAGE_SIZE });
     }, []);
 
-    const loadFirstPage = useCallback(async (term: string) => {
-        setIsLoading(true);
-        setError('');
-        try {
-            const items = await fetchPage(1, term);
-            setStoreState({
-                results: items,
-                page: 1,
-                hasMore: items.length === PAGE_SIZE,
-                hasLoaded: true
-            });
-        } catch (e) {
-            const message = e instanceof Error ? e.message : 'Failed to load comics.';
-            setError(message);
-            toast.error(message);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [fetchPage, setStoreState]);
+    const loadFirstPage = useCallback(
+        async (term: string) => {
+            setIsLoading(true);
+            setError('');
+            try {
+                const items = await fetchPage(1, term);
+                setStoreState({
+                    results: items,
+                    page: 1,
+                    hasMore: items.length === PAGE_SIZE,
+                    hasLoaded: true,
+                });
+            } catch (e) {
+                const message = e instanceof Error ? e.message : 'Failed to load comics.';
+                setError(message);
+                toast.error(message);
+            } finally {
+                setIsLoading(false);
+            }
+        },
+        [fetchPage, setStoreState],
+    );
 
     const loadMore = useCallback(async () => {
         const cached = useStorePageStore.getState();
@@ -69,7 +71,7 @@ export function StorePage() {
             setStoreState({
                 results: [...useStorePageStore.getState().results, ...items],
                 page: nextPage,
-                hasMore: items.length === PAGE_SIZE
+                hasMore: items.length === PAGE_SIZE,
             });
         } catch (e) {
             const message = e instanceof Error ? e.message : 'Failed to load more comics.';
@@ -88,7 +90,6 @@ export function StorePage() {
     useEffect(() => {
         setTitle('Store');
         if (!useStorePageStore.getState().hasLoaded) loadFirstPage('');
-
     }, [setTitle, loadFirstPage]);
 
     useLayoutEffect(() => {
@@ -102,13 +103,15 @@ export function StorePage() {
     useEffect(() => {
         const $sentinel = sentinelRef.current;
         if (!$sentinel) return;
-        const observer = new IntersectionObserver((entries) => {
-            if (!entries.some(e => e.isIntersecting)) return;
-            loadMore();
-        }, { rootMargin: '600px' });
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (!entries.some((e) => e.isIntersecting)) return;
+                loadMore();
+            },
+            { rootMargin: '600px' },
+        );
         observer.observe($sentinel);
         return () => observer.disconnect();
-
     }, [loadMore]);
 
     const isEmpty = !isLoading && results.length === 0;
@@ -116,11 +119,9 @@ export function StorePage() {
     return (
         <Layout>
             <section className={styles.page}>
-
                 <h1 className={styles.title}>Store</h1>
 
                 <div className={styles.searchRow}>
-
                     <input
                         type="text"
                         className={styles.searchInput}
@@ -128,15 +129,12 @@ export function StorePage() {
                         aria-label="Search comics"
                         value={query}
                         onChange={(e) => setStoreState({ query: e.target.value })}
-                        onKeyDown={(e) => { if (e.key === 'Enter') runSearch(); }}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') runSearch();
+                        }}
                     />
 
-                    <BRButton
-                        text='Search'
-                        onClick={runSearch}
-                    >
-                    </BRButton>
-                    
+                    <BRButton text="Search" onClick={runSearch}></BRButton>
                 </div>
 
                 <p className={styles.errorText}>{error}</p>
@@ -146,13 +144,13 @@ export function StorePage() {
                 </p>
 
                 <section className={styles.grid}>
-                    {results.map(item => <StoreCard key={keyFor(item)} item={item} />)}
+                    {results.map((item) => (
+                        <StoreCard key={keyFor(item)} item={item} />
+                    ))}
                     <div className={styles.sentinel} ref={sentinelRef} />
                     {isLoadingMore && <p className={styles.loadingMore}>Loading more…</p>}
                 </section>
-
             </section>
         </Layout>
     );
-
 }

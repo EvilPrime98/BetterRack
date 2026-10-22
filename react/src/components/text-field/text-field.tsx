@@ -9,14 +9,7 @@ interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
     label: string;
 }
 
-export function TextField({
-    fieldKey,
-    label,
-    placeholder,
-    className,
-    ...props
-}: TextFieldProps) {
-
+export function TextField({ fieldKey, label, placeholder, className, ...props }: TextFieldProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const settings = useSettingsStore((s) => s.settings);
 
@@ -26,8 +19,9 @@ export function TextField({
 
     return (
         <div className={styles.field}>
-
-            <label className={styles.label} htmlFor={`settings-${fieldKey}`}>{label}</label>
+            <label className={styles.label} htmlFor={`settings-${fieldKey}`}>
+                {label}
+            </label>
 
             <input
                 ref={inputRef}
@@ -37,8 +31,6 @@ export function TextField({
                 className={[styles.input, className].filter(Boolean).join(' ')}
                 {...props}
             />
-
         </div>
     );
-
 }

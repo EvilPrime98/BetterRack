@@ -13,7 +13,6 @@ export function CycleButton<T extends string>({
     onNext: () => void;
     variant?: 'primary' | 'secondary' | 'ghost';
 } & ButtonHTMLAttributes<HTMLButtonElement>) {
-
     return (
         <BRButton
             text={state}
@@ -23,5 +22,4 @@ export function CycleButton<T extends string>({
             {...props}
         />
     );
-
 }

@@ -5,14 +5,13 @@ export function StarComponent({
     weight,
     initialFill,
     changeRating,
-    onHover
+    onHover,
 }: {
-    weight: number,
-    initialFill: number,
-    changeRating: (newRating: number) => void
-    onHover: (previewRating: number) => void
+    weight: number;
+    initialFill: number;
+    changeRating: (newRating: number) => void;
+    onHover: (previewRating: number) => void;
 }) {
-
     return (
         <StarIcon
             size={18}
@@ -21,5 +20,4 @@ export function StarComponent({
             onClick={(e) => changeRating(weight - 1 + getStarFraction(e))}
         />
     );
-
 }

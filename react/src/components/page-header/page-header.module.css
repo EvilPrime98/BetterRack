@@ -1,4 +1,4 @@
-.pageHeader{
+.pageHeader {
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -114,6 +114,6 @@
     }
 }
 
-.backButton{
+.backButton {
     min-width: 20px;
 }

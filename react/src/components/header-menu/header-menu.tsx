@@ -14,7 +14,6 @@ function onEnterOrSpace(handler: () => void) {
 }
 
 export function HeaderMenu() {
-
     const [isOpen, setOpen] = useState(false);
     const refreshLibrary = useLibraryStore((s) => s.refreshLibraryWithPrompt);
 
@@ -37,9 +36,10 @@ export function HeaderMenu() {
 
     return (
         <div
-            className={[styles.menuWrap, headerStyles.noDrag, isOpen ? styles.open : ''].filter(Boolean).join(' ')}
+            className={[styles.menuWrap, headerStyles.noDrag, isOpen ? styles.open : '']
+                .filter(Boolean)
+                .join(' ')}
         >
-
             <button
                 type="button"
                 className={headerStyles.iconBtn}
@@ -52,8 +52,11 @@ export function HeaderMenu() {
             </button>
 
             {/* UltraActivity: always mounted, visibility toggled via display */}
-            <ul className={styles.menu} role="menu" style={{ display: isOpen ? undefined : 'none' }}>
-
+            <ul
+                className={styles.menu}
+                role="menu"
+                style={{ display: isOpen ? undefined : 'none' }}
+            >
                 <li
                     className={styles.option}
                     role="menuitem"
@@ -66,10 +69,7 @@ export function HeaderMenu() {
                 >
                     Refresh library
                 </li>
-
             </ul>
-
         </div>
     );
-
 }
