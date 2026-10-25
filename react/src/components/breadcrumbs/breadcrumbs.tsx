@@ -10,21 +10,19 @@ interface ICrumb {
     name: string;
 }
 
-function buildTrail(
-    uid: string,
-    groups: ILibraryGroup[]
-): ICrumb[] {
-
-    const group = groups.find(g => g.uid === uid);
+function buildTrail(uid: string, groups: ILibraryGroup[]): ICrumb[] {
+    const group = groups.find((g) => g.uid === uid);
     if (group) return [{ uid: group.uid, name: group.name }];
 
     const byUid = new Map<string, ILibraryResponseItem>();
     const ownerGroup = new Map<string, ILibraryGroup>();
 
-    groups.forEach(g => g.entries.forEach(entry => {
-        byUid.set(entry.uid, entry);
-        ownerGroup.set(entry.uid, g);
-    }));
+    groups.forEach((g) =>
+        g.entries.forEach((entry) => {
+            byUid.set(entry.uid, entry);
+            ownerGroup.set(entry.uid, g);
+        }),
+    );
 
     const trail: ICrumb[] = [];
     let current = byUid.get(uid);
@@ -40,28 +38,20 @@ function buildTrail(
     }
 
     return trail;
-
 }
 
-export function Breadcrumbs({
-    uid
-}: {
-    uid: string
-}) {
-
+export function Breadcrumbs({ uid }: { uid: string }) {
     const groups = useLibraryStore((s) => s.groups);
 
     const trail = useMemo(() => buildTrail(uid, groups), [uid, groups]);
 
     return (
         <nav className={styles.breadcrumbs} aria-label="Breadcrumb">
-
             <Link to="/" className={styles.crumb}>
                 <span>Library</span>
             </Link>
 
             {trail.map((crumb, i) => {
-
                 const isCurrent = i === trail.length - 1;
 
                 return (
@@ -70,7 +60,10 @@ export function Breadcrumbs({
                             <ChevronDownIcon size={12} />
                         </span>
                         {isCurrent ? (
-                            <span className={[styles.crumb, styles.current].filter(Boolean).join(' ')} aria-current="page">
+                            <span
+                                className={[styles.crumb, styles.current].filter(Boolean).join(' ')}
+                                aria-current="page"
+                            >
                                 {crumb.name}
                             </span>
                         ) : (
@@ -80,10 +73,7 @@ export function Breadcrumbs({
                         )}
                     </Fragment>
                 );
-
             })}
-
         </nav>
     );
-
 }

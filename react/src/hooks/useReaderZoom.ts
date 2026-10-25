@@ -11,13 +11,13 @@ const ZOOM_PERSIST_MS = 300;
 const maxZoomFor = (viewerWidth: number) =>
     Math.max(1, Math.floor(Math.min(MAX_ZOOM, viewerWidth / PAGE_BASE_WIDTH) * 100) / 100);
 
-const clampZoom = (value: number, maxZoom: number) => Math.min(maxZoom, Math.max(MIN_ZOOM, +value.toFixed(2)));
+const clampZoom = (value: number, maxZoom: number) =>
+    Math.min(maxZoom, Math.max(MIN_ZOOM, +value.toFixed(2)));
 
 export function useReaderZoom(
     pageRef: RefObject<HTMLElement | null>,
-    viewerRef: RefObject<HTMLElement | null>
+    viewerRef: RefObject<HTMLElement | null>,
 ) {
-
     const [initialZoom] = useState(() => useUserPrefStore.getState().getPref('zoom'));
     const zoomRef = useRef(initialZoom);
     const frameRef = useRef(0);
@@ -28,21 +28,40 @@ export function useReaderZoom(
         const $viewer = viewerRef.current;
         if (!$viewer) return;
         const $scroller = pageRef.current;
-        const oldHeight = $scroller?.scrollHeight ?? 0;
-        const fraction = $scroller && oldHeight > 0
-            ? ($scroller.scrollTop + $scroller.clientHeight / 2) / oldHeight
-            : null;
+        const $activePage =
+            $scroller?.dataset.mode === 'horizontal' && $scroller.clientWidth > 0
+                ? ($viewer.children[Math.round($scroller.scrollLeft / $scroller.clientWidth)] as
+                      HTMLElement | undefined)
+                : undefined;
+        const $target = $activePage ?? $scroller;
+        const oldHeight = $target?.scrollHeight ?? 0;
+        const oldWidth = $target?.scrollWidth ?? 0;
+        const fractionY =
+            $target && oldHeight > 0
+                ? ($target.scrollTop + $target.clientHeight / 2) / oldHeight
+                : null;
+        const fractionX =
+            $activePage && oldWidth > 0
+                ? ($activePage.scrollLeft + $activePage.clientWidth / 2) / oldWidth
+                : null;
         $viewer.style.setProperty('--reader-zoom', String(zoomRef.current));
-        if ($scroller && fraction !== null) {
-            $scroller.scrollTop = fraction * $scroller.scrollHeight - $scroller.clientHeight / 2;
+        if ($target && fractionY !== null) {
+            $target.scrollTop = fractionY * $target.scrollHeight - $target.clientHeight / 2;
+        }
+        if ($activePage && fractionX !== null) {
+            $activePage.scrollLeft =
+                fractionX * $activePage.scrollWidth - $activePage.clientWidth / 2;
         }
     }, [viewerRef, pageRef]);
 
-    const applyZoom = useCallback((value: number) => {
-        if (value === zoomRef.current) return;
-        zoomRef.current = value;
-        if (!frameRef.current) frameRef.current = requestAnimationFrame(flushZoom);
-    }, [flushZoom]);
+    const applyZoom = useCallback(
+        (value: number) => {
+            if (value === zoomRef.current) return;
+            zoomRef.current = value;
+            if (!frameRef.current) frameRef.current = requestAnimationFrame(flushZoom);
+        },
+        [flushZoom],
+    );
 
     const schedulePersistZoom = useCallback((value: number) => {
         clearTimeout(persistTimerRef.current);
@@ -68,7 +87,10 @@ export function useReaderZoom(
         return width > 0 ? maxZoomFor(width) : MAX_ZOOM;
     }, [pageRef]);
 
-    const clamp = useCallback((value: number) => clampZoom(value, currentMaxZoom()), [currentMaxZoom]);
+    const clamp = useCallback(
+        (value: number) => clampZoom(value, currentMaxZoom()),
+        [currentMaxZoom],
+    );
 
     const zoomIn = useCallback(() => {
         const next = clamp(zoomRef.current + ZOOM_STEP);
@@ -87,14 +109,17 @@ export function useReaderZoom(
         schedulePersistZoom(1);
     }, [applyZoom, schedulePersistZoom]);
 
-    const onWheel = useCallback((e: React.WheelEvent) => {
-        if (!e.ctrlKey) return;
-        // hijack the browser/Electron ctrl+wheel
-        // pinch-zoom and drive our own page zoom instead
-        e.preventDefault();
-        if (e.deltaY < 0) zoomIn();
-        else if (e.deltaY > 0) zoomOut();
-    }, [zoomIn, zoomOut]);
+    const onWheel = useCallback(
+        (e: React.WheelEvent) => {
+            if (!e.ctrlKey) return;
+            // hijack the browser/Electron ctrl+wheel
+            // pinch-zoom and drive our own page zoom instead
+            e.preventDefault();
+            if (e.deltaY < 0) zoomIn();
+            else if (e.deltaY > 0) zoomOut();
+        },
+        [zoomIn, zoomOut],
+    );
 
     useEffect(() => {
         function onKeydown(e: KeyboardEvent) {
@@ -213,5 +238,4 @@ export function useReaderZoom(
     }, [pageRef, clamp, applyZoom, schedulePersistZoom]);
 
     return { onWheel };
-
 }

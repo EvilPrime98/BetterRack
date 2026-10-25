@@ -1,11 +1,10 @@
 export function MenuIcon({
     size = 20,
-    color = '#fff'
+    color = '#fff',
 }: {
     size?: number;
     color?: string;
 } = {}) {
-
     return `<svg
         width="${size}"
         height="${size}"
@@ -17,5 +16,4 @@ export function MenuIcon({
         <circle cx="12" cy="12" r="2"/>
         <circle cx="12" cy="19" r="2"/>
     </svg>`;
-
 }

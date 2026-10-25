@@ -1,4 +1,4 @@
-import { API_URL, authHeaders } from "./server-config.service";
+import { API_URL, authHeaders } from './server-config.service';
 
 let cachedDirectories: string[] | null = null;
 let inFlightRefresh: Promise<string[]> | null = null;

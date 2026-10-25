@@ -1,20 +1,20 @@
-import { UltraActivity, UltraComponent } from "ultra-light-js";
+import { UltraActivity, UltraComponent } from 'ultra-light-js';
 import styles from './comic-card.module.css';
-import type { WikiComic } from "better-wiki";
-import type { TMetaSource } from "@/library.types";
-import { InfoRow } from "./info-row";
-import { Loader } from "@/components/loader/loader";
-import { FandomIcon } from "@/icons/fandom.icon";
-import { XmlIcon } from "@/icons/xml.icon";
+import type { WikiComic } from 'better-wiki';
+import type { TMetaSource } from '@/library.types';
+import { InfoRow } from './info-row';
+import { Loader } from '@/components/loader/loader';
+import { FandomIcon } from '@/icons/fandom.icon';
+import { XmlIcon } from '@/icons/xml.icon';
 
 const metaSourceLabel: Record<TMetaSource, string> = {
     wiki: 'From wiki',
-    comicinfo: 'From ComicInfo.xml'
+    comicinfo: 'From ComicInfo.xml',
 };
 
 const metaSourceIcon: Record<TMetaSource, string> = {
     wiki: FandomIcon(),
-    comicinfo: XmlIcon()
+    comicinfo: XmlIcon(),
 };
 
 export function ComicCardInfo({
@@ -23,7 +23,7 @@ export function ComicCardInfo({
     metaSource,
     subsMetaSource,
     isLoading,
-    subsIsLoading
+    subsIsLoading,
 }: {
     comic: () => WikiComic | null;
     subsComic: (fn: (value: WikiComic | null) => void) => () => void;
@@ -32,7 +32,6 @@ export function ComicCardInfo({
     isLoading: () => boolean;
     subsIsLoading: (fn: (value: boolean) => void) => () => void;
 }) {
-
     const updateMetaSourceBadge = ($badge: HTMLElement) => {
         const source = metaSource();
         if (!source) {
@@ -43,49 +42,48 @@ export function ComicCardInfo({
         $badge.innerHTML = metaSourceIcon[source];
         $badge.title = metaSourceLabel[source];
         $badge.style.display = 'flex';
-    }
+    };
 
     return UltraComponent({
-
         component: '<div></div>',
 
         className: [styles.info],
 
         children: [
-
             Loader({
                 mode: {
                     state: isLoading,
-                    subscriber: subsIsLoading
+                    subscriber: subsIsLoading,
                 },
                 size: 16,
-                className: styles.infoLoader
+                className: styles.infoLoader,
             }),
 
             UltraActivity({
                 mode: {
                     state: () => !isLoading() && !comic(),
-                    subscriber: [subsIsLoading, subsComic]
+                    subscriber: [subsIsLoading, subsComic],
                 },
-                component: `<p class="${styles.infoEmpty}">No information found.</p>`
+                component: `<p class="${styles.infoEmpty}">No information found.</p>`,
             }),
 
             UltraActivity({
                 mode: {
                     state: () => !isLoading() && !!comic(),
-                    subscriber: [subsIsLoading, subsComic]
+                    subscriber: [subsIsLoading, subsComic],
                 },
                 component: '<div></div>',
                 styles: { display: 'contents' },
                 children: [
-
                     UltraComponent({
                         component: `<div class="${styles.metaSourceBadge}"></div>`,
                         onMount: [updateMetaSourceBadge],
-                        trigger: [{
-                            subscriber: subsMetaSource,
-                            triggerFunction: updateMetaSourceBadge
-                        }]
+                        trigger: [
+                            {
+                                subscriber: subsMetaSource,
+                                triggerFunction: updateMetaSourceBadge,
+                            },
+                        ],
                     }),
 
                     InfoRow({
@@ -93,7 +91,7 @@ export function ComicCardInfo({
                         label: 'Comic',
                         onValueChange: ($span) => {
                             $span.textContent = comic()?.title || '';
-                        }
+                        },
                     }),
 
                     InfoRow({
@@ -101,7 +99,7 @@ export function ComicCardInfo({
                         label: 'Volume',
                         onValueChange: ($span) => {
                             $span.textContent = comic()?.volume || '';
-                        }
+                        },
                     }),
 
                     InfoRow({
@@ -109,7 +107,7 @@ export function ComicCardInfo({
                         label: 'Issue',
                         onValueChange: ($span) => {
                             $span.textContent = comic()?.issue || '';
-                        }
+                        },
                     }),
 
                     InfoRow({
@@ -117,7 +115,7 @@ export function ComicCardInfo({
                         label: 'Year',
                         onValueChange: ($span) => {
                             $span.textContent = comic()?.releaseDate?.releaseYear || '';
-                        }
+                        },
                     }),
 
                     InfoRow({
@@ -125,7 +123,7 @@ export function ComicCardInfo({
                         label: 'Writer',
                         onValueChange: ($span) => {
                             $span.textContent = (comic()?.credits?.writers || []).join(', ');
-                        }
+                        },
                     }),
 
                     InfoRow({
@@ -133,7 +131,7 @@ export function ComicCardInfo({
                         label: 'Artist',
                         onValueChange: ($span) => {
                             $span.textContent = (comic()?.credits?.artists || []).join(', ');
-                        }
+                        },
                     }),
 
                     InfoRow({
@@ -142,15 +140,16 @@ export function ComicCardInfo({
                         onValueChange: ($span) => {
                             const releaseDate = comic()?.releaseDate;
                             const { releaseMonth, releaseDay, releaseYear } = releaseDate || {};
-                            $span.textContent = releaseMonth && releaseDay && releaseYear
-                                ? [releaseMonth, releaseDay].map(n => n.padStart(2, '0')).join('/') + `/${releaseYear}`
-                                : '';
-                        }
-                    })
-
-                ]
-            })
-
-        ]
-    })
+                            $span.textContent =
+                                releaseMonth && releaseDay && releaseYear
+                                    ? [releaseMonth, releaseDay]
+                                          .map((n) => n.padStart(2, '0'))
+                                          .join('/') + `/${releaseYear}`
+                                    : '';
+                        },
+                    }),
+                ],
+            }),
+        ],
+    });
 }

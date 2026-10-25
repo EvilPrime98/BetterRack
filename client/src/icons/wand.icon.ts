@@ -1,11 +1,10 @@
 export function WandIcon({
     size = 14,
-    color = '#34c3d1'
+    color = '#34c3d1',
 }: {
     size?: number;
     color?: string;
 } = {}) {
-
     return `<svg
         width="${size}"
         height="${size}"
@@ -17,5 +16,4 @@ export function WandIcon({
         <path d="M17 3l0.8 2.2L20 6l-2.2 0.8L17 9l-0.8-2.2L14 6l2.2-0.8L17 3z" fill="${color}"/>
         <path d="M6.5 13.5l0.5 1.4 1.4 0.5-1.4 0.5-0.5 1.4-0.5-1.4-1.4-0.5 1.4-0.5 0.5-1.4z" fill="${color}"/>
     </svg>`;
-
 }

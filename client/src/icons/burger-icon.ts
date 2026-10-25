@@ -1,11 +1,9 @@
 interface Props {
-  size?: number
+    size?: number;
 }
 
-export function BurgerIcon({
-  size = 24
-}: Props) {
-  return `
+export function BurgerIcon({ size = 24 }: Props) {
+    return `
     <svg
       width="${size}"
       height="${size}"
@@ -21,5 +19,5 @@ export function BurgerIcon({
           fill="#fff">
         </path>
       </g>
-    </svg>`
+    </svg>`;
 }

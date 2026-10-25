@@ -62,7 +62,8 @@ export const useSidebarStore = create<ISidebarStore>((set) => ({
         set({ isPinned, isCollapsed: false, isExpanded: !isPinned });
     },
     expandedGroups: {},
-    toggleGroup: (uid) => set((s) => ({
-        expandedGroups: { ...s.expandedGroups, [uid]: !s.expandedGroups[uid] }
-    })),
+    toggleGroup: (uid) =>
+        set((s) => ({
+            expandedGroups: { ...s.expandedGroups, [uid]: !s.expandedGroups[uid] },
+        })),
 }));

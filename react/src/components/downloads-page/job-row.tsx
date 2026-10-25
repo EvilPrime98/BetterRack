@@ -1,14 +1,13 @@
-import type { TJobStatus } from "@/services/store.service";
-import type { TStoreProgressEvent } from "@/store.types";
+import type { TJobStatus } from '@/services/store.service';
+import type { TStoreProgressEvent } from '@/store.types';
+import { ExternalLink } from '@/components/external-link/external-link';
 import styles from '@/pages/store-downloads.page.module.css';
 
 function percentFor(progress?: TStoreProgressEvent): number | null {
     if (!progress) return null;
     if (progress.type === 'progress') return Math.round(progress.percent);
     if (progress.type === 'extracting') {
-        return progress.total > 0
-            ? Math.round((progress.done / progress.total) * 100)
-            : null;
+        return progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : null;
     }
     return null;
 }
@@ -42,26 +41,32 @@ const STATE_LABEL: Record<TJobStatus['state'], string> = {
     queued: 'Queued',
     running: 'Downloading',
     done: 'Done',
-    error: 'Failed'
+    error: 'Failed',
 };
 
-export function JobRow({ job, onRetry, retrying, onStop, stopping }: {
+export function JobRow({
+    job,
+    onRetry,
+    retrying,
+    onStop,
+    stopping,
+}: {
     job: TJobStatus;
     onRetry: (jobId: string) => void;
     retrying: boolean;
     onStop: (job: TJobStatus) => void;
     stopping: boolean;
 }) {
-
     const percent = percentFor(job.progress);
     const detail = detailFor(job.progress);
 
     return (
         <li className={styles.row} data-state={job.state}>
-
             <div className={styles.rowHead}>
                 <span className={styles.label}>{job.label}</span>
-                <span className={styles.badge} data-state={job.state}>{STATE_LABEL[job.state]}</span>
+                <span className={styles.badge} data-state={job.state}>
+                    {STATE_LABEL[job.state]}
+                </span>
             </div>
 
             {percent !== null && (
@@ -73,7 +78,16 @@ export function JobRow({ job, onRetry, retrying, onStop, stopping }: {
                 </>
             )}
 
-            {detail && <span className={styles.detail}>{detail}</span>}
+            {(detail || job.pageUrl) && (
+                <div className={styles.detailRow}>
+                    {detail && <span className={styles.detail}>{detail}</span>}
+                    {job.pageUrl && (
+                        <ExternalLink className={styles.pageLink} href={job.pageUrl}>
+                            Open comic page
+                        </ExternalLink>
+                    )}
+                </div>
+            )}
 
             {job.state === 'error' && (
                 <button
@@ -96,8 +110,6 @@ export function JobRow({ job, onRetry, retrying, onStop, stopping }: {
                     Stop
                 </button>
             )}
-
         </li>
     );
-
 }

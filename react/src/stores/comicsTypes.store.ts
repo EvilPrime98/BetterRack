@@ -9,7 +9,6 @@ interface IComicsTypeStore {
 }
 
 export const useComicsTypeStore = create<IComicsTypeStore>((set, get) => ({
-
     type: 'detail',
 
     init: () => {
@@ -21,6 +20,5 @@ export const useComicsTypeStore = create<IComicsTypeStore>((set, get) => ({
         const nextType = get().type === 'cover' ? 'detail' : 'cover';
         set({ type: nextType });
         useUserPrefStore.getState().setPref({ comicType: nextType });
-    }
-
+    },
 }));

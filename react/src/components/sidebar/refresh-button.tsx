@@ -3,7 +3,6 @@ import { useLibraryStore } from '@/stores/library.store';
 import styles from './sidebar.module.css';
 
 export function RefreshLibraryButton() {
-
     // useLibraryStore doesn't expose a shared fetching flag, so "spinning" reflects only
     // this button's own refreshLibrary() call, not any in-flight fetch from elsewhere.
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -22,7 +21,9 @@ export function RefreshLibraryButton() {
 
     return (
         <button
-            className={[styles.refreshButton, isBusy ? styles.spinning : ''].filter(Boolean).join(' ')}
+            className={[styles.refreshButton, isBusy ? styles.spinning : '']
+                .filter(Boolean)
+                .join(' ')}
             aria-label="Refresh library"
             onClick={handleRefresh}
             disabled={isBusy}
@@ -35,5 +36,4 @@ export function RefreshLibraryButton() {
             </span>
         </button>
     );
-
 }

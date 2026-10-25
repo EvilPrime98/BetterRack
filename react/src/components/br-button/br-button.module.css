@@ -15,11 +15,12 @@
     cursor: pointer;
     user-select: none;
     text-transform: capitalize;
-    transition: background-color 0.25s ease-in-out, 
-    border-color 0.15s ease, 
-    color 0.15s ease, 
-    scale .15s ease-in-out,
-    transform 0.1s ease;
+    transition:
+        background-color 0.25s ease-in-out,
+        border-color 0.15s ease,
+        color 0.15s ease,
+        scale 0.15s ease-in-out,
+        transform 0.1s ease;
 }
 
 .button:focus-visible {
@@ -39,7 +40,7 @@
 }
 
 .primary:hover:not(:disabled) {
-    background: var(--mui-palette-primary-dark)
+    background: var(--mui-palette-primary-dark);
 }
 
 .primary:active:not(:disabled) {

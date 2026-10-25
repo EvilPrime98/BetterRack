@@ -9,12 +9,7 @@ import { FolderPlusIcon } from '@/icons/folder-plus.icon';
 import { ChevronDownIcon } from '@/icons/chevron.icon';
 import type { ILibraryGroup } from '@/library.types';
 
-export function SideBarGroup({
-    group
-}: {
-    group: ILibraryGroup
-}) {
-
+export function SideBarGroup({ group }: { group: ILibraryGroup }) {
     const listId = useId();
     const isExpanded = useSidebarStore((s) => !!s.expandedGroups[group.uid]);
     const toggleGroup = useSidebarStore((s) => s.toggleGroup);
@@ -30,13 +25,10 @@ export function SideBarGroup({
         openNewFolderModal(group.uid);
     }
 
-    const entries = isExpanded
-    ? getLibraryItems({ onlyDir: true, uid: group.uid })
-    : [];
+    const entries = isExpanded ? getLibraryItems({ onlyDir: true, uid: group.uid }) : [];
 
     return (
         <div className={styles.group}>
-
             <div className={styles.groupHeader}>
                 <button
                     type="button"
@@ -51,7 +43,9 @@ export function SideBarGroup({
                     </span>
                     <span className={styles.groupHeaderLabel}>{group.name}</span>
                     <span
-                        className={[styles.chevron, isExpanded ? styles.chevronExpanded : ''].filter(Boolean).join(' ')}
+                        className={[styles.chevron, isExpanded ? styles.chevronExpanded : '']
+                            .filter(Boolean)
+                            .join(' ')}
                         aria-hidden="true"
                     >
                         <ChevronDownIcon size={14} />
@@ -77,12 +71,10 @@ export function SideBarGroup({
                 className={styles.groupList}
                 hidden={!isExpanded}
             >
-                {entries.map(item => (
+                {entries.map((item) => (
                     <SideBarElement key={item.uid} item={item} />
                 ))}
             </div>
-
         </div>
     );
-
 }

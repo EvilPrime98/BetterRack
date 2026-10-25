@@ -1,6 +1,11 @@
-import { ultraCompState, type IUltraCompStateStateful } from "ultra-light-js";
-import { getSettings, updateSettings as requestUpdateSettings, addLibraryFolder as requestAddLibraryFolder, removeLibraryFolder as requestRemoveLibraryFolder } from "../services/settings.service";
-import type { IAppSettings } from "../settings.types";
+import { ultraCompState, type IUltraCompStateStateful } from 'ultra-light-js';
+import {
+    getSettings,
+    updateSettings as requestUpdateSettings,
+    addLibraryFolder as requestAddLibraryFolder,
+    removeLibraryFolder as requestRemoveLibraryFolder,
+} from '../services/settings.service';
+import type { IAppSettings } from '../settings.types';
 
 export interface ISettingsCtx {
     settings: IUltraCompStateStateful<IAppSettings>;
@@ -11,7 +16,6 @@ export interface ISettingsCtx {
 }
 
 export const SETTINGS_CONTEXT: ISettingsCtx = ultraCompState({
-
     settings: {
         outputDirs: [],
         apiUrl: '',
@@ -26,7 +30,10 @@ export const SETTINGS_CONTEXT: ISettingsCtx = ultraCompState({
         comp.settings.set(data);
     },
 
-    updateSettings: async (comp: ISettingsCtx, partial: Partial<Omit<IAppSettings, 'outputDirs'>>) => {
+    updateSettings: async (
+        comp: ISettingsCtx,
+        partial: Partial<Omit<IAppSettings, 'outputDirs'>>,
+    ) => {
         const data = await requestUpdateSettings(partial);
         comp.settings.set(data);
     },
@@ -40,5 +47,4 @@ export const SETTINGS_CONTEXT: ISettingsCtx = ultraCompState({
         const data = await requestRemoveLibraryFolder(path);
         comp.settings.set(data);
     },
-
 });

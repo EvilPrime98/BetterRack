@@ -10,28 +10,21 @@ import { LinkPickerModal } from '@/components/link-picker-modal/link-picker-moda
 import { useSidebarStore } from '@/stores/sidebar.store';
 import styles from './layout.module.css';
 
-export function Layout({
-    children
-}: {
-    children: ReactNode
-}) {
-
+export function Layout({ children }: { children: ReactNode }) {
     const isCollapsed = useSidebarStore((s) => s.isCollapsed);
     const isPinned = useSidebarStore((s) => s.isPinned);
 
     return (
-        <main className={[
-            styles.layout,
-            (isCollapsed || !isPinned) ? styles.sidebarCollapsed : ''
-        ].filter(Boolean).join(' ')}>
-
+        <main
+            className={[styles.layout, isCollapsed || !isPinned ? styles.sidebarCollapsed : '']
+                .filter(Boolean)
+                .join(' ')}
+        >
             <Header />
 
             <SideBar />
 
-            <div className={styles.content}>
-                {children}
-            </div>
+            <div className={styles.content}>{children}</div>
 
             <ComicIdentifier />
 
@@ -44,8 +37,6 @@ export function Layout({
             <DownloadDirModal />
 
             <LinkPickerModal />
-
         </main>
     );
-
 }

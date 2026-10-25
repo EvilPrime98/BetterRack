@@ -5,7 +5,6 @@ import { useComicCacheStore } from '@/stores/comicCache.store';
 import { preloadWindow } from '@/utils/reader.page.utils';
 
 export function useComicPages(uid: string | undefined) {
-
     const [pages, setPages] = useState<string[]>([]);
     const [title, setTitle] = useState('');
     const [isLoading, setIsLoading] = useState(true);
@@ -63,5 +62,4 @@ export function useComicPages(uid: string | undefined) {
     }, [loadPages]);
 
     return { pages, title, isLoading, hasError, bookmarks, isRefreshing, loadPages, refreshComic };
-
 }

@@ -1,4 +1,4 @@
-import { ultraCompState, type IUltraCompStateStateful } from "ultra-light-js";
+import { ultraCompState, type IUltraCompStateStateful } from 'ultra-light-js';
 
 const COLLAPSED_KEY = 'better-rack-sidebar-collapsed';
 
@@ -45,8 +45,8 @@ export const SIDEBAR_CONTEXT: ISidebarCtx = ultraCompState({
     toggleGroup: (comp: ISidebarCtx, uid: string) => {
         const current = comp.expandedGroups.get();
         comp.expandedGroups.set({ ...current, [uid]: !current[uid] });
-    }
-})
+    },
+});
 
 SIDEBAR_CONTEXT.isCompact.subscribe(() => {
     if (typeof window === 'undefined') return;

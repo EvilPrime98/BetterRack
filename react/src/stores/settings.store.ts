@@ -1,5 +1,10 @@
 import { create } from 'zustand';
-import { getSettings, updateSettings as requestUpdateSettings, addLibraryFolder as requestAddLibraryFolder, removeLibraryFolder as requestRemoveLibraryFolder } from '../services/settings.service';
+import {
+    getSettings,
+    updateSettings as requestUpdateSettings,
+    addLibraryFolder as requestAddLibraryFolder,
+    removeLibraryFolder as requestRemoveLibraryFolder,
+} from '../services/settings.service';
 import type { IAppSettings } from '../settings.types';
 
 interface ISettingsStore {
@@ -11,7 +16,6 @@ interface ISettingsStore {
 }
 
 export const useSettingsStore = create<ISettingsStore>((set) => ({
-
     settings: {
         outputDirs: [],
         apiUrl: '',
@@ -40,5 +44,4 @@ export const useSettingsStore = create<ISettingsStore>((set) => ({
         const data = await requestRemoveLibraryFolder(path);
         set({ settings: data });
     },
-
 }));

@@ -17,21 +17,28 @@ export function NewFolderModalProvider({ children }: { children: ReactNode }) {
         setIsVisible(false);
     }, []);
 
-    const submitNewFolder = useCallback(async (folderName: string) => {
-        const trimmed = folderName.trim();
-        if (!trimmed) return;
-        closeNewFolderModal();
-        await useLibraryStore.getState().createFolder(trimmed, parentFolderUidRef.current);
-    }, [closeNewFolderModal]);
+    const submitNewFolder = useCallback(
+        async (folderName: string) => {
+            const trimmed = folderName.trim();
+            if (!trimmed) return;
+            closeNewFolderModal();
+            await useLibraryStore.getState().createFolder(trimmed, parentFolderUidRef.current);
+        },
+        [closeNewFolderModal],
+    );
 
-    const value = useMemo(() => ({
-        isVisible, parentFolderUid,
-        openNewFolderModal, closeNewFolderModal, submitNewFolder
-    }), [isVisible, parentFolderUid, openNewFolderModal, closeNewFolderModal, submitNewFolder]);
+    const value = useMemo(
+        () => ({
+            isVisible,
+            parentFolderUid,
+            openNewFolderModal,
+            closeNewFolderModal,
+            submitNewFolder,
+        }),
+        [isVisible, parentFolderUid, openNewFolderModal, closeNewFolderModal, submitNewFolder],
+    );
 
     return (
-        <NewFolderModalContext.Provider value={value}>
-            {children}
-        </NewFolderModalContext.Provider>
+        <NewFolderModalContext.Provider value={value}>{children}</NewFolderModalContext.Provider>
     );
 }

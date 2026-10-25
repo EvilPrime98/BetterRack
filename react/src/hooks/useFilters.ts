@@ -2,11 +2,8 @@ import { useState } from 'react';
 import { FILTER_OPTIONS, type ILibraryFilters, type ILibraryResponseItem } from '../library.types';
 import { useUserPrefStore } from '../stores/userPref.store';
 
-function sortByReleaseDate(
-    data: ILibraryResponseItem[]
-): ILibraryResponseItem[] {
-    return data
-    .sort((a, b) => {
+function sortByReleaseDate(data: ILibraryResponseItem[]): ILibraryResponseItem[] {
+    return data.sort((a, b) => {
         const aDate = a.comic?.releaseDate;
         const bDate = b.comic?.releaseDate;
         if (!aDate || !bDate) return -1;
@@ -14,13 +11,13 @@ function sortByReleaseDate(
         if (r1 !== 0) return r1;
         const r2 = Number(aDate.releaseMonth) - Number(bDate.releaseMonth);
         if (r2 !== 0) return r2;
-        return Number(aDate.releaseDay) - Number(bDate.releaseDay)
-    })
+        return Number(aDate.releaseDay) - Number(bDate.releaseDay);
+    });
 }
 
 export function applyFilters(
     rawItems: ILibraryResponseItem[],
-    filters: ILibraryFilters
+    filters: ILibraryFilters,
 ): ILibraryResponseItem[] {
     const items = [...rawItems];
     if (filters.sortByReleaseDate) sortByReleaseDate(items);
@@ -28,10 +25,10 @@ export function applyFilters(
 }
 
 export function useFilters() {
-
     const [filters, setFiltersState] = useState<ILibraryFilters>(() => ({
         sortByCreation: false,
-        sortByReleaseDate: useUserPrefStore.getState().getPref('filter') === FILTER_OPTIONS.byReleaseDate
+        sortByReleaseDate:
+            useUserPrefStore.getState().getPref('filter') === FILTER_OPTIONS.byReleaseDate,
     }));
 
     function setFilters(updates: Partial<ILibraryFilters>) {
@@ -46,6 +43,5 @@ export function useFilters() {
         filters,
         setFilters,
         resetFilters,
-    }
-
+    };
 }

@@ -13,7 +13,6 @@ interface IStorePageState {
 }
 
 export const useStorePageStore = create<IStorePageState>((set) => ({
-
     query: '',
     activeSearch: '',
     results: [],
@@ -22,6 +21,5 @@ export const useStorePageStore = create<IStorePageState>((set) => ({
     hasLoaded: false,
     scrollY: 0,
 
-    set: (patch) => set(patch)
-
+    set: (patch) => set(patch),
 }));

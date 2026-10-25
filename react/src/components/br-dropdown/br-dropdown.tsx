@@ -27,13 +27,15 @@ export function BRDropdown<T extends string>({
     className,
     ...aria
 }: BRDropdownProps<T>) {
-
     const rootRef = useRef<HTMLDivElement>(null);
     const listId = useId();
     const [isOpen, setIsOpen] = useState(false);
     const [activeIndex, setActiveIndex] = useState(0);
 
-    const selectedIndex = Math.max(0, options.findIndex((o) => o.value === value));
+    const selectedIndex = Math.max(
+        0,
+        options.findIndex((o) => o.value === value),
+    );
     const selected = options[selectedIndex];
 
     useEffect(() => {
@@ -97,7 +99,6 @@ export function BRDropdown<T extends string>({
 
     return (
         <div ref={rootRef} className={[styles.root, className].filter(Boolean).join(' ')}>
-
             <button
                 id={id}
                 type="button"
@@ -112,13 +113,20 @@ export function BRDropdown<T extends string>({
                 {...aria}
             >
                 <span className={styles.label}>
-                    {triggerLabel === undefined && options.map((o) => (
-                        <span key={o.value} className={styles.sizer} aria-hidden="true">{o.label}</span>
-                    ))}
-                    <span className={styles.current} title={triggerLabel}>{triggerLabel ?? selected?.label}</span>
+                    {triggerLabel === undefined &&
+                        options.map((o) => (
+                            <span key={o.value} className={styles.sizer} aria-hidden="true">
+                                {o.label}
+                            </span>
+                        ))}
+                    <span className={styles.current} title={triggerLabel}>
+                        {triggerLabel ?? selected?.label}
+                    </span>
                 </span>
                 <svg
-                    className={[styles.chevron, isOpen ? styles.chevronOpen : ''].filter(Boolean).join(' ')}
+                    className={[styles.chevron, isOpen ? styles.chevronOpen : '']
+                        .filter(Boolean)
+                        .join(' ')}
                     viewBox="0 0 12 12"
                     fill="none"
                     aria-hidden="true"
@@ -133,14 +141,20 @@ export function BRDropdown<T extends string>({
                         <li
                             key={option.value}
                             id={`${listId}-${index}`}
-                            ref={index === activeIndex ? (el) => el?.scrollIntoView({ block: 'nearest' }) : undefined}
+                            ref={
+                                index === activeIndex
+                                    ? (el) => el?.scrollIntoView({ block: 'nearest' })
+                                    : undefined
+                            }
                             role="option"
                             aria-selected={option.value === value}
                             className={[
                                 styles.option,
                                 index === activeIndex ? styles.active : '',
-                                option.value === value ? styles.selected : ''
-                            ].filter(Boolean).join(' ')}
+                                option.value === value ? styles.selected : '',
+                            ]
+                                .filter(Boolean)
+                                .join(' ')}
                             onPointerEnter={() => setActiveIndex(index)}
                             onClick={() => select(index)}
                         >
@@ -149,8 +163,6 @@ export function BRDropdown<T extends string>({
                     ))}
                 </ul>
             )}
-
         </div>
     );
-
 }

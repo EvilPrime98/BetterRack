@@ -7,7 +7,6 @@ import { useComicById } from '@/hooks/useComicById';
 import { ComicContent } from '@/components/details-page/content';
 
 export function DetailsPage() {
-
     const { pageId } = useParams<{ pageId?: string }>();
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
@@ -21,9 +20,7 @@ export function DetailsPage() {
     return (
         <Layout>
             <section className={styles.page}>
-
                 <header className={styles.header}>
-
                     <button
                         type="button"
                         className={styles.backButton}
@@ -35,11 +32,13 @@ export function DetailsPage() {
 
                     <div className={styles.summary}>
                         <span className={styles.eyebrow}>
-                            {comic?.volume || 'Comic'}{comic?.issue ? ` #${comic.issue}` : ''}
+                            {comic?.volume || 'Comic'}
+                            {comic?.issue ? ` #${comic.issue}` : ''}
                         </span>
-                        <h1 className={styles.title}>{comic?.title || (loading ? 'Loading…' : 'Comic details')}</h1>
+                        <h1 className={styles.title}>
+                            {comic?.title || (loading ? 'Loading…' : 'Comic details')}
+                        </h1>
                     </div>
-
                 </header>
 
                 {loading ? (
@@ -49,9 +48,7 @@ export function DetailsPage() {
                 ) : comic ? (
                     <ComicContent comic={comic} navigate={navigate} />
                 ) : null}
-
             </section>
         </Layout>
     );
-
 }

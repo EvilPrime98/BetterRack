@@ -1,11 +1,4 @@
-export function StarIcon({
-    size = 24,
-    fill = 1
-}: {
-    size?: number;
-    fill?: number;
-}) {
-    
+export function StarIcon({ size = 24, fill = 1 }: { size?: number; fill?: number }) {
     const percent = Math.max(0, Math.min(1, fill));
     const clipWidth = 16 * percent;
     const clipId = `star-fill-${Math.random().toString(36).slice(2)}`;

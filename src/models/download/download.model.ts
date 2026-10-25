@@ -41,6 +41,8 @@ function abortableSleep(
 
 const CUSTOM_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
+export const CLOUDFLARE_CHALLENGE_ERROR = 'Cloudflare challenge detected.';
+
 const CLOUDFLARE_CHALLENGE_MARKERS = [
     'cloudflare',
     'just a moment',
@@ -308,7 +310,7 @@ export class DownloadModel {
             if (contentType.includes('text/html')) {
                 const preview = await response.clone().text();
                 if (this.isCloudflareChallengePage(preview)) {
-                    const error = 'Cloudflare challenge detected. Open the comic in a browser or use a browser-side download path.';
+                    const error = CLOUDFLARE_CHALLENGE_ERROR;
                     this.proxyLogger(quiet).error(error);
                     throw new FatalDownloadError(error);
                 }

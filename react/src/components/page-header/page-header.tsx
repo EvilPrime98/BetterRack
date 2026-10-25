@@ -16,7 +16,7 @@ type TSortOption = 'alphabetical' | 'releaseDate';
 
 const SORT_OPTIONS: BRDropdownOption<TSortOption>[] = [
     { value: 'alphabetical', label: FILTER_OPTIONS.nofilters },
-    { value: 'releaseDate', label: FILTER_OPTIONS.byReleaseDate }
+    { value: 'releaseDate', label: FILTER_OPTIONS.byReleaseDate },
 ];
 
 export function PageHeader({
@@ -25,7 +25,7 @@ export function PageHeader({
     filters,
     setFilters,
     resetFilters,
-    showNewFolder = false
+    showNewFolder = false,
 }: {
     uid?: string;
     items: ILibraryResponseItem[];
@@ -34,32 +34,30 @@ export function PageHeader({
     resetFilters: () => void;
     showNewFolder?: boolean;
 }) {
-
     const navigate = useNavigate();
     const { openNewFolderModal } = useNewFolderModalContext();
-    const title = useLibraryStore((s) => s.groups)
-        .flatMap(g => g.entries).find(e => e.uid === uid)?.name || 'Root';
+    const title =
+        useLibraryStore((s) => s.groups)
+            .flatMap((g) => g.entries)
+            .find((e) => e.uid === uid)?.name || 'Root';
 
     return (
         <header className={styles.pageHeader}>
-
             {/* {uid ? <Breadcrumbs uid={uid} /> : null} */}
 
             <div className={styles.filtersRow}>
-
                 <div className={styles.left}>
-                    {uid
-                        ? <BRButton
+                    {uid ? (
+                        <BRButton
                             className={styles.backButton}
-                            text=''
-                            variant='secondary'
+                            text=""
+                            variant="secondary"
                             onClick={() => navigate(-1)}
                             aria-label="Back to library"
                         >
                             <ArrowLeftIcon size={16} />
                         </BRButton>
-                        : null
-                    }
+                    ) : null}
                     <BRDropdown<TSortOption>
                         className={styles.sortDropdown}
                         options={SORT_OPTIONS}
@@ -82,7 +80,7 @@ export function PageHeader({
                             <span className={styles.divider} aria-hidden="true" />
                             <BRButton
                                 text="New Folder"
-                                variant='secondary'
+                                variant="secondary"
                                 className={styles.newFolderButton}
                                 onClick={() => openNewFolderModal(uid)}
                             >
@@ -91,10 +89,7 @@ export function PageHeader({
                         </>
                     ) : null}
                 </div>
-
             </div>
-
         </header>
     );
-
 }

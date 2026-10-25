@@ -1,5 +1,13 @@
 import { create } from 'zustand';
-import { getStoredServerUrl, isRemoteModeEnabled, needsServerSetup, setServerUrl, setRemoteServer, setStoredApiKey, isAndroidPlatform } from '../services/server-config.service';
+import {
+    getStoredServerUrl,
+    isRemoteModeEnabled,
+    needsServerSetup,
+    setServerUrl,
+    setRemoteServer,
+    setStoredApiKey,
+    isAndroidPlatform,
+} from '../services/server-config.service';
 
 export { getStoredServerUrl };
 
@@ -17,7 +25,6 @@ interface IServerModalStore {
 }
 
 export const useServerModalStore = create<IServerModalStore>((set, get) => ({
-
     isVisible: false,
     isMandatory: false,
     error: '',
@@ -58,6 +65,5 @@ export const useServerModalStore = create<IServerModalStore>((set, get) => ({
         if (getStoredServerUrl() !== urlBefore || isRemoteModeEnabled() !== remoteBefore) {
             window.location.reload();
         }
-    }
-
+    },
 }));

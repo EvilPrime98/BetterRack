@@ -14,7 +14,9 @@ interface IComicIdentStore {
     lastUnidentified: { uid: string } | null;
     setIsVisible: (isVisible: boolean) => void;
     setItemUid: (itemUid: string) => void;
-    setLastIdentified: (value: { uid: string; comic: WikiComic; metaSource: TMetaSource } | null) => void;
+    setLastIdentified: (
+        value: { uid: string; comic: WikiComic; metaSource: TMetaSource } | null,
+    ) => void;
     setLastUnidentified: (value: { uid: string } | null) => void;
 }
 

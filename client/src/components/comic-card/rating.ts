@@ -1,16 +1,11 @@
-import { UltraComponent, ultraState } from "ultra-light-js"
-import styles from './comic-card.module.css'
-import { StarComponent } from "../star-component/star-component";
-import { COMIC_CACHE_CONTEXT } from "../../context/comic-cache.context";
+import { UltraComponent, ultraState } from 'ultra-light-js';
+import styles from './comic-card.module.css';
+import { StarComponent } from '../star-component/star-component';
+import { COMIC_CACHE_CONTEXT } from '../../context/comic-cache.context';
 
-export function ComicRating({
-    uid
-}: {
-    uid: string
-}) {
-
+export function ComicRating({ uid }: { uid: string }) {
     const [rating, setRating, subsRating] = ultraState(
-        COMIC_CACHE_CONTEXT.getCacheById(uid)?.rating || 0
+        COMIC_CACHE_CONTEXT.getCacheById(uid)?.rating || 0,
     );
 
     COMIC_CACHE_CONTEXT.subscribeById(uid, (entry) => {
@@ -19,8 +14,8 @@ export function ComicRating({
 
     const changeRating = (newRating: number) => {
         setRating(newRating);
-        COMIC_CACHE_CONTEXT.setCacheById(uid, { rating: newRating })
-    }
+        COMIC_CACHE_CONTEXT.setCacheById(uid, { rating: newRating });
+    };
 
     let $container: HTMLElement | null = null;
 
@@ -34,9 +29,9 @@ export function ComicRating({
         for (let i = 0; i < stars.length; i++) {
             const $fillRect = stars[i].querySelector('.fillRect');
             const fraction = Math.max(0, Math.min(1, value - i));
-            $fillRect?.setAttribute('width', String(16 * fraction))
+            $fillRect?.setAttribute('width', String(16 * fraction));
         }
-    }
+    };
 
     const onRatingChange = ($div: HTMLElement) => {
         $container = $div;
@@ -47,24 +42,25 @@ export function ComicRating({
                     weight: i + 1,
                     changeRating,
                     onHover: applyFill,
-                    initialFill: Math.max(0, Math.min(1, rating() - i))
-                })
+                    initialFill: Math.max(0, Math.min(1, rating() - i)),
+                }),
             );
         }
         $div.replaceChildren(...stars);
-    }
+    };
 
     return UltraComponent({
         component: '<div></div>',
         className: [styles.rating],
         onMount: [onRatingChange],
         eventHandler: {
-            mouseleave: () => applyFill(rating())
+            mouseleave: () => applyFill(rating()),
         },
-        trigger: [{
-            subscriber: subsRating,
-            triggerFunction: onRatingChange
-        }]
+        trigger: [
+            {
+                subscriber: subsRating,
+                triggerFunction: onRatingChange,
+            },
+        ],
     });
-
 }

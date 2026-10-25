@@ -1,4 +1,4 @@
-import { UltraComponent, ultraState } from "ultra-light-js";
+import { UltraComponent, ultraState } from 'ultra-light-js';
 import styles from './window-controls.module.css';
 
 const MINIMIZE_ICON = `<svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor">
@@ -19,7 +19,6 @@ const CLOSE_ICON = `<svg width="10" height="10" viewBox="0 0 10 10" fill="none" 
 </svg>`;
 
 export function WindowControls() {
-
     // macOS keeps its native traffic lights
     const isEnabled = !!window.desktop?.minimizeWindow && window.versions?.platform !== 'darwin';
     if (!isEnabled) return null;
@@ -29,10 +28,9 @@ export function WindowControls() {
     const onMaximizedChange = ($button: HTMLElement) => {
         $button.setAttribute('aria-label', isMaximized() ? 'Restore' : 'Maximize');
         $button.innerHTML = isMaximized() ? RESTORE_ICON : MAXIMIZE_ICON;
-    }
+    };
 
     return UltraComponent({
-
         component: '<div></div>',
 
         className: [styles.controls],
@@ -41,16 +39,15 @@ export function WindowControls() {
             () => {
                 window.desktop?.isWindowMaximized().then(setIsMaximized);
                 return window.desktop?.onMaximizedChange(setIsMaximized);
-            }
+            },
         ],
 
         children: [
-
             UltraComponent({
                 component: `<button type="button">${MINIMIZE_ICON}</button>`,
                 className: [styles.button],
                 attributes: { 'aria-label': 'Minimize' },
-                eventHandler: { click: () => window.desktop?.minimizeWindow() }
+                eventHandler: { click: () => window.desktop?.minimizeWindow() },
             }),
 
             UltraComponent({
@@ -58,20 +55,15 @@ export function WindowControls() {
                 className: [styles.button],
                 attributes: { 'aria-label': 'Maximize' },
                 eventHandler: { click: () => window.desktop?.toggleMaximizeWindow() },
-                trigger: [
-                    { subscriber: subsIsMaximized, triggerFunction: onMaximizedChange }
-                ]
+                trigger: [{ subscriber: subsIsMaximized, triggerFunction: onMaximizedChange }],
             }),
 
             UltraComponent({
                 component: `<button type="button">${CLOSE_ICON}</button>`,
                 className: [styles.button, styles.close],
                 attributes: { 'aria-label': 'Close' },
-                eventHandler: { click: () => window.desktop?.closeWindow() }
-            })
-
-        ]
-
-    })
-
+                eventHandler: { click: () => window.desktop?.closeWindow() },
+            }),
+        ],
+    });
 }

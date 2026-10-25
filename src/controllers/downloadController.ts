@@ -4,6 +4,7 @@ import { streamSSE } from "hono/streaming";
 import type { fsModel } from "#src/types.ts";
 import { logger } from "#utils/logger";
 import type { TJob, TJobModel, TJobState } from "#src/types/jobs.types.ts";
+import { CLOUDFLARE_CHALLENGE_ERROR } from "#src/models/download/download.model.ts";
 
 const log = logger.child({ module: 'DownloadController' });
 
@@ -78,11 +79,14 @@ export class DownloadController {
     private toStatusPayload(
         job: TJob<TProgressEvent>
     ) {
+        const blockedByCloudflare = job.progress?.type === 'error'
+            && job.progress.message === CLOUDFLARE_CHALLENGE_ERROR;
         return {
             jobId: job.id,
             state: job.state,
             label: job.label,
-            progress: job.progress
+            progress: job.progress,
+            ...(blockedByCloudflare && { pageUrl: this.gcwModel.getPostPageUrl(job.request.comicId) })
         };
     }
 

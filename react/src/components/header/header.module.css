@@ -44,7 +44,6 @@
 }
 
 @media (min-width: 801px) {
-    
     .header {
         grid-template-columns: auto minmax(0, var(--content-max-width)) minmax(20px, 1fr);
     }
@@ -65,7 +64,6 @@
         transform: scale(0.6);
         pointer-events: none;
     }
-
 }
 
 .header::after {
@@ -80,13 +78,11 @@
 }
 
 .left {
-
     display: flex;
     align-items: center;
     gap: 10px;
 
     .text {
-
         display: flex;
         flex-direction: column;
         gap: 1px;
@@ -98,9 +94,7 @@
             letter-spacing: -0.2px;
             line-height: 1.1;
         }
-
     }
-
 }
 
 .logo {
@@ -144,7 +138,9 @@
     border-radius: 8px;
     color: #fff;
     cursor: pointer;
-    transition: background-color 150ms ease, transform 100ms ease;
+    transition:
+        background-color 150ms ease,
+        transform 100ms ease;
     outline: none;
 }
 

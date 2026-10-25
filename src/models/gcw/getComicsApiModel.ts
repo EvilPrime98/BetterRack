@@ -307,6 +307,10 @@ export class GetComicsApiModel implements TGetComicsApiModel {
         return result;
     };
 
+    getPostPageUrl = (postId: number): string => {
+        return `${this.storeOrigin}/?p=${postId}`;
+    };
+
     getDownloadLinkFromPost = async (
         postId: number,
         strat: TStrat,

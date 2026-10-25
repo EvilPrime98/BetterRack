@@ -17,19 +17,25 @@ export function MoveFileModalProvider({ children }: { children: ReactNode }) {
         setIsVisible(false);
     }, []);
 
-    const selectMoveTarget = useCallback(async (targetFolderUid?: string) => {
-        closeMoveFileModal();
-        await useLibraryStore.getState().moveFile(fileUid, targetFolderUid);
-    }, [fileUid, closeMoveFileModal]);
-
-    const value = useMemo(() => ({
-        isVisible, fileUid, fileName,
-        openMoveFileModal, closeMoveFileModal, selectMoveTarget
-    }), [isVisible, fileUid, fileName, openMoveFileModal, closeMoveFileModal, selectMoveTarget]);
-
-    return (
-        <MoveFileModalContext.Provider value={value}>
-            {children}
-        </MoveFileModalContext.Provider>
+    const selectMoveTarget = useCallback(
+        async (targetFolderUid?: string) => {
+            closeMoveFileModal();
+            await useLibraryStore.getState().moveFile(fileUid, targetFolderUid);
+        },
+        [fileUid, closeMoveFileModal],
     );
+
+    const value = useMemo(
+        () => ({
+            isVisible,
+            fileUid,
+            fileName,
+            openMoveFileModal,
+            closeMoveFileModal,
+            selectMoveTarget,
+        }),
+        [isVisible, fileUid, fileName, openMoveFileModal, closeMoveFileModal, selectMoveTarget],
+    );
+
+    return <MoveFileModalContext.Provider value={value}>{children}</MoveFileModalContext.Provider>;
 }

@@ -1,5 +1,4 @@
 .folderCard {
-
     position: relative;
     z-index: 0;
     display: flex;
@@ -14,8 +13,9 @@
     border-radius: 14px;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0));
     border: 1px solid rgba(255, 255, 255, 0);
-    transition: box-shadow 220ms ease,
-    scale .25s ease-in-out;
+    transition:
+        box-shadow 220ms ease,
+        scale 0.25s ease-in-out;
 
     .cardLink {
         display: flex;
@@ -53,7 +53,6 @@
         span {
             text-transform: capitalize;
         }
-        
     }
 
     .basicFolderCard {
@@ -94,39 +93,41 @@
         box-shadow: none;
     }
 
-    .stack>* {
+    .stack > * {
         position: absolute;
         inset: 0;
-        transition: transform 220ms ease, filter 220ms ease;
+        transition:
+            transform 220ms ease,
+            filter 220ms ease;
     }
 
-    .stack>*:nth-child(1) {
+    .stack > *:nth-child(1) {
         z-index: 3;
         transform: rotate(-2deg);
     }
 
-    .stack>*:nth-child(2) {
+    .stack > *:nth-child(2) {
         z-index: 2;
         transform: rotate(-7deg) translate(-9%, 5%);
         filter: brightness(0.9);
     }
 
-    .stack>*:nth-child(3) {
+    .stack > *:nth-child(3) {
         z-index: 1;
         transform: rotate(7deg) translate(10%, 7%);
         filter: brightness(0.78);
     }
 
     @media (hover: hover) {
-        .cardLink:hover .stack>*:nth-child(1) {
+        .cardLink:hover .stack > *:nth-child(1) {
             transform: rotate(-4deg);
         }
 
-        .cardLink:hover .stack>*:nth-child(2) {
+        .cardLink:hover .stack > *:nth-child(2) {
             transform: rotate(-10deg) translate(-13%, 7%);
         }
 
-        .cardLink:hover .stack>*:nth-child(3) {
+        .cardLink:hover .stack > *:nth-child(3) {
             transform: rotate(10deg) translate(14%, 9%);
         }
     }
@@ -202,17 +203,20 @@
         border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 999px;
         cursor: pointer;
-        transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+        transition:
+            background-color 160ms ease,
+            border-color 160ms ease,
+            color 160ms ease,
+            transform 160ms ease;
     }
 
     .folderActionButton svg {
         pointer-events: none;
     }
 
-    &:active{
-        scale: .9;
+    &:active {
+        scale: 0.9;
     }
-
 }
 
 @media (hover: hover) {
@@ -241,7 +245,6 @@
 }
 
 .detailMode {
-
     justify-content: center;
     max-width: none;
     margin-inline: 0;
@@ -278,7 +281,7 @@
         border: none;
     }
 
-    .stack>* {
+    .stack > * {
         border-radius: 12px;
     }
 
@@ -319,8 +322,7 @@
         }
     }
 
-    .folderActions{
+    .folderActions {
         display: flex;
     }
-    
 }

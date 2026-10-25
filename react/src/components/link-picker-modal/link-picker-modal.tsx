@@ -3,8 +3,8 @@ import styles from './link-picker-modal.module.css';
 import { useLinkPickerModalContext } from '@/context/LinkPickerModalContext.hooks';
 
 export function LinkPickerModal() {
-
-    const { isVisible, comicTitle, links, closeLinkPickerModal, pickLink } = useLinkPickerModalContext();
+    const { isVisible, comicTitle, links, closeLinkPickerModal, pickLink } =
+        useLinkPickerModalContext();
 
     const cancel = () => closeLinkPickerModal();
 
@@ -19,8 +19,12 @@ export function LinkPickerModal() {
 
     return (
         <div className={styles.overlay} style={{ display: isVisible ? undefined : 'none' }}>
-
-            <button type="button" className={styles.backdrop} aria-label="Close dialog" onClick={cancel} />
+            <button
+                type="button"
+                className={styles.backdrop}
+                aria-label="Close dialog"
+                onClick={cancel}
+            />
 
             <div
                 role="dialog"
@@ -28,14 +32,16 @@ export function LinkPickerModal() {
                 aria-label="Choose a download link"
                 className={styles.modal}
             >
-
                 <div className={styles.header}>
                     <p className={styles.title}>Choose a link</p>
-                    {comicTitle && <p className={styles.subtitle} title={comicTitle}>{comicTitle}</p>}
+                    {comicTitle && (
+                        <p className={styles.subtitle} title={comicTitle}>
+                            {comicTitle}
+                        </p>
+                    )}
                 </div>
 
                 <ul className={styles.list} role="listbox">
-
                     {links.length === 0 && <li className={styles.empty}>No links available.</li>}
 
                     {links.map((link, i) => (
@@ -56,12 +62,8 @@ export function LinkPickerModal() {
                             <span title={link.title}>{link.title}</span>
                         </li>
                     ))}
-
                 </ul>
-
             </div>
-
         </div>
     );
-
 }

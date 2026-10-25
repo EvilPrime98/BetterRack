@@ -1,21 +1,25 @@
-import { UltraComponent, ultraCompState, ultraState } from "ultra-light-js";
+import { UltraComponent, ultraCompState, ultraState } from 'ultra-light-js';
 import styles from './settings.page.module.css';
-import { Layout } from "../layout";
-import { SETTINGS_CONTEXT } from "../context/settings.context";
-import type { IAppSettings } from "../settings.types";
-import { TextField } from "../components/text-field/text-field";
-import { LibraryFolderRow } from "@/components/library-folder-row/library-folder-row";
-import { toast } from "../services/toast.service";
-import { DOCUMENT_TITLE_CONTEXT } from "../context/document-title.context";
-import { BRButton } from "../components/br-button/br-button";
-import { BRCheckbox } from "../components/br-checkbox/br-checkbox";
-import { clearRemoteServer, getStoredServerUrl, hasNativeFolderPicker, isRemoteModeEnabled } from "../services/server-config.service";
-import { LIBRARY_CONTEXT } from "../context/library.context";
-import { SERVER_MODAL_CTX } from "../context/server-modal.context";
-import { CONFIRM_MODAL_CTX } from "../context/confirm-modal.context";
+import { Layout } from '../layout';
+import { SETTINGS_CONTEXT } from '../context/settings.context';
+import type { IAppSettings } from '../settings.types';
+import { TextField } from '../components/text-field/text-field';
+import { LibraryFolderRow } from '@/components/library-folder-row/library-folder-row';
+import { toast } from '../services/toast.service';
+import { DOCUMENT_TITLE_CONTEXT } from '../context/document-title.context';
+import { BRButton } from '../components/br-button/br-button';
+import { BRCheckbox } from '../components/br-checkbox/br-checkbox';
+import {
+    clearRemoteServer,
+    getStoredServerUrl,
+    hasNativeFolderPicker,
+    isRemoteModeEnabled,
+} from '../services/server-config.service';
+import { LIBRARY_CONTEXT } from '../context/library.context';
+import { SERVER_MODAL_CTX } from '../context/server-modal.context';
+import { CONFIRM_MODAL_CTX } from '../context/confirm-modal.context';
 
 export function SettingsPage() {
-
     const [folderError, setFolderError, subsFolderError] = ultraState('');
     const [settingsError, setSettingsError, subsSettingsError] = ultraState('');
 
@@ -25,8 +29,8 @@ export function SettingsPage() {
         folderPath: '',
         wikiSearch: false,
         rescanOnStartup: true,
-        rotatingFetch: false
-    })
+        rotatingFetch: false,
+    });
 
     function onFolderError($p: HTMLElement) {
         $p.textContent = folderError();
@@ -68,25 +72,22 @@ export function SettingsPage() {
         ($el as HTMLInputElement).value = fieldsState.downloadDir.get();
     }
 
-    function renderFolders(
-        $ul: HTMLElement
-    ) {
+    function renderFolders($ul: HTMLElement) {
         const dirs = SETTINGS_CONTEXT.settings.get().outputDirs;
         $ul.replaceChildren(
             ...(dirs.length === 0
                 ? [
-                    UltraComponent({
-                        component: `<li class="${styles.empty}">No library folders configured yet.</li>`
-                    })
-                ]
-                : dirs.map(dir =>
-                    LibraryFolderRow({
-                        dir,
-                        clearFolderError,
-                        setFolderError
-                    })
-                )
-            )
+                      UltraComponent({
+                          component: `<li class="${styles.empty}">No library folders configured yet.</li>`,
+                      }),
+                  ]
+                : dirs.map((dir) =>
+                      LibraryFolderRow({
+                          dir,
+                          clearFolderError,
+                          setFolderError,
+                      }),
+                  )),
         );
     }
 
@@ -100,9 +101,8 @@ export function SettingsPage() {
             toast.success('Folder added');
             LIBRARY_CONTEXT.refreshLibrary({ silent: true });
         } catch (e) {
-            const message = e instanceof Error
-                ? e.message
-                : 'There was an error adding the folder.';
+            const message =
+                e instanceof Error ? e.message : 'There was an error adding the folder.';
             setFolderError(message);
             toast.error(message);
         }
@@ -120,9 +120,7 @@ export function SettingsPage() {
         try {
             selected = await picker();
         } catch (e) {
-            const message = e instanceof Error
-                ? e.message
-                : 'Could not open the folder picker.';
+            const message = e instanceof Error ? e.message : 'Could not open the folder picker.';
             setFolderError(message);
             toast.error(message);
             return;
@@ -144,8 +142,9 @@ export function SettingsPage() {
     async function onReidentifyAll() {
         const confirmed = await CONFIRM_MODAL_CTX.confirmDialog({
             title: 'Re-identify all comics?',
-            message: 'This will re-run identification for every comic in your library, overwriting any existing matches.',
-            confirmLabel: 'Re-identify'
+            message:
+                'This will re-run identification for every comic in your library, overwriting any existing matches.',
+            confirmLabel: 'Re-identify',
         });
         if (!confirmed) return;
         LIBRARY_CONTEXT.reidentifyAll();
@@ -154,8 +153,9 @@ export function SettingsPage() {
     async function onUnlinkServer() {
         const confirmed = await CONFIRM_MODAL_CTX.confirmDialog({
             title: 'Unlink from remote server?',
-            message: 'The app will disconnect from the remote server and go back to your local library.',
-            confirmLabel: 'Unlink'
+            message:
+                'The app will disconnect from the remote server and go back to your local library.',
+            confirmLabel: 'Unlink',
         });
         if (!confirmed) return;
         clearRemoteServer();
@@ -163,7 +163,6 @@ export function SettingsPage() {
     }
 
     async function onSave() {
-        
         const partial: Partial<Omit<IAppSettings, 'outputDirs'>> = {
             apiUrl: fieldsState.apiUrl.get(),
             downloadDir: fieldsState.downloadDir.get(),
@@ -182,362 +181,353 @@ export function SettingsPage() {
             setSettingsError(message);
             toast.error(message);
         }
-
     }
 
     return Layout(
-
         UltraComponent({
-
             component: '<section></section>',
 
             className: [styles.page],
 
             onMount: [syncFields, () => DOCUMENT_TITLE_CONTEXT.setTitle('Settings')],
 
-            trigger: [{
-                subscriber: SETTINGS_CONTEXT.settings.subscribe,
-                triggerFunction: syncFields,
-                defer: true
-            }],
+            trigger: [
+                {
+                    subscriber: SETTINGS_CONTEXT.settings.subscribe,
+                    triggerFunction: syncFields,
+                    defer: true,
+                },
+            ],
 
             children: [
-
                 UltraComponent({
-
                     component: '<header></header>',
 
                     className: [styles.header],
 
                     children: [
-
                         `<h1 class="${styles.title}">Settings</h1>`,
 
                         UltraComponent({
-
                             component: '<div></div>',
 
                             className: [styles.headerActions],
 
                             children: [
-
                                 UltraComponent({
                                     component: `<p class="${styles.errorText}"></p>`,
-                                    trigger: [{
-                                        subscriber: subsSettingsError,
-                                        triggerFunction: onSettingsError
-                                    }]
+                                    trigger: [
+                                        {
+                                            subscriber: subsSettingsError,
+                                            triggerFunction: onSettingsError,
+                                        },
+                                    ],
                                 }),
 
                                 BRButton({
                                     text: 'Save',
-                                    eventHandler: { click: onSave }
-                                })
-
-                            ]
-
-                        })
-
-                    ]
-
+                                    eventHandler: { click: onSave },
+                                }),
+                            ],
+                        }),
+                    ],
                 }),
 
                 UltraComponent({
-
                     component: '<div></div>',
 
                     className: [styles.grid],
 
                     children: [
-
                         UltraComponent({
-
                             component: '<div></div>',
 
                             className: [styles.column],
 
                             children: [
-
                                 UltraComponent({
-
                                     component: '<section></section>',
 
                                     className: [styles.section],
 
                                     children: [
-
                                         `<h2 class="${styles.sectionTitle}">Server</h2>`,
 
                                         UltraComponent({
                                             component: `<p class="${styles.empty}"></p>`,
-                                            onMount: [($p: HTMLElement) => {
-                                                $p.textContent = getStoredServerUrl() || 'No server configured';
-                                            }]
+                                            onMount: [
+                                                ($p: HTMLElement) => {
+                                                    $p.textContent =
+                                                        getStoredServerUrl() ||
+                                                        'No server configured';
+                                                },
+                                            ],
                                         }),
 
                                         BRButton({
                                             text: 'Change server',
-                                            eventHandler: { click: () => SERVER_MODAL_CTX.openServerModal() }
+                                            eventHandler: {
+                                                click: () => SERVER_MODAL_CTX.openServerModal(),
+                                            },
                                         }),
 
-                                        ...(isRemoteModeEnabled() ? [
-                                            BRButton({
-                                                text: 'Unlink server',
-                                                variant: 'secondary',
-                                                eventHandler: { click: onUnlinkServer }
-                                            })
-                                        ] : [])
-
-                                    ]
-
+                                        ...(isRemoteModeEnabled()
+                                            ? [
+                                                  BRButton({
+                                                      text: 'Unlink server',
+                                                      variant: 'secondary',
+                                                      eventHandler: { click: onUnlinkServer },
+                                                  }),
+                                              ]
+                                            : []),
+                                    ],
                                 }),
 
                                 UltraComponent({
-
                                     component: '<section></section>',
 
                                     className: [styles.section],
 
                                     children: [
-
                                         UltraComponent({
-
                                             component: '<div></div>',
 
                                             className: [styles.fieldGroup],
 
                                             children: [
-
                                                 `<h2 class="${styles.sectionTitle}">Downloads</h2>`,
 
                                                 UltraComponent({
-
                                                     component: '<div></div>',
 
                                                     className: [styles.field],
 
                                                     children: [
-
                                                         `<label class="${styles.label}" for="settings-downloadDir">Download folder</label>`,
 
                                                         UltraComponent({
-
                                                             component: '<div></div>',
 
                                                             className: [styles.addRow],
 
                                                             children: [
-
                                                                 UltraComponent({
-                                                                    component: '<input id="settings-downloadDir" type="text" />',
+                                                                    component:
+                                                                        '<input id="settings-downloadDir" type="text" />',
                                                                     className: [styles.input],
                                                                     attributes: {
-                                                                        placeholder: '/path/to/downloads'
+                                                                        placeholder:
+                                                                            '/path/to/downloads',
                                                                     },
                                                                     onMount: [syncDownloadDirInput],
-                                                                    trigger: [{
-                                                                        subscriber: fieldsState.downloadDir.subscribe,
-                                                                        triggerFunction: syncDownloadDirInput
-                                                                    }],
+                                                                    trigger: [
+                                                                        {
+                                                                            subscriber:
+                                                                                fieldsState
+                                                                                    .downloadDir
+                                                                                    .subscribe,
+                                                                            triggerFunction:
+                                                                                syncDownloadDirInput,
+                                                                        },
+                                                                    ],
                                                                     eventHandler: {
                                                                         input: (e: Event) => {
-                                                                            const $input = e.target as HTMLInputElement;
-                                                                            fieldsState.downloadDir.set($input.value)
-                                                                        }
-                                                                    }
+                                                                            const $input =
+                                                                                e.target as HTMLInputElement;
+                                                                            fieldsState.downloadDir.set(
+                                                                                $input.value,
+                                                                            );
+                                                                        },
+                                                                    },
                                                                 }),
 
-                                                                ...(hasNativeFolderPicker() ? [
-                                                                    BRButton({
-                                                                        text: 'Browse…',
-                                                                        variant: 'secondary',
-                                                                        className: [styles.browseBtn],
-                                                                        eventHandler: { click: onBrowseDownloadDir }
-                                                                    })
-                                                                ] : [])
-
-                                                            ]
-
-                                                        })
-
-                                                    ]
-
-                                                })
-
-                                            ]
-
-                                        })
-
-                                    ]
-
+                                                                ...(hasNativeFolderPicker()
+                                                                    ? [
+                                                                          BRButton({
+                                                                              text: 'Browse…',
+                                                                              variant: 'secondary',
+                                                                              className: [
+                                                                                  styles.browseBtn,
+                                                                              ],
+                                                                              eventHandler: {
+                                                                                  click: onBrowseDownloadDir,
+                                                                              },
+                                                                          }),
+                                                                      ]
+                                                                    : []),
+                                                            ],
+                                                        }),
+                                                    ],
+                                                }),
+                                            ],
+                                        }),
+                                    ],
                                 }),
 
                                 UltraComponent({
-
                                     component: '<section></section>',
 
                                     className: [styles.section],
 
                                     children: [
-
                                         UltraComponent({
-
                                             component: '<div></div>',
 
                                             className: [styles.fieldGroup],
 
                                             children: [
-
                                                 `<h2 class="${styles.sectionTitle}">API configuration</h2>`,
 
                                                 TextField({
                                                     key: 'apiUrl',
                                                     label: 'API URL',
-                                                    placeholder: 'https://example.com/wp-json/wp/v2',
+                                                    placeholder:
+                                                        'https://example.com/wp-json/wp/v2',
                                                     eventHandler: {
                                                         input: (e: Event) => {
-                                                            const $input = e.target as HTMLInputElement;
-                                                            fieldsState.apiUrl.set($input.value)
-                                                        }
-                                                    }
+                                                            const $input =
+                                                                e.target as HTMLInputElement;
+                                                            fieldsState.apiUrl.set($input.value);
+                                                        },
+                                                    },
                                                 }),
-
-                                            ]
-
-                                        })
-
-                                    ]
-
-                                })
-
-                            ]
-
+                                            ],
+                                        }),
+                                    ],
+                                }),
+                            ],
                         }),
 
                         UltraComponent({
-
                             component: '<div></div>',
 
                             className: [styles.column],
 
                             children: [
-
                                 UltraComponent({
-
                                     component: '<section></section>',
 
                                     className: [styles.section],
 
                                     children: [
-
                                         `<h2 class="${styles.sectionTitle}">Library folders</h2>`,
 
                                         UltraComponent({
                                             component: `<ul class="${styles.folderList}"></ul>`,
                                             onMount: [renderFolders],
-                                            trigger: [{
-                                                subscriber: SETTINGS_CONTEXT.settings.subscribe,
-                                                triggerFunction: renderFolders,
-                                                defer: true
-                                            }]
+                                            trigger: [
+                                                {
+                                                    subscriber: SETTINGS_CONTEXT.settings.subscribe,
+                                                    triggerFunction: renderFolders,
+                                                    defer: true,
+                                                },
+                                            ],
                                         }),
 
                                         UltraComponent({
-
                                             component: '<div></div>',
 
                                             className: [styles.addRow],
 
                                             children: [
-
                                                 UltraComponent({
                                                     component: '<input type="text" />',
                                                     className: [styles.input],
                                                     attributes: {
                                                         placeholder: 'Folder path',
-                                                        'aria-label': 'Folder path'
+                                                        'aria-label': 'Folder path',
                                                     },
-                                                    trigger: [{
-                                                        subscriber: fieldsState.folderPath.subscribe,
-                                                        triggerFunction: ($el: HTMLElement) => {
-                                                            ($el as HTMLInputElement).value = fieldsState.folderPath.get();
-                                                        }
-                                                    }],
+                                                    trigger: [
+                                                        {
+                                                            subscriber:
+                                                                fieldsState.folderPath.subscribe,
+                                                            triggerFunction: ($el: HTMLElement) => {
+                                                                ($el as HTMLInputElement).value =
+                                                                    fieldsState.folderPath.get();
+                                                            },
+                                                        },
+                                                    ],
                                                     eventHandler: {
                                                         input: (e: Event) => {
-                                                            const $input = e.target as HTMLInputElement;
-                                                            fieldsState.folderPath.set($input.value);
+                                                            const $input =
+                                                                e.target as HTMLInputElement;
+                                                            fieldsState.folderPath.set(
+                                                                $input.value,
+                                                            );
                                                         },
                                                         keydown: (e: Event) => {
                                                             const kE = e as KeyboardEvent;
                                                             if (kE.key === 'Enter') onAddFolder();
-                                                        }
-                                                    }
+                                                        },
+                                                    },
                                                 }),
 
-                                                ...(hasNativeFolderPicker() ? [
-                                                    BRButton({
-                                                        text: 'Browse…',
-                                                        variant: 'secondary',
-                                                        className: [styles.browseBtn],
-                                                        eventHandler: { click: onBrowseFolder }
-                                                    })
-                                                ] : []),
+                                                ...(hasNativeFolderPicker()
+                                                    ? [
+                                                          BRButton({
+                                                              text: 'Browse…',
+                                                              variant: 'secondary',
+                                                              className: [styles.browseBtn],
+                                                              eventHandler: {
+                                                                  click: onBrowseFolder,
+                                                              },
+                                                          }),
+                                                      ]
+                                                    : []),
 
                                                 BRButton({
                                                     text: 'Add Folder',
-                                                    eventHandler: { click: onAddFolder }
-                                                })
-                                            ]
-
+                                                    eventHandler: { click: onAddFolder },
+                                                }),
+                                            ],
                                         }),
 
                                         UltraComponent({
                                             component: `<p class="${styles.errorText}"></p>`,
-                                            trigger: [{
-                                                subscriber: subsFolderError,
-                                                triggerFunction: onFolderError
-                                            }]
-                                        })
-
-                                    ]
-
+                                            trigger: [
+                                                {
+                                                    subscriber: subsFolderError,
+                                                    triggerFunction: onFolderError,
+                                                },
+                                            ],
+                                        }),
+                                    ],
                                 }),
 
                                 UltraComponent({
-
                                     component: '<section></section>',
 
                                     className: [styles.section],
 
                                     children: [
-
                                         UltraComponent({
-
                                             component: '<div></div>',
 
                                             className: [styles.fieldGroup],
 
                                             children: [
-
                                                 `<h2 class="${styles.sectionTitle}">Identification</h2>`,
 
                                                 UltraComponent({
-
                                                     component: '<div></div>',
 
                                                     className: [styles.toggleRow],
 
                                                     children: [
-
                                                         BRCheckbox({
                                                             text: 'Search the wiki for metadata',
-                                                            onChange: (checked) => fieldsState.wikiSearch.set(checked),
-                                                            trigger: [{
-                                                                subscriber: fieldsState.wikiSearch.subscribe,
-                                                                triggerFunction: syncWikiSearchCheckbox
-                                                            }],
-                                                            onMount: [syncWikiSearchCheckbox]
+                                                            onChange: (checked) =>
+                                                                fieldsState.wikiSearch.set(checked),
+                                                            trigger: [
+                                                                {
+                                                                    subscriber:
+                                                                        fieldsState.wikiSearch
+                                                                            .subscribe,
+                                                                    triggerFunction:
+                                                                        syncWikiSearchCheckbox,
+                                                                },
+                                                            ],
+                                                            onMount: [syncWikiSearchCheckbox],
                                                         }),
 
                                                         `<span class="${styles.infoIcon}" tabindex="0">
@@ -553,77 +543,73 @@ export function SettingsPage() {
                                                             text: 'Re-identify all',
                                                             variant: 'secondary',
                                                             className: [styles.reidentifyBtn],
-                                                            eventHandler: { click: onReidentifyAll }
-                                                        })
-
-                                                    ]
-
+                                                            eventHandler: {
+                                                                click: onReidentifyAll,
+                                                            },
+                                                        }),
+                                                    ],
                                                 }),
 
                                                 UltraComponent({
-
                                                     component: '<div></div>',
 
                                                     className: [styles.toggleRow],
 
                                                     children: [
-
                                                         BRCheckbox({
                                                             text: 'Re-scan on start up',
-                                                            onChange: (checked) => fieldsState.rescanOnStartup.set(checked),
-                                                            trigger: [{
-                                                                subscriber: fieldsState.rescanOnStartup.subscribe,
-                                                                triggerFunction: syncRescanCheckbox
-                                                            }],
-                                                            onMount: [syncRescanCheckbox]
-                                                        })
-
-                                                    ]
-
+                                                            onChange: (checked) =>
+                                                                fieldsState.rescanOnStartup.set(
+                                                                    checked,
+                                                                ),
+                                                            trigger: [
+                                                                {
+                                                                    subscriber:
+                                                                        fieldsState.rescanOnStartup
+                                                                            .subscribe,
+                                                                    triggerFunction:
+                                                                        syncRescanCheckbox,
+                                                                },
+                                                            ],
+                                                            onMount: [syncRescanCheckbox],
+                                                        }),
+                                                    ],
                                                 }),
 
                                                 UltraComponent({
-
                                                     component: '<div></div>',
 
                                                     className: [styles.toggleRow],
 
                                                     children: [
-
                                                         BRCheckbox({
                                                             text: 'Rotate identity',
-                                                            onChange: (checked) => fieldsState.rotatingFetch.set(checked),
-                                                            trigger: [{
-                                                                subscriber: fieldsState.rotatingFetch.subscribe,
-                                                                triggerFunction: syncRotatingFetchCheckbox
-                                                            }],
-                                                            onMount: [syncRotatingFetchCheckbox]
-                                                        })
-
-                                                    ]
-
-                                                })
-
-                                            ]
-
-                                        })
-
-                                    ]
-
-                                })
-
-                            ]
-
-                        })
-
-                    ]
-
-                })
-
-            ]
-
-        })
-
-    )
-
+                                                            onChange: (checked) =>
+                                                                fieldsState.rotatingFetch.set(
+                                                                    checked,
+                                                                ),
+                                                            trigger: [
+                                                                {
+                                                                    subscriber:
+                                                                        fieldsState.rotatingFetch
+                                                                            .subscribe,
+                                                                    triggerFunction:
+                                                                        syncRotatingFetchCheckbox,
+                                                                },
+                                                            ],
+                                                            onMount: [syncRotatingFetchCheckbox],
+                                                        }),
+                                                    ],
+                                                }),
+                                            ],
+                                        }),
+                                    ],
+                                }),
+                            ],
+                        }),
+                    ],
+                }),
+            ],
+        }),
+    );
 }

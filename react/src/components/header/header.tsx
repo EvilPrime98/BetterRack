@@ -8,7 +8,6 @@ import { useLibraryStore } from '@/stores/library.store';
 import { WindowControls } from '@/components/window-controls/window-controls';
 
 export function Header() {
-
     const iconSize = 24;
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -35,13 +34,8 @@ export function Header() {
 
     return (
         <header className={styles.header}>
-
             <button
-                className={[
-                    styles.iconBtn,
-                    styles.noDrag,
-                    styles.burger
-                ].filter(Boolean).join(' ')}
+                className={[styles.iconBtn, styles.noDrag, styles.burger].filter(Boolean).join(' ')}
                 type="button"
                 aria-label="Toggle sidebar"
                 aria-hidden={false}
@@ -51,9 +45,7 @@ export function Header() {
             </button>
 
             <div className={styles.inner}>
-
                 <div className={styles.left}>
-
                     <Link
                         to="/"
                         aria-label="BetterRack home"
@@ -63,26 +55,17 @@ export function Header() {
                         <BetterRackIcon size={iconSize * 1.3} />
                     </Link>
 
-                    <div 
-                        className={styles.text} 
-                        style={{ userSelect: 'none' }}
-                    >
-                        <span
-                            className={styles.title}
-                            style={{ fontSize: '1.15rem' }}
-                        >
+                    <div className={styles.text} style={{ userSelect: 'none' }}>
+                        <span className={styles.title} style={{ fontSize: '1.15rem' }}>
                             BetterRack
                         </span>
                     </div>
-
                 </div>
             </div>
 
             <div className={styles.windowControls}>
                 <WindowControls />
             </div>
-
         </header>
     );
-
 }

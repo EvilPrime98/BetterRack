@@ -25,7 +25,6 @@ interface BRContextMenuProps {
 }
 
 export function BRContextMenu({ groups, targetRef, className, ...aria }: BRContextMenuProps) {
-
     const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
 
     useEffect(() => {
@@ -64,11 +63,18 @@ export function BRContextMenu({ groups, targetRef, className, ...aria }: BRConte
 
     const place = (el: HTMLDivElement | null) => {
         if (!el) return;
-        const x = Math.max(VIEWPORT_MARGIN, Math.min(position.x, window.innerWidth - el.offsetWidth - VIEWPORT_MARGIN));
-        const y = Math.max(VIEWPORT_MARGIN, Math.min(position.y, window.innerHeight - el.offsetHeight - VIEWPORT_MARGIN));
+        const x = Math.max(
+            VIEWPORT_MARGIN,
+            Math.min(position.x, window.innerWidth - el.offsetWidth - VIEWPORT_MARGIN),
+        );
+        const y = Math.max(
+            VIEWPORT_MARGIN,
+            Math.min(position.y, window.innerHeight - el.offsetHeight - VIEWPORT_MARGIN),
+        );
         el.style.left = `${x}px`;
         el.style.top = `${y}px`;
-        if (!el.contains(document.activeElement)) el.querySelector<HTMLElement>(ITEM_SELECTOR)?.focus();
+        if (!el.contains(document.activeElement))
+            el.querySelector<HTMLElement>(ITEM_SELECTOR)?.focus();
     };
 
     const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -115,7 +121,9 @@ export function BRContextMenu({ groups, targetRef, className, ...aria }: BRConte
                 key={item.label}
                 type="button"
                 role="menuitem"
-                className={[styles.item, styles.action, item.busy ? styles.busy : ''].filter(Boolean).join(' ')}
+                className={[styles.item, styles.action, item.busy ? styles.busy : '']
+                    .filter(Boolean)
+                    .join(' ')}
                 onClick={run(item.onSelect)}
             >
                 {item.icon}
@@ -137,14 +145,20 @@ export function BRContextMenu({ groups, targetRef, className, ...aria }: BRConte
             onContextMenu={(event) => event.stopPropagation()}
         >
             {groups.map((group) => (
-                <div key={group.id} className={styles.group} role="group" aria-label={group.heading}>
+                <div
+                    key={group.id}
+                    className={styles.group}
+                    role="group"
+                    aria-label={group.heading}
+                >
                     {group.heading && <span className={styles.heading}>{group.heading}</span>}
-                    {group.scrollable
-                        ? <div className={styles.scroll}>{group.items.map(renderItem)}</div>
-                        : group.items.map(renderItem)}
+                    {group.scrollable ? (
+                        <div className={styles.scroll}>{group.items.map(renderItem)}</div>
+                    ) : (
+                        group.items.map(renderItem)
+                    )}
                 </div>
             ))}
         </div>
     );
-
 }

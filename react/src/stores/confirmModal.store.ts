@@ -25,7 +25,6 @@ interface IConfirmModalStore {
 }
 
 export const useConfirmModalStore = create<IConfirmModalStore>((set, get) => ({
-
     isVisible: false,
     title: 'Are you sure?',
     message: '',
@@ -36,13 +35,22 @@ export const useConfirmModalStore = create<IConfirmModalStore>((set, get) => ({
 
     setDontAskAgain: (value) => set({ dontAskAgain: value }),
 
-    confirmDialog: ({ title = 'Are you sure?', message, confirmLabel = 'Confirm', cancelLabel = 'Cancel', onDontAskAgain }) => {
+    confirmDialog: ({
+        title = 'Are you sure?',
+        message,
+        confirmLabel = 'Confirm',
+        cancelLabel = 'Cancel',
+        onDontAskAgain,
+    }) => {
         dontAskAgainCallback = onDontAskAgain ?? null;
         set({
-            title, message, confirmLabel, cancelLabel,
+            title,
+            message,
+            confirmLabel,
+            cancelLabel,
             hasDontAskAgain: onDontAskAgain !== undefined,
             dontAskAgain: false,
-            isVisible: true
+            isVisible: true,
         });
         return new Promise<boolean | null>((resolve) => {
             resolver = resolve;
@@ -55,6 +63,5 @@ export const useConfirmModalStore = create<IConfirmModalStore>((set, get) => ({
         resolver?.(result);
         resolver = null;
         dontAskAgainCallback = null;
-    }
-
+    },
 }));

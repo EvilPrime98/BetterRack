@@ -1,11 +1,10 @@
 export function BookmarkIcon({
     size = 16,
-    color = 'currentColor'
+    color = 'currentColor',
 }: {
     size?: number;
     color?: string;
 } = {}) {
-
     return `<svg
         width="${size}"
         height="${size}"
@@ -15,5 +14,4 @@ export function BookmarkIcon({
     >
         <path d="M6 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v17l-6-4.2L6 21V4Z" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>`;
-
 }

@@ -2,7 +2,6 @@ import { useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export function useReaderNavigation() {
-
     const navigate = useNavigate();
 
     const goBack = useCallback(() => {
@@ -19,5 +18,4 @@ export function useReaderNavigation() {
     }, [goBack]);
 
     return { navigate, goBack };
-
 }
