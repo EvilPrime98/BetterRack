@@ -1,4 +1,4 @@
-import { UltraComponent, type UltraElementProps } from "ultra-light-js";
+import { UltraComponent, type UltraElementProps } from 'ultra-light-js';
 import styles from './cr-button.module.css';
 
 export function CrButton({
@@ -9,28 +9,18 @@ export function CrButton({
     text: string;
     variant?: 'cyan' | 'red' | 'orange';
 } & UltraElementProps) {
-
     return UltraComponent({
-
         ...props,
 
         component: '<span></span>',
 
-        className: [
-            ...(props.className ? props.className : []),
-            styles.crButton,
-            styles[variant]
-        ],
+        className: [...(props.className ? props.className : []), styles.crButton, styles[variant]],
 
         attributes: {
             ...props.attributes,
-            type: 'button'
+            type: 'button',
         },
 
-        children: [
-            `<span>${text}</span>`
-        ]
-
-    })
-
+        children: [`<span>${text}</span>`],
+    });
 }

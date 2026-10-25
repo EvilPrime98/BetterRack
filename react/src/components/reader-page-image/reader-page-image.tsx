@@ -10,7 +10,7 @@ export const ImageElement = memo(function ImageElement({
     index,
     total,
     active,
-    onRatio
+    onRatio,
 }: {
     uid: string;
     ind: number;
@@ -19,24 +19,17 @@ export const ImageElement = memo(function ImageElement({
     active: boolean;
     onRatio: (ratio: number) => void;
 }) {
-
     const [isLoaded, setIsLoaded] = useState(false);
     const [ratio, setRatio] = useState<number | null>(null);
 
     if (!active && isLoaded) setIsLoaded(false);
 
-    const className = [
-        styles.pageWrapper,
-        isLoaded ? styles.loaded : '',
-        active ? '' : styles.idle
-    ].filter(Boolean).join(' ');
+    const className = [styles.pageWrapper, isLoaded ? styles.loaded : '', active ? '' : styles.idle]
+        .filter(Boolean)
+        .join(' ');
 
     return (
-        <figure
-            className={className}
-            style={ratio ? { aspectRatio: ratio } : undefined}
-            data-splash={ratio !== null && ratio > 1 ? '' : undefined}
-        >
+        <figure className={className} style={ratio ? { aspectRatio: ratio } : undefined}>
             {active ? (
                 <ImageGen
                     src={withAuthQuery(`${API_URL}/read/${uid}/pages/${ind}`)}
@@ -55,5 +48,4 @@ export const ImageElement = memo(function ImageElement({
             ) : null}
         </figure>
     );
-
 });

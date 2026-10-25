@@ -1,17 +1,10 @@
-import type { ILibraryGroup } from "@/library.types";
-import { useEffect, useRef, useState } from "react";
-import { SideBarElement } from "./sider-bar-element";
+import type { ILibraryGroup } from '@/library.types';
+import { useEffect, useRef, useState } from 'react';
+import { SideBarElement } from './sider-bar-element';
 
 const SERIES_PAGE_SIZE = 50;
 
-export function SeriesList({ 
-    groups, 
-    isHidden 
-}: { 
-    groups: ILibraryGroup[]; 
-    isHidden: boolean 
-}) {
-
+export function SeriesList({ groups, isHidden }: { groups: ILibraryGroup[]; isHidden: boolean }) {
     const [count, setCount] = useState(SERIES_PAGE_SIZE);
 
     const sentinelRef = useRef<HTMLDivElement>(null);
@@ -22,9 +15,9 @@ export function SeriesList({
         if (!hasMore || !node) return;
         const observer = new IntersectionObserver(
             (entries) => {
-                if (entries.some(e => e.isIntersecting)) setCount(c => c + SERIES_PAGE_SIZE);
+                if (entries.some((e) => e.isIntersecting)) setCount((c) => c + SERIES_PAGE_SIZE);
             },
-            { rootMargin: '300px' }
+            { rootMargin: '300px' },
         );
         observer.observe(node);
         return () => observer.disconnect();
@@ -32,14 +25,21 @@ export function SeriesList({
 
     return (
         <>
-            {!isHidden && groups.slice(0, count).map(group => (
-                <SideBarElement
-                    key={group.uid}
-                    item={{ uid: group.uid, did: true, name: group.name, path: group.path, parentId: '', createdAt: 0 }}
-                />
-            ))}
+            {!isHidden &&
+                groups.slice(0, count).map((group) => (
+                    <SideBarElement
+                        key={group.uid}
+                        item={{
+                            uid: group.uid,
+                            did: true,
+                            name: group.name,
+                            path: group.path,
+                            parentId: '',
+                            createdAt: 0,
+                        }}
+                    />
+                ))}
             {hasMore && <div ref={sentinelRef} style={{ height: 1 }} />}
         </>
     );
-
 }

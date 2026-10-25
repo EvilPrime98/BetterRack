@@ -6,7 +6,9 @@ export function TriviaSection({ trivia }: { trivia?: string[] }) {
     return (
         <SectionBlock title="Trivia">
             <ul className={styles.plainList}>
-                {trivia.map((fact) => <li key={fact}>{fact}</li>)}
+                {trivia.map((fact) => (
+                    <li key={fact}>{fact}</li>
+                ))}
             </ul>
         </SectionBlock>
     );

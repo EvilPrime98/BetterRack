@@ -1,10 +1,10 @@
-import { ultraCompState, type IUltraCompStateStateful } from "ultra-light-js";
-import type { TComicsTypes, TFilterOptions } from "../library.types";
+import { ultraCompState, type IUltraCompStateStateful } from 'ultra-light-js';
+import type { TComicsTypes, TFilterOptions } from '../library.types';
 
 export type TReadingMode = 'vertical' | 'horizontal';
 
 export interface IUserPref {
-    filter: TFilterOptions,
+    filter: TFilterOptions;
     comicType: TComicsTypes;
     /** Whether or not to show a confirmation modal when stopping a download job. */
     askStopDownloads: boolean;
@@ -26,20 +26,16 @@ const DEFAULT_PREF: IUserPref = {
     comicType: 'detail',
     askStopDownloads: true,
     zoom: 1,
-    readingMode: 'vertical'
-}
+    readingMode: 'vertical',
+};
 
 export const USER_PREF = ultraCompState({
-
     keyName: 'better-rack-user-pref',
 
     pref: DEFAULT_PREF,
 
     compile: (comp: IUserPrefCtx) => {
-        window.localStorage.setItem(
-            comp.keyName.get(),
-            JSON.stringify(comp.pref.get())
-        );
+        window.localStorage.setItem(comp.keyName.get(), JSON.stringify(comp.pref.get()));
     },
 
     init: (comp: IUserPrefCtx) => {
@@ -51,21 +47,14 @@ export const USER_PREF = ultraCompState({
         }
     },
 
-    getPref: <K extends keyof IUserPref>(
-        comp: IUserPrefCtx,
-        prefKey: K
-    ): IUserPref[K] => {
+    getPref: <K extends keyof IUserPref>(comp: IUserPrefCtx, prefKey: K): IUserPref[K] => {
         return comp.pref.get()[prefKey];
     },
 
-    setPref: (
-        comp: IUserPrefCtx, 
-        pref: Partial<IUserPref>
-    ) => {
+    setPref: (comp: IUserPrefCtx, pref: Partial<IUserPref>) => {
         const currPref = structuredClone(comp.pref.get());
         Object.assign(currPref, pref);
         comp.pref.set(currPref);
         comp.compile();
-    }
-
+    },
 }) as unknown as IUserPrefCtx;

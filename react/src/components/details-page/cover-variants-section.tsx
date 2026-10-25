@@ -8,7 +8,7 @@ export function CoverVariantsSection({ variants }: { variants?: WikiComicCoverVa
     return (
         <SectionBlock title="Cover Variants">
             <div className={styles.variantGrid}>
-                {variants.map(variant => (
+                {variants.map((variant) => (
                     <div key={variant.coverNumber} className={styles.variantCard}>
                         {variant.imageUrl ? (
                             <ImageGen
@@ -17,9 +17,13 @@ export function CoverVariantsSection({ variants }: { variants?: WikiComicCoverVa
                                 alt={variant.imageLabel || `Cover ${variant.coverNumber}`}
                             />
                         ) : null}
-                        <span className={styles.variantLabel}>{variant.imageLabel || `Cover ${variant.coverNumber}`}</span>
+                        <span className={styles.variantLabel}>
+                            {variant.imageLabel || `Cover ${variant.coverNumber}`}
+                        </span>
                         {variant.artists.length > 0 ? (
-                            <span className={styles.variantArtists}>{variant.artists.join(', ')}</span>
+                            <span className={styles.variantArtists}>
+                                {variant.artists.join(', ')}
+                            </span>
                         ) : null}
                     </div>
                 ))}

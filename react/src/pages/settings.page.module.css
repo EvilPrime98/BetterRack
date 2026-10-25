@@ -220,7 +220,9 @@
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.15s ease, transform 0.1s ease;
+    transition:
+        background-color 0.15s ease,
+        transform 0.1s ease;
 }
 
 .saveBtn {
@@ -245,7 +247,7 @@
     outline-offset: 2px;
 }
 
-.saveButton{
+.saveButton {
     width: fit-content;
     align-self: center;
 }

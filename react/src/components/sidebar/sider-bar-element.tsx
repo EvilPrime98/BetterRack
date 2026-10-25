@@ -5,12 +5,7 @@ import type { ILibraryResponseItem } from '@/library.types';
 import styles from './sidebar.module.css';
 import { useLibraryStore } from '@/stores/library.store';
 
-export function SideBarElement({
-    item
-}: {
-    item: ILibraryResponseItem
-}) {
-
+export function SideBarElement({ item }: { item: ILibraryResponseItem }) {
     const setSearchQuery = useLibraryStore((s) => s.setSearchQuery);
     const setIsExpanded = useSidebarStore((s) => s.setIsExpanded);
 
@@ -23,12 +18,13 @@ export function SideBarElement({
         <NavLink
             to={`/${item.uid}`}
             end
-            className={({ isActive }) => [styles.item, isActive ? styles.itemActive : ''].filter(Boolean).join(' ')}
+            className={({ isActive }) =>
+                [styles.item, isActive ? styles.itemActive : ''].filter(Boolean).join(' ')
+            }
             onClick={onClick}
         >
             <FolderIcon size={16} />
             <span>{item.name}</span>
         </NavLink>
     );
-
 }

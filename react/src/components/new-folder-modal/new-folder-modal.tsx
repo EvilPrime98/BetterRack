@@ -1,10 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import styles from './new-folder-modal.module.css';
-import { BRButton } from "@/components/br-button/br-button";
-import { useNewFolderModalContext } from "@/context/NewFolderModalContext.hooks";
+import { BRButton } from '@/components/br-button/br-button';
+import { useNewFolderModalContext } from '@/context/NewFolderModalContext.hooks';
 
 export function NewFolderModal() {
-
     const { isVisible, closeNewFolderModal, submitNewFolder } = useNewFolderModalContext();
 
     const [text, setText] = useState('');
@@ -38,8 +37,12 @@ export function NewFolderModal() {
 
     return (
         <div className={styles.overlay} style={{ display: isVisible ? undefined : 'none' }}>
-
-            <button type="button" className={styles.backdrop} aria-label="Close dialog" onClick={cancel} />
+            <button
+                type="button"
+                className={styles.backdrop}
+                aria-label="Close dialog"
+                onClick={cancel}
+            />
 
             <div
                 role="dialog"
@@ -47,7 +50,6 @@ export function NewFolderModal() {
                 aria-label="Create folder"
                 className={styles.modal}
             >
-
                 <p className={styles.title}>New folder</p>
 
                 <input
@@ -60,21 +62,10 @@ export function NewFolderModal() {
                 />
 
                 <div className={styles.actions}>
-                    <BRButton 
-                        text="Cancel" 
-                        variant="secondary" 
-                        onClick={cancel} 
-                    />
-                    <BRButton 
-                        text="Create" 
-                        variant="classic" 
-                        onClick={submit} 
-                    />
+                    <BRButton text="Cancel" variant="secondary" onClick={cancel} />
+                    <BRButton text="Create" variant="classic" onClick={submit} />
                 </div>
-
             </div>
-
         </div>
     );
-
 }

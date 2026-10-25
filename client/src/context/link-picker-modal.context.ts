@@ -1,5 +1,5 @@
-import { ultraCompState, type IUltraCompStateStateful } from "ultra-light-js";
-import type { IStoreLink } from "@/store.types";
+import { ultraCompState, type IUltraCompStateStateful } from 'ultra-light-js';
+import type { IStoreLink } from '@/store.types';
 
 export interface ILinkPickerModalCtx {
     isVisible: IUltraCompStateStateful<boolean>;
@@ -19,12 +19,15 @@ function settle(link: IStoreLink | null) {
 }
 
 export const LINK_PICKER_MODAL_CTX: ILinkPickerModalCtx = ultraCompState({
-
     isVisible: false,
     comicTitle: '' as string,
     links: [] as IStoreLink[],
 
-    openLinkPickerModal: (comp: ILinkPickerModalCtx, links: IStoreLink[], comicTitle: string): Promise<IStoreLink | null> => {
+    openLinkPickerModal: (
+        comp: ILinkPickerModalCtx,
+        links: IStoreLink[],
+        comicTitle: string,
+    ): Promise<IStoreLink | null> => {
         settle(null);
         comp.links.set(links);
         comp.comicTitle.set(comicTitle);
@@ -42,6 +45,5 @@ export const LINK_PICKER_MODAL_CTX: ILinkPickerModalCtx = ultraCompState({
     closeLinkPickerModal: (comp: ILinkPickerModalCtx) => {
         comp.isVisible.set(false);
         settle(null);
-    }
-
+    },
 });

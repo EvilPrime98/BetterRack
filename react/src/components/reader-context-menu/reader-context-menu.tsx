@@ -6,7 +6,7 @@ import type { TReadingMode } from '../../stores/userPref.store';
 
 const READING_MODES: { value: TReadingMode; label: string }[] = [
     { value: 'vertical', label: 'Vertical' },
-    { value: 'horizontal', label: 'Horizontal' }
+    { value: 'horizontal', label: 'Horizontal' },
 ];
 
 export function ReaderContextMenu({
@@ -16,7 +16,7 @@ export function ReaderContextMenu({
     readingMode,
     onReadingModeChange,
     goToPage,
-    onRefresh
+    onRefresh,
 }: {
     currentPage: number;
     bookmarks: IBookmark[];
@@ -26,7 +26,6 @@ export function ReaderContextMenu({
     goToPage: (page: number) => void;
     onRefresh: () => void;
 }) {
-
     const groups: BRMenuGroup[] = [
         {
             id: 'reading-mode',
@@ -35,33 +34,38 @@ export function ReaderContextMenu({
                 kind: 'radio',
                 label: mode.label,
                 checked: mode.value === readingMode,
-                onSelect: () => onReadingModeChange(mode.value)
-            }))
+                onSelect: () => onReadingModeChange(mode.value),
+            })),
         },
-        ...(bookmarks.length > 0 ? [{
-            id: 'bookmarks',
-            heading: 'Jump to bookmark',
-            scrollable: true,
-            items: bookmarks.map((bookmark): BRMenuGroup['items'][number] => ({
-                kind: 'radio',
-                label: `${bookmark.label} · p.${bookmark.page}`,
-                title: `${bookmark.label} · p.${bookmark.page}`,
-                checked: bookmark.page === currentPage,
-                onSelect: () => goToPage(bookmark.page)
-            }))
-        }] : []),
+        ...(bookmarks.length > 0
+            ? [
+                  {
+                      id: 'bookmarks',
+                      heading: 'Jump to bookmark',
+                      scrollable: true,
+                      items: bookmarks.map((bookmark): BRMenuGroup['items'][number] => ({
+                          kind: 'radio',
+                          label: `${bookmark.label} · p.${bookmark.page}`,
+                          title: `${bookmark.label} · p.${bookmark.page}`,
+                          checked: bookmark.page === currentPage,
+                          onSelect: () => goToPage(bookmark.page),
+                      })),
+                  },
+              ]
+            : []),
         {
             id: 'actions',
-            items: [{
-                kind: 'action',
-                label: 'Refresh scan',
-                icon: <RefreshIcon size={14} />,
-                busy: isRefreshing,
-                onSelect: onRefresh
-            }]
-        }
+            items: [
+                {
+                    kind: 'action',
+                    label: 'Refresh scan',
+                    icon: <RefreshIcon size={14} />,
+                    busy: isRefreshing,
+                    onSelect: onRefresh,
+                },
+            ],
+        },
     ];
 
     return <BRContextMenu groups={groups} aria-label="Reader options" />;
-
 }

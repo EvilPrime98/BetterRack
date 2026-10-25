@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 
 export function useSettledValue<T>(value: T | null, delay: number): T | null {
-
     const [settled, setSettled] = useState<T | null>(null);
 
     if (settled === null && value !== null) setSettled(value);
@@ -13,5 +12,4 @@ export function useSettledValue<T>(value: T | null, delay: number): T | null {
     }, [value, settled, delay]);
 
     return settled;
-
 }

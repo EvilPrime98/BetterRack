@@ -28,8 +28,8 @@
     pointer-events: none;
 }
 
-:root[data-platform="win32"] .header,
-:root[data-platform="linux"] .header {
+:root[data-platform='win32'] .header,
+:root[data-platform='linux'] .header {
     padding-right: 0;
 }
 
@@ -38,18 +38,16 @@
     margin: -8px 0;
 }
 
-:root[data-platform="darwin"] .header {
+:root[data-platform='darwin'] .header {
     padding-left: 80px;
 }
 
 .left {
-
     display: flex;
     align-items: center;
     gap: 10px;
 
     .text {
-
         display: flex;
         flex-direction: column;
         gap: 1px;
@@ -61,9 +59,7 @@
             letter-spacing: -0.2px;
             line-height: 1.1;
         }
-
     }
-
 }
 
 .burger {
@@ -124,7 +120,9 @@
     border-radius: 8px;
     color: #fff;
     cursor: pointer;
-    transition: background-color 150ms ease, transform 100ms ease;
+    transition:
+        background-color 150ms ease,
+        transform 100ms ease;
     outline: none;
 }
 

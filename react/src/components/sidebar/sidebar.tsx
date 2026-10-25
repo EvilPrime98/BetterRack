@@ -21,11 +21,10 @@ import type { TLibraryStructure } from '@/services/library.service';
 
 const STRUCTURE_OPTIONS: BRDropdownOption<TLibraryStructure>[] = [
     { value: 'folders', label: 'Folders' },
-    { value: 'series', label: 'Series' }
+    { value: 'series', label: 'Series' },
 ];
 
 function PinButton() {
-
     const isPinned = useSidebarStore((s) => s.isPinned);
     const setIsPinned = useSidebarStore((s) => s.setIsPinned);
     const label = isPinned ? 'Unpin sidebar' : 'Pin sidebar';
@@ -47,11 +46,9 @@ function PinButton() {
             />
         </button>
     );
-
 }
 
 function LibraryList({ isHidden, isLoading }: { isHidden: boolean; isLoading: boolean }) {
-
     const groups = useLibraryStore((s) => s.groups);
     const structure = useLibraryStore((s) => s.structure);
 
@@ -63,12 +60,10 @@ function LibraryList({ isHidden, isLoading }: { isHidden: boolean; isLoading: bo
         );
     }
     if (structure === 'series') return <SeriesList groups={groups} isHidden={isHidden} />;
-    return groups.map(group => <SideBarGroup key={group.uid} group={group} />);
-
+    return groups.map((group) => <SideBarGroup key={group.uid} group={group} />);
 }
 
 export function SideBar() {
-
     const asideRef = useRef<HTMLElement>(null);
     const isExpanded = useSidebarStore((s) => s.isExpanded);
     const setIsExpanded = useSidebarStore((s) => s.setIsExpanded);
@@ -117,9 +112,10 @@ export function SideBar() {
 
     return (
         <div>
-
             <div
-                className={[styles.backdrop, !isDocked && isExpanded ? styles.visible : ''].filter(Boolean).join(' ')}
+                className={[styles.backdrop, !isDocked && isExpanded ? styles.visible : '']
+                    .filter(Boolean)
+                    .join(' ')}
                 onClick={closeSidebar}
                 aria-hidden="true"
             />
@@ -132,10 +128,11 @@ export function SideBar() {
                     styles.sideBar,
                     isExpanded ? styles.expanded : '',
                     isDocked ? styles.pinned : '',
-                    isCollapsed ? styles.collapsed : ''
-                ].filter(Boolean).join(' ')}
+                    isCollapsed ? styles.collapsed : '',
+                ]
+                    .filter(Boolean)
+                    .join(' ')}
             >
-
                 <div className={styles.topBar}>
                     <BRButton
                         text={isCompact ? 'Show more' : 'Show less'}
@@ -148,14 +145,16 @@ export function SideBar() {
                 </div>
 
                 <div
-                    className={[styles.fold, isCompact ? styles.folded : ''].filter(Boolean).join(' ')}
+                    className={[styles.fold, isCompact ? styles.folded : '']
+                        .filter(Boolean)
+                        .join(' ')}
                     inert={isCompact}
                 >
-
                     <div className={styles.foldInner}>
-
                         <div className={styles.section}>
-                            <span id="library-group-by-label" className={styles.sectionTitle}>Group by</span>
+                            <span id="library-group-by-label" className={styles.sectionTitle}>
+                                Group by
+                            </span>
                             <BRDropdown
                                 className={styles.groupByDropdown}
                                 aria-labelledby="library-group-by-label"
@@ -179,7 +178,11 @@ export function SideBar() {
                                 <ShopIcon size={16} />
                                 <span>Store</span>
                             </Link>
-                            <Link to="/store/downloads" className={styles.item} onClick={closeSidebar}>
+                            <Link
+                                to="/store/downloads"
+                                className={styles.item}
+                                onClick={closeSidebar}
+                            >
                                 <DownloadIcon size={16} />
                                 <span>Downloads</span>
                             </Link>
@@ -200,24 +203,24 @@ export function SideBar() {
                         <SidebarSearch />
 
                         <RefreshLibraryButton />
-
                     </div>
-
                 </div>
 
                 <nav className={styles.list}>
                     <LibraryList isHidden={isHidden} isLoading={isLoading} />
                 </nav>
 
-                <div className={[styles.fold, isCompact ? styles.folded : ''].filter(Boolean).join(' ')} inert={isCompact}>
+                <div
+                    className={[styles.fold, isCompact ? styles.folded : '']
+                        .filter(Boolean)
+                        .join(' ')}
+                    inert={isCompact}
+                >
                     <div className={styles.foldInner}>
                         <Footer />
                     </div>
                 </div>
-
             </aside>
-
         </div>
     );
-
 }

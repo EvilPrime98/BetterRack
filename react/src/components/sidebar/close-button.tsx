@@ -5,7 +5,6 @@ import { useSidebarStore } from '@/stores/sidebar.store';
 import { useIsDesktop } from '@/hooks/useIsDesktop';
 
 export function SidebarCloseButton() {
-
     const isDesktop = useIsDesktop();
     const setIsExpanded = useSidebarStore((s) => s.setIsExpanded);
     const setIsCollapsed = useSidebarStore((s) => s.setIsCollapsed);
@@ -30,5 +29,4 @@ export function SidebarCloseButton() {
             {isDesktop ? <ArrowLeftIcon size={20} /> : <CloseIcon size={20} />}
         </button>
     );
-
 }

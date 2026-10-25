@@ -70,7 +70,7 @@
     background: var(--bg-canvas);
 }
 
-.row[data-state="done"] {
+.row[data-state='done'] {
     opacity: 0.6;
 }
 
@@ -104,17 +104,17 @@
     color: #b7b7b7;
 }
 
-.badge[data-state="running"] {
+.badge[data-state='running'] {
     color: #8fdde5;
     border-color: rgba(52, 195, 209, 0.5);
 }
 
-.badge[data-state="queued"] {
+.badge[data-state='queued'] {
     color: var(--accent);
     border-color: rgba(232, 163, 61, 0.5);
 }
 
-.badge[data-state="error"] {
+.badge[data-state='error'] {
     color: #f2a1a1;
     border-color: rgba(220, 90, 90, 0.5);
 }
@@ -153,8 +153,33 @@
     white-space: nowrap;
 }
 
-.row[data-state="error"] .detail {
+.row[data-state='error'] .detail {
     color: #f2a1a1;
+}
+
+.detailRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.detailRow .detail {
+    min-width: 0;
+}
+
+.pageLink {
+    flex-shrink: 0;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 600;
+    color: #ededed;
+    text-decoration: underline;
+    white-space: nowrap;
+}
+
+.pageLink:hover {
+    color: #fff;
 }
 
 .retry,

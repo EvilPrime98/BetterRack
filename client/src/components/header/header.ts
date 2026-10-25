@@ -1,14 +1,13 @@
-import { UltraComponent, UltraLink, ultraNavigate, ultraQueryParams } from "ultra-light-js";
+import { UltraComponent, UltraLink, ultraNavigate, ultraQueryParams } from 'ultra-light-js';
 import styles from './header.module.css';
-import { SIDEBAR_CONTEXT } from "@/context/sidebar.context";
-import { VIEWPORT_CONTEXT } from "@/context/viewport.context";
-import { BurgerIcon } from "@/icons/burger-icon";
-import { BetterRackIcon } from "@/icons/better-rack.icon";
-import { LIBRARY_CONTEXT } from "@/context/library.context";
-import { WindowControls } from "@/components/window-controls/window-controls";
+import { SIDEBAR_CONTEXT } from '@/context/sidebar.context';
+import { VIEWPORT_CONTEXT } from '@/context/viewport.context';
+import { BurgerIcon } from '@/icons/burger-icon';
+import { BetterRackIcon } from '@/icons/better-rack.icon';
+import { LIBRARY_CONTEXT } from '@/context/library.context';
+import { WindowControls } from '@/components/window-controls/window-controls';
 
 export function Header() {
-
     const iconSize = 30;
 
     function toggleSidebar() {
@@ -17,16 +16,14 @@ export function Header() {
         } else {
             SIDEBAR_CONTEXT.isExpanded.set(!SIDEBAR_CONTEXT.isExpanded.get());
         }
-    };
+    }
 
     function goHome() {
         LIBRARY_CONTEXT.searchQuery.set('');
         if (ultraQueryParams().search) ultraNavigate({ href: '/' });
     }
 
-    function onEnterOrSpace(
-        handler: () => void
-    ) {
+    function onEnterOrSpace(handler: () => void) {
         return (e: Event) => {
             const key = (e as KeyboardEvent).key;
             if (key !== 'Enter' && key !== ' ') return;
@@ -36,21 +33,17 @@ export function Header() {
     }
 
     return UltraComponent({
-
         component: '<header></header>',
 
         className: [styles.header],
 
         children: [
-
             UltraComponent({
-
                 component: '<div></div>',
 
                 className: [styles.left],
 
                 children: [
-
                     UltraComponent({
                         component: BurgerIcon({ size: iconSize * 1.5 }),
                         className: [styles.iconBtn, styles.noDrag, styles.burger],
@@ -58,26 +51,24 @@ export function Header() {
                             role: 'button',
                             tabindex: '0',
                             'aria-hidden': 'false',
-                            'aria-label': 'Toggle sidebar'
+                            'aria-label': 'Toggle sidebar',
                         },
                         eventHandler: {
                             click: toggleSidebar,
-                            keydown: onEnterOrSpace(toggleSidebar)
-                        }
+                            keydown: onEnterOrSpace(toggleSidebar),
+                        },
                     }),
 
                     UltraLink({
                         href: '/',
                         attributes: {
-                            'aria-label': 'BetterRack home'
+                            'aria-label': 'BetterRack home',
                         },
                         className: [styles.logo, styles.noDrag],
                         eventHandler: {
-                            click: goHome
+                            click: goHome,
                         },
-                        children: [
-                            BetterRackIcon({ size: iconSize * 1.3 })
-                        ]
+                        children: [BetterRackIcon({ size: iconSize * 1.3 })],
                     }),
 
                     UltraComponent({
@@ -91,20 +82,18 @@ export function Header() {
                                 component: `<span>BetterRack</span>`,
                                 className: [styles.title],
                                 styles: {
-                                    fontSize: '1.5rem'
-                                }
-                            })
-                        ]
-                    })
-
-                ]
-
+                                    fontSize: '1.5rem',
+                                },
+                            }),
+                        ],
+                    }),
+                ],
             }),
 
             UltraComponent({
                 component: '<div></div>',
                 className: [styles.windowControls],
-                children: [WindowControls()]
+                children: [WindowControls()],
             }),
 
             // UltraComponent({
@@ -114,9 +103,6 @@ export function Header() {
             //         HeaderMenu()
             //     ]
             // })
-
-        ]
-
-    })
-
+        ],
+    });
 }

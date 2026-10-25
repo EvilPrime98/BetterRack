@@ -1,5 +1,4 @@
 .comicCard {
-
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -43,11 +42,14 @@
             overflow: hidden;
             background: #232222;
             box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.6);
-            transition: transform 220ms ease, box-shadow 220ms ease, border-radius 320ms ease;
+            transition:
+                transform 220ms ease,
+                box-shadow 220ms ease,
+                border-radius 320ms ease;
         }
 
         .frame::after {
-            content: "";
+            content: '';
             position: absolute;
             inset: 0;
             background: linear-gradient(100deg, transparent 30%, #302f2f 50%, transparent 70%);
@@ -74,7 +76,9 @@
             object-fit: cover;
             filter: saturate(1.1);
             opacity: 0;
-            transition: opacity 240ms ease, filter 320ms ease;
+            transition:
+                opacity 240ms ease,
+                filter 320ms ease;
         }
 
         .frame.loaded img {
@@ -94,9 +98,10 @@
         opacity: 0;
         transform: translateX(-50%) scaleY(1);
         transform-origin: center bottom;
-        transition: opacity 360ms ease
-        ,transform 360ms ease
-        ,border-radius 320ms ease;
+        transition:
+            opacity 360ms ease,
+            transform 360ms ease,
+            border-radius 320ms ease;
     }
 
     .bagOverlay {
@@ -108,20 +113,24 @@
         overflow: hidden;
         pointer-events: none;
         opacity: 0;
-        transition: opacity 360ms ease, border-radius 320ms ease;
+        transition:
+            opacity 360ms ease,
+            border-radius 320ms ease;
     }
 
     /**plastic effect**/
     .bagOverlay::before {
-        content: "";
+        content: '';
         position: absolute;
         inset: 0;
-        background: linear-gradient(118deg,
-                transparent 22%,
-                rgba(255, 255, 255, 0.14) 42%,
-                rgba(255, 255, 255, 0.32) 48%,
-                rgba(255, 255, 255, 0.1) 54%,
-                transparent 74%);
+        background: linear-gradient(
+            118deg,
+            transparent 22%,
+            rgba(255, 255, 255, 0.14) 42%,
+            rgba(255, 255, 255, 0.32) 48%,
+            rgba(255, 255, 255, 0.1) 54%,
+            transparent 74%
+        );
         mix-blend-mode: screen;
     }
 
@@ -142,7 +151,9 @@
         opacity: 0;
         transform: translateY(-4px);
         pointer-events: none;
-        transition: opacity 260ms ease, transform 260ms ease;
+        transition:
+            opacity 260ms ease,
+            transform 260ms ease;
     }
 
     .issueBadge:empty {
@@ -170,7 +181,9 @@
         opacity: 0;
         transform: translateY(6px);
         pointer-events: none;
-        transition: opacity 260ms ease, transform 260ms ease;
+        transition:
+            opacity 260ms ease,
+            transform 260ms ease;
     }
 
     .eventBadge:empty {
@@ -190,7 +203,9 @@
         flex-direction: column;
         width: 90%;
         margin-top: 8px;
-        transition: width 320ms ease, margin-top 320ms ease;
+        transition:
+            width 320ms ease,
+            margin-top 320ms ease;
     }
 
     .title {
@@ -362,11 +377,12 @@
     }
 
     @media (hover: hover) {
-
         .actions {
             opacity: 0;
             transform: translateY(2px);
-            transition: opacity 200ms ease, transform 200ms ease;
+            transition:
+                opacity 200ms ease,
+                transform 200ms ease;
             pointer-events: none;
         }
 
@@ -381,7 +397,6 @@
             opacity: 1;
             pointer-events: auto;
         }
-
     }
 
     @media (min-width: 481px) and (max-width: 1024px) {
@@ -412,11 +427,9 @@
             margin-bottom: 6px;
         }
     }
-
 }
 
 .isRead {
-
     .cover img {
         box-shadow:
             0 0 0 1px rgba(0, 0, 0, 0.15),
@@ -432,11 +445,9 @@
     .bagOverlay {
         opacity: 1;
     }
-    
 }
 
 .detailMode {
-
     flex-direction: row;
     align-items: center;
     gap: 16px;
@@ -528,7 +539,6 @@
             justify-content: center;
         }
     }
-
 }
 
 @keyframes coverShimmer {

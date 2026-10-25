@@ -14,7 +14,6 @@ import { useConfirmModalStore } from '@/stores/confirmModal.store';
 const DEBOUNCING_DELAY = 500;
 
 export function ComicIdentifier() {
-
     const isVisible = useComicIdentStore((s) => s.isVisible);
 
     const [search, setSearch] = useState('');
@@ -29,17 +28,16 @@ export function ComicIdentifier() {
         const confirmed = await useConfirmModalStore.getState().confirmDialog({
             title: 'Un-identify comic?',
             message: 'This will remove the identified metadata for this comic.',
-            confirmLabel: 'Un-identify'
+            confirmLabel: 'Un-identify',
         });
         if (!confirmed) return;
         const itemUid = useComicIdentStore.getState().itemUid;
         await useLibraryStore.getState().unidentifyFile(itemUid);
         useComicIdentStore.getState().setLastUnidentified({ uid: itemUid });
         close();
-    }
+    };
 
     useEffect(() => {
-
         if (!search.trim()) {
             setSuggestions([]);
             setIsSearching(false);
@@ -60,7 +58,6 @@ export function ComicIdentifier() {
             cancelled = true;
             clearTimeout(timeoutId);
         };
-
     }, [search]);
 
     useEffect(() => {
@@ -77,8 +74,12 @@ export function ComicIdentifier() {
 
     return (
         <div className={styles.overlay} style={{ display: isVisible ? undefined : 'none' }}>
-
-            <button type="button" className={styles.backdrop} aria-label="Close dialog" onClick={close} />
+            <button
+                type="button"
+                className={styles.backdrop}
+                aria-label="Close dialog"
+                onClick={close}
+            />
 
             <div
                 className={styles.modal}
@@ -86,9 +87,7 @@ export function ComicIdentifier() {
                 aria-modal="true"
                 aria-label="Search comics"
             >
-
                 <div className={styles.searchBar}>
-
                     <SearchIcon size={16} color="#8f8f8f" />
 
                     <input
@@ -116,18 +115,16 @@ export function ComicIdentifier() {
                     >
                         <CloseIcon size={14} />
                     </button>
-
                 </div>
 
                 <section className={styles.suggestions}>
-                    {suggestions.length > 0
-                        ? suggestions.map((s) => <SuggestionCard key={s.pageId} comic={s} />)
-                        : <IdentifierDefaultContent search={search} isSearching={isSearching} />}
+                    {suggestions.length > 0 ? (
+                        suggestions.map((s) => <SuggestionCard key={s.pageId} comic={s} />)
+                    ) : (
+                        <IdentifierDefaultContent search={search} isSearching={isSearching} />
+                    )}
                 </section>
-
             </div>
-
         </div>
     );
-
 }

@@ -4,12 +4,11 @@ import { Loader } from '../loader/loader';
 
 export function IdentifierDefaultContent({
     isSearching,
-    search
+    search,
 }: {
     isSearching: boolean;
     search: string;
 }) {
-
     const itemUid = useComicIdentStore((s) => s.itemUid);
 
     const message = search.trim()
@@ -18,14 +17,11 @@ export function IdentifierDefaultContent({
 
     return (
         <div>
-
             <Loader visible={isSearching} label="Searching…" />
 
             <p className={styles.emptyState} style={{ display: !isSearching ? undefined : 'none' }}>
                 {message}
             </p>
-
         </div>
     );
-
 }

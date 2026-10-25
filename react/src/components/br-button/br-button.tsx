@@ -14,20 +14,14 @@ export function BRButton({
     children,
     ...props
 }: BRButtonProps) {
-
     return (
         <button
             type="button"
-            className={[
-                styles.button, 
-                styles[variant], 
-                className].filter(Boolean).join(' ')
-            }
+            className={[styles.button, styles[variant], className].filter(Boolean).join(' ')}
             {...props}
         >
             {text}
             {children}
         </button>
     );
-
 }

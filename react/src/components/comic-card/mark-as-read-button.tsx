@@ -3,12 +3,7 @@ import { useComicCacheStore } from '@/stores/comicCache.store';
 import { BookmarkIcon } from '@/icons/bookmark.icon';
 import { toggleComicRead } from './mark-as-read-button.utils';
 
-export function MarkAsReadButton({
-    uid
-}: {
-    uid: string;
-}) {
-
+export function MarkAsReadButton({ uid }: { uid: string }) {
     const isRead = useComicCacheStore((s) => s.cache[uid]?.read === true);
 
     const onClick = () => toggleComicRead(uid);
@@ -17,7 +12,9 @@ export function MarkAsReadButton({
     return (
         <button
             type="button"
-            className={[styles.markAsReadButton, isRead ? styles.isRead : ''].filter(Boolean).join(' ')}
+            className={[styles.markAsReadButton, isRead ? styles.isRead : '']
+                .filter(Boolean)
+                .join(' ')}
             aria-pressed={isRead}
             aria-label={label}
             title={label}
@@ -26,5 +23,4 @@ export function MarkAsReadButton({
             <BookmarkIcon size={16} />
         </button>
     );
-
 }

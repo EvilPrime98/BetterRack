@@ -11,12 +11,7 @@ import { useDocumentTitleStore } from '@/stores/documentTitle.store';
 import { matchesReadFilter, useReadTypesContext } from '@/context/ReadTypesContext.hooks';
 import { useComicCacheStore } from '@/stores/comicCache.store';
 
-export function SearchPage({
-    search
-}: {
-    search: string
-}) {
-
+export function SearchPage({ search }: { search: string }) {
     const groups = useLibraryStore((s) => s.groups);
     const searchQuery = useLibraryStore((s) => s.searchQuery);
     const comicsType = useComicsTypeStore((s) => s.type);
@@ -27,9 +22,11 @@ export function SearchPage({
 
     function getSearchItems(): ILibraryResponseItem[] {
         const query = useLibraryStore.getState().searchQuery.trim().toLowerCase();
-        return useLibraryStore.getState().getLibraryItems({ onlyDir: false })
-        .filter(item => item.did === false)
-        .filter(item => item.name.toLowerCase().includes(query));
+        return useLibraryStore
+            .getState()
+            .getLibraryItems({ onlyDir: false })
+            .filter((item) => item.did === false)
+            .filter((item) => item.name.toLowerCase().includes(query));
     }
 
     const { filters, setFilters, resetFilters } = useFilters();
@@ -50,12 +47,13 @@ export function SearchPage({
         useLibraryStore.getState().fetchLibrary();
     }, []);
 
-    const hasVisibleItems = items.some(item => matchesReadFilter(readFilter, comicCache[item.uid]?.readPer || 0));
+    const hasVisibleItems = items.some((item) =>
+        matchesReadFilter(readFilter, comicCache[item.uid]?.readPer || 0),
+    );
 
     return (
         <Layout>
             <section className={styles.page}>
-
                 <PageHeader
                     items={items}
                     filters={filters}
@@ -66,13 +64,18 @@ export function SearchPage({
                 {!hasVisibleItems ? (
                     <p className={styles.empty}>No items to show.</p>
                 ) : (
-                    <section className={[styles.comicContainer, comicsType === 'detail' ? styles.detailLayout : ''].filter(Boolean).join(' ')}>
+                    <section
+                        className={[
+                            styles.comicContainer,
+                            comicsType === 'detail' ? styles.detailLayout : '',
+                        ]
+                            .filter(Boolean)
+                            .join(' ')}
+                    >
                         <ItemsGrid key={search} items={items} />
                     </section>
                 )}
-
             </section>
         </Layout>
     );
-
 }

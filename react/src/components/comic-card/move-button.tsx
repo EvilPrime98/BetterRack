@@ -3,14 +3,7 @@ import styles from './move-button.module.css';
 import { FolderIcon } from '@/icons/folder.icon';
 import { useMoveFileModalContext } from '@/context/MoveFileModalContext.hooks';
 
-export function MoveFileButton({
-    uid,
-    name
-}: {
-    uid: string;
-    name: string;
-}) {
-
+export function MoveFileButton({ uid, name }: { uid: string; name: string }) {
     const { openMoveFileModal } = useMoveFileModalContext();
 
     const onClick = (e: MouseEvent) => {
@@ -30,5 +23,4 @@ export function MoveFileButton({
             <FolderIcon size={18} />
         </button>
     );
-
 }

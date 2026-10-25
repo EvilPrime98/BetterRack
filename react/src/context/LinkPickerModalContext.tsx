@@ -14,34 +14,45 @@ export function LinkPickerModalProvider({ children }: { children: ReactNode }) {
         resolve?.(link);
     }, []);
 
-    const openLinkPickerModal = useCallback((nextLinks: IStoreLink[], title: string) => {
-        settle(null);
-        setLinks(nextLinks);
-        setComicTitle(title);
-        setIsVisible(true);
-        return new Promise<IStoreLink | null>((resolve) => {
-            pendingResolve.current = resolve;
-        });
-    }, [settle]);
+    const openLinkPickerModal = useCallback(
+        (nextLinks: IStoreLink[], title: string) => {
+            settle(null);
+            setLinks(nextLinks);
+            setComicTitle(title);
+            setIsVisible(true);
+            return new Promise<IStoreLink | null>((resolve) => {
+                pendingResolve.current = resolve;
+            });
+        },
+        [settle],
+    );
 
-    const pickLink = useCallback((link: IStoreLink) => {
-        setIsVisible(false);
-        settle(link);
-    }, [settle]);
+    const pickLink = useCallback(
+        (link: IStoreLink) => {
+            setIsVisible(false);
+            settle(link);
+        },
+        [settle],
+    );
 
     const closeLinkPickerModal = useCallback(() => {
         setIsVisible(false);
         settle(null);
     }, [settle]);
 
-    const value = useMemo(() => ({
-        isVisible, comicTitle, links,
-        openLinkPickerModal, pickLink, closeLinkPickerModal
-    }), [isVisible, comicTitle, links, openLinkPickerModal, pickLink, closeLinkPickerModal]);
+    const value = useMemo(
+        () => ({
+            isVisible,
+            comicTitle,
+            links,
+            openLinkPickerModal,
+            pickLink,
+            closeLinkPickerModal,
+        }),
+        [isVisible, comicTitle, links, openLinkPickerModal, pickLink, closeLinkPickerModal],
+    );
 
     return (
-        <LinkPickerModalContext.Provider value={value}>
-            {children}
-        </LinkPickerModalContext.Provider>
+        <LinkPickerModalContext.Provider value={value}>{children}</LinkPickerModalContext.Provider>
     );
 }

@@ -8,12 +8,16 @@ export function AppearingSection({ groups }: { groups: AppearingGroup[] }) {
     return (
         <SectionBlock title="Appearing">
             <div className={styles.appearingGroups}>
-                {groups.map(group => (
+                {groups.map((group) => (
                     <div key={group.label} className={styles.appearingGroup}>
                         <span className={styles.appearingGroupLabel}>{group.label}</span>
                         <div className={styles.chipList}>
                             {group.entries.map((entry: WikiAppearanceEntry) => (
-                                <span key={entry.name} className={styles.chip} title={entry.statusNote || undefined}>
+                                <span
+                                    key={entry.name}
+                                    className={styles.chip}
+                                    title={entry.statusNote || undefined}
+                                >
                                     {entry.name}
                                 </span>
                             ))}

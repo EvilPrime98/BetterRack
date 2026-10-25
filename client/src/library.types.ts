@@ -1,5 +1,5 @@
-import type { IUltraCompStateStateful } from "ultra-light-js";
-import type { WikiComic } from "better-wiki";
+import type { IUltraCompStateStateful } from 'ultra-light-js';
+import type { WikiComic } from 'better-wiki';
 
 export type TMetaSource = 'wiki' | 'comicinfo';
 
@@ -14,39 +14,39 @@ export interface ILibraryItem {
 }
 
 export interface ILibraryResponseItem {
-    "uid": string,
-    "did": boolean,
-    "name": string,
-    "path": string,
-    "parentId": string,
+    uid: string;
+    did: boolean;
+    name: string;
+    path: string;
+    parentId: string;
     /** Milliseconds since the epoch, from the file's mtime at scan time. */
-    "createdAt": number,
+    createdAt: number;
     /** Tri-state, files only: undefined = not yet looked up (fetch GET /api/library/:uid/identify), true = identified (see `comic`), false = looked up, no wiki match. */
-    "identified"?: boolean,
+    identified?: boolean;
     /** The identified wiki comic, resolved on demand - metadata only, never the cover source. */
-    "comic"?: WikiComic,
-    "metaSource"?: TMetaSource,
+    comic?: WikiComic;
+    metaSource?: TMetaSource;
 }
 
 export interface ILibraryGroup {
-    "uid": string,
-    "name": string,
-    "path": string,
-    "entries": ILibraryResponseItem[]
+    uid: string;
+    name: string;
+    path: string;
+    entries: ILibraryResponseItem[];
 }
 
 /** The response body of GET /api/library/recent. It is a flat list of files added within the window, newest first. */
 export interface IRecentlyAddedResponse {
-    "items": ILibraryResponseItem[],
+    items: ILibraryResponseItem[];
     /** The look-back window the list was built with, in hours. */
-    "windowHours": number,
+    windowHours: number;
     /** The `Date.now()` value the window was measured against. */
-    "generatedAt": number
+    generatedAt: number;
 }
 
 export interface IReadingResponse {
-    "items": ILibraryResponseItem[],
-    "generatedAt": number
+    items: ILibraryResponseItem[];
+    generatedAt: number;
 }
 
 /** The look-back windows for the "recently added" view. The view sends `hours`
@@ -59,20 +59,20 @@ export const RECENT_WINDOW_OPTIONS = [
     { label: 'Last year', hours: 8760 },
 ] as const;
 
-export type TRecentWindow = typeof RECENT_WINDOW_OPTIONS[number];
+export type TRecentWindow = (typeof RECENT_WINDOW_OPTIONS)[number];
 
 export interface ILibraryIndexGroup {
-    "uid": string,
-    "name": string,
-    "count": number
+    uid: string;
+    name: string;
+    count: number;
 }
 
 export interface ILibraryPage {
-    "groups": ILibraryGroup[],
-    "total": number,
-    "limit": number,
-    "offset": number,
-    "hasMore": boolean
+    groups: ILibraryGroup[];
+    total: number;
+    limit: number;
+    offset: number;
+    hasMore: boolean;
 }
 
 export interface ILibraryFilters {
@@ -112,7 +112,11 @@ export type TIdentifyProgress =
 
 export type TIdentifyLibraryStatus =
     | { state: 'idle' }
-    | { jobId: string; state: 'queued' | 'running' | 'done' | 'error'; progress?: TIdentifyProgress };
+    | {
+          jobId: string;
+          state: 'queued' | 'running' | 'done' | 'error';
+          progress?: TIdentifyProgress;
+      };
 
 export interface IComicLSCache {
     /**Rating for the comic */
@@ -134,15 +138,15 @@ export interface IComicIdentity {
 }
 
 export const COMICS_TYPES = {
-    'cover': 'cover',
-    detail: 'detail'
+    cover: 'cover',
+    detail: 'detail',
 } as const;
 
 export const READ_TYPES = {
-    'all': 'all',
-    'read': 'read',
-    'unread': 'unread',
-    'reading': 'reading'
+    all: 'all',
+    read: 'read',
+    unread: 'unread',
+    reading: 'reading',
 } as const;
 
 export type TReadTypes = keyof typeof READ_TYPES;
@@ -152,15 +156,17 @@ export type TComicsTypes = keyof typeof COMICS_TYPES;
 export const FILTER_OPTIONS = {
     nofilters: 'Alphabetically',
     byCreation: 'Creation Date',
-    byReleaseDate: 'Release Date'
+    byReleaseDate: 'Release Date',
 } as const;
 
-export type TFilterOptions = typeof FILTER_OPTIONS[keyof typeof FILTER_OPTIONS];
+export type TFilterOptions = (typeof FILTER_OPTIONS)[keyof typeof FILTER_OPTIONS];
 
 export function isIUltraCompStateStateful<T>(
-    candidate: object
+    candidate: object,
 ): candidate is IUltraCompStateStateful<T> {
-    return Object.hasOwn(candidate, 'get')
-    && Object.hasOwn(candidate, 'set')
-    && Object.hasOwn(candidate, 'subscribe')
+    return (
+        Object.hasOwn(candidate, 'get') &&
+        Object.hasOwn(candidate, 'set') &&
+        Object.hasOwn(candidate, 'subscribe')
+    );
 }

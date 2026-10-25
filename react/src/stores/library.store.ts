@@ -10,9 +10,14 @@ import {
     reidentifyAllLibrary as requestReidentifyAllLibrary,
     startIdentifyLibrary,
     getIdentifyLibraryStatus,
-    type TLibraryStructure
+    type TLibraryStructure,
 } from '../services/library.service';
-import type { ILibraryGroup, ILibraryResponseItem, TIdentifyLibraryStatus, TIdentifyProgress } from '../library.types';
+import type {
+    ILibraryGroup,
+    ILibraryResponseItem,
+    TIdentifyLibraryStatus,
+    TIdentifyProgress,
+} from '../library.types';
 import { toast } from '../services/toast.service';
 import { useConfirmModalStore } from './confirmModal.store';
 
@@ -20,7 +25,8 @@ import { useConfirmModalStore } from './confirmModal.store';
 // into this store action, fetchLibrary keeps a lightweight staleTime + in-flight-promise
 // cache here instead.
 const LIBRARY_STALE_TIME_MS = 60 * 5 * 1000;
-const cache: Partial<Record<TLibraryStructure, { groups: ILibraryGroup[]; fetchedAt: number }>> = {};
+const cache: Partial<Record<TLibraryStructure, { groups: ILibraryGroup[]; fetchedAt: number }>> =
+    {};
 const inFlight: Partial<Record<TLibraryStructure, Promise<void>>> = {};
 
 function invalidateLibraryCache() {
@@ -65,12 +71,11 @@ interface ILibraryStore {
     moveFile: (fileUid: string, targetFolderUid?: string) => Promise<void>;
     unidentifyFile: (uid: string) => Promise<void>;
     reidentifyAll: () => Promise<void>;
-    getLibraryItems: (args: { onlyDir: boolean, uid?: string }) => ILibraryResponseItem[];
+    getLibraryItems: (args: { onlyDir: boolean; uid?: string }) => ILibraryResponseItem[];
     findUidByPath: (absPath: string) => string | undefined;
 }
 
 export const useLibraryStore = create<ILibraryStore>((set, get) => ({
-
     groups: [],
     searchQuery: '',
     structure: readStoredStructure(),
@@ -81,7 +86,11 @@ export const useLibraryStore = create<ILibraryStore>((set, get) => ({
 
     setStructure: async (structure) => {
         if (get().structure === structure) return;
-        try { localStorage.setItem(STRUCTURE_STORAGE_KEY, structure); } catch { /* storage unavailable */ }
+        try {
+            localStorage.setItem(STRUCTURE_STORAGE_KEY, structure);
+        } catch {
+            /* storage unavailable */
+        }
         const cached = cache[structure];
         set(cached ? { structure, groups: cached.groups } : { structure });
         try {
@@ -94,7 +103,11 @@ export const useLibraryStore = create<ILibraryStore>((set, get) => ({
     fetchLibrary: async () => {
         const structure = get().structure;
         const cached = cache[structure];
-        if (cached && Date.now() - cached.fetchedAt < LIBRARY_STALE_TIME_MS && !inFlight[structure]) {
+        if (
+            cached &&
+            Date.now() - cached.fetchedAt < LIBRARY_STALE_TIME_MS &&
+            !inFlight[structure]
+        ) {
             if (get().groups !== cached.groups) set({ groups: cached.groups });
             return;
         }
@@ -103,7 +116,9 @@ export const useLibraryStore = create<ILibraryStore>((set, get) => ({
                 const data = await getLibrary(structure);
                 cache[structure] = { groups: data, fetchedAt: Date.now() };
                 if (get().structure === structure) set({ groups: data });
-            })().finally(() => { delete inFlight[structure]; });
+            })().finally(() => {
+                delete inFlight[structure];
+            });
         }
         await inFlight[structure];
     },
@@ -129,9 +144,10 @@ export const useLibraryStore = create<ILibraryStore>((set, get) => ({
 
         const identify = await useConfirmModalStore.getState().confirmDialog({
             title: 'Identify library?',
-            message: 'Do you also want to identify every comic in your library after refreshing? This can take a while and runs in the background.',
+            message:
+                'Do you also want to identify every comic in your library after refreshing? This can take a while and runs in the background.',
             confirmLabel: 'Refresh & identify',
-            cancelLabel: 'Just refresh'
+            cancelLabel: 'Just refresh',
         });
 
         if (identify === null) return;
@@ -156,7 +172,11 @@ export const useLibraryStore = create<ILibraryStore>((set, get) => ({
                 const progress = status.progress;
 
                 if (status.state === 'error' || progress?.type === 'error') {
-                    toast.error(progress?.type === 'error' ? progress.message : 'Library identification failed.');
+                    toast.error(
+                        progress?.type === 'error'
+                            ? progress.message
+                            : 'Library identification failed.',
+                    );
                     return;
                 }
                 if (status.state === 'done' || progress?.type === 'done') {
@@ -166,7 +186,12 @@ export const useLibraryStore = create<ILibraryStore>((set, get) => ({
                     return;
                 }
 
-                set({ identifyProgress: progress?.type === 'identifying' ? progress : { type: 'identifying', done: 0, total: 0 } });
+                set({
+                    identifyProgress:
+                        progress?.type === 'identifying'
+                            ? progress
+                            : { type: 'identifying', done: 0, total: 0 },
+                });
                 await new Promise((resolve) => setTimeout(resolve, IDENTIFY_POLL_INTERVAL_MS));
                 status = await getIdentifyLibraryStatus();
             }
@@ -242,59 +267,60 @@ export const useLibraryStore = create<ILibraryStore>((set, get) => ({
             await get().fetchLibrary();
             toast.success(data.message || 'Library flagged for re-identification');
         } catch (e) {
-            toast.error(e instanceof Error ? e.message : 'Failed to flag library for re-identification.');
+            toast.error(
+                e instanceof Error ? e.message : 'Failed to flag library for re-identification.',
+            );
         }
     },
 
     getLibraryItems: ({ onlyDir, uid }) => {
-
         const groups = get().groups;
 
         if (get().structure === 'series') {
             if (!uid) {
                 return onlyDir
-                    ? groups.map(g => ({ uid: g.uid, did: true, name: g.name, path: g.path, parentId: '', createdAt: 0 }))
-                    : groups.flatMap(g => g.entries);
+                    ? groups.map((g) => ({
+                          uid: g.uid,
+                          did: true,
+                          name: g.name,
+                          path: g.path,
+                          parentId: '',
+                          createdAt: 0,
+                      }))
+                    : groups.flatMap((g) => g.entries);
             }
-            const series = groups.find(g => g.uid === uid);
+            const series = groups.find((g) => g.uid === uid);
             if (series) return onlyDir ? [] : series.entries;
         }
 
         let data: ILibraryResponseItem[];
 
-        const library = uid
-            ? groups.find(g => g.uid === uid)
-            : undefined;
+        const library = uid ? groups.find((g) => g.uid === uid) : undefined;
 
         if (!uid) {
-            data = groups.map(g => g.entries).flat();
+            data = groups.map((g) => g.entries).flat();
         } else if (library) {
-            data = library.entries.filter(e => !e.parentId);
+            data = library.entries.filter((e) => !e.parentId);
         } else {
-            data = groups.flatMap(g => g.entries)
-            .filter(e => e.parentId === uid);
+            data = groups.flatMap((g) => g.entries).filter((e) => e.parentId === uid);
         }
 
-        if (onlyDir) data = data.filter(i => i.did !== false);
+        if (onlyDir) data = data.filter((i) => i.did !== false);
 
         return data;
-
     },
 
     findUidByPath: (absPath) => {
-
         const groups = get().groups;
 
-        const group = groups.find(g => g.path === absPath);
+        const group = groups.find((g) => g.path === absPath);
         if (group) return group.uid;
 
         for (const g of groups) {
-            const entry = g.entries.find(e => e.did && e.path === absPath);
+            const entry = g.entries.find((e) => e.did && e.path === absPath);
             if (entry) return entry.uid;
         }
 
         return undefined;
-
-    }
-
+    },
 }));

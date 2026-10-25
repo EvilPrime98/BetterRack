@@ -1,5 +1,5 @@
-import { ultraCompState, type IUltraCompStateStateful } from "ultra-light-js";
-import { LIBRARY_CONTEXT } from "./library.context";
+import { ultraCompState, type IUltraCompStateStateful } from 'ultra-light-js';
+import { LIBRARY_CONTEXT } from './library.context';
 
 export interface IMoveFileModalCtx {
     isVisible: IUltraCompStateStateful<boolean>;
@@ -11,7 +11,6 @@ export interface IMoveFileModalCtx {
 }
 
 export const MOVE_FILE_MODAL_CTX: IMoveFileModalCtx = ultraCompState({
-
     isVisible: false,
     fileUid: '' as string,
     fileName: '' as string,
@@ -30,6 +29,5 @@ export const MOVE_FILE_MODAL_CTX: IMoveFileModalCtx = ultraCompState({
         const fileUid = comp.fileUid.get();
         comp.closeMoveFileModal();
         await LIBRARY_CONTEXT.moveFile(fileUid, targetFolderUid);
-    }
-
+    },
 });

@@ -3,10 +3,13 @@ import styles from './server-modal.module.css';
 import { BRButton } from '@/components/br-button/br-button';
 import { BRCheckbox } from '@/components/br-checkbox/br-checkbox';
 import { useServerModalStore, getStoredServerUrl } from '@/stores/serverModal.store';
-import { isAndroidPlatform, isRemoteModeEnabled, getStoredApiKey } from '@/services/server-config.service';
+import {
+    isAndroidPlatform,
+    isRemoteModeEnabled,
+    getStoredApiKey,
+} from '@/services/server-config.service';
 
 export function ServerModal() {
-
     const isVisible = useServerModalStore((s) => s.isVisible);
     const isMandatory = useServerModalStore((s) => s.isMandatory);
     const error = useServerModalStore((s) => s.error);
@@ -51,8 +54,12 @@ export function ServerModal() {
 
     return (
         <div className={styles.overlay} style={{ display: isVisible ? undefined : 'none' }}>
-
-            <button type="button" className={styles.backdrop} aria-label="Close dialog" onClick={cancel} />
+            <button
+                type="button"
+                className={styles.backdrop}
+                aria-label="Close dialog"
+                onClick={cancel}
+            />
 
             <div
                 className={styles.modal}
@@ -60,10 +67,11 @@ export function ServerModal() {
                 aria-modal="true"
                 aria-label="Connect to server"
             >
-
                 <p className={styles.title}>Connect to your server</p>
 
-                <p className={styles.hint}>Enter the address of the BetterRack server on your network.</p>
+                <p className={styles.hint}>
+                    Enter the address of the BetterRack server on your network.
+                </p>
 
                 <input
                     ref={inputRef}
@@ -102,16 +110,9 @@ export function ServerModal() {
                     {!isMandatory && (
                         <BRButton text="Cancel" variant="secondary" onClick={cancel} />
                     )}
-                    <BRButton 
-                        text="Connect" 
-                        variant="classic" 
-                        onClick={submit}
-                    />
+                    <BRButton text="Connect" variant="classic" onClick={submit} />
                 </div>
-
             </div>
-
         </div>
     );
-
 }

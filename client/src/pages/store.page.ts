@@ -1,13 +1,19 @@
-import { UltraActivity, UltraComponent, ultraCompState, type IUltraCompStateStateful, type UltraLightElement } from "ultra-light-js";
+import {
+    UltraActivity,
+    UltraComponent,
+    ultraCompState,
+    type IUltraCompStateStateful,
+    type UltraLightElement,
+} from 'ultra-light-js';
 import styles from './store.page.module.css';
-import { Layout } from "../layout";
-import { StoreCard } from "../components/store-card/store-card";
-import { searchComics, getLatestComics } from "../services/store.service";
-import { toast } from "../services/toast.service";
-import type { IStorePost } from "../store.types";
-import { DOCUMENT_TITLE_CONTEXT } from "../context/document-title.context";
-import { STORE_PAGE_CONTEXT } from "../context/store-page.context";
-import { BRButton } from "../components/br-button/br-button";
+import { Layout } from '../layout';
+import { StoreCard } from '../components/store-card/store-card';
+import { searchComics, getLatestComics } from '../services/store.service';
+import { toast } from '../services/toast.service';
+import type { IStorePost } from '../store.types';
+import { DOCUMENT_TITLE_CONTEXT } from '../context/document-title.context';
+import { STORE_PAGE_CONTEXT } from '../context/store-page.context';
+import { BRButton } from '../components/br-button/br-button';
 
 interface IStorePageState {
     isLoading: IUltraCompStateStateful<boolean>;
@@ -20,11 +26,9 @@ interface IStorePageState {
 }
 
 export function StorePage() {
-
     const PAGE_SIZE = 30;
 
     const store: IStorePageState = ultraCompState({
-
         isLoading: false,
         isLoadingMore: false,
         error: '',
@@ -55,7 +59,12 @@ export function StorePage() {
         },
 
         loadMore: async (comp: IStorePageState) => {
-            if (!STORE_PAGE_CONTEXT.hasMore.get() || comp.isLoading.get() || comp.isLoadingMore.get()) return;
+            if (
+                !STORE_PAGE_CONTEXT.hasMore.get() ||
+                comp.isLoading.get() ||
+                comp.isLoadingMore.get()
+            )
+                return;
             const nextPage = STORE_PAGE_CONTEXT.page.get() + 1;
             comp.isLoadingMore.set(true);
             try {
@@ -74,8 +83,7 @@ export function StorePage() {
         runSearch: (comp: IStorePageState) => {
             STORE_PAGE_CONTEXT.activeSearch.set(STORE_PAGE_CONTEXT.query.get().trim());
             comp.loadFirstPage();
-        }
-
+        },
     });
 
     function saveScrollY() {
@@ -99,7 +107,7 @@ export function StorePage() {
     }
 
     const itemsMap = new Map<string, UltraLightElement>();
-    
+
     function keyFor(item: IStorePost) {
         return item.id !== undefined ? `id:${item.id}` : `link:${item.link}`;
     }
@@ -117,38 +125,37 @@ export function StorePage() {
     }
 
     function onSentinelMount($sentinel: HTMLElement) {
-        const observer = new IntersectionObserver((entries) => {
-            if (!entries.some(e => e.isIntersecting)) return;
-            store.loadMore();
-        }, { rootMargin: '600px' });
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (!entries.some((e) => e.isIntersecting)) return;
+                store.loadMore();
+            },
+            { rootMargin: '600px' },
+        );
         observer.observe($sentinel);
         return () => observer.disconnect();
     }
 
     const sentinel = UltraComponent({
         component: `<div class="${styles.sentinel}"></div>`,
-        onMount: [onSentinelMount]
+        onMount: [onSentinelMount],
     });
 
     const loadingMore = UltraComponent({
-        component: `<p class="${styles.loadingMore}">Loading more…</p>`
+        component: `<p class="${styles.loadingMore}">Loading more…</p>`,
     });
 
     function onResultsChange($section: HTMLElement) {
-
         const currResults = STORE_PAGE_CONTEXT.results.get();
 
         if (currResults.length === 0) {
-            
             for (const node of itemsMap.values()) {
                 node._cleanup?.();
                 node.remove();
             }
-            
-            itemsMap.clear();
 
-        }else{
-            
+            itemsMap.clear();
+        } else {
             const currKeys = new Set(currResults.map(keyFor));
 
             for (const [key, node] of itemsMap) {
@@ -158,13 +165,13 @@ export function StorePage() {
                 itemsMap.delete(key);
             }
 
-            currResults.forEach(item => {
+            currResults.forEach((item) => {
                 const key = keyFor(item);
                 if (itemsMap.has(key)) return;
                 itemsMap.set(key, StoreCard({ item }));
             });
 
-            currResults.forEach(item => {
+            currResults.forEach((item) => {
                 const node = itemsMap.get(keyFor(item));
                 if (node) $section.appendChild(node);
             });
@@ -173,14 +180,11 @@ export function StorePage() {
 
             if (store.isLoadingMore.get()) $section.appendChild(loadingMore);
             else loadingMore.remove();
-
         }
     }
 
     return Layout(
-
         UltraComponent({
-
             component: '<section></section>',
 
             className: [styles.page],
@@ -188,102 +192,103 @@ export function StorePage() {
             onMount: [
                 loadFirstPageIfEmpty,
                 () => DOCUMENT_TITLE_CONTEXT.setTitle('Store'),
-                trackScroll
+                trackScroll,
             ],
 
             children: [
-
                 `<h1 class="${styles.title}">Store</h1>`,
 
                 UltraComponent({
-                    
                     component: '<div></div>',
-                    
-                    className: [styles.searchRow],
-                    
-                    children: [
 
+                    className: [styles.searchRow],
+
+                    children: [
                         UltraComponent({
                             component: '<input type="text" />',
                             className: [styles.searchInput],
                             attributes: {
                                 placeholder: 'Search for a comic…',
-                                'aria-label': 'Search comics'
+                                'aria-label': 'Search comics',
                             },
-                            trigger: [{
-                                subscriber: STORE_PAGE_CONTEXT.query.subscribe,
-                                triggerFunction: ($el: HTMLElement) => {
-                                    ($el as HTMLInputElement).value = STORE_PAGE_CONTEXT.query.get();
-                                }
-                            }],
+                            trigger: [
+                                {
+                                    subscriber: STORE_PAGE_CONTEXT.query.subscribe,
+                                    triggerFunction: ($el: HTMLElement) => {
+                                        ($el as HTMLInputElement).value =
+                                            STORE_PAGE_CONTEXT.query.get();
+                                    },
+                                },
+                            ],
                             eventHandler: {
                                 input: onQueryInput,
-                                keydown: onQueryKeydown
-                            }
+                                keydown: onQueryKeydown,
+                            },
                         }),
 
                         BRButton({
                             text: 'Search',
-                            eventHandler: { click: store.runSearch }
-                        })
-
-                    ]
+                            eventHandler: { click: store.runSearch },
+                        }),
+                    ],
                 }),
 
                 UltraComponent({
                     component: `<p class="${styles.errorText}"></p>`,
-                    trigger: [{
-                        subscriber: store.error.subscribe,
-                        triggerFunction: onErrorChange
-                    }]
+                    trigger: [
+                        {
+                            subscriber: store.error.subscribe,
+                            triggerFunction: onErrorChange,
+                        },
+                    ],
                 }),
 
                 UltraActivity({
                     mode: {
                         subscriber: [
                             store.isLoading.subscribe,
-                            STORE_PAGE_CONTEXT.results.subscribe
+                            STORE_PAGE_CONTEXT.results.subscribe,
                         ],
-                        state: () => !store.isLoading.get() 
-                        && STORE_PAGE_CONTEXT.results.get().length === 0
+                        state: () =>
+                            !store.isLoading.get() && STORE_PAGE_CONTEXT.results.get().length === 0,
                     },
                     component: '<p></p>',
                     className: [styles.empty],
-                    trigger: [{
-                        subscriber: [
-                            STORE_PAGE_CONTEXT.results.subscribe,
-                            store.isLoading.subscribe,
-                            store.isLoadingMore.subscribe,
-                            STORE_PAGE_CONTEXT.hasMore.subscribe
-                        ],
-                        triggerFunction: ($p: HTMLElement) => {
-                            $p.textContent = store.isLoading.get() 
-                            ? 'Loading…' 
-                            : 'No comics found.'
-                        }
-                    }]
+                    trigger: [
+                        {
+                            subscriber: [
+                                STORE_PAGE_CONTEXT.results.subscribe,
+                                store.isLoading.subscribe,
+                                store.isLoadingMore.subscribe,
+                                STORE_PAGE_CONTEXT.hasMore.subscribe,
+                            ],
+                            triggerFunction: ($p: HTMLElement) => {
+                                $p.textContent = store.isLoading.get()
+                                    ? 'Loading…'
+                                    : 'No comics found.';
+                            },
+                        },
+                    ],
                 }),
 
                 UltraComponent({
                     component: '<section></section>',
                     className: [styles.grid],
                     onMount: [onResultsChange],
-                    trigger: [{
-                        subscriber: [
-                            STORE_PAGE_CONTEXT.results.subscribe,
-                            store.isLoading.subscribe,
-                            store.isLoadingMore.subscribe,
-                            STORE_PAGE_CONTEXT.hasMore.subscribe
-                        ],
-                        triggerFunction: onResultsChange,
-                        defer: true
-                    }]
-                })
-
-            ]
-
-        })
-
-    )
-
+                    trigger: [
+                        {
+                            subscriber: [
+                                STORE_PAGE_CONTEXT.results.subscribe,
+                                store.isLoading.subscribe,
+                                store.isLoadingMore.subscribe,
+                                STORE_PAGE_CONTEXT.hasMore.subscribe,
+                            ],
+                            triggerFunction: onResultsChange,
+                            defer: true,
+                        },
+                    ],
+                }),
+            ],
+        }),
+    );
 }

@@ -22,12 +22,12 @@ import { useSettledValue } from '@/hooks/useSettledValue';
 const ACTIVE_PAGE_SETTLE_MS = 150;
 
 export function ReaderPage() {
-
     //hooks
     const { uid } = useParams<{ uid: string }>();
     const setTitle = useDocumentTitleStore((s) => s.setTitle);
     const { navigate, goBack } = useReaderNavigation();
-    const { pages, title, isLoading, hasError, bookmarks, isRefreshing, loadPages, refreshComic } = useComicPages(uid);
+    const { pages, title, isLoading, hasError, bookmarks, isRefreshing, loadPages, refreshComic } =
+        useComicPages(uid);
 
     //refs
     const viewerRef = useRef<HTMLButtonElement>(null);
@@ -57,37 +57,36 @@ export function ReaderPage() {
         currentPageRef.current = currentPage;
     }, [currentPage]);
     useLayoutEffect(() => {
-        const $page = viewerRef.current?.children[currentPageRef.current - 2] as HTMLElement | undefined;
+        const $page = viewerRef.current?.children[currentPageRef.current - 2] as
+            HTMLElement | undefined;
         $page?.scrollIntoView({ block: 'start', inline: 'start' });
     }, [readingMode]);
 
     useEffect(() => {
         if (!isHorizontal) return;
         const realign = () => {
-            const $page = viewerRef.current?.children[currentPageRef.current - 2] as HTMLElement | undefined;
+            const $page = viewerRef.current?.children[currentPageRef.current - 2] as
+                HTMLElement | undefined;
             $page?.scrollIntoView({ block: 'nearest', inline: 'start' });
         };
         window.addEventListener('resize', realign);
         return () => window.removeEventListener('resize', realign);
     }, [isHorizontal]);
 
-    const onPageWheel = useCallback((e: React.WheelEvent) => {
-        onWheel(e);
-        if (!isHorizontal || e.ctrlKey || Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
-        const $figure = (e.target as HTMLElement).closest('figure');
-        if ($figure?.hasAttribute('data-splash')) {
-            const canScrollX = e.deltaY < 0 ? $figure.scrollLeft > 0
-                : $figure.scrollLeft + $figure.clientWidth < $figure.scrollWidth - 1;
-            if (canScrollX) {
-                $figure.scrollLeft += e.deltaY;
-                return;
-            }
-        }
-        const canScrollY = $figure && !$figure.hasAttribute('data-splash')
-            && (e.deltaY < 0 ? $figure.scrollTop > 0
-                : $figure.scrollTop + $figure.clientHeight < $figure.scrollHeight - 1);
-        if (!canScrollY && pageRef.current) pageRef.current.scrollLeft += e.deltaY;
-    }, [onWheel, isHorizontal]);
+    const onPageWheel = useCallback(
+        (e: React.WheelEvent) => {
+            onWheel(e);
+            if (!isHorizontal || e.ctrlKey || Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+            const $figure = (e.target as HTMLElement).closest('figure');
+            const canScrollY =
+                $figure &&
+                (e.deltaY < 0
+                    ? $figure.scrollTop > 0
+                    : $figure.scrollTop + $figure.clientHeight < $figure.scrollHeight - 1);
+            if (!canScrollY && pageRef.current) pageRef.current.scrollLeft += e.deltaY;
+        },
+        [onWheel, isHorizontal],
+    );
 
     const [isHeaderVisible, setIsHeaderVisible] = useState(true);
 
@@ -103,7 +102,7 @@ export function ReaderPage() {
     }, [isHeaderVisible, isHorizontal]);
 
     const toggleHeader = useCallback(() => {
-        setIsHeaderVisible(visible => !visible);
+        setIsHeaderVisible((visible) => !visible);
     }, []);
 
     const toggleFullscreen = useCallback(() => {
@@ -130,10 +129,26 @@ export function ReaderPage() {
     const next = numPages > 0 && currentPage === numPages;
 
     return (
-        <section className={styles.page} data-mode={readingMode} data-header={isHeaderVisible ? 'visible' : 'hidden'} onWheel={onPageWheel} ref={pageRef}>
-
+        <section
+            className={styles.page}
+            data-mode={readingMode}
+            data-header={isHeaderVisible ? 'visible' : 'hidden'}
+            onWheel={onPageWheel}
+            ref={pageRef}
+        >
             <div className={`${styles.headerOverlay} ${isHeaderVisible ? '' : styles.hidden}`}>
-                <ReaderPageHeader title={title} currentPage={currentPage} totalPages={pages.length} bookmarks={bookmarks} isRefreshing={isRefreshing} readingMode={readingMode} onReadingModeChange={onReadingModeChange} goToPage={goToPage} goBack={goBack} onRefresh={refreshComic} />
+                <ReaderPageHeader
+                    title={title}
+                    currentPage={currentPage}
+                    totalPages={pages.length}
+                    bookmarks={bookmarks}
+                    isRefreshing={isRefreshing}
+                    readingMode={readingMode}
+                    onReadingModeChange={onReadingModeChange}
+                    goToPage={goToPage}
+                    goBack={goBack}
+                    onRefresh={refreshComic}
+                />
                 <ReaderPageProgressBar currentPage={currentPage} totalPages={pages.length} />
             </div>
 
@@ -144,7 +159,9 @@ export function ReaderPage() {
 
             <div className={styles.state} style={{ display: hasError ? undefined : 'none' }}>
                 <p>Something went wrong while loading this comic.</p>
-                <button type="button" className={styles.retry} onClick={loadPages}>Retry</button>
+                <button type="button" className={styles.retry} onClick={loadPages}>
+                    Retry
+                </button>
             </div>
 
             <button
@@ -155,24 +172,34 @@ export function ReaderPage() {
                 onClick={toggleHeader}
                 onDoubleClick={toggleFullscreen}
             >
-                {Array.from({ length: Math.max(0, numPages - 1) }, (_, i) => i + 1).map(i => (
+                {Array.from({ length: Math.max(0, numPages - 1) }, (_, i) => i + 1).map((i) => (
                     <ImageElement
                         key={i}
                         uid={uid}
                         ind={i}
                         index={i + 1}
                         total={numPages}
-                        active={activePage !== null && i + 1 >= activePage - RENDER_BEHIND && i + 1 <= activePage + RENDER_AHEAD}
+                        active={
+                            activePage !== null &&
+                            i + 1 >= activePage - RENDER_BEHIND &&
+                            i + 1 <= activePage + RENDER_AHEAD
+                        }
                         onRatio={onPageRatio}
                     />
                 ))}
             </button>
 
-            { next ? <ReaderNext uid={uid} navigate={navigate}/> : null }
+            {next ? <ReaderNext uid={uid} navigate={navigate} /> : null}
 
-            <ReaderContextMenu currentPage={currentPage} bookmarks={bookmarks} isRefreshing={isRefreshing} readingMode={readingMode} onReadingModeChange={onReadingModeChange} goToPage={goToPage} onRefresh={refreshComic} />
-
+            <ReaderContextMenu
+                currentPage={currentPage}
+                bookmarks={bookmarks}
+                isRefreshing={isRefreshing}
+                readingMode={readingMode}
+                onReadingModeChange={onReadingModeChange}
+                goToPage={goToPage}
+                onRefresh={refreshComic}
+            />
         </section>
     );
-
 }

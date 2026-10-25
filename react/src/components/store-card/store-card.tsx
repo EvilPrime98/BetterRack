@@ -10,12 +10,7 @@ import { STRAT, type IStoreLink, type IStorePost, type TCardState } from '@/stor
 import { BRButton } from '@/components/br-button/br-button';
 import { isDesktopApp } from '@/services/server-config.service';
 
-export function StoreCard({
-    item
-}: {
-    item: IStorePost
-}) {
-
+export function StoreCard({ item }: { item: IStorePost }) {
     const { openDownloadDirModal } = useDownloadDirModalContext();
     const { openLinkPickerModal } = useLinkPickerModalContext();
 
@@ -25,7 +20,6 @@ export function StoreCard({
     const displayState = state.status === 'links-loading' ? lastRenderable.current : state;
 
     async function startDownload(link: IStoreLink) {
-
         if (!item.id) return;
 
         const outputDir = await openDownloadDirModal(link.title);
@@ -41,7 +35,7 @@ export function StoreCard({
                 title: link.title,
                 uuid: link.uuid,
                 outputDir,
-                strat: STRAT
+                strat: STRAT,
             });
             setState({ status: 'idle' });
             toast.success('Download in progress');
@@ -50,11 +44,9 @@ export function StoreCard({
             setState({ status: 'error', message });
             toast.error(message);
         }
-
     }
 
     async function onDownloadClick() {
-
         if (!item.id) return;
 
         setState({ status: 'links-loading' });
@@ -83,7 +75,6 @@ export function StoreCard({
             setState({ status: 'error', message });
             toast.error(message);
         }
-
     }
 
     function onCoverLoad() {
@@ -100,36 +91,28 @@ export function StoreCard({
     }
 
     function renderAction(curr: TCardState) {
-
         if (curr.status === 'idle') {
-
             return (
-                <BRButton 
-                    text="" onClick={onDownloadClick}
-                    variant='classic'
-                >
+                <BRButton text="" onClick={onDownloadClick} variant="classic">
                     <span>Download</span>
                 </BRButton>
             );
-
         }
 
         if (curr.status === 'error') {
-
             return (
-                <BRButton 
-                    text="" 
-                    variant='classic'
-                    className={styles.retryBtn} 
-                    onClick={onDownloadClick}>
+                <BRButton
+                    text=""
+                    variant="classic"
+                    className={styles.retryBtn}
+                    onClick={onDownloadClick}
+                >
                     <span>Retry</span>
                 </BRButton>
             );
-
         }
 
         return null;
-
     }
 
     useEffect(() => {
@@ -140,8 +123,11 @@ export function StoreCard({
 
     return (
         <article className={styles.storeCard}>
-
-            <div className={[styles.cover, coverLoaded ? styles.loaded : ''].filter(Boolean).join(' ')}>
+            <div
+                className={[styles.cover, coverLoaded ? styles.loaded : '']
+                    .filter(Boolean)
+                    .join(' ')}
+            >
                 <ImageGen
                     src={item.thumbnailUrl || NO_IMAGE_URL}
                     alt={item.title}
@@ -152,12 +138,15 @@ export function StoreCard({
             </div>
 
             <div className={styles.details}>
-
                 {isDesktopApp() ? (
-                    <p className={styles.title} title={item.title}>{item.title}</p>
+                    <p className={styles.title} title={item.title}>
+                        {item.title}
+                    </p>
                 ) : (
-                    <a href={item.link} target='_blank' rel='noopener noreferrer'>
-                        <p className={styles.title} title={item.title}>{item.title}</p>
+                    <a href={item.link} target="_blank" rel="noopener noreferrer">
+                        <p className={styles.title} title={item.title}>
+                            {item.title}
+                        </p>
                     </a>
                 )}
 
@@ -165,13 +154,8 @@ export function StoreCard({
                     <p className={styles.date}>{new Date(item.uploadDate).toLocaleDateString()}</p>
                 )}
 
-                <div className={styles.action}>
-                    {renderAction(displayState)}
-                </div>
-
+                <div className={styles.action}>{renderAction(displayState)}</div>
             </div>
-
         </article>
     );
-
 }

@@ -1,28 +1,27 @@
-import { UltraComponent } from "ultra-light-js";
-import { API_URL } from "../../services/library.service";
-import { withAuthQuery } from "../../services/server-config.service";
+import { UltraComponent } from 'ultra-light-js';
+import { API_URL } from '../../services/library.service';
+import { withAuthQuery } from '../../services/server-config.service';
 import styles from '../../pages/reader.page.module.css';
-import { ImageGen } from "../image-generic/image-generic";
+import { ImageGen } from '../image-generic/image-generic';
 
 export function ImageElement({
     uid,
     ind,
     index,
     total,
-    onRatio
-}:{
-    uid: string,
-    ind: number,
-    index: number,
-    total: number,
-    onRatio: (ratio: number) => void
-}){
-
+    onRatio,
+}: {
+    uid: string;
+    ind: number;
+    index: number;
+    total: number;
+    onRatio: (ratio: number) => void;
+}) {
     let $img: HTMLElement | null = null;
 
     const $figure = UltraComponent({
         component: '<figure></figure>',
-        className: [styles.pageWrapper, styles.idle]
+        className: [styles.pageWrapper, styles.idle],
     });
 
     const onLoad = (evt: Event) => {
@@ -30,12 +29,10 @@ export function ImageElement({
         if (naturalWidth > 0 && naturalHeight > 0) {
             const measured = naturalWidth / naturalHeight;
             $figure.style.aspectRatio = String(measured);
-            if (measured > 1) $figure.setAttribute('data-splash', '');
-            else $figure.removeAttribute('data-splash');
             onRatio(measured);
         }
         $figure.classList.add(styles.loaded);
-    }
+    };
 
     const setActive = (active: boolean) => {
         $figure.classList.toggle(styles.idle, !active);
@@ -45,9 +42,9 @@ export function ImageElement({
                 attributes: {
                     src: withAuthQuery(`${API_URL}/read/${uid}/pages/${ind}`),
                     alt: `${uid} — page ${index} of ${total}`,
-                    loading: 'eager'
+                    loading: 'eager',
                 },
-                eventHandler: { load: onLoad }
+                eventHandler: { load: onLoad },
             });
             $figure.replaceChildren($img);
         } else {
@@ -55,8 +52,7 @@ export function ImageElement({
             $img = null;
             $figure.classList.remove(styles.loaded);
         }
-    }
+    };
 
     return { element: $figure, setActive };
-
 }

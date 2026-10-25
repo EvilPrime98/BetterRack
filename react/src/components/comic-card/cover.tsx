@@ -11,13 +11,12 @@ import { withAuthQuery } from '@/services/server-config.service';
 export function ComicCardCover({
     item,
     comic,
-    coverVersion
+    coverVersion,
 }: {
     item: ILibraryResponseItem;
     comic: WikiComic | null;
     coverVersion: number;
 }) {
-
     const readerHref = `/${item.uid}/reader`;
     const versionQuery = coverVersion ? `?v=${coverVersion}` : '';
     const coverSrc = withAuthQuery(`${API_URL}/api/thumbnail/${item.uid}${versionQuery}`);
@@ -35,8 +34,10 @@ export function ComicCardCover({
     };
 
     return (
-        <Link to={readerHref} className={[styles.frame, loaded ? styles.loaded : ''].filter(Boolean).join(' ')}>
-
+        <Link
+            to={readerHref}
+            className={[styles.frame, loaded ? styles.loaded : ''].filter(Boolean).join(' ')}
+        >
             <ImageGen
                 src={imgSrc}
                 alt={item.name}
@@ -48,8 +49,6 @@ export function ComicCardCover({
             <span className={styles.issueBadge}>{comic?.issue ? `#${comic.issue}` : ''}</span>
 
             <span className={styles.eventBadge}>{comic?.event || ''}</span>
-
         </Link>
     );
-
 }

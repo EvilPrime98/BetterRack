@@ -5,16 +5,9 @@ interface BRCheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 't
     text: string;
 }
 
-export function BRCheckbox({
-    text,
-    className,
-    children,
-    ...props
-}: BRCheckboxProps) {
-
+export function BRCheckbox({ text, className, children, ...props }: BRCheckboxProps) {
     return (
         <label className={[styles.root, className].filter(Boolean).join(' ')}>
-
             <input type="checkbox" className={styles.input} {...props} />
 
             <span className={styles.box} aria-hidden="true">
@@ -27,8 +20,6 @@ export function BRCheckbox({
                 {text}
                 {children}
             </span>
-
         </label>
     );
-
 }

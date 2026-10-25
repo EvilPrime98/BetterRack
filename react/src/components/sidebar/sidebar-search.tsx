@@ -6,7 +6,6 @@ import { SearchIcon } from '@/icons/search.icon';
 import { useSidebarStore } from '@/stores/sidebar.store';
 
 export function SidebarSearch() {
-
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const inputRef = useRef<HTMLInputElement>(null);
@@ -59,12 +58,10 @@ export function SidebarSearch() {
         } else if (onSearchPage) {
             navigate('/');
         }
-
     }
 
     return (
         <div className={styles.searchBox}>
-
             <div className={styles.searchIcon}>
                 <SearchIcon size={16} color="#8a8a8a" />
             </div>
@@ -78,8 +75,6 @@ export function SidebarSearch() {
                 defaultValue={searchQuery}
                 onKeyDown={onSearchKeydown}
             />
-
         </div>
     );
-
 }

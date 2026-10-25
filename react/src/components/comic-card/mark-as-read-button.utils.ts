@@ -7,6 +7,6 @@ export function toggleComicRead(uid: string) {
     const newRead = isRead === undefined ? true : !isRead;
     setCacheById(uid, {
         read: newRead,
-        readPer: newRead ? 100 : 0
+        readPer: newRead ? 100 : 0,
     });
 }

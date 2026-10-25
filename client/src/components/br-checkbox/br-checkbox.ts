@@ -1,4 +1,4 @@
-import { UltraComponent, type UltraElementProps } from "ultra-light-js";
+import { UltraComponent, type UltraElementProps } from 'ultra-light-js';
 import styles from './br-checkbox.module.css';
 
 export function BRCheckbox({
@@ -11,32 +11,28 @@ export function BRCheckbox({
     checked?: boolean;
     onChange?: (checked: boolean) => void;
 } & UltraElementProps) {
-
     const { attributes, className, ...rest } = props;
 
     return UltraComponent({
-
         ...rest,
 
         component: '<label></label>',
 
-        className: [
-            ...(className ? className : []),
-            styles.root
-        ],
+        className: [...(className ? className : []), styles.root],
 
         children: [
-
             UltraComponent({
                 component: '<input type="checkbox" />',
                 className: [styles.input],
                 attributes,
                 onMount: [
-                    ($el) => { ($el as HTMLInputElement).checked = checked; }
+                    ($el) => {
+                        ($el as HTMLInputElement).checked = checked;
+                    },
                 ],
                 eventHandler: {
-                    change: (e) => onChange?.((e.currentTarget as HTMLInputElement).checked)
-                }
+                    change: (e) => onChange?.((e.currentTarget as HTMLInputElement).checked),
+                },
             }),
 
             `<span class="${styles.box}" aria-hidden="true">
@@ -45,10 +41,7 @@ export function BRCheckbox({
                 </svg>
             </span>`,
 
-            `<span class="${styles.label}">${text}</span>`
-
-        ]
-
+            `<span class="${styles.label}">${text}</span>`,
+        ],
     });
-
 }

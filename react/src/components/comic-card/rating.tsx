@@ -3,12 +3,7 @@ import styles from './comic-card.module.css';
 import { StarComponent } from '@/components/star-component/star-component';
 import { useComicCacheStore } from '@/stores/comicCache.store';
 
-export function ComicRating({
-    uid
-}: {
-    uid: string;
-}) {
-
+export function ComicRating({ uid }: { uid: string }) {
     const rating = useComicCacheStore((s) => s.cache[uid]?.rating || 0);
     const [preview, setPreview] = useState<number | null>(null);
 
@@ -29,7 +24,7 @@ export function ComicRating({
                 changeRating={changeRating}
                 onHover={setPreview}
                 initialFill={Math.max(0, Math.min(1, displayRating - i))}
-            />
+            />,
         );
     }
 
@@ -38,5 +33,4 @@ export function ComicRating({
             {stars}
         </div>
     );
-
 }

@@ -1,4 +1,4 @@
-import type { WikiComic } from "better-wiki";
+import type { WikiComic } from 'better-wiki';
 
 export type TMetaSource = 'wiki' | 'comicinfo';
 
@@ -13,34 +13,34 @@ export interface ILibraryItem {
 }
 
 export interface ILibraryResponseItem {
-    "uid": string,
-    "did": boolean,
-    "name": string,
-    "path": string,
-    "parentId": string,
+    uid: string;
+    did: boolean;
+    name: string;
+    path: string;
+    parentId: string;
     /** Milliseconds since the epoch, from the file's mtime at scan time. */
-    "createdAt": number,
+    createdAt: number;
     /** Tri-state, files only: undefined = not yet looked up (fetch GET /api/library/:uid/identify), true = identified (see `comic`), false = looked up, no wiki match. */
-    "identified"?: boolean,
+    identified?: boolean;
     /** The identified wiki comic, resolved on demand - metadata only, never the cover source. */
-    "comic"?: WikiComic,
-    "metaSource"?: TMetaSource,
+    comic?: WikiComic;
+    metaSource?: TMetaSource;
 }
 
 export interface ILibraryGroup {
-    "uid": string,
-    "name": string,
-    "path": string,
-    "entries": ILibraryResponseItem[]
+    uid: string;
+    name: string;
+    path: string;
+    entries: ILibraryResponseItem[];
 }
 
 /** One page of GET /api/library. `limit`/`offset` count entries, not groups; `hasMore` is true while further pages remain. */
 export interface ILibraryPage {
-    "groups": ILibraryGroup[],
-    "total": number,
-    "limit": number,
-    "offset": number,
-    "hasMore": boolean
+    groups: ILibraryGroup[];
+    total: number;
+    limit: number;
+    offset: number;
+    hasMore: boolean;
 }
 
 /** The response body of GET /api/library/recent. It is a flat list of files added within the window, newest first. */
@@ -67,7 +67,7 @@ export const RECENT_WINDOW_OPTIONS = [
     { label: 'Last year', hours: 8760 },
 ] as const;
 
-export type TRecentWindow = typeof RECENT_WINDOW_OPTIONS[number];
+export type TRecentWindow = (typeof RECENT_WINDOW_OPTIONS)[number];
 
 /** Filter toggles for the library grid; owned by the `useFilters` hook (react/src/hooks/useFilters.ts). */
 export interface ILibraryFilters {
@@ -106,7 +106,11 @@ export type TIdentifyProgress =
 
 export type TIdentifyLibraryStatus =
     | { state: 'idle' }
-    | { jobId: string; state: 'queued' | 'running' | 'done' | 'error'; progress?: TIdentifyProgress };
+    | {
+          jobId: string;
+          state: 'queued' | 'running' | 'done' | 'error';
+          progress?: TIdentifyProgress;
+      };
 
 export interface IComicLSCache {
     /**Rating for the comic */
@@ -120,15 +124,15 @@ export interface IComicLSCache {
 }
 
 export const COMICS_TYPES = {
-    'cover': 'cover',
-    detail: 'detail'
+    cover: 'cover',
+    detail: 'detail',
 } as const;
 
 export const READ_TYPES = {
-    'all': 'all',
-    'read': 'read',
-    'unread': 'unread',
-    'reading': 'reading'
+    all: 'all',
+    read: 'read',
+    unread: 'unread',
+    reading: 'reading',
 } as const;
 
 export type TReadTypes = keyof typeof READ_TYPES;
@@ -136,7 +140,7 @@ export type TReadTypes = keyof typeof READ_TYPES;
 export type TComicsTypes = keyof typeof COMICS_TYPES;
 
 export const COMIC_FILTERS = {
-    writer: 'writer'
+    writer: 'writer',
 } as const;
 
 export type TComicFilters = keyof typeof COMIC_FILTERS;
@@ -146,7 +150,7 @@ export type IComicFilters = Partial<Record<TComicFilters, string>>;
 export const FILTER_OPTIONS = {
     nofilters: 'Alphabetically',
     byCreation: 'Creation Date',
-    byReleaseDate: 'Release Date'
+    byReleaseDate: 'Release Date',
 } as const;
 
-export type TFilterOptions = typeof FILTER_OPTIONS[keyof typeof FILTER_OPTIONS];
+export type TFilterOptions = (typeof FILTER_OPTIONS)[keyof typeof FILTER_OPTIONS];

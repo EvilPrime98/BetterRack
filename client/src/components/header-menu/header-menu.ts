@@ -1,8 +1,8 @@
-import { UltraComponent, UltraActivity, ultraState } from "ultra-light-js";
+import { UltraComponent, UltraActivity, ultraState } from 'ultra-light-js';
 import styles from './header-menu.module.css';
 import headerStyles from './header.module.css';
-import { MenuIcon } from "../../icons/menu.icon";
-import { LIBRARY_CONTEXT } from "../../context/library.context";
+import { MenuIcon } from '../../icons/menu.icon';
+import { LIBRARY_CONTEXT } from '../../context/library.context';
 
 function onEnterOrSpace(handler: () => void) {
     return (e: Event) => {
@@ -14,7 +14,6 @@ function onEnterOrSpace(handler: () => void) {
 }
 
 export function HeaderMenu() {
-
     const [isOpen, setOpen, subsOpen] = ultraState(false);
 
     const closeMenu = () => setOpen(false);
@@ -22,25 +21,24 @@ export function HeaderMenu() {
     const toggleMenu = (e: Event) => {
         e.stopPropagation();
         setOpen(!isOpen());
-    }
+    };
 
     const onOpenChange = ($root: HTMLElement) => {
         $root.classList.toggle(styles.open, isOpen());
-    }
+    };
 
     const refresh = () => {
         LIBRARY_CONTEXT.refreshLibraryWithPrompt();
         setOpen(false);
-    }
+    };
 
     return UltraComponent({
-
         component: '<div></div>',
 
         className: [styles.menuWrap, headerStyles.noDrag],
 
         eventHandler: {
-            click: toggleMenu
+            click: toggleMenu,
         },
 
         onMount: [
@@ -48,16 +46,17 @@ export function HeaderMenu() {
             () => {
                 document.addEventListener('click', closeMenu);
                 return () => document.removeEventListener('click', closeMenu);
-            }
+            },
         ],
 
-        trigger: [{
-            subscriber: subsOpen,
-            triggerFunction: onOpenChange
-        }],
+        trigger: [
+            {
+                subscriber: subsOpen,
+                triggerFunction: onOpenChange,
+            },
+        ],
 
         children: [
-
             UltraComponent({
                 component: MenuIcon({ size: 18 }),
                 className: [headerStyles.iconBtn],
@@ -65,45 +64,38 @@ export function HeaderMenu() {
                     role: 'button',
                     tabindex: '0',
                     'aria-haspopup': 'menu',
-                    'aria-label': 'More options'
+                    'aria-label': 'More options',
                 },
                 eventHandler: {
-                    keydown: onEnterOrSpace(() => setOpen(!isOpen()))
-                }
+                    keydown: onEnterOrSpace(() => setOpen(!isOpen())),
+                },
             }),
 
             UltraActivity({
-
                 component: `<ul class="${styles.menu}" role="menu"></ul>`,
 
                 mode: {
                     state: isOpen,
-                    subscriber: subsOpen
+                    subscriber: subsOpen,
                 },
 
                 children: [
-
                     UltraComponent({
                         component: `<li class="${styles.option}">Refresh library</li>`,
                         attributes: {
                             role: 'menuitem',
-                            tabindex: '0'
+                            tabindex: '0',
                         },
                         eventHandler: {
                             click: (e: Event) => {
                                 e.stopPropagation();
                                 refresh();
                             },
-                            keydown: onEnterOrSpace(refresh)
-                        }
-                    })
-
-                ]
-
-            })
-
-        ]
-
-    })
-
+                            keydown: onEnterOrSpace(refresh),
+                        },
+                    }),
+                ],
+            }),
+        ],
+    });
 }

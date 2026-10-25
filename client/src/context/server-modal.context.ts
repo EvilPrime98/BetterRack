@@ -1,5 +1,13 @@
-import { ultraCompState, type IUltraCompStateStateful } from "ultra-light-js";
-import { getStoredServerUrl, isRemoteModeEnabled, needsServerSetup, setServerUrl, setRemoteServer, setStoredApiKey, isAndroidPlatform } from "../services/server-config.service";
+import { ultraCompState, type IUltraCompStateStateful } from 'ultra-light-js';
+import {
+    getStoredServerUrl,
+    isRemoteModeEnabled,
+    needsServerSetup,
+    setServerUrl,
+    setRemoteServer,
+    setStoredApiKey,
+    isAndroidPlatform,
+} from '../services/server-config.service';
 
 let resolver: (() => void) | null = null;
 
@@ -15,7 +23,6 @@ export interface IServerModalCtx {
 }
 
 export const SERVER_MODAL_CTX: IServerModalCtx = ultraCompState({
-
     isVisible: false,
     isMandatory: false,
     error: '' as string,
@@ -41,7 +48,11 @@ export const SERVER_MODAL_CTX: IServerModalCtx = ultraCompState({
         comp.isVisible.set(false);
     },
 
-    submitServer: (comp: IServerModalCtx, url: string, remote?: { enabled: boolean; apiKey: string }) => {
+    submitServer: (
+        comp: IServerModalCtx,
+        url: string,
+        remote?: { enabled: boolean; apiKey: string },
+    ) => {
         const trimmed = url.trim();
         if (!trimmed) {
             comp.error.set('Enter a server address.');
@@ -61,8 +72,7 @@ export const SERVER_MODAL_CTX: IServerModalCtx = ultraCompState({
         if (getStoredServerUrl() !== urlBefore || isRemoteModeEnabled() !== remoteBefore) {
             window.location.reload();
         }
-    }
-
+    },
 });
 
 export { getStoredServerUrl };

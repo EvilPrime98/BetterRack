@@ -1,18 +1,17 @@
 export function ChevronDownIcon({
     size = 14,
     color = '#e8a33d',
-    orientation = 'down'
+    orientation = 'down',
 }: {
     size?: number;
     color?: string;
     orientation?: 'up' | 'down' | 'left' | 'right';
 } = {}) {
-
     const rotations = {
         down: 0,
         up: 180,
         left: 90,
-        right: -90
+        right: -90,
     };
 
     return (
@@ -33,5 +32,4 @@ export function ChevronDownIcon({
             />
         </svg>
     );
-    
 }

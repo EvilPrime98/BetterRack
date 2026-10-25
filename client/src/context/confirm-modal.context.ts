@@ -1,4 +1,4 @@
-import { ultraCompState, type IUltraCompStateStateful } from "ultra-light-js";
+import { ultraCompState, type IUltraCompStateStateful } from 'ultra-light-js';
 
 export interface IConfirmOptions {
     title?: string;
@@ -28,7 +28,6 @@ export interface IConfirmModalCtx {
 }
 
 export const CONFIRM_MODAL_CTX: IConfirmModalCtx = ultraCompState({
-
     isVisible: false,
     title: 'Are you sure?' as string,
     message: '' as string,
@@ -39,7 +38,13 @@ export const CONFIRM_MODAL_CTX: IConfirmModalCtx = ultraCompState({
 
     confirmDialog: (
         comp: IConfirmModalCtx,
-        { title = 'Are you sure?', message, confirmLabel = 'Confirm', cancelLabel = 'Cancel', onDontAskAgain }: IConfirmOptions
+        {
+            title = 'Are you sure?',
+            message,
+            confirmLabel = 'Confirm',
+            cancelLabel = 'Cancel',
+            onDontAskAgain,
+        }: IConfirmOptions,
     ): Promise<boolean | null> => {
         dontAskAgainCallback = onDontAskAgain ?? null;
         comp.title.set(title);
@@ -60,6 +65,5 @@ export const CONFIRM_MODAL_CTX: IConfirmModalCtx = ultraCompState({
         resolver?.(result);
         resolver = null;
         dontAskAgainCallback = null;
-    }
-
+    },
 });

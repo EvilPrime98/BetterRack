@@ -7,9 +7,8 @@ const DESKTOP_QUERY = '(min-width: 801px)';
  * the sidebar becomes a permanent part of the layout instead of an overlay.
  */
 export function useIsDesktop(): boolean {
-
     const [isDesktop, setIsDesktop] = useState(
-        () => typeof window !== 'undefined' && window.matchMedia(DESKTOP_QUERY).matches
+        () => typeof window !== 'undefined' && window.matchMedia(DESKTOP_QUERY).matches,
     );
 
     useEffect(() => {
@@ -22,5 +21,4 @@ export function useIsDesktop(): boolean {
     }, []);
 
     return isDesktop;
-
 }

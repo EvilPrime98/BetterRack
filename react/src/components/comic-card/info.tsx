@@ -9,27 +9,26 @@ import { XmlIcon } from '@/icons/xml.icon';
 
 const metaSourceLabel: Record<TMetaSource, string> = {
     wiki: 'From wiki',
-    comicinfo: 'From ComicInfo.xml'
+    comicinfo: 'From ComicInfo.xml',
 };
 
 function formatReleaseDate(releaseDate?: ReleaseDate | null): string {
     const { releaseMonth, releaseDay, releaseYear } = releaseDate || {};
     if (!releaseMonth || !releaseDay || !releaseYear) return '';
-    return [releaseMonth, releaseDay].map(n => n.padStart(2, '0')).join('/') + `/${releaseYear}`;
+    return [releaseMonth, releaseDay].map((n) => n.padStart(2, '0')).join('/') + `/${releaseYear}`;
 }
 
 export function ComicCardInfo({
     navigate,
     comic,
     metaSource,
-    isLoading
+    isLoading,
 }: {
     navigate: (val: string) => void;
     comic: WikiComic | null;
     metaSource?: TMetaSource;
     isLoading?: boolean;
 }) {
-
     if (isLoading) {
         return (
             <div className={styles.info}>
@@ -48,14 +47,13 @@ export function ComicCardInfo({
 
     const released = formatReleaseDate(comic?.releaseDate);
 
-    const writers = (comic?.credits?.writers || []);
+    const writers = comic?.credits?.writers || [];
     const firstWriter = writers[0];
 
     //const viewMoreURL = `/details/${comic?.pageId}?sourceWiki=${comic?.sourceWiki}`;
 
     return (
         <div className={styles.info}>
-
             {metaSource && (
                 <div
                     className={styles.metaSourceBadge}
@@ -63,7 +61,11 @@ export function ComicCardInfo({
                     aria-label={metaSourceLabel[metaSource]}
                     title={metaSourceLabel[metaSource]}
                 >
-                    {metaSource === 'wiki' ? <FandomIcon size={11} /> : <XmlIcon size={15} color="#334155" />}
+                    {metaSource === 'wiki' ? (
+                        <FandomIcon size={11} />
+                    ) : (
+                        <XmlIcon size={15} color="#334155" />
+                    )}
                 </div>
             )}
 
@@ -78,13 +80,14 @@ export function ComicCardInfo({
             <InfoRow
                 label="Writer"
                 value={writers.join(', ')}
-                onClick={firstWriter ? () => navigate(`/filters?writer=${encodeURIComponent(firstWriter)}`) : undefined}
+                onClick={
+                    firstWriter
+                        ? () => navigate(`/filters?writer=${encodeURIComponent(firstWriter)}`)
+                        : undefined
+                }
             />
 
-            <InfoRow
-                label="Artist"
-                value={(comic?.credits?.artists || []).join(', ')}
-            />
+            <InfoRow label="Artist" value={(comic?.credits?.artists || []).join(', ')} />
 
             <InfoRow label="Released" value={released} />
 
@@ -93,8 +96,6 @@ export function ComicCardInfo({
                 className={styles.viewMore}
                 onClick={() => navigate(viewMoreURL)}
             /> */}
-
         </div>
     );
-
 }

@@ -1,4 +1,4 @@
-import { UltraComponent, type UltraElementProps } from "ultra-light-js";
+import { UltraComponent, type UltraElementProps } from 'ultra-light-js';
 import styles from './br-dropdown.module.css';
 
 export interface IBRDropdownOption<T extends string> {
@@ -28,14 +28,17 @@ export function BRDropdown<T extends string>({
     ariaLabelledby?: string;
     ariaLabel?: string | (() => string);
 } & UltraElementProps) {
-
     const listId = `br-dropdown-${++dropdownCount}`;
 
     let isOpen = false;
     let activeIndex = 0;
     let $list: HTMLElement | null = null;
 
-    const selectedIndex = () => Math.max(0, options.findIndex((o) => o.value === value()));
+    const selectedIndex = () =>
+        Math.max(
+            0,
+            options.findIndex((o) => o.value === value()),
+        );
 
     const $trigger = UltraComponent({
         component: '<button type="button"></button>',
@@ -47,18 +50,20 @@ export function BRDropdown<T extends string>({
             'aria-expanded': 'false',
             'aria-controls': listId,
             ...(ariaLabelledby ? { 'aria-labelledby': ariaLabelledby } : {}),
-            ...(ariaLabel ? { 'aria-label': typeof ariaLabel === 'function' ? ariaLabel() : ariaLabel } : {})
+            ...(ariaLabel
+                ? { 'aria-label': typeof ariaLabel === 'function' ? ariaLabel() : ariaLabel }
+                : {}),
         },
         children: [
             `<span class="${styles.label}">${triggerLabel ? '' : options.map((o) => `<span class="${styles.sizer}" aria-hidden="true">${o.label}</span>`).join('')}<span class="${styles.current}"></span></span>`,
             `<svg class="${styles.chevron}" viewBox="0 0 12 12" fill="none" aria-hidden="true">
                 <path d="M3 4.5 6 7.5 9 4.5" />
-            </svg>`
+            </svg>`,
         ],
         eventHandler: {
             click: () => (isOpen ? close() : open()),
-            keydown: (e) => onKeyDown(e as KeyboardEvent)
-        }
+            keydown: (e) => onKeyDown(e as KeyboardEvent),
+        },
     });
 
     const $label = $trigger.querySelector(`.${styles.current}`) as HTMLElement;
@@ -97,14 +102,16 @@ export function BRDropdown<T extends string>({
         $list = UltraComponent({
             component: `<ul id="${listId}" role="listbox"></ul>`,
             className: [styles.list],
-            children: options.map((option, index) => UltraComponent({
-                component: `<li id="${listId}-${index}" role="option">${option.label}</li>`,
-                className: [styles.option],
-                eventHandler: {
-                    pointerenter: () => moveActive(index),
-                    click: () => select(index)
-                }
-            }))
+            children: options.map((option, index) =>
+                UltraComponent({
+                    component: `<li id="${listId}-${index}" role="option">${option.label}</li>`,
+                    className: [styles.option],
+                    eventHandler: {
+                        pointerenter: () => moveActive(index),
+                        click: () => select(index),
+                    },
+                }),
+            ),
         });
         $root.appendChild($list);
         syncActive();
@@ -174,15 +181,11 @@ export function BRDropdown<T extends string>({
     syncLabel();
 
     const $root = UltraComponent({
-
         ...props,
 
         component: '<div></div>',
 
-        className: [
-            styles.root,
-            ...(props.className ? props.className : [])
-        ],
+        className: [styles.root, ...(props.className ? props.className : [])],
 
         children: [$trigger],
 
@@ -193,17 +196,12 @@ export function BRDropdown<T extends string>({
                 triggerFunction: () => {
                     syncLabel();
                     syncActive();
-                }
-            }
+                },
+            },
         ],
 
-        cleanup: [
-            ...(props.cleanup ? props.cleanup : []),
-            close
-        ]
-
+        cleanup: [...(props.cleanup ? props.cleanup : []), close],
     });
 
     return $root;
-
 }

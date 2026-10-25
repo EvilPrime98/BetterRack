@@ -1,11 +1,10 @@
 export function ShopIcon({
     size = 20,
-    color = '#fff'
+    color = '#fff',
 }: {
     size?: number;
     color?: string;
 } = {}) {
-
     return `<svg
         width="${size}"
         height="${size}"
@@ -17,5 +16,4 @@ export function ShopIcon({
         <path d="M3 6h18" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
         <path d="M16 10a4 4 0 0 1-8 0" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
     </svg>`;
-
 }

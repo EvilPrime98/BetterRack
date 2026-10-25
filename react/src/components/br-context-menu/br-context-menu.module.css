@@ -66,14 +66,14 @@
     outline: none;
 }
 
-.item[aria-checked="true"] {
+.item[aria-checked='true'] {
     color: var(--accent);
     font-weight: 600;
     background-color: color-mix(in srgb, var(--accent) 16%, transparent);
 }
 
-.item[aria-checked="true"]:hover,
-.item[aria-checked="true"]:focus-visible {
+.item[aria-checked='true']:hover,
+.item[aria-checked='true']:focus-visible {
     background-color: color-mix(in srgb, var(--accent) 24%, transparent);
 }
 
@@ -101,5 +101,7 @@
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
