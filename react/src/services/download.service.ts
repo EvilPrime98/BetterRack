@@ -8,7 +8,7 @@ function streamUrl(uid: string): string {
 }
 
 function safeFileName(name: string): string {
-    return name.replace(/[\/:*?"<>|]/g, '_');
+    return name.replace(/[/:*?"<>|]/g, '_');
 }
 
 export async function downloadComic(uid: string, name: string): Promise<string | undefined> {
