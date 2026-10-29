@@ -34,7 +34,7 @@ export class streamController {
             }
 
             const filename = basename(entry.path);
-            const asciiFallback = filename.replace(/[^ -~]|["\%]/g, '_');
+            const asciiFallback = filename.replace(/[^ -~]|["%]/g, '_');
 
             return new Response(file.stream(), {
                 headers: {
