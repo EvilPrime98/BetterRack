@@ -33,10 +33,13 @@ export class streamController {
                 throw new Error('File not found');
             }
 
+            const filename = basename(entry.path);
+            const asciiFallback = filename.replace(/[^ -~]|["%]/g, '_');
+
             return new Response(file.stream(), {
                 headers: {
                     'Content-Type': 'application/octet-stream',
-                    'Content-Disposition': `attachment; filename="${basename(file.name!)}"`,
+                    'Content-Disposition': `attachment; filename="${asciiFallback}"; filename*=UTF-8''${encodeURIComponent(filename)}`,
                     'Content-Length': String(file.size),
                 },
             })
