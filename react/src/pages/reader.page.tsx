@@ -90,17 +90,6 @@ export function ReaderPage() {
 
     const [isHeaderVisible, setIsHeaderVisible] = useState(true);
 
-    const prevPaddingTop = useRef<number | null>(null);
-    useLayoutEffect(() => {
-        const $page = pageRef.current;
-        if (!$page) return;
-        const paddingTop = parseFloat(getComputedStyle($page).paddingTop);
-        if (prevPaddingTop.current !== null && !isHorizontal) {
-            $page.scrollTop += paddingTop - prevPaddingTop.current;
-        }
-        prevPaddingTop.current = paddingTop;
-    }, [isHeaderVisible, isHorizontal]);
-
     const toggleHeader = useCallback(() => {
         setIsHeaderVisible((visible) => !visible);
     }, []);
@@ -132,7 +121,6 @@ export function ReaderPage() {
         <section
             className={styles.page}
             data-mode={readingMode}
-            data-header={isHeaderVisible ? 'visible' : 'hidden'}
             onWheel={onPageWheel}
             ref={pageRef}
         >

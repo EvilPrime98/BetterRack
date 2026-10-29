@@ -6,12 +6,6 @@
     scrollbar-width: none;
     -ms-overflow-style: none;
     touch-action: pan-y;
-    /* reserves space for the fixed .headerOverlay */
-    padding-top: calc(var(--header-height) + 2px);
-}
-
-.page[data-header='hidden'] {
-    padding-top: 0;
 }
 
 .page::-webkit-scrollbar {
@@ -249,12 +243,7 @@
     aspect-ratio: var(--page-ratio, 0.667);
     contain: layout paint;
     background: #1d1d1d;
-    scroll-margin-top: calc(var(--header-height) + 2px);
     touch-action: pan-y;
-}
-
-.page[data-header='hidden'] .pageWrapper {
-    scroll-margin-top: 0;
 }
 
 .pageWrapper::after {
@@ -401,7 +390,8 @@
     flex: none;
     width: calc(100% * var(--reader-zoom, 1));
     max-width: none;
-    height: auto;
+    height: calc(100dvh * var(--reader-zoom, 1));
+    object-fit: contain;
     margin: auto;
 }
 

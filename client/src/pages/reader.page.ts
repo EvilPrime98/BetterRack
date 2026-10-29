@@ -263,13 +263,6 @@ export function ReaderPage({ uid }: { uid: string }) {
         $current?.scrollIntoView({ block: 'nearest', inline: 'start' });
     };
 
-    const onHeaderPaddingChange = ($page: HTMLElement) => {
-        const before = parseFloat(getComputedStyle($page).paddingTop);
-        $page.dataset.header = isHeaderVisible() ? 'visible' : 'hidden';
-        if (readingMode() === 'horizontal') return;
-        $page.scrollTop += parseFloat(getComputedStyle($page).paddingTop) - before;
-    };
-
     const toggleFullscreen = () => {
         if (window.desktop?.toggleFullscreen) {
             window.desktop.toggleFullscreen();
@@ -516,7 +509,6 @@ export function ReaderPage({ uid }: { uid: string }) {
             },
             ($page: HTMLElement) => {
                 $page.dataset.mode = readingMode();
-                $page.dataset.header = 'visible';
             },
             ($page: HTMLElement) => {
                 $page.addEventListener('pointerdown', onPointerDown);
@@ -620,10 +612,6 @@ export function ReaderPage({ uid }: { uid: string }) {
             {
                 subscriber: subsReadingMode,
                 triggerFunction: onReadingModeApply,
-            },
-            {
-                subscriber: subsIsHeaderVisible,
-                triggerFunction: onHeaderPaddingChange,
             },
             {
                 subscriber: [subsPages, subsCurrentPage],
