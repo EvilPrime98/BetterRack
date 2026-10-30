@@ -13,6 +13,10 @@ contextBridge.exposeInMainWorld("desktop", {
     return ipcRenderer.invoke("dialog:pick-folder")
   },
 
+  downloadComic: (request: { url: string; name: string; headers?: Record<string, string> }): Promise<string | null> => {
+    return ipcRenderer.invoke("dialog:save-comic", request)
+  },
+
   toggleFullscreen: (): Promise<void> => {
     return ipcRenderer.invoke("window:toggle-fullscreen")
   },

@@ -9,6 +9,7 @@ import { createBeforeInputHandler } from "./events/before-input.event";
 import { handleWindowOpen } from "./events/window-open.event";
 import { createNavigationGuard } from "./events/navigation-guard.event";
 import { registerPickFolderHandler } from "./ipc/pick-folder.ipc";
+import { registerDownloadComicHandler } from "./ipc/download-comic.ipc";
 import { registerToggleFullscreenHandler } from "./ipc/toggle-fullscreen.ipc";
 import { registerWindowControlsHandlers } from "./ipc/window-controls.ipc";
 import { bindMaximizeChangeEvents } from "./events/maximize-change.event";
@@ -218,6 +219,7 @@ async function startDesktopApp() {
   }
 
   registerPickFolderHandler();
+  registerDownloadComicHandler();
   registerToggleFullscreenHandler();
   registerWindowControlsHandlers();
   registerCloseGuardHandlers();
