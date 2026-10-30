@@ -15,6 +15,11 @@ declare global {
         };
         desktop?: {
             pickLibraryFolder(): Promise<string | null>;
+            downloadComic(request: {
+                url: string;
+                name: string;
+                headers?: Record<string, string>;
+            }): Promise<string | null>;
             toggleFullscreen(): Promise<void>;
             minimizeWindow(): Promise<void>;
             toggleMaximizeWindow(): Promise<void>;
