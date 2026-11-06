@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain } from "electron";
+import { countActiveComicDownloads } from "../ipc/download-comic.ipc";
 
 type TJobSummary = { state: string };
 
@@ -17,15 +18,16 @@ async function countActiveDownloads(serverUrl: string): Promise<number> {
     try {
 
         const response = await fetch(`${serverUrl}api/downloads/jobs`);
-        if (!response.ok) return 0;
+        if (!response.ok) return countActiveComicDownloads();
 
         const { jobs } = await response.json() as { jobs: TJobSummary[] };
 
-        return jobs.filter((job) => job.state === "queued" || job.state === "running").length;
+        return jobs.filter((job) => job.state === "queued" || job.state === "running").length
+            + countActiveComicDownloads();
 
     } catch {
 
-        return 0;
+        return countActiveComicDownloads();
 
     }
 
