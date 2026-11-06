@@ -24,6 +24,7 @@ import { comicsRouter } from './routers/comicsRouter';
 import { downloadsRouter } from './routers/downloadsRouter';
 import { ThumbnailModel } from './models/thumbnail/thumbnail.model';
 import { thumbnailRouter } from './routers/thumbnailRouter';
+import { streamRouter } from './routers/streamRouter';
 import { apiKeyAuth } from './middleware/apiKeyAuthMiddleware';
 import { storeApiUrlGuard } from './middleware/storeApiUrlGuard';
 import { logger } from '#utils/logger';
@@ -101,6 +102,8 @@ async function startApp() {
     app.route('/api/directories', fsRouter(fsModel, prefsModel));
 
     app.route('/api/thumbnail', thumbnailRouter(thumbnailModel, libModel));
+
+    app.route('/api/stream', streamRouter({ libModel }));
 
     app.route('/read', comicReaderRouter({
         libModel: libModel,
